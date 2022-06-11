@@ -1,173 +1,136 @@
-
+#include "cl_type_glue.h"
 #include "peep.h"
 #include "random.h"
 
-int MapX2SectorX(int map_x) {
-    return map_x / SQRT_CELLS_PER_MAP_SECTOR;
+// sqrt_i64 computes the squrare root of a 64bit integer and returns
+// a 64bit integer value. It requires that v is positive.
+long sqrt_i64(long v) {
+    ulong b = ((ulong)1) << 62, q = 0, r = v;
+    while (b > r)
+        b >>= 2;
+    while (b > 0) {
+        ulong t = q + b;
+        q >>= 1;
+        if (r >= t) {
+            r -= t;
+            q += b;
+        }
+        b >>= 2;
+    }
+    return q;
 }
-int MapY2SectorY(int map_y) {
-    return map_y / SQRT_CELLS_PER_MAP_SECTOR;
-}
-Cell* Map2Cell(__global const GameState* gameState, int map_x, int map_y)
+
+
+void ForceInteraction(Peep* peep, Peep* otherPeep)
 {
-    MapSector* sector = &gameState->sectors[MapX2SectorX(map_x)][MapY2SectorY(map_y)];
-    return &sector->cells[map_x% SQRT_CELLS_PER_MAP_SECTOR][map_y%SQRT_CELLS_PER_MAP_SECTOR];
+
+    cl_long deltax_Q16 = otherPeep->map_x_Q15_16 - peep->map_x_Q15_16;
+    cl_long deltay_Q16 = otherPeep->map_y_Q15_16 - peep->map_y_Q15_16;
+
+    cl_long innerx_Q32 = (deltax_Q16 * deltax_Q16);
+    cl_long innery_Q32 = (deltay_Q16 * deltay_Q16);
+
+    cl_long inner_Q32 = innerx_Q32 + innery_Q32;//dist_squared.
+
+    cl_long distOffset_Q16 = (1 << 16);
+
+    cl_long dist_Q16 = sqrt_i64(inner_Q32) - distOffset_Q16;
+
+    cl_long forcex_Q16 = ((deltax_Q16 << 16) / dist_Q16);
+    cl_long forcey_Q16 = ((deltay_Q16 << 16) / dist_Q16);
+
+    cl_long forceMultiplier_Q16 = 1 << 16;
+
+
+    //if (otherPeep->faction == peep->faction)
+    //{
+    //    forceMultiplier_Q16 = -16;
+    //}
+    forcex_Q16 *= forceMultiplier_Q16;
+    forcey_Q16 *= forceMultiplier_Q16;
+    forcex_Q16 = forcex_Q16 >> 16;
+    forcey_Q16 = forcey_Q16 >> 16;
+
+
+    //add to net force
+    peep->netForcex_Q16 += forcex_Q16 >> 4;
+    peep->netForcey_Q16 += forcey_Q16 >> 4;
 }
 
-
-void MovePeep(__global const GameState* gameState, Peep* peep, int2 dir)
+void PeepUpdateGravity(__global GameState* gameState, Peep* peep)
 {
-    //check dest
-    int newX = peep->map_xi + dir.x;
-    int newY = peep->map_yi + dir.y;
 
-    //printf("attempting movingpeep\n");
+    for (int p = 0; p < MAX_PEEPS; p++)
+    {
+        Peep* otherPeep = &gameState->peeps[p];
+        if (otherPeep != peep) {
+            ForceInteraction(peep, otherPeep);
+        }
+    }
+}
+void PeepUpdate(__global GameState* gameState, Peep* peep)
+{
+    //traverse sector
+
+
+    int minx = peep->mapSector->xidx - 2; if (minx < 0) minx = 0;
+    int miny = peep->mapSector->yidx - 2; if (miny < 0) miny = 0;
+
+    int maxx = peep->mapSector->xidx + 2; if (maxx >= SQRT_MAXSECTORS) maxx = SQRT_MAXSECTORS-1;
+    int maxy = peep->mapSector->yidx + 2; if (maxy >= SQRT_MAXSECTORS) maxy = SQRT_MAXSECTORS-1;
     
-    if (newX < 0 || newX >= SQRT_CELLS_PER_MAP_SECTOR * SQRT_SECTORS_PER_MAP)
+    for(cl_int sectorx = minx; sectorx <= maxx; sectorx++)
     {
-        peep->xv = -peep->xv;
-        return;
-    }
-    if (newY < 0 || newY >= SQRT_CELLS_PER_MAP_SECTOR * SQRT_SECTORS_PER_MAP)
-    {
-        peep->yv = -peep->yv;
-        return;
-    }
-
-    Cell* newCell = Map2Cell(gameState, newX, newY);
-    MapSector* newSector = &gameState->sectors[MapX2SectorX(newX)][MapY2SectorY(newY)];
-    if (newCell->Peep != NULL)
-    {
-        peep->xv = -peep->xv;
-        peep->yv = -peep->yv;
-        return;
-    }
-    //MOVE
-    peep->cell->Peep = NULL;
-
-    peep->cell = newCell;
-    peep->cell->Peep = peep;
-
-    peep->sector = newSector;
-    peep->map_xi = newX;
-    peep->map_yi = newY;
-    //printf("moved peep:%d\n", peep);
-   
-}
-
-void UpdatePeep(__global const GameState* gameState, Peep* peep)
-{
-    MovePeep(gameState, peep, (int2)(peep->xv, peep->yv));
-}
-
-
-void SectorUpdate(__global const GameState* gameState, MapSector* sector)
-{
-    Peep* PeepsToUpdate[SQRT_CELLS_PER_MAP_SECTOR * SQRT_CELLS_PER_MAP_SECTOR];
-    int i = 0;
-    //printf("sectorx: %d, sectory: %d\n", sector->sectorX, sector->sectorY);
-    for (int x = 0; x < SQRT_CELLS_PER_MAP_SECTOR; x++)
-    {
-        for (int y = 0; y < SQRT_CELLS_PER_MAP_SECTOR; y++)
+        for (cl_int sectory = miny; sectory <= maxy; sectory++)
         {
-            //printf("secx: %d, secy: %d\n", x, y);
-            Cell* cell = &(sector->cells[x][y]);
-            //printf("cell localx:%d, localy:%d\n", cell->localx, cell->localy);
-            if (cell->Peep != NULL)
-            {
-                
-                PeepsToUpdate[i] = cell->Peep;
-                i++;
-            }
-        }
-    }
-    for (int p = 0; p < i; p++) {
-        UpdatePeep(gameState, PeepsToUpdate[p]);
-    }
-}
 
-
-void GameInit(__global const GameState* gameState)
-{
-    //setup map
-    for (int secX = 0; secX < SQRT_SECTORS_PER_MAP; secX++)
-    {
-        for (int secY = 0; secY < SQRT_SECTORS_PER_MAP; secY++)
-        {
-            MapSector* sector = &gameState->sectors[secX][secY];
-            sector->sectorX = secX;
-            sector->sectorY = secY;
-            for (int cellX = 0; cellX < SQRT_CELLS_PER_MAP_SECTOR; cellX++)
+            MapSector* sector = &gameState->sectors[sectorx][sectory];
+            
+            Peep* curPeep = sector->lastPeep;
+            Peep* firstPeep = curPeep;
+            while (curPeep != NULL)
             {
-                for (int cellY = 0; cellY < SQRT_CELLS_PER_MAP_SECTOR; cellY++)
-                {
-                    Cell* cell = &(sector->cells[cellX][cellY]);
-                    cell->localx = cellX;
-                    cell->localy = cellY;
-                    cell->Peep = NULL;
+                if (curPeep != peep) {
+                    ForceInteraction(peep, curPeep);
                 }
+
+                curPeep = curPeep->prevSectorPeep;
+                if (curPeep == firstPeep)
+                    break;
             }
+
         }
     }
 
-    //setup peeps
-    for (int i = 0; i < MAX_PEEPS; i++)
-    {
-        Peep* p = &(gameState->peeps[i]);
-        p->xv = RandomRange(i, -4, 4);
-        p->yv = RandomRange(i+1, -4, 4);
-        p->valid = 1;
-        p->map_xi =  RandomRange(i, 0, SQRT_CELLS_PER_MAP_SECTOR*SQRT_SECTORS_PER_MAP);
-        p->map_yi =  RandomRange(i+1, 0, SQRT_CELLS_PER_MAP_SECTOR * SQRT_SECTORS_PER_MAP);
-
-        //printf("%d\n", p->map_xi);
-        int sectorX = p->map_xi / SQRT_CELLS_PER_MAP_SECTOR;
-        int sectorY = p->map_yi / SQRT_CELLS_PER_MAP_SECTOR;
-
-        int cellX = p->map_xi % SQRT_CELLS_PER_MAP_SECTOR;
-        int cellY = p->map_yi % SQRT_CELLS_PER_MAP_SECTOR;
-        p->sector = &gameState->sectors[sectorX][sectorY];
-        p->cell = &(p->sector->cells[cellX][cellY]);
-        p->cell->Peep = p;
-    }
 }
-
-
-
-
-
 
 __kernel void game_update(__global const GameState* gameState) {
     // Get the index of the current element to be processed
-    int globalRow = get_global_id(0);
-    int globalCol = get_global_id(1);
+    int globalid = get_global_id(0);
+    int localid = get_local_id(0);
 
-    int localRow = get_local_id(0);
-    int localCol = get_local_id(1);
+    
+    PeepUpdate(gameState, &gameState->peeps[globalid]);
+}
 
-    if (gameState->frameIdx == 0)
+
+__kernel void game_preupdate_single(__global const GameState* gameState) {
+    // Get the index of the current element to be processed
+    for (int pi = 0; pi < MAX_PEEPS; pi++)
     {
-        barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
-        if (globalCol == 0 && globalRow == 0)
-        {
-            GameInit(gameState);
-            printf("Game Initialized.\n");
-        }
+        Peep* p = &gameState->peeps[pi];
+        p->netForcex_Q16 += -p->xv_Q15_16 >> 4;//drag
+        p->netForcey_Q16 += -p->yv_Q15_16 >> 4;
+
+        p->xv_Q15_16 += p->netForcex_Q16;
+        p->yv_Q15_16 += p->netForcey_Q16;
+
+        p->map_x_Q15_16 += p->xv_Q15_16;
+        p->map_y_Q15_16 += p->yv_Q15_16;
+
+
+        p->netForcex_Q16 = 0;
+        p->netForcey_Q16 = 0;
+        AssignPeepToSector(gameState, p );
     }
-    else
-    {
-
-//printf("frameIdx:%d\n", gameState->frameIdx);
-
-
-        MapSector* sector = &(gameState->sectors[globalRow][globalCol]);
-        
-
-        SectorUpdate(gameState, sector);
-
-
-
-    }
-
-
 }

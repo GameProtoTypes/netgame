@@ -121,6 +121,40 @@ int main(int argc, char* args[])
 
 
         GameState* gameState = new GameState();
+        for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
+        {
+            for (int secy = 0; secy < SQRT_MAXSECTORS; secy++)
+            {
+                gameState->sectors[secx][secy].xidx = secx;
+                gameState->sectors[secx][secy].yidx = secy;
+                gameState->sectors[secx][secy].lastPeep = NULL;
+                gameState->sectors[secx][secy].nextPeepIdx = 0;
+            }
+        }
+        for (int p = 0; p < MAX_PEEPS; p++)
+        {
+            gameState->peeps[p].map_x_Q15_16 = random(0, SCREEN_WIDTH) * (1 << 16);
+            gameState->peeps[p].map_y_Q15_16 = random(0, SCREEN_HEIGHT) * (1 << 16);
+
+            gameState->peeps[p].xv_Q15_16 = random(-4, 4)  << 16;
+            gameState->peeps[p].yv_Q15_16 = random(-4, 4)  << 16;
+            gameState->peeps[p].netForcex_Q16 = 0;
+            gameState->peeps[p].netForcey_Q16 = 0;
+            gameState->peeps[p].mapSector = NULL;
+            gameState->peeps[p].mapSectorListIdx = 0;
+            gameState->peeps[p].nextSectorPeep = NULL;
+            gameState->peeps[p].prevSectorPeep = NULL;
+
+            if (gameState->peeps[p].map_x_Q15_16>>16 < SCREEN_WIDTH / 2)
+            {
+                gameState->peeps[p].faction = 0;
+            }
+            else
+            {
+                gameState->peeps[p].faction = 1;
+            }
+
+        }
 
 
 
@@ -161,6 +195,12 @@ int main(int argc, char* args[])
         cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
         CL_ERROR_CHECK(ret)
 
+
+
+
+
+
+
         // Create a command queue
         cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
         CL_ERROR_CHECK(ret)
@@ -200,16 +240,59 @@ int main(int argc, char* args[])
         CL_ERROR_CHECK(ret)
 
         printf("program built\n");
+
+
+        cl_ulong localMemSize;
+        clGetDeviceInfo(device_id,
+            CL_DEVICE_LOCAL_MEM_SIZE,
+            sizeof(localMemSize),
+            &localMemSize,
+            NULL);
+
+        printf("CL_DEVICE_LOCAL_MEM_SIZE: %u\n", localMemSize);
+
+
+        cl_ulong globalMemSize;
+        clGetDeviceInfo(device_id,
+            CL_DEVICE_GLOBAL_MEM_SIZE,
+            sizeof(globalMemSize),
+            &globalMemSize,
+            NULL);
+
+        printf("CL_DEVICE_GLOBAL_MEM_SIZE: %u\n", globalMemSize);
+
+
+
+
         // Create the OpenCL kernel
-        cl_kernel kernel = clCreateKernel(program, "game_update", &ret);
+        cl_kernel cellularize_kernel = clCreateKernel(program, "game_preupdate_single", &ret); CL_ERROR_CHECK(ret)
+        cl_kernel kernel = clCreateKernel(program, "game_update", &ret); CL_ERROR_CHECK(ret)
 
-        // Set the arguments of the kernel
-        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj);
+            
+        // Set the arguments of the kernels
+        ret = clSetKernelArg(cellularize_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+       // ret = clSetKernelArg(kernel, 1, SQRT_SECTORS_PER_MAP * SQRT_SECTORS_PER_MAP *sizeof(MapSector), NULL); CL_ERROR_CHECK(ret)
+
+        //get stats
+        cl_ulong usedLocalMemSize;
+        clGetKernelWorkGroupInfo(kernel,
+            device_id,
+            CL_KERNEL_LOCAL_MEM_SIZE,
+            sizeof(cl_ulong),
+            &usedLocalMemSize,
+            NULL);
+        printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
+
         // Execute the OpenCL kernel on the list
-        size_t WorkItems[] = { SQRT_SECTORS_PER_MAP ,SQRT_SECTORS_PER_MAP };
-        size_t WorkItemsPerWorkGroup[] = { 16, 16 };
-        
+        size_t InitWorkItems[] = { 1 };
+        size_t InitWorkItemsPerWorkGroup[] = { 1 };
 
+
+        size_t WorkItems[] = { TOTALWORKITEMS };
+        size_t WorkItemsPerWorkGroup[] = { WORKGROUPSIZE};
+        
+        
         //Main loop flag
         bool quit = false;
 
@@ -218,32 +301,34 @@ int main(int argc, char* args[])
 
         int mousex, mousey;
 
-        gameState->screenHeight = SCREEN_HEIGHT;
-        gameState->screenWidth = SCREEN_WIDTH;
+        gameState->mapHeight = SCREEN_HEIGHT;
+        gameState->mapWidth = SCREEN_WIDTH;
         gameState->frameIdx = 0;
 
-        
-
-
-
+        cl_event initEvent;
         while (!quit)
         {
 
-
-            //printf("Simulating..\n");
+            
             ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
                 sizeof(GameState), gameState, 0, NULL, NULL);
             CL_ERROR_CHECK(ret)
 
-            printf("Starting kernal\n");
+            
+   
+            ret = clEnqueueNDRangeKernel(command_queue, cellularize_kernel, 1, NULL,
+                InitWorkItems, InitWorkItemsPerWorkGroup, 0, NULL, &initEvent);
+            CL_ERROR_CHECK(ret)
 
-            ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, NULL,
-                WorkItems, WorkItemsPerWorkGroup, 0, NULL, NULL);
+    
+            cl_uint waitListCnt = 1;
+            ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
+                WorkItems, NULL, waitListCnt, &initEvent, NULL);
             CL_ERROR_CHECK(ret)
 
             ret = clFinish(command_queue);
             CL_ERROR_CHECK(ret)
-            printf("kernal done.\n");
+            //printf("kernal done.\n");
 
             // Read the memory buffer C on the device to the local variable C
             ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
@@ -273,27 +358,28 @@ int main(int argc, char* args[])
             SDL_RenderClear(gRenderer);
 
 
-            for (int sx = 0; sx < SQRT_SECTORS_PER_MAP; sx++)
-            {
-                for (int sy = 0; sy < SQRT_SECTORS_PER_MAP; sy++)
-                {
-                    SDL_Rect rect;
-                    rect.x = sx * SQRT_CELLS_PER_MAP_SECTOR;
-                    rect.y = sy * SQRT_CELLS_PER_MAP_SECTOR;
-                    rect.w = SQRT_CELLS_PER_MAP_SECTOR;
-                    rect.h = SQRT_CELLS_PER_MAP_SECTOR;
-                    SDL_SetRenderDrawColor(gRenderer, sx+50, sy+50, 50, 0xFF);
-                    SDL_RenderDrawRect(gRenderer, &rect);
-                }
-            }
-
+            //for (int sx = 0; sx < SQRT_SECTORS_PER_MAP; sx++)
+            //{
+            //    for (int sy = 0; sy < SQRT_SECTORS_PER_MAP; sy++)
+            //    {
+            //        SDL_Rect rect;
+            //        rect.x = sx * SQRT_CELLS_PER_MAP_SECTOR;
+            //        rect.y = sy * SQRT_CELLS_PER_MAP_SECTOR;
+            //        rect.w = SQRT_CELLS_PER_MAP_SECTOR;
+            //        rect.h = SQRT_CELLS_PER_MAP_SECTOR;
+            //        SDL_SetRenderDrawColor(gRenderer, sx+50, sy+50, 50, 0xFF);
+            //        SDL_RenderDrawRect(gRenderer, &rect);
+            //    }
+            //}
+            
             for (int pi = 0; pi < MAX_PEEPS; pi++) {
                 Peep* p = &gameState->peeps[pi];
-                if (p->valid)
-                {
-                    SDL_RenderDrawPoint(gRenderer, p->map_xi, p->map_yi);
-                }
 
+
+
+                    SDL_SetRenderDrawColor(gRenderer, p->faction*255, (1-p->faction)*255, 255, 0xFF);
+                    SDL_RenderDrawPoint(gRenderer, p->map_x_Q15_16 / (1 << 16), p->map_y_Q15_16 / (1 << 16));
+                
             }
 
                 
@@ -308,7 +394,7 @@ int main(int argc, char* args[])
             {
                 while (true) {}
             }
-            SDL_Delay(10);
+          //  SDL_Delay(10);
             
         }
 

@@ -1,63 +1,124 @@
 #pragma once
 
 
-#define SQRT_CELLS_PER_MAP_SECTOR  64
-#define SQRT_SECTORS_PER_MAP  16
-#define MAX_PEEPS 1024*64
+
+#define MAX_PEEPS (1024*16)
+
+#define WORKGROUPSIZE (32)
+#define TOTALWORKITEMS MAX_PEEPS
+
+#define SQRT_MAXSECTORS (32)
+#define SECTOR_SIZE (64)
+
+#define MAX_PEEPS_PER_SECTOR (10000+1)
 
 struct Cell;
 struct MapSector;
 struct Peep {
-	int valid;
+	//int valid;
+	int map_x_Q15_16;
+	int map_y_Q15_16;
 
-	int map_xi;
-	int map_yi;
-	int xv;
-	int yv;
+	int xv_Q15_16;
+	int yv_Q15_16;
 
-	float redblue;
+	cl_long netForcex_Q16;
+	cl_long netForcey_Q16;
 
-	struct MapSector* sector;
-	struct Cell* cell;
+	int target_x;
+	int target_y;
 
+	int faction;
+	struct MapSector* mapSector;
+	int mapSectorListIdx;
+
+	struct Peep* nextSectorPeep;
+	struct Peep* prevSectorPeep;
 } typedef Peep;
 
-
-struct Cell {
-	int localx;
-	int localy;
-	Peep* Peep;
-} typedef Cell;
-
 struct MapSector {
-	Cell cells[SQRT_CELLS_PER_MAP_SECTOR][SQRT_CELLS_PER_MAP_SECTOR];
-	int sectorX;
-	int sectorY;
-	struct MapSector* upSector;
-	struct MapSector* downSector;
-	struct MapSector* leftSector;
-	struct MapSector* rightSector;
+	Peep* peeps[MAX_PEEPS_PER_SECTOR];
+	int nextPeepIdx;
+	Peep* lastPeep;
+	int xidx;
+	int yidx;
 } typedef MapSector;
 
 struct GameState {
-	float screenWidth;
-	float screenHeight;
-	float mousex;
-	float mousey;
-	int clicked;
+	Peep peeps[MAX_PEEPS];
+	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
+	cl_int mapWidth;
+	cl_int mapHeight;
+
+
+	cl_int mousex;
+	cl_int mousey;
+
+	cl_int clicked;
 
 	int frameIdx;
-
-	MapSector sectors[SQRT_SECTORS_PER_MAP][SQRT_SECTORS_PER_MAP];
-	Peep peeps[MAX_PEEPS];
 }typedef GameState;
 
 
+void AssignPeepToSector(GameState* gameState, Peep* peep)
+{
+	cl_int x = ((peep->map_x_Q15_16 >> 16) / (SECTOR_SIZE)) ;
+	cl_int y = ((peep->map_y_Q15_16 >> 16) / (SECTOR_SIZE)) ;
 
+	//clamp
+	if (x < 0)
+		x = 0;
+	if (y < 0)
+		y = 0;
+	if (x >= SQRT_MAXSECTORS)
+		x = SQRT_MAXSECTORS - 1;
+	if (y >= SQRT_MAXSECTORS)
+		y = SQRT_MAXSECTORS - 1;
+
+	MapSector* newSector = &gameState->sectors[x][y];
+	if ((peep->mapSector != newSector))
+	{
+		if (peep->mapSector != NULL)
+		{
+			//update old sector
+			if ((peep->prevSectorPeep != NULL) && (peep->nextSectorPeep == NULL))
+				peep->prevSectorPeep->nextSectorPeep = NULL;
+			else if ((peep->prevSectorPeep == NULL) && (peep->nextSectorPeep != NULL))
+				peep->nextSectorPeep->prevSectorPeep = NULL;
+			else if((peep->prevSectorPeep != NULL) && (peep->nextSectorPeep != NULL))
+				peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;//remove link
+
+
+			peep->mapSector->peeps[peep->mapSectorListIdx] = NULL;
+		}
+
+		//assign new sector
+		peep->mapSector = newSector;
+
+		//put peep in the sector.  extend list
+		if(peep->mapSector->lastPeep != NULL)
+			peep->mapSector->lastPeep->nextSectorPeep = peep;
+
+		peep->mapSector->lastPeep = peep;
+		peep->mapSector->peeps[newSector->nextPeepIdx] = peep;
+
+		peep->mapSectorListIdx = newSector->nextPeepIdx;
+
+
+		newSector->nextPeepIdx++;
+		while (newSector->peeps[newSector->nextPeepIdx] != NULL) 
+		{
+			newSector->nextPeepIdx++;
+			newSector->nextPeepIdx = newSector->nextPeepIdx % MAX_PEEPS_PER_SECTOR;
+		}
+
+
+	}
+}
 
 void PrintPeep(Peep* p)
 {
-	printf("Peep (%d) at %d,%d\n", (unsigned int)(void*)p, p->map_xi, p->map_yi);
+	printf("Peep (%d) at %d,%d\n", (unsigned int)(void*)p, p->map_x_Q15_16, p->map_y_Q15_16);
 }
 
 
