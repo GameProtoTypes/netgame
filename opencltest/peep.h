@@ -2,7 +2,7 @@
 
 
 
-#define MAX_PEEPS (1024*16)
+#define MAX_PEEPS (1024*128)
 
 #define WORKGROUPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -10,7 +10,6 @@
 #define SQRT_MAXSECTORS (32)
 #define SECTOR_SIZE (64)
 
-#define MAX_PEEPS_PER_SECTOR (10000+1)
 
 struct Cell;
 struct MapSector;
@@ -37,7 +36,6 @@ struct Peep {
 } typedef Peep;
 
 struct MapSector {
-	Peep* peeps[MAX_PEEPS_PER_SECTOR];
 	int nextPeepIdx;
 	Peep* lastPeep;
 	int xidx;
@@ -88,8 +86,9 @@ void AssignPeepToSector(GameState* gameState, Peep* peep)
 			else if((peep->prevSectorPeep != NULL) && (peep->nextSectorPeep != NULL))
 				peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;//remove link
 
+			if (peep->mapSector->lastPeep == peep)
+				peep->mapSector->lastPeep = NULL;
 
-			peep->mapSector->peeps[peep->mapSectorListIdx] = NULL;
 		}
 
 		//assign new sector
@@ -100,19 +99,6 @@ void AssignPeepToSector(GameState* gameState, Peep* peep)
 			peep->mapSector->lastPeep->nextSectorPeep = peep;
 
 		peep->mapSector->lastPeep = peep;
-		peep->mapSector->peeps[newSector->nextPeepIdx] = peep;
-
-		peep->mapSectorListIdx = newSector->nextPeepIdx;
-
-
-		newSector->nextPeepIdx++;
-		while (newSector->peeps[newSector->nextPeepIdx] != NULL) 
-		{
-			newSector->nextPeepIdx++;
-			newSector->nextPeepIdx = newSector->nextPeepIdx % MAX_PEEPS_PER_SECTOR;
-		}
-
-
 	}
 }
 

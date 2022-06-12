@@ -374,12 +374,8 @@ int main(int argc, char* args[])
             
             for (int pi = 0; pi < MAX_PEEPS; pi++) {
                 Peep* p = &gameState->peeps[pi];
-
-
-
-                    SDL_SetRenderDrawColor(gRenderer, p->faction*255, (1-p->faction)*255, 255, 0xFF);
-                    SDL_RenderDrawPoint(gRenderer, p->map_x_Q15_16 / (1 << 16), p->map_y_Q15_16 / (1 << 16));
-                
+                SDL_SetRenderDrawColor(gRenderer, p->faction*255, (1-p->faction)*255, 255, 0xFF);
+                SDL_RenderDrawPoint(gRenderer, p->map_x_Q15_16 / (1 << 16), p->map_y_Q15_16 / (1 << 16));
             }
 
                 
@@ -390,12 +386,10 @@ int main(int argc, char* args[])
 
             gameState->frameIdx++;
             printf("CPU frameIdx: %d\n", gameState->frameIdx);
-            if (gameState->frameIdx == 1000)
+            if (gameState->frameIdx == 500)
             {
                 while (true) {}
             }
-          //  SDL_Delay(10);
-            
         }
 
 
