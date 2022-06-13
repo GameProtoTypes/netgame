@@ -39,12 +39,12 @@ void ForceInteraction(Peep* peep, Peep* otherPeep)
     cl_long forcex_Q16 = ((deltax_Q16 << 16) / ((dist_Q16*dist_Q16)>>16));
     cl_long forcey_Q16 = ((deltay_Q16 << 16) / ((dist_Q16 * dist_Q16) >> 16));
 
-    cl_long forceMultiplier_Q16 = 1 << 16;
+    cl_long forceMultiplier_Q16 = 10 << 16;
 
 
     if (otherPeep->faction == peep->faction)
     {
-        forceMultiplier_Q16 = -1024;
+     //   forceMultiplier_Q16 = -1024;
     }
     forcex_Q16 *= forceMultiplier_Q16;
     forcey_Q16 *= forceMultiplier_Q16;

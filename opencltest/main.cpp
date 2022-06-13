@@ -10,7 +10,7 @@
 
 
 #include <SDL.h>
-
+#include "glew.h"
 #include "peep.h"
 
 #define MAX_SOURCE_SIZE (0x100000)
@@ -64,23 +64,13 @@ bool init()
             printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
             success = false;
         }
-        else
-        {
-            //Create renderer for window
-            gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
-            if (gRenderer == NULL)
-            {
-                printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
-                success = false;
-            }
-            else
-            {
-                //Initialize renderer color
-                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+        SDL_GL_CreateContext(gWindow);
+        //swap buffer at the monitors rate
+        SDL_GL_SetSwapInterval(1);
 
-               
-            }
-        }
+        //GLEW is an OpenGL Loading Library used to reach GL functions
+        //Sets all functions available
+        glewInit();
     }
 
     return success;
@@ -91,7 +81,6 @@ bool init()
 void close()
 {
     //Destroy window	
-    SDL_DestroyRenderer(gRenderer);
     SDL_DestroyWindow(gWindow);
     gWindow = NULL;
     gRenderer = NULL;
@@ -133,8 +122,8 @@ int main(int argc, char* args[])
         }
         for (int p = 0; p < MAX_PEEPS; p++)
         {
-            gameState->peeps[p].map_x_Q15_16 = random(0, SCREEN_WIDTH) * (1 << 16);
-            gameState->peeps[p].map_y_Q15_16 = random(0, SCREEN_HEIGHT) * (1 << 16);
+            gameState->peeps[p].map_x_Q15_16 = random(-1000, 1000)  << 16;
+            gameState->peeps[p].map_y_Q15_16 = random(-1000, 1000)  << 16;
 
             gameState->peeps[p].xv_Q15_16 = random(-4, 4)  << 16;
             gameState->peeps[p].yv_Q15_16 = random(-4, 4)  << 16;
@@ -304,6 +293,7 @@ int main(int argc, char* args[])
         gameState->mapHeight = SCREEN_HEIGHT;
         gameState->mapWidth = SCREEN_WIDTH;
         gameState->frameIdx = 0;
+        gameState->mousescroll = 0;
 
         cl_event initEvent;
         while (!quit)
@@ -339,6 +329,11 @@ int main(int argc, char* args[])
             CL_ERROR_CHECK(ret)
 
 
+            
+            gameState->mousePrimaryPressed = 0;
+            gameState->mousePrimaryReleased = 0;
+            gameState->mouseSecondaryPressed = 0;
+            gameState->mouseSecondaryReleased = 0;
             //Handle events on queue
             while (SDL_PollEvent(&e) != 0)
             {
@@ -347,17 +342,82 @@ int main(int argc, char* args[])
                 {
                     quit = true;
                 }
+                else if (e.type == SDL_MOUSEWHEEL)
+                {
+                    if (e.wheel.y > 0) // scroll up
+                    {
+                        if (gameState->viewScale >= 1 && gameState->viewScale < 15)
+                            gameState->mousescroll++;
+                        
+                    }
+                    else if (e.wheel.y < 0) // scroll down
+                    {
+                        if (gameState->viewScale > 1)
+                            gameState->mousescroll--;
+                    }
+                }
+                else if (e.type == SDL_MOUSEBUTTONDOWN)
+                {
+                    if (e.button.button == SDL_BUTTON_LEFT)
+                    {
+                        gameState->mousePrimaryDown = 1;
+                        gameState->mousePrimaryPressed = 1;
+
+                    }
+                    else
+                    {
+                        gameState->mouseSecondaryDown = 1;
+                        gameState->mouseSecondaryPressed = 1;
+                    }
+                }
+                else if (e.type == SDL_MOUSEBUTTONUP)
+                {
+                    if (e.button.button == SDL_BUTTON_LEFT)
+                    {
+                        gameState->mousePrimaryDown = 0;
+                        gameState->mousePrimaryReleased = 1;
+                    }
+                    else
+                    {
+                        gameState->mouseSecondaryDown = 0;
+                        gameState->mouseSecondaryReleased = 1;
+                    }
+                }
             }
             SDL_GetMouseState(&mousex, &mousey);
             gameState->mousex = mousex;
             gameState->mousey = mousey;
+            if (gameState->mouseSecondaryPressed)
+            {
+                gameState->mouse_dragBeginx = mousex;
+                gameState->mouse_dragBeginy = mousey;
+                gameState->view_beginX = gameState->viewX;
+                gameState->view_beginY = gameState->viewY;
+            }
+            
+            if (gameState->mouseSecondaryDown)
+            {
+                gameState->viewX = gameState->view_beginX + (gameState->mousex - gameState->mouse_dragBeginx)/ gameState->viewScale;
+                gameState->viewY = gameState->view_beginY + (gameState->mousey - gameState->mouse_dragBeginy)/ gameState->viewScale;
+            }
+            
             
 
             //Clear screen
-            SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 0xFF);
-            SDL_RenderClear(gRenderer);
+            glClearColor(0, 0, 0, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
 
+            glPushMatrix();
 
+            gameState->viewScale = 20.0f + gameState->mousescroll;
+            if (gameState->viewScale < 1)
+                gameState->viewScale = 1;
+
+             glScalef(gameState->viewScale,
+                 gameState->viewScale, 1.0f);
+                       glTranslatef(2*gameState->viewX /float(SCREEN_WIDTH) , -2*gameState->viewY / float(SCREEN_HEIGHT) , 0.0f);
+   
+            
             //for (int sx = 0; sx < SQRT_SECTORS_PER_MAP; sx++)
             //{
             //    for (int sy = 0; sy < SQRT_SECTORS_PER_MAP; sy++)
@@ -372,23 +432,50 @@ int main(int argc, char* args[])
             //    }
             //}
             
-            for (int pi = 0; pi < MAX_PEEPS; pi++) {
+            for (int pi = 0; pi < MAX_PEEPS; pi++) 
+            {
                 Peep* p = &gameState->peeps[pi];
-                SDL_SetRenderDrawColor(gRenderer, p->faction*255, (1-p->faction)*255, 255, 0xFF);
-                SDL_RenderDrawPoint(gRenderer, p->map_x_Q15_16 / (1 << 16), p->map_y_Q15_16 / (1 << 16));
-            }
 
-                
-           
+
+                float vertices[] = {
+                    -0.001f, -0.001f,
+                    0.001f, -0.001f,
+                    0.001f,  0.001f
+                };
+
+                float colors[] = {
+                     0.0f, 1.0f, 1.0f, // red
+                     0.0f, 1.0f, 1.0f,
+                     0.0f, 1.0f, 1.0f,
+                };
+
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(2, GL_FLOAT, 0, vertices);
+
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(3, GL_FLOAT, 0, colors);
+
+                glPushMatrix();
+                float x = float(p->map_x_Q15_16) / float(1 << 16);
+                float y = float(p->map_y_Q15_16) / float(1 << 16);
+
+                glTranslatef(x/float(SCREEN_WIDTH)-0.5, y/float(SCREEN_HEIGHT)-0.5, 0);
+                glDrawArrays(GL_TRIANGLES, 0, 3);
+                glPopMatrix();
+
+
+            }
+   
+            glPopMatrix();
 
             //Update screen
-            SDL_RenderPresent(gRenderer);
+            SDL_GL_SwapWindow(gWindow);
 
             gameState->frameIdx++;
             printf("CPU frameIdx: %d\n", gameState->frameIdx);
             if (gameState->frameIdx == 500)
             {
-                while (true) {}
+               // while (true) {}
             }
         }
 

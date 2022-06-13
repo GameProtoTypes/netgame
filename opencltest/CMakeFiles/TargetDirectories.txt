@@ -1,0 +1,3 @@
+C:/Users/casht/repos/opencltest/opencltest/CMakeFiles/opencltest.dir
+C:/Users/casht/repos/opencltest/opencltest/CMakeFiles/ALL_BUILD.dir
+C:/Users/casht/repos/opencltest/opencltest/CMakeFiles/ZERO_CHECK.dir

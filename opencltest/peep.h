@@ -2,12 +2,12 @@
 
 
 
-#define MAX_PEEPS (1024*128)
+#define MAX_PEEPS (1024*64)
 
 #define WORKGROUPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
 
-#define SQRT_MAXSECTORS (32)
+#define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (64)
 
 
@@ -51,8 +51,24 @@ struct GameState {
 
 	cl_int mousex;
 	cl_int mousey;
-
+	cl_int mouse_dragBeginx;
+	cl_int mouse_dragBeginy;
+	cl_int mousescroll;
 	cl_int clicked;
+
+	cl_int mousePrimaryDown;
+	cl_int mousePrimaryPressed;
+	cl_int mousePrimaryReleased;
+
+	cl_int mouseSecondaryDown;
+	cl_int mouseSecondaryPressed;
+	cl_int mouseSecondaryReleased;
+
+	cl_float viewX;
+	cl_float viewY;
+	cl_float view_beginX;
+	cl_float view_beginY;
+	cl_float viewScale;
 
 	int frameIdx;
 }typedef GameState;
@@ -64,16 +80,16 @@ void AssignPeepToSector(GameState* gameState, Peep* peep)
 	cl_int y = ((peep->map_y_Q15_16 >> 16) / (SECTOR_SIZE)) ;
 
 	//clamp
-	if (x < 0)
-		x = 0;
-	if (y < 0)
-		y = 0;
-	if (x >= SQRT_MAXSECTORS)
-		x = SQRT_MAXSECTORS - 1;
-	if (y >= SQRT_MAXSECTORS)
-		y = SQRT_MAXSECTORS - 1;
+	if (x < -SQRT_MAXSECTORS / 2)
+		x = -SQRT_MAXSECTORS / 2;
+	if (y < -SQRT_MAXSECTORS / 2)
+		y = -SQRT_MAXSECTORS / 2;
+	if (x >= SQRT_MAXSECTORS / 2)
+		x = SQRT_MAXSECTORS / 2 - 1;
+	if (y >= SQRT_MAXSECTORS / 2)
+		y = SQRT_MAXSECTORS / 2 - 1;
 
-	MapSector* newSector = &gameState->sectors[x][y];
+	MapSector* newSector = &gameState->sectors[x+SQRT_MAXSECTORS/2][y+SQRT_MAXSECTORS/2];
 	if ((peep->mapSector != newSector))
 	{
 		if (peep->mapSector != NULL)
