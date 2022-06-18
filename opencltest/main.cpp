@@ -8,11 +8,21 @@
 #include <CL/cl.h>
 #endif
 
+#include "glew.h"
+#include "glfw3native.h"
 
 #include <SDL.h>
-#include "glew.h"
+#include "SDL_opengl.h"
 #include "peep.h"
 
+#include "glm.hpp"
+
+#include "GEShader.h"
+#include "GEShaderProgram.h"
+
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 #define MAX_SOURCE_SIZE (0x100000)
 
 #define CL_ERROR_CHECK(ret) if (ret != 0) {printf("ret at %d is %d\n", __LINE__, ret); fflush(stdout); return 1; }
@@ -38,6 +48,8 @@ SDL_Window* gWindow = NULL;
 //The window renderer
 SDL_Renderer* gRenderer = NULL;
 
+
+ImGuiContext* imguicontext;
 bool init()
 {
     //Initialization flag
@@ -50,7 +62,11 @@ bool init()
         success = false;
     }
     else
-    {
+    {        
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+        //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
         //Set texture filtering to linear
         if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1"))
         {
@@ -64,14 +80,34 @@ bool init()
             printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
             success = false;
         }
+
+
         SDL_GL_CreateContext(gWindow);
         //swap buffer at the monitors rate
         SDL_GL_SetSwapInterval(1);
 
+
+
         //GLEW is an OpenGL Loading Library used to reach GL functions
         //Sets all functions available
+        
         glewInit();
     }
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    imguicontext = ImGui::CreateContext();
+ 
+    // Setup Dear ImGui style
+    ImGui::StyleColorsLight();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImFont* font1 = io.Fonts->AddFontDefault();
+    // Setup Platform/Renderer bindings
+    // window is the SDL_Window*
+    // context is the SDL_GLContext
+    ImGui_ImplSDL2_InitForOpenGL(gWindow, imguicontext);
+    ImGui_ImplOpenGL3_Init();
+
 
     return success;
 }
@@ -91,6 +127,8 @@ void close()
 
 int random(int min, int max) { return rand() % (max - min + 1) + min; }
 
+
+
 int main(int argc, char* args[]) 
 {
 
@@ -105,8 +143,24 @@ int main(int argc, char* args[])
 
         printf("started running\n");
 
-        // Create the two input vectors
-        int i;
+
+        std::vector<GEShaderProgram*> shaderProgramList;
+        std::vector<GEShader*> shaderList;
+
+        GEShader* pVertShad = new GEShader(GL_VERTEX_SHADER, "vertShader.shad");
+        GEShader* pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragShader.shad");
+        shaderList.push_back(pVertShad);
+        shaderList.push_back(pFragShad);
+
+        //create programs to use those shaders.
+        GEShaderProgram* pShadProgram = new GEShaderProgram();
+        //pShadProgram->AttachShader(pVertShad);
+        //pShadProgram->AttachShader(pFragShad);
+       // pShadProgram->Link();
+        shaderProgramList.push_back(pShadProgram);
+
+
+
 
 
         GameState* gameState = new GameState();
@@ -117,7 +171,7 @@ int main(int argc, char* args[])
                 gameState->sectors[secx][secy].xidx = secx;
                 gameState->sectors[secx][secy].yidx = secy;
                 gameState->sectors[secx][secy].lastPeep = NULL;
-                gameState->sectors[secx][secy].nextPeepIdx = 0;
+                gameState->sectors[secx][secy].mutex = 0;
             }
         }
         for (int p = 0; p < MAX_PEEPS; p++)
@@ -125,16 +179,18 @@ int main(int argc, char* args[])
             gameState->peeps[p].map_x_Q15_16 = random(-1000, 1000)  << 16;
             gameState->peeps[p].map_y_Q15_16 = random(-1000, 1000)  << 16;
 
-            gameState->peeps[p].xv_Q15_16 = random(-4, 4)  << 16;
-            gameState->peeps[p].yv_Q15_16 = random(-4, 4)  << 16;
+            gameState->peeps[p].xv_Q15_16 = random(-4, 4) << 16;
+            gameState->peeps[p].yv_Q15_16 = random(-4, 4) << 16;
             gameState->peeps[p].netForcex_Q16 = 0;
             gameState->peeps[p].netForcey_Q16 = 0;
+            gameState->peeps[p].minDistPeep = NULL;
+            gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
             gameState->peeps[p].mapSector = NULL;
-            gameState->peeps[p].mapSectorListIdx = 0;
             gameState->peeps[p].nextSectorPeep = NULL;
             gameState->peeps[p].prevSectorPeep = NULL;
-
-            if (gameState->peeps[p].map_x_Q15_16>>16 < SCREEN_WIDTH / 2)
+            gameState->peeps[p].target_x_Q16 = random(-1000, 1000) << 16;
+            gameState->peeps[p].target_y_Q16 = random(-1000, 1000) << 16;
+            if (gameState->peeps[p].map_x_Q15_16>>16 < 0)
             {
                 gameState->peeps[p].faction = 0;
             }
@@ -147,20 +203,20 @@ int main(int argc, char* args[])
 
 
 
-        // Load the kernel source code into the array source_str
+        // Load the update_kernel source code into the array source_str
         FILE* fp;
         char* source_str;
         size_t source_size;
 
         fp = fopen("vector_add_kernel.c", "r");
         if (!fp) {
-            fprintf(stderr, "Failed to load kernel.\n");
+            fprintf(stderr, "Failed to load update_kernel.\n");
             exit(1);
         }
         source_str = (char*)malloc(MAX_SOURCE_SIZE);
         source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
         fclose(fp);
-        printf("kernel loading done\n");
+        printf("update_kernel loading done\n");
         // Get platform and device information
         cl_device_id device_id = NULL;
         cl_uint ret_num_devices;
@@ -177,9 +233,9 @@ int main(int argc, char* args[])
         ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
         CL_ERROR_CHECK(ret)
 
-        ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1,
-            &device_id, &ret_num_devices);
+        ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
         CL_ERROR_CHECK(ret)
+
         // Create an OpenCL context
         cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
         CL_ERROR_CHECK(ret)
@@ -191,7 +247,7 @@ int main(int argc, char* args[])
 
 
         // Create a command queue
-        cl_command_queue command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+        cl_command_queue command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
         CL_ERROR_CHECK(ret)
 
         // Create memory buffers on the device for each vector 
@@ -201,7 +257,7 @@ int main(int argc, char* args[])
 
 
         printf("before building\n");
-        // Create a program from the kernel source
+        // Create a program from the update_kernel source
         cl_program program = clCreateProgramWithSource(context, 1,
             (const char**)&source_str, (const size_t*)&source_size, &ret);
         CL_ERROR_CHECK(ret)
@@ -253,19 +309,21 @@ int main(int argc, char* args[])
 
 
 
-        // Create the OpenCL kernel
-        cl_kernel cellularize_kernel = clCreateKernel(program, "game_preupdate_single", &ret); CL_ERROR_CHECK(ret)
-        cl_kernel kernel = clCreateKernel(program, "game_update", &ret); CL_ERROR_CHECK(ret)
+        // Create the OpenCL update_kernel
+        cl_kernel preupdate_kernel = clCreateKernel(program, "game_preupdate_single", &ret); CL_ERROR_CHECK(ret)
+        cl_kernel update_kernel = clCreateKernel(program, "game_update", &ret); CL_ERROR_CHECK(ret)
+        cl_kernel init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_ERROR_CHECK(ret)
 
             
         // Set the arguments of the kernels
-        ret = clSetKernelArg(cellularize_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
-        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
-       // ret = clSetKernelArg(kernel, 1, SQRT_SECTORS_PER_MAP * SQRT_SECTORS_PER_MAP *sizeof(MapSector), NULL); CL_ERROR_CHECK(ret)
+        ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+        ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+        ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+
 
         //get stats
         cl_ulong usedLocalMemSize;
-        clGetKernelWorkGroupInfo(kernel,
+        clGetKernelWorkGroupInfo(update_kernel,
             device_id,
             CL_KERNEL_LOCAL_MEM_SIZE,
             sizeof(cl_ulong),
@@ -273,9 +331,9 @@ int main(int argc, char* args[])
             NULL);
         printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
 
-        // Execute the OpenCL kernel on the list
-        size_t InitWorkItems[] = { 1 };
-        size_t InitWorkItemsPerWorkGroup[] = { 1 };
+        // Execute the OpenCL update_kernel on the list
+        size_t SingleKernelWorkItems[] = { 1 };
+        size_t SingleKernelWorkItemsPerWorkGroup[] = { 1 };
 
 
         size_t WorkItems[] = { TOTALWORKITEMS };
@@ -295,30 +353,70 @@ int main(int argc, char* args[])
         gameState->frameIdx = 0;
         gameState->mousescroll = 0;
 
+
+        ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+            sizeof(GameState), gameState, 0, NULL, NULL);
+        CL_ERROR_CHECK(ret)
+
+
         cl_event initEvent;
+        ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
+            SingleKernelWorkItems, NULL, 0, NULL, &initEvent);
+        CL_ERROR_CHECK(ret)
+        
+        clWaitForEvents(1, &initEvent);
+
+        cl_event preUpdateEvent;
         while (!quit)
         {
+            //Clear screen
+            glClearColor(0, 0, 0, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
 
             
-            ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-                sizeof(GameState), gameState, 0, NULL, NULL);
-            CL_ERROR_CHECK(ret)
 
             
    
-            ret = clEnqueueNDRangeKernel(command_queue, cellularize_kernel, 1, NULL,
-                InitWorkItems, InitWorkItemsPerWorkGroup, 0, NULL, &initEvent);
+            ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
+                WorkItems, NULL, 0, NULL, &preUpdateEvent);
             CL_ERROR_CHECK(ret)
 
-    
+            clWaitForEvents(1, &preUpdateEvent);
             cl_uint waitListCnt = 1;
-            ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
-                WorkItems, NULL, waitListCnt, &initEvent, NULL);
+            cl_event updateEvent;
+            ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
+                WorkItems, NULL, waitListCnt, &preUpdateEvent, &updateEvent);
             CL_ERROR_CHECK(ret)
+
+            clWaitForEvents(1, &updateEvent);
+                
 
             ret = clFinish(command_queue);
             CL_ERROR_CHECK(ret)
-            //printf("kernal done.\n");
+           
+
+
+            cl_ulong time_start;
+            cl_ulong time_end;
+
+            clGetEventProfilingInfo(updateEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+            clGetEventProfilingInfo(updateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+
+            double nanoSeconds = time_end - time_start;
+            printf("update_kernel Execution time is: %0.3f milliseconds \n", nanoSeconds / 1000000.0);
+
+            clGetEventProfilingInfo(preUpdateEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+            clGetEventProfilingInfo(preUpdateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+
+             nanoSeconds = time_end - time_start;
+            printf("preupdate_kernel Execution time is: %0.3f milliseconds \n", nanoSeconds / 1000000.0);
+
+
+
+
+
+
+
 
             // Read the memory buffer C on the device to the local variable C
             ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
@@ -328,8 +426,6 @@ int main(int argc, char* args[])
             ret = clFinish(command_queue);
             CL_ERROR_CHECK(ret)
 
-
-            
             gameState->mousePrimaryPressed = 0;
             gameState->mousePrimaryReleased = 0;
             gameState->mouseSecondaryPressed = 0;
@@ -337,6 +433,8 @@ int main(int argc, char* args[])
             //Handle events on queue
             while (SDL_PollEvent(&e) != 0)
             {
+                ImGui_ImplSDL2_ProcessEvent(&e);
+
                 //User requests quit
                 if (e.type == SDL_QUIT)
                 {
@@ -383,6 +481,20 @@ int main(int argc, char* args[])
                         gameState->mouseSecondaryReleased = 1;
                     }
                 }
+                else if (SDL_WINDOWEVENT)
+                {
+
+                    switch (e.window.event)
+                    {
+                    case SDL_WINDOWEVENT_RESIZED:
+                        int windowWidth = e.window.data1;
+                        int windowHeight = e.window.data2;
+                        glViewport(0, 0, windowWidth, windowHeight);
+                        break;
+                    }
+
+
+                }
             }
             SDL_GetMouseState(&mousex, &mousey);
             gameState->mousex = mousex;
@@ -394,7 +506,12 @@ int main(int argc, char* args[])
                 gameState->view_beginX = gameState->viewX;
                 gameState->view_beginY = gameState->viewY;
             }
-            
+            if (gameState->mousePrimaryPressed)
+            {
+                gameState->mouse_dragBeginx = mousex;
+                gameState->mouse_dragBeginy = mousey;
+            }
+
             if (gameState->mouseSecondaryDown)
             {
                 gameState->viewX = gameState->view_beginX + (gameState->mousex - gameState->mouse_dragBeginx)/ gameState->viewScale;
@@ -403,9 +520,51 @@ int main(int argc, char* args[])
             
             
 
-            //Clear screen
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
+            ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+                sizeof(GameState), gameState, 0, NULL, NULL);
+            CL_ERROR_CHECK(ret)
+
+
+
+
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL2_NewFrame(gWindow);
+            ImGui::NewFrame();
+
+
+            
+
+            //selection box
+            //if (gameState->mousePrimaryDown)
+            //{
+            //    glPushMatrix(); glTranslatef(-1.0f, -1.0f, 0.0f);
+            //    glScalef(2.0f / SCREEN_WIDTH, -2.0f / SCREEN_HEIGHT, 1.0);
+
+            //    float selBoxVerts[] = {
+            //        gameState->mouse_dragBeginx, -(SCREEN_HEIGHT - gameState->mouse_dragBeginy),
+            //        gameState->mousex , -(SCREEN_HEIGHT - gameState->mouse_dragBeginy) ,
+            //        gameState->mousex , -(SCREEN_HEIGHT - (gameState->mousey)),
+            //       gameState->mouse_dragBeginx , -(SCREEN_HEIGHT - (gameState->mousey)) ,
+            //    };
+
+            //    float selBoxColors[] = {
+            //         1.0f, 1.0f, 1.0f,
+            //         1.0f, 1.0f, 1.0f,
+            //         1.0f, 1.0f, 1.0f,
+            //         1.0f, 1.0f, 1.0f
+            //    };
+            //    glEnableClientState(GL_VERTEX_ARRAY);
+            //    glVertexPointer(2, GL_FLOAT, 0, selBoxVerts);
+
+            //    glEnableClientState(GL_COLOR_ARRAY);
+            //    glColorPointer(3, GL_FLOAT, 0, selBoxColors);
+
+            //    glDrawArrays(GL_LINE_LOOP, 0, 4);
+            //    glPopMatrix();
+            //}
+
+
 
             glPushMatrix();
 
@@ -417,37 +576,52 @@ int main(int argc, char* args[])
                  gameState->viewScale, 1.0f);
                        glTranslatef(2*gameState->viewX /float(SCREEN_WIDTH) , -2*gameState->viewY / float(SCREEN_HEIGHT) , 0.0f);
    
+
+            ImGui::Begin("Company");
+            ImGui::Button("Assets");
+            ImGui::Button("Profit/Loss");
+            ImGui::End();
+
+            ImGui::Begin("Build");
+            ImGui::Button("Tracks");
+            ImGui::Button("Machines");
+            ImGui::Button("Bulldoze");
             
-            //for (int sx = 0; sx < SQRT_SECTORS_PER_MAP; sx++)
-            //{
-            //    for (int sy = 0; sy < SQRT_SECTORS_PER_MAP; sy++)
-            //    {
-            //        SDL_Rect rect;
-            //        rect.x = sx * SQRT_CELLS_PER_MAP_SECTOR;
-            //        rect.y = sy * SQRT_CELLS_PER_MAP_SECTOR;
-            //        rect.w = SQRT_CELLS_PER_MAP_SECTOR;
-            //        rect.h = SQRT_CELLS_PER_MAP_SECTOR;
-            //        SDL_SetRenderDrawColor(gRenderer, sx+50, sy+50, 50, 0xFF);
-            //        SDL_RenderDrawRect(gRenderer, &rect);
-            //    }
-            //}
+            ImGui::End();
+
+            ImGui::Begin("Routines");
             
+            ImGui::End();
+
+            ImGui::Begin("Miner Bots");
+            ImGui::Button("New Miner");
+            ImGui::Button("Destroy Miner");
+            ImGui::End();
+
+
             for (int pi = 0; pi < MAX_PEEPS; pi++) 
             {
                 Peep* p = &gameState->peeps[pi];
 
 
                 float vertices[] = {
+                    0.000f, 0.002f,
                     -0.001f, -0.001f,
-                    0.001f, -0.001f,
-                    0.001f,  0.001f
+                    0.001f,  -0.001f
                 };
+
 
                 float colors[] = {
                      0.0f, 1.0f, 1.0f, // red
                      0.0f, 1.0f, 1.0f,
                      0.0f, 1.0f, 1.0f,
                 };
+                if (p->faction == 1)
+                {
+                    colors[1] = 0.0f;
+                    colors[4] = 0.0f;
+                    colors[7] = 0.0f;
+                }
 
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(2, GL_FLOAT, 0, vertices);
@@ -459,7 +633,13 @@ int main(int argc, char* args[])
                 float x = float(p->map_x_Q15_16) / float(1 << 16);
                 float y = float(p->map_y_Q15_16) / float(1 << 16);
 
+                float xv = p->xv_Q15_16 / float(1 << 16);
+                float yv = p->yv_Q15_16 / float(1 << 16);
+
+                float angle = atan2f(yv, xv) ;
+                
                 glTranslatef(x/float(SCREEN_WIDTH)-0.5, y/float(SCREEN_HEIGHT)-0.5, 0);
+                glRotatef(angle* (180.0f / 3.1415f) - 90.0f, 0.0f, 0.0f, 1.0f);
                 glDrawArrays(GL_TRIANGLES, 0, 3);
                 glPopMatrix();
 
@@ -467,6 +647,10 @@ int main(int argc, char* args[])
             }
    
             glPopMatrix();
+
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             //Update screen
             SDL_GL_SwapWindow(gWindow);
@@ -479,17 +663,27 @@ int main(int argc, char* args[])
             }
         }
 
+        //cleanup
+        for (auto* s : shaderProgramList)
+            delete s;
+        for (auto* s : shaderList)
+            delete s;
 
 
         // Clean up
         ret = clFlush(command_queue);
         ret = clFinish(command_queue);
-        ret = clReleaseKernel(kernel);
+        ret = clReleaseKernel(update_kernel);
         ret = clReleaseProgram(program);
         ret = clReleaseMemObject(gamestate_mem_obj);
         ret = clReleaseCommandQueue(command_queue);
         ret = clReleaseContext(context);
         free(gameState);
+
+        // Cleanup
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
         return 0;
     }
 

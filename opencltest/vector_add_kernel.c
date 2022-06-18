@@ -1,60 +1,53 @@
 #include "cl_type_glue.h"
+#include "fixedpoint_opencl.h"
+
 #include "peep.h"
 #include "random.h"
 
-// sqrt_i64 computes the squrare root of a 64bit integer and returns
-// a 64bit integer value. It requires that v is positive.
-long sqrt_i64(long v) {
-    ulong b = ((ulong)1) << 62, q = 0, r = v;
-    while (b > r)
-        b >>= 2;
-    while (b > 0) {
-        ulong t = q + b;
-        q >>= 1;
-        if (r >= t) {
-            r -= t;
-            q += b;
-        }
-        b >>= 2;
+
+
+void RobotInteraction(Peep* peep, Peep* otherPeep)
+{
+    cl_int dist_Q16 = length_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
+
+    if (dist_Q16 < peep->minDistPeep_Q16)
+    {
+        peep->minDistPeep_Q16 = dist_Q16;
+        peep->minDistPeep = otherPeep;
     }
-    return q;
 }
 
 
-void ForceInteraction(Peep* peep, Peep* otherPeep)
+
+void ForceUpdate(Peep* peep)
 {
+    peep->netForcex_Q16 += -peep->xv_Q15_16 >> 5;//drag
+    peep->netForcey_Q16 += -peep->yv_Q15_16 >> 5;
+    peep->xv_Q15_16 += peep->netForcex_Q16;
+    peep->yv_Q15_16 += peep->netForcey_Q16;
+}
+void RobotUpdate(Peep* peep)
+{
+    cl_int deltax_Q16 = peep->target_x_Q16 - peep->map_x_Q15_16;
+    cl_int deltay_Q16 = peep->target_y_Q16 - peep->map_y_Q15_16;
 
-    cl_long deltax_Q16 = otherPeep->map_x_Q15_16 - peep->map_x_Q15_16;
-    cl_long deltay_Q16 = otherPeep->map_y_Q15_16 - peep->map_y_Q15_16;
-
-    cl_long innerx_Q32 = (deltax_Q16 * deltax_Q16);
-    cl_long innery_Q32 = (deltay_Q16 * deltay_Q16);
-
-    cl_long inner_Q32 = innerx_Q32 + innery_Q32;
-
-    cl_long distOffset_Q16 = (1 << 16);
-
-    cl_long dist_Q16 = sqrt_i64(inner_Q32) - distOffset_Q16;
-
-    cl_long forcex_Q16 = ((deltax_Q16 << 16) / ((dist_Q16*dist_Q16)>>16));
-    cl_long forcey_Q16 = ((deltay_Q16 << 16) / ((dist_Q16 * dist_Q16) >> 16));
-
-    cl_long forceMultiplier_Q16 = 10 << 16;
+    normalize_Q16(&deltax_Q16, &deltay_Q16);
 
 
-    if (otherPeep->faction == peep->faction)
+    if ((peep->minDistPeep_Q16 >> 16) < 5)
     {
-     //   forceMultiplier_Q16 = -1024;
+        deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
+        deltay_Q16 = peep->minDistPeep->map_y_Q15_16 - peep->map_y_Q15_16;
+        normalize_Q16(&deltax_Q16, &deltay_Q16);
+        peep->xv_Q15_16 = -deltax_Q16/2;
+        peep->yv_Q15_16 = -deltay_Q16/2;
     }
-    forcex_Q16 *= forceMultiplier_Q16;
-    forcey_Q16 *= forceMultiplier_Q16;
-    forcex_Q16 = forcex_Q16 >> 16;
-    forcey_Q16 = forcey_Q16 >> 16;
+    else
+    {
+        peep->xv_Q15_16 = deltax_Q16;
+        peep->yv_Q15_16 = deltay_Q16;
+    }
 
-
-    //add to net force
-    peep->netForcex_Q16 += forcex_Q16 << 1;
-    peep->netForcey_Q16 += forcey_Q16 << 1;
 
 
 
@@ -74,9 +67,12 @@ void PeepUpdateGravity(__global GameState* gameState, Peep* peep)
 }
 void PeepUpdate(__global GameState* gameState, Peep* peep)
 {
+
+    peep->minDistPeep_Q16 = (1 << 30);
+    peep->minDistPeep = NULL;
+
+
     //traverse sector
-
-
     int minx = peep->mapSector->xidx - 1; if (minx < 0) minx = 0;
     int miny = peep->mapSector->yidx - 1; if (miny < 0) miny = 0;
 
@@ -95,7 +91,7 @@ void PeepUpdate(__global GameState* gameState, Peep* peep)
             while (curPeep != NULL)
             {
                 if (curPeep != peep) {
-                    ForceInteraction(peep, curPeep);
+                    RobotInteraction(peep, curPeep);
                 }
 
                 curPeep = curPeep->prevSectorPeep;
@@ -105,14 +101,23 @@ void PeepUpdate(__global GameState* gameState, Peep* peep)
 
         }
     }
-
-
-    peep->netForcex_Q16 += -peep->xv_Q15_16 >> 5;//drag
-    peep->netForcey_Q16 += -peep->yv_Q15_16 >> 5;
-    peep->xv_Q15_16 += peep->netForcex_Q16;
-    peep->yv_Q15_16 += peep->netForcey_Q16;
+    RobotUpdate(peep);
+ 
 
 }
+__kernel void game_init_single(__global const GameState* gameState) {
+    for (int pi = 0; pi < MAX_PEEPS; pi++)
+    {
+        __global Peep* p = &gameState->peeps[pi];
+
+        
+        AssignPeepToSector(gameState, p);
+        printf("Assigning Peep to sector %d\n", p->mapSector);
+    }
+}
+
+
+
 
 __kernel void game_update(__global const GameState* gameState) {
     // Get the index of the current element to be processed
@@ -126,19 +131,23 @@ __kernel void game_update(__global const GameState* gameState) {
 
 __kernel void game_preupdate_single(__global const GameState* gameState) {
     // Get the index of the current element to be processed
-    for (int pi = 0; pi < MAX_PEEPS; pi++)
-    {
-        Peep* p = &gameState->peeps[pi];
- 
-            
+    int globalid = get_global_id(0);
 
+    if (globalid == 0)
+    {   
+        for (int pi = 0; pi < MAX_PEEPS; pi++)
+        {
+            Peep* p = &gameState->peeps[pi];
             p->map_x_Q15_16 += p->xv_Q15_16;
             p->map_y_Q15_16 += p->yv_Q15_16;
-      
-        p->netForcex_Q16 = 0;
-        p->netForcey_Q16 = 0;
+
+            p->netForcex_Q16 = 0;
+            p->netForcey_Q16 = 0;
 
 
-        AssignPeepToSector(gameState, p );
+            AssignPeepToSector(gameState, p);
+
+        }
     }
+
 }

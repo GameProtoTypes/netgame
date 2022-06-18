@@ -2,19 +2,20 @@
 
 
 
-#define MAX_PEEPS (1024*64)
+#define MAX_PEEPS (1024*16)
 
 #define WORKGROUPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
 
 #define SQRT_MAXSECTORS (128)
-#define SECTOR_SIZE (64)
+#define SECTOR_SIZE (32)
 
 
 struct Cell;
 struct MapSector;
 struct Peep {
 	//int valid;
+
 	int map_x_Q15_16;
 	int map_y_Q15_16;
 
@@ -24,22 +25,25 @@ struct Peep {
 	cl_long netForcex_Q16;
 	cl_long netForcey_Q16;
 
-	int target_x;
-	int target_y;
+	cl_int minDistPeep_Q16;
+	struct Peep* minDistPeep;
+
+
+	int target_x_Q16;
+	int target_y_Q16;
 
 	int faction;
 	struct MapSector* mapSector;
-	int mapSectorListIdx;
 
 	struct Peep* nextSectorPeep;
 	struct Peep* prevSectorPeep;
 } typedef Peep;
 
 struct MapSector {
-	int nextPeepIdx;
 	Peep* lastPeep;
 	int xidx;
 	int yidx;
+	int mutex;
 } typedef MapSector;
 
 struct GameState {
@@ -94,16 +98,26 @@ void AssignPeepToSector(GameState* gameState, Peep* peep)
 	{
 		if (peep->mapSector != NULL)
 		{
-			//update old sector
-			if ((peep->prevSectorPeep != NULL) && (peep->nextSectorPeep == NULL))
-				peep->prevSectorPeep->nextSectorPeep = NULL;
-			else if ((peep->prevSectorPeep == NULL) && (peep->nextSectorPeep != NULL))
-				peep->nextSectorPeep->prevSectorPeep = NULL;
-			else if((peep->prevSectorPeep != NULL) && (peep->nextSectorPeep != NULL))
-				peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;//remove link
+			//remove peep from old sector
+			if ((peep->prevSectorPeep != NULL))
+			{
+				peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;
+			}
+			if ((peep->nextSectorPeep != NULL))
+			{
+				peep->nextSectorPeep->prevSectorPeep = peep->prevSectorPeep;
+			}
 
-			if (peep->mapSector->lastPeep == peep)
-				peep->mapSector->lastPeep = NULL;
+
+			if (peep->mapSector->lastPeep == peep) {
+				peep->mapSector->lastPeep = peep->prevSectorPeep;
+				if(peep->mapSector->lastPeep != NULL)
+					peep->mapSector->lastPeep->nextSectorPeep = NULL;
+			}
+
+			//completely detach
+			peep->nextSectorPeep = NULL;
+			peep->prevSectorPeep = NULL;
 
 		}
 
@@ -111,9 +125,11 @@ void AssignPeepToSector(GameState* gameState, Peep* peep)
 		peep->mapSector = newSector;
 
 		//put peep in the sector.  extend list
-		if(peep->mapSector->lastPeep != NULL)
+		if (peep->mapSector->lastPeep != NULL)
+		{
 			peep->mapSector->lastPeep->nextSectorPeep = peep;
-
+			peep->prevSectorPeep = peep->mapSector->lastPeep;
+		}
 		peep->mapSector->lastPeep = peep;
 	}
 }
