@@ -27,7 +27,26 @@ void GEShaderProgram::Link(void)
 	glGetProgramiv(programID, GL_LINK_STATUS, &success);
 
 	if (!success)
+	{
+
 		std::cout << "Error Linking shader program " << programID << "." << std::endl;
+		GLint maxLength = 0;
+		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
+
+		// The maxLength includes the NULL character
+		std::vector<GLchar> infoLog(maxLength);
+		glGetProgramInfoLog(programID, maxLength, &maxLength, &infoLog[0]);
+
+		for (int i = 0; i < infoLog.size(); i++)
+		{
+			std::cout << infoLog[i];
+		}
+
+	}
+		
+
+
+
 
 }
 

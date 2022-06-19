@@ -14,7 +14,7 @@ out vec3 lightIntensity;
 void main()
 { 
 
-    vec4 lightPos = vec4(10.0f,10.0f,10.0f,1.0f);
+    vec4 lightPos = vec4( 10.0f, 10.0f, 10.0f, 1.0f);
 	
 	mat4 WorldToLocal = inverse(LocalToWorldTransform);
 
@@ -27,5 +27,4 @@ void main()
 	lightIntensity = diffuseReflection;
 	gl_Position = LocalToScreenTransform * vertexPosition;
 
-	
 }

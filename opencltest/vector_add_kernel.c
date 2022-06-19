@@ -39,8 +39,8 @@ void RobotUpdate(Peep* peep)
         deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
         deltay_Q16 = peep->minDistPeep->map_y_Q15_16 - peep->map_y_Q15_16;
         normalize_Q16(&deltax_Q16, &deltay_Q16);
-        peep->xv_Q15_16 = -deltax_Q16/2;
-        peep->yv_Q15_16 = -deltay_Q16/2;
+        peep->xv_Q15_16 = -deltax_Q16;
+        peep->yv_Q15_16 = -deltay_Q16;
     }
     else
     {
@@ -49,6 +49,7 @@ void RobotUpdate(Peep* peep)
     }
 
 
+    
 
 
 }
@@ -112,7 +113,7 @@ __kernel void game_init_single(__global const GameState* gameState) {
 
         
         AssignPeepToSector(gameState, p);
-        printf("Assigning Peep to sector %d\n", p->mapSector);
+        //printf("Assigning Peep to sector %d\n", p->mapSector);
     }
 }
 
@@ -144,9 +145,7 @@ __kernel void game_preupdate_single(__global const GameState* gameState) {
             p->netForcex_Q16 = 0;
             p->netForcey_Q16 = 0;
 
-
             AssignPeepToSector(gameState, p);
-
         }
     }
 
