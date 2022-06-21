@@ -1,6 +1,7 @@
 #pragma once
 #include "GEShader.h"
 #include <vector>
+#include "glm.hpp"
 
 class GEShaderProgram
 {
@@ -10,6 +11,10 @@ public:
 
 	void AttachShader(GEShader* shader);
 	void DetachShader(GEShader* shader);
+
+	void SetUniform_Mat4(std::string name, glm::mat4& val);
+	void SetUniform_Vec3(std::string name, glm::vec3& val);
+
 
 	GLuint ProgramID(){ return programID; }
 

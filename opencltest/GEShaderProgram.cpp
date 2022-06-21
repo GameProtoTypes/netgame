@@ -73,3 +73,28 @@ void GEShaderProgram::DetachShader(GEShader* shader)
 		}
 	}
 }
+
+void GEShaderProgram::SetUniform_Mat4(std::string name, glm::mat4& val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
+
+	if (location >= 0)
+	{
+		glUniformMatrix4fv(location, 1, GL_FALSE,
+			&val[0][0]);
+	}
+}
+
+void GEShaderProgram::SetUniform_Vec3(std::string name, glm::vec3& val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
+
+	if (location >= 0)
+	{
+		glUniform3f(location, val.x,val.y,val.z);
+
+	}
+
+}

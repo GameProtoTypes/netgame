@@ -172,26 +172,46 @@ int main(int argc, char* args[])
         std::vector<GEShaderProgram*> shaderProgramList;
         std::vector<GEShader*> shaderList;
 
-        GEShader* pVertShad = new GEShader(GL_VERTEX_SHADER, "vertBasic.shad");
-        GEShader* pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragBasic.shad");
+        GEShader* pVertShad = new GEShader(GL_VERTEX_SHADER, "vertPeep.shad");
+        GEShader* pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragPeep.shad");
         shaderList.push_back(pVertShad);
         shaderList.push_back(pFragShad);
 
         //create programs to use those shaders.
-        GEShaderProgram* pShadProgram = new GEShaderProgram();
-        pShadProgram->AttachShader(pVertShad);
-        pShadProgram->AttachShader(pFragShad);
+        GEShaderProgram* pPeepShadProgram = new GEShaderProgram();
+        pPeepShadProgram->AttachShader(pVertShad);
+        pPeepShadProgram->AttachShader(pFragShad);
+
+        shaderProgramList.push_back(pPeepShadProgram);
 
 
-        // Bind index 0 to the shader input variable "VertexPosition"
-        glBindAttribLocation(pShadProgram->ProgramID(), 0, "VertexPosition");
+        pVertShad = new GEShader(GL_VERTEX_SHADER, "vertShader.shad");
+        pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragShader.shad");
+        shaderList.push_back(pVertShad);
+        shaderList.push_back(pFragShad);
 
-        // Bind index 1 to the shader input variable "VertexColor"
-        glBindAttribLocation(pShadProgram->ProgramID(), 1, "VertexColor");
+        //create programs to use those shaders.
+        GEShaderProgram* pBasicShadProgram = new GEShaderProgram();
+        pBasicShadProgram->AttachShader(pVertShad);
+        pBasicShadProgram->AttachShader(pFragShad);
+
+        shaderProgramList.push_back(pBasicShadProgram);
 
 
-        pShadProgram->Link();
-        shaderProgramList.push_back(pShadProgram);
+        glBindAttribLocation(pPeepShadProgram->ProgramID(), 0, "VertexPosition");
+        glBindAttribLocation(pPeepShadProgram->ProgramID(), 1, "VertexColor");
+
+        glBindAttribLocation(pBasicShadProgram->ProgramID(), 0, "VertexPosition");
+        glBindAttribLocation(pBasicShadProgram->ProgramID(), 1, "VertexColor");
+
+
+
+
+
+
+
+        pPeepShadProgram->Link();
+        pBasicShadProgram->Link();
 
 
         // store instance data in an array buffer
@@ -199,7 +219,7 @@ int main(int argc, char* args[])
         unsigned int instanceVBO;
         glGenBuffers(1, &instanceVBO);
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3)) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -226,9 +246,12 @@ int main(int argc, char* args[])
         // also set instance data
         glEnableVertexAttribArray(2);
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)0);//position
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)sizeof(glm::vec2));//color
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+        glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 
 
 
@@ -312,9 +335,6 @@ int main(int argc, char* args[])
         // Create an OpenCL context
         cl_context context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
         CL_ERROR_CHECK(ret)
-
-
-
 
 
 
@@ -443,6 +463,9 @@ int main(int argc, char* args[])
 
         cl_event preUpdateEvent1;
         cl_event preUpdateEvent2;
+
+        glm::vec2* worldPositions = new glm::vec2[MAX_PEEPS];
+        glm::vec3* colors = new glm::vec3[MAX_PEEPS];
         while (!quit)
         {
             //Clear screen
@@ -603,19 +626,9 @@ int main(int argc, char* args[])
                 gameState->viewX = gameState->view_beginX + (gameState->mousex - gameState->mouse_dragBeginx);
                 gameState->viewY = gameState->view_beginY + (gameState->mousey - gameState->mouse_dragBeginy);
             }
+            gameState->frameIdx++;
             
-            
-            cl_event writeEvent;
-            ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-                sizeof(GameState), gameState, 0, NULL, &writeEvent);
-            CL_ERROR_CHECK(ret)
-            
-            clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-            clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-            nanoSeconds = time_end - time_start;
-            ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
-            ImGui::End();
 
             //render
             static float viewScale = 0.02f;
@@ -627,17 +640,82 @@ int main(int argc, char* args[])
             glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
             
 
-            //view = glm::translate(view, -position*scaleVec);
             view = glm::scale(view, scaleVec);
             view = glm::translate(view,position/ viewScale);
             
             
- 
-            //view = glm::translate(view, position / (scaleVec));
+
+
+            //draw mouse
+            pBasicShadProgram->Use();
+
+
+            pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
+
+
+            glm::mat4 mouseWorldPos(1.0f);
+            glm::mat4 mouseWorldPosEnd(1.0f);
+            glm::vec4 mouseScreenCoords = glm::vec4(2.0f * (float(mousex) / SCREEN_WIDTH) - 1.0, -2.0f * (float(mousey) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
+            glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(gameState->mouse_dragBeginx) / SCREEN_WIDTH) - 1.0, -2.0f * (float(gameState->mouse_dragBeginy) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
+
+
+            glm::vec4 worldMouseEnd = glm::inverse(view) * mouseScreenCoords;
+            glm::vec4 worldMouseBegin = glm::inverse(view) * mouseBeginScreenCoords;
+
+
+
+            glm::mat4 drawingTransform(1.0f);
+            pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
+            pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+
+            float mouseSelectVerts[] = {
+                 //positions    
+                mouseBeginScreenCoords.x,  mouseBeginScreenCoords.y,
+                mouseScreenCoords.x, mouseBeginScreenCoords.y,
+                mouseScreenCoords.x , mouseScreenCoords.y ,
+                mouseBeginScreenCoords.x, mouseScreenCoords.y
+            };
+
+            unsigned int mouseVAO, mouseVBO;
+            glGenVertexArrays(1, &mouseVAO);
+            glGenBuffers(1, &mouseVBO);
+            glBindVertexArray(mouseVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, mouseVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(mouseSelectVerts), mouseSelectVerts, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+
+            if(gameState->mousePrimaryDown)
+            glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
+
+
+
+            if (gameState->mousePrimaryReleased)
+            {
+
+                float endx = glm::max(worldMouseBegin.x, worldMouseEnd.x);
+                float endy = glm::min(worldMouseBegin.y, worldMouseEnd.y);
+                float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
+                float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
+
+                gameState->action_DoSelect = 1;
+                gameState->params_DoSelect_StartX_Q16 = cl_int(startx*(1<<16));
+                gameState->params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
+                gameState->params_DoSelect_EndX_Q16   = cl_int(endx * (1 << 16));
+                gameState->params_DoSelect_EndY_Q16   = cl_int(endy * (1 << 16));
+            }
+
             
-            //view = glm::translate(view, position);
-
-
+            if (gameState->mouseSecondaryReleased)
+            {
+                gameState->action_CommandToLocation = 1;
+                gameState->params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x*(1<<16)) ;
+                gameState->params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
+            }
 
 
 
@@ -668,35 +746,36 @@ int main(int argc, char* args[])
 
 
 
-            pShadProgram->Use();
 
-            GLuint location = glGetUniformLocation(pShadProgram->ProgramID(),
-                "WorldToScreenTransform");
-
-            if (location >= 0)
-            {
-                glUniformMatrix4fv(location, 1, GL_FALSE,
-                    &view[0][0]);
-            }
+            pPeepShadProgram->Use();
+            pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
 
-            
-
-            glm::vec2 worldPositions[MAX_PEEPS];
-            glm::float32 rotations[MAX_PEEPS];
+                    
             for (int pi = 0; pi < MAX_PEEPS; pi++)
             {
                 Peep* p = &gameState->peeps[pi];
 
-                glm::vec3 color(1.0f, 0.0f, 0.0f);
 
+                float factor = 0.6f;
                 if (p->faction == 1)
                 {
-                    color.r = 0.0f;
-                    color.g = 1.0f;
-                    color.b = 1.0f;
+                    colors[pi].r = 0.0f;
+                    colors[pi].g = 1.0f;
+                    colors[pi].b = 1.0f;
+                }
+                else
+                {
+                    colors[pi].r = 1.0f;
+                    colors[pi].g = 0.0f;
+                    colors[pi].b = 1.0f;
                 }
 
+                if (p->selectedByClient)
+                {
+                    factor = 1.0f;
+                }
+                colors[pi] = colors[pi]*factor;
                 
                 float x = float(p->map_x_Q15_16) / float(1 << 16);
                 float y = float(p->map_y_Q15_16) / float(1 << 16);
@@ -716,7 +795,9 @@ int main(int argc, char* args[])
 
                 glm::vec2 location2D = glm::vec2(x, y);
                 glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-                glBufferSubData(GL_ARRAY_BUFFER, pi * sizeof(glm::vec2), sizeof(glm::vec2), &location2D.x);
+                int stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
+                glBufferSubData(GL_ARRAY_BUFFER, pi * stride, sizeof(glm::vec2), &location2D.x);
+                glBufferSubData(GL_ARRAY_BUFFER, pi * stride + sizeof(glm::vec2), sizeof(glm::vec3), &colors[pi].r);
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             }
@@ -728,7 +809,19 @@ int main(int argc, char* args[])
             glBindVertexArray(0);
 
             
+            cl_event writeEvent;
+            ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+                sizeof(GameState), gameState, 0, NULL, &writeEvent);
+            CL_ERROR_CHECK(ret)
 
+                clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+            clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+            nanoSeconds = time_end - time_start;
+            ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+
+
+            ImGui::Text("FrameIdx: %d", gameState->frameIdx);
+            ImGui::End();
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -736,11 +829,9 @@ int main(int argc, char* args[])
             //Update screen
             SDL_GL_SwapWindow(gWindow);
 
-            gameState->frameIdx++;
-            //printf("CPU frameIdx: %d\n", gameState->frameIdx);
             if (gameState->frameIdx == 500)
             {
-               // while (true) {}
+              //  while (true) {}
             }
         }
 
@@ -749,6 +840,9 @@ int main(int argc, char* args[])
             delete s;
         for (auto* s : shaderList)
             delete s;
+
+        delete[] worldPositions;
+        delete[] colors;
 
 
         // Clean up

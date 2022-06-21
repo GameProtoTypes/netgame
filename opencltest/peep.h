@@ -2,7 +2,7 @@
 
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*64)
 
 #define WORKGROUPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -42,6 +42,17 @@ struct Peep {
 	struct Peep* nextSectorPeep;
 	struct Peep* prevSectorPeep;
 
+	struct Peep* nextSelectionPeep;
+	struct Peep* prevSelectionPeep;
+
+
+	//noncore
+	cl_int selectedByClient;
+
+
+
+
+
 } typedef Peep;
 
 struct MapSector {
@@ -79,7 +90,20 @@ struct GameState {
 	cl_float view_beginY;
 	cl_float viewScale;
 
-	int frameIdx;
+
+	cl_int action_DoSelect;
+	cl_int params_DoSelect_StartX_Q16;
+	cl_int params_DoSelect_StartY_Q16;
+	cl_int params_DoSelect_EndX_Q16;
+	cl_int params_DoSelect_EndY_Q16;
+
+	cl_int action_CommandToLocation;
+	cl_int params_CommandToLocation_X_Q16;
+	cl_int params_CommandToLocation_Y_Q16;
+
+	Peep* selectedPeepsLast;
+
+	cl_uint frameIdx;
 }typedef GameState;
 
 
