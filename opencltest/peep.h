@@ -2,7 +2,7 @@
 
 
 
-#define MAX_PEEPS (1024*64)
+#define MAX_PEEPS (1024*32)
 
 #define WORKGROUPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -14,13 +14,20 @@
 struct Cell;
 struct MapSector;
 struct Peep {
-	//int valid;
 
+	//State:
 	int map_x_Q15_16;
 	int map_y_Q15_16;
-
 	int xv_Q15_16;
 	int yv_Q15_16;
+
+	int target_x_Q16;
+	int target_y_Q16;
+
+	int faction;
+
+
+
 
 	cl_long netForcex_Q16;
 	cl_long netForcey_Q16;
@@ -28,22 +35,20 @@ struct Peep {
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;
 
-
-	int target_x_Q16;
-	int target_y_Q16;
-
-	int faction;
+	
+	struct MapSector* mapSector_pending;
 	struct MapSector* mapSector;
 
 	struct Peep* nextSectorPeep;
 	struct Peep* prevSectorPeep;
+
 } typedef Peep;
 
 struct MapSector {
 	Peep* lastPeep;
 	int xidx;
 	int yidx;
-	int mutex;
+	cl_uint lock;
 } typedef MapSector;
 
 struct GameState {
@@ -76,6 +81,72 @@ struct GameState {
 
 	int frameIdx;
 }typedef GameState;
+
+
+
+void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
+{
+	cl_int x = ((peep->map_x_Q15_16 >> 16) / (SECTOR_SIZE));
+	cl_int y = ((peep->map_y_Q15_16 >> 16) / (SECTOR_SIZE));
+
+	//clamp
+	if (x < -SQRT_MAXSECTORS / 2)
+		x = -SQRT_MAXSECTORS / 2;
+	if (y < -SQRT_MAXSECTORS / 2)
+		y = -SQRT_MAXSECTORS / 2;
+	if (x >= SQRT_MAXSECTORS / 2)
+		x = SQRT_MAXSECTORS / 2 - 1;
+	if (y >= SQRT_MAXSECTORS / 2)
+		y = SQRT_MAXSECTORS / 2 - 1;
+
+	MapSector* newSector = &gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2];
+	if ((peep->mapSector != newSector))
+	{
+		if (peep->mapSector != NULL)
+		{
+			//remove peep from old sector
+			if ((peep->prevSectorPeep != NULL))
+			{
+				peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;
+			}
+			if ((peep->nextSectorPeep != NULL))
+			{
+				peep->nextSectorPeep->prevSectorPeep = peep->prevSectorPeep;
+			}
+
+
+			if (peep->mapSector->lastPeep == peep) {
+				peep->mapSector->lastPeep = peep->prevSectorPeep;
+				if (peep->mapSector->lastPeep != NULL)
+					peep->mapSector->lastPeep->nextSectorPeep = NULL;
+			}
+
+			//completely detach
+			peep->nextSectorPeep = NULL;
+			peep->prevSectorPeep = NULL;
+
+		}
+
+		//assign new sector for next stage
+		peep->mapSector_pending = newSector;
+	}
+}
+void AssignPeepToSector_Insert(GameState* gameState, Peep* peep)
+{
+	//assign new sector
+	if (peep->mapSector != peep->mapSector_pending)
+	{
+		peep->mapSector = peep->mapSector_pending;
+
+		//put peep in the sector.  extend list
+		if (peep->mapSector->lastPeep != NULL)
+		{
+			peep->mapSector->lastPeep->nextSectorPeep = peep;
+			peep->prevSectorPeep = peep->mapSector->lastPeep;
+		}
+		peep->mapSector->lastPeep = peep;
+	}
+}
 
 
 void AssignPeepToSector(GameState* gameState, Peep* peep)

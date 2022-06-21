@@ -4,7 +4,7 @@
 #include "peep.h"
 #include "random.h"
 
-
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
 void RobotInteraction(Peep* peep, Peep* otherPeep)
 {
@@ -130,23 +130,84 @@ __kernel void game_update(__global const GameState* gameState) {
 }
 
 
-__kernel void game_preupdate_single(__global const GameState* gameState) {
+__kernel void game_preupdate_1(__global const GameState* gameState) {
     // Get the index of the current element to be processed
+    
     int globalid = get_global_id(0);
+    if (globalid >= WORKGROUPSIZE)
+        return;
 
-    if (globalid == 0)
-    {   
-        for (int pi = 0; pi < MAX_PEEPS; pi++)
+    local cl_uint localLocks[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
+    for (int x = 0; x < SQRT_MAXSECTORS; x++)
+    {
+        for (int y = 0; y < SQRT_MAXSECTORS; y++)
         {
-            Peep* p = &gameState->peeps[pi];
-            p->map_x_Q15_16 += p->xv_Q15_16;
-            p->map_y_Q15_16 += p->yv_Q15_16;
-
-            p->netForcex_Q16 = 0;
-            p->netForcey_Q16 = 0;
-
-            AssignPeepToSector(gameState, p);
+            localLocks[x][y] = gameState->sectors[x][y].lock;
         }
     }
+
+
+
+
+
+    const cl_uint chunkSize = MAX_PEEPS / WORKGROUPSIZE;
+    for (cl_uint pi = 0; pi < MAX_PEEPS / WORKGROUPSIZE; pi++)
+    {
+        Peep* p = &gameState->peeps[pi + globalid*chunkSize];
+        p->map_x_Q15_16 += p->xv_Q15_16;
+        p->map_y_Q15_16 += p->yv_Q15_16;
+
+        p->netForcex_Q16 = 0;
+        p->netForcey_Q16 = 0;
+
+        global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
+        global volatile int* lock = (global volatile int*)&mapSector->lock;
+        
+
+
+
+        int reservation = atomic_add(lock, 1) + 1;
+        barrier(CLK_GLOBAL_MEM_FENCE);
+
+        while (atomic_add(lock, 0) != reservation) {  }
+        AssignPeepToSector_Detach(gameState, p);
+
+        atomic_dec(lock);
+    }
+}
+
+
+__kernel void game_preupdate_2(__global const GameState* gameState) {
+   
+    // Get the index of the current element to be processed
+    int globalid = get_global_id(0);
+    if (globalid >= WORKGROUPSIZE)
+        return;
+
+
+    const cl_uint chunkSize = MAX_PEEPS / WORKGROUPSIZE;
+    for (cl_uint pi = 0; pi < MAX_PEEPS / WORKGROUPSIZE; pi++)
+    {
+        Peep* p = &gameState->peeps[pi + globalid * chunkSize];
+
+        global volatile MapSector* mapSector = (global volatile MapSector*)p->mapSector_pending;
+        if (mapSector == NULL)
+            continue;
+        global volatile int* lock = (global volatile int*) & mapSector->lock;
+
+
+
+
+        int reservation = atomic_add(lock, 1) + 1;
+        barrier(CLK_GLOBAL_MEM_FENCE);
+
+        while (atomic_add(lock, 0) != reservation) {}
+
+            AssignPeepToSector_Insert(gameState, p);
+        
+        atomic_dec(lock);
+    }
+
+
 
 }

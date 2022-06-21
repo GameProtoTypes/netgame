@@ -189,74 +189,46 @@ int main(int argc, char* args[])
         // Bind index 1 to the shader input variable "VertexColor"
         glBindAttribLocation(pShadProgram->ProgramID(), 1, "VertexColor");
 
-        GLuint vaoHandle;
 
         pShadProgram->Link();
         shaderProgramList.push_back(pShadProgram);
 
 
+        // store instance data in an array buffer
+        // --------------------------------------
+        unsigned int instanceVBO;
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        // set up vertex data (and buffer(s)) and configure vertex attributes
+        // ------------------------------------------------------------------
+        float quadVertices[] = {
+            // positions    
+            -1.0f,  1.0f, 
+             1.0f, -1.0f,  
+            -1.0f, -1.0f,
 
-        ////////////////////////
-        float positionData[] = {
-             -0.8f, -0.8f, 0.0f,
-              0.8f, -0.8f, 0.0f,
-              0.0f,  0.8f, 0.0f };
-        float colorData[] = {
-              1.0f, 0.0f, 0.0f,
-              0.0f, 1.0f, 0.0f,
-              0.0f, 0.0f, 1.0f };
+            -1.0f,  1.0f, 
+             1.0f, -1.0f,  
+             1.0f,  1.0f
+        };
+        unsigned int quadVAO, quadVBO;
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-
-        // Create the buffer objects
-        GLuint vboHandles[2];
-        glGenBuffers(2, vboHandles);
-        GLuint positionBufferHandle = vboHandles[0];
-        GLuint colorBufferHandle = vboHandles[1];
-
-        // Populate the position buffer
-        glBindBuffer(GL_ARRAY_BUFFER, positionBufferHandle);
-        glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), positionData,
-            GL_STATIC_DRAW);
-
-        // Populate the color buffer
-        glBindBuffer(GL_ARRAY_BUFFER, colorBufferHandle);
-        glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), colorData,
-            GL_STATIC_DRAW);
-
-        /////////////////////////
-
-
-
-        // Create and set-up the vertex array object
-        glGenVertexArrays(1, &vaoHandle);
-        glBindVertexArray(vaoHandle);
-
-        // Enable the vertex attribute arrays
-        glEnableVertexAttribArray(0);  // Vertex position
-        glEnableVertexAttribArray(1);  // Vertex color
-
-        // Map index 0 to the position buffer
-        glBindBuffer(GL_ARRAY_BUFFER, positionBufferHandle);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0,
-            (GLubyte*)NULL);
-
-        // Map index 1 to the color buffer
-        glBindBuffer(GL_ARRAY_BUFFER, colorBufferHandle);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0,
-            (GLubyte*)NULL);
-
-
-        /////////////////////////////
-
-
-
-
-
-
-
-
-
+        // also set instance data
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
 
 
 
@@ -271,7 +243,7 @@ int main(int argc, char* args[])
                 gameState->sectors[secx][secy].xidx = secx;
                 gameState->sectors[secx][secy].yidx = secy;
                 gameState->sectors[secx][secy].lastPeep = NULL;
-                gameState->sectors[secx][secy].mutex = 0;
+                gameState->sectors[secx][secy].lock = 0;
             }
         }
         for (int p = 0; p < MAX_PEEPS; p++)
@@ -286,6 +258,7 @@ int main(int argc, char* args[])
             gameState->peeps[p].minDistPeep = NULL;
             gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
             gameState->peeps[p].mapSector = NULL;
+            gameState->peeps[p].mapSector_pending = NULL;
             gameState->peeps[p].nextSectorPeep = NULL;
             gameState->peeps[p].prevSectorPeep = NULL;
             gameState->peeps[p].target_x_Q16 = random(-1000, 1000) << 16;
@@ -410,7 +383,8 @@ int main(int argc, char* args[])
 
 
         // Create the OpenCL update_kernel
-        cl_kernel preupdate_kernel = clCreateKernel(program, "game_preupdate_single", &ret); CL_ERROR_CHECK(ret)
+        cl_kernel preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_ERROR_CHECK(ret)
+        cl_kernel preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_ERROR_CHECK(ret)
         cl_kernel update_kernel = clCreateKernel(program, "game_update", &ret); CL_ERROR_CHECK(ret)
         cl_kernel init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_ERROR_CHECK(ret)
 
@@ -418,6 +392,7 @@ int main(int argc, char* args[])
         // Set the arguments of the kernels
         ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
         ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
+        ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
         ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_ERROR_CHECK(ret)
 
 
@@ -432,8 +407,8 @@ int main(int argc, char* args[])
         printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
 
         // Execute the OpenCL update_kernel on the list
-        size_t SingleKernelWorkItems[] = { 1 };
-        size_t SingleKernelWorkItemsPerWorkGroup[] = { 1 };
+        size_t SingleKernelWorkItems[] = { WORKGROUPSIZE };
+        size_t SingleKernelWorkItemsPerWorkGroup[] = { WORKGROUPSIZE };
 
 
         size_t WorkItems[] = { TOTALWORKITEMS };
@@ -466,7 +441,8 @@ int main(int argc, char* args[])
         
         clWaitForEvents(1, &initEvent);
 
-        cl_event preUpdateEvent;
+        cl_event preUpdateEvent1;
+        cl_event preUpdateEvent2;
         while (!quit)
         {
             //Clear screen
@@ -481,14 +457,19 @@ int main(int argc, char* args[])
             
             
             ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
-                WorkItems, NULL, 0, NULL, &preUpdateEvent);
+                SingleKernelWorkItems, NULL, 0, NULL, &preUpdateEvent1);
             CL_ERROR_CHECK(ret)
 
-            clWaitForEvents(1, &preUpdateEvent);
+            ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
+                SingleKernelWorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
+            CL_ERROR_CHECK(ret)
+
+
+            clWaitForEvents(1, &preUpdateEvent2);
             cl_uint waitListCnt = 1;
             cl_event updateEvent;
             ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
-                WorkItems, NULL, waitListCnt, &preUpdateEvent, &updateEvent);
+                WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
             CL_ERROR_CHECK(ret)
 
 
@@ -502,8 +483,8 @@ int main(int argc, char* args[])
             ImGui::Begin("Profiling");
             double nanoSeconds = time_end - time_start;
             ImGui::Text("update_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-            clGetEventProfilingInfo(preUpdateEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-            clGetEventProfilingInfo(preUpdateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+            clGetEventProfilingInfo(preUpdateEvent1, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+            clGetEventProfilingInfo(preUpdateEvent2, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
 
             nanoSeconds = time_end - time_start;
             ImGui::Text("preupdate_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
@@ -698,44 +679,8 @@ int main(int argc, char* args[])
                     &view[0][0]);
             }
 
-            GLuint localMatrixLocation = glGetUniformLocation(pShadProgram->ProgramID(),
-                "LocalTransform");
 
-            GLuint localColorShadeLocation = glGetUniformLocation(pShadProgram->ProgramID(),
-                "ColorShade");
-
-            GLuint worldLocationsnUniformLocation = glGetUniformLocation(pShadProgram->ProgramID(),
-                "worldLocations");
-
-
-
-            //draw world center
-            glm::vec3 color(1.0f, 1.0f, 0.0f);
-            glm::mat4 localMatrix = glm::mat4(1.0f);
-            glUniformMatrix4fv(localMatrixLocation, 1, GL_FALSE,
-                &localMatrix[0][0]);
-
-            glUniform3fv(localColorShadeLocation, 1,
-                &color[0]);
-
-            glBindVertexArray(vaoHandle);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-
-
-            //mouse
-             color = glm::vec3(0.0f, 1.0f, 0.0f);
-             glm::vec3 mouseWorldCoord = glm::inverse(view) * glm::vec4(2.0f*(float(mousex)/SCREEN_WIDTH)-1.0, -2.0f*(float(mousey)/SCREEN_HEIGHT)+1.0, 0.0f, 1.0f);
             
-             localMatrix = glm::translate(glm::mat4(1.0f), mouseWorldCoord);
-            glUniformMatrix4fv(localMatrixLocation, 1, GL_FALSE,
-                &localMatrix[0][0]);
-
-            glUniform3fv(localColorShadeLocation, 1,
-                &color[0]);
-
-            glBindVertexArray(vaoHandle);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-
 
             glm::vec2 worldPositions[MAX_PEEPS];
             glm::float32 rotations[MAX_PEEPS];
@@ -769,32 +714,20 @@ int main(int argc, char* args[])
                 localMatrix = glm::translate(localMatrix, glm::vec3(x, y, 0));
                 localMatrix = glm::rotate(localMatrix, angle * (180.0f / 3.1415f) - 90.0f, glm::vec3(0, 0, 1));
 
+                glm::vec2 location2D = glm::vec2(x, y);
+                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+                glBufferSubData(GL_ARRAY_BUFFER, pi * sizeof(glm::vec2), sizeof(glm::vec2), &location2D.x);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-                //glUniformMatrix4fv(localMatrixLocation, 1, GL_FALSE,
-                //    &localMatrix[0][0]);
-
-                //glUniform3fv(localColorShadeLocation, 1,
-                //    &color[0]);
-
-
-
-
-                //glBindVertexArray(vaoHandle);
-                //
-                //glDrawArrays(GL_TRIANGLES, 0, 3);
-                //
             }
 
-            for (int i = 0; i < MAX_PEEPS / 512; i++)
-            {
 
-                color = glm::vec3(1.0f, 0.0f, 0.0f);
+            //draw all peeps
+            glBindVertexArray(quadVAO);
+            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
+            glBindVertexArray(0);
 
-                glUniform3fv(localColorShadeLocation, 1,
-                        &color[0]);
-                glUniform2fv(worldLocationsnUniformLocation, 512, &worldPositions[i*512].x);
-                glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 512);
-            }
+            
 
 
             ImGui::Render();

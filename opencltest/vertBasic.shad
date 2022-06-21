@@ -1,25 +1,20 @@
 #version 400
 
-in vec3 VertexPosition;
-in vec3 VertexColor;
+layout(location = 0) in vec2 VertexPosition;
+layout(location = 1) in vec3 VertexColor;
+layout(location = 2) in vec2 InstanceWorldPos;
+layout(location = 3) in vec3 InstanceColor;
 
 out vec3 Color;
 
-
 uniform mat4 WorldToScreenTransform;
-uniform mat4 LocalTransform;
-uniform vec3 ColorShade;
 
-uniform vec2 worldLocations[512]; 
 
 void main()
 {
-   Color = ColorShade;
-
-   vec2 worldLocation = worldLocations[gl_InstanceID];
-
-   gl_Position = WorldToScreenTransform * vec4((worldLocation + VertexPosition.xy), 0.0, 1.0);
 
 
+   gl_Position = WorldToScreenTransform * vec4((InstanceWorldPos + VertexPosition.xy), 0.0, 1.0);
+   Color = vec3(0.0,1.0,1.0);
 
 }
