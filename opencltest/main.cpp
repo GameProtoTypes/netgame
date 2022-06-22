@@ -22,6 +22,9 @@
 #include <gtx/transform2.hpp>
 #include <gtx/string_cast.hpp>
 
+#include "slikenet/peerinterface.h"
+
+
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
@@ -294,7 +297,6 @@ int main(int argc, char* args[])
             {
                 gameState->peeps[p].faction = 1;
             }
-
         }
 
 
@@ -643,62 +645,19 @@ int main(int argc, char* args[])
             view = glm::scale(view, scaleVec);
             view = glm::translate(view,position/ viewScale);
             
-            
-
-
-            //draw mouse
-            pBasicShadProgram->Use();
-
-
-            pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
-
-
             glm::mat4 mouseWorldPos(1.0f);
             glm::mat4 mouseWorldPosEnd(1.0f);
             glm::vec4 mouseScreenCoords = glm::vec4(2.0f * (float(mousex) / SCREEN_WIDTH) - 1.0, -2.0f * (float(mousey) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
             glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(gameState->mouse_dragBeginx) / SCREEN_WIDTH) - 1.0, -2.0f * (float(gameState->mouse_dragBeginy) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
-
-
             glm::vec4 worldMouseEnd = glm::inverse(view) * mouseScreenCoords;
             glm::vec4 worldMouseBegin = glm::inverse(view) * mouseBeginScreenCoords;
-
-
-
-            glm::mat4 drawingTransform(1.0f);
-            pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
-            pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-
-            float mouseSelectVerts[] = {
-                 //positions    
-                mouseBeginScreenCoords.x,  mouseBeginScreenCoords.y,
-                mouseScreenCoords.x, mouseBeginScreenCoords.y,
-                mouseScreenCoords.x , mouseScreenCoords.y ,
-                mouseBeginScreenCoords.x, mouseScreenCoords.y
-            };
-
-            unsigned int mouseVAO, mouseVBO;
-            glGenVertexArrays(1, &mouseVAO);
-            glGenBuffers(1, &mouseVBO);
-            glBindVertexArray(mouseVAO);
-            glBindBuffer(GL_ARRAY_BUFFER, mouseVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(mouseSelectVerts), mouseSelectVerts, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-            if(gameState->mousePrimaryDown)
-            glDrawArrays(GL_LINE_LOOP, 0, 4);
-
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
-
 
 
             if (gameState->mousePrimaryReleased)
             {
 
-                float endx = glm::max(worldMouseBegin.x, worldMouseEnd.x);
-                float endy = glm::min(worldMouseBegin.y, worldMouseEnd.y);
+                float endx   = glm::max(worldMouseBegin.x, worldMouseEnd.x);
+                float endy   = glm::min(worldMouseBegin.y, worldMouseEnd.y);
                 float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
                 float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
 
@@ -742,7 +701,16 @@ int main(int argc, char* args[])
 
 
 
+            ImGui::Begin("Network");
 
+            ImGui::Button("Start Server");
+
+            ImGui::Button("Connect To Local Server");
+
+            ImGui::End();
+
+
+            
 
 
 
@@ -808,13 +776,60 @@ int main(int argc, char* args[])
             glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
             glBindVertexArray(0);
 
-            
+            //draw mouse
+            {
+               
+                pBasicShadProgram->Use();
+
+
+                pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
+
+
+                glm::mat4 drawingTransform(1.0f);
+                pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
+                pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+
+                float mouseSelectVerts[] = {
+                    //positions    
+                   mouseBeginScreenCoords.x,  mouseBeginScreenCoords.y,
+                   mouseScreenCoords.x, mouseBeginScreenCoords.y,
+                   mouseScreenCoords.x , mouseScreenCoords.y ,
+                   mouseBeginScreenCoords.x, mouseScreenCoords.y
+                };
+
+                unsigned int mouseVAO, mouseVBO;
+                glGenVertexArrays(1, &mouseVAO);
+                glGenBuffers(1, &mouseVBO);
+                glBindVertexArray(mouseVAO);
+                glBindBuffer(GL_ARRAY_BUFFER, mouseVBO);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(mouseSelectVerts), mouseSelectVerts, GL_STATIC_DRAW);
+                glEnableVertexAttribArray(0);
+                glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+
+                if (gameState->mousePrimaryDown)
+                    glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glBindVertexArray(0);
+            }
+
+
+
+
+
+
+
+
+
+
+
             cl_event writeEvent;
             ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
                 sizeof(GameState), gameState, 0, NULL, &writeEvent);
             CL_ERROR_CHECK(ret)
 
-                clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+            clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
             clGetEventProfilingInfo(writeEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
             nanoSeconds = time_end - time_start;
             ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
@@ -865,3 +880,6 @@ int main(int argc, char* args[])
 
 
 }
+
+
+

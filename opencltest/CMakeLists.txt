@@ -39,10 +39,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/../SDL2-2.0.22/include;"
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
 )
-
-
-
 
 
 ################################################################################
@@ -56,7 +54,8 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "Opengl32;"
     "glew32;"
     "glfw3;"
-    "imgui"
+    "imgui;"
+    "SLikeNet"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES}")

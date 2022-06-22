@@ -2,8 +2,10 @@ project(game)
 cmake_minimum_required(VERSION 3.20)
 
 add_subdirectory(opencltest)
+add_subdirectory(SLikeNet)
 
-
+set(SPRINTFS_FUNCTION_EXISTS true)
+set(VSNPRINTFS_FUNCTION_EXISTS true)
 
 add_library(imgui
     # Main Imgui files

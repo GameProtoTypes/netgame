@@ -86,7 +86,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -103,10 +103,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -114,7 +114,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Debug\imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Debug\imgui.lib;..\SLikeNet\Debug\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -129,7 +129,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -146,10 +146,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -157,7 +157,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Release\imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Release\imgui.lib;..\SLikeNet\Release\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -172,7 +172,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -189,10 +189,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -200,7 +200,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\MinSizeRel\imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\MinSizeRel\imgui.lib;..\SLikeNet\MinSizeRel\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -215,7 +215,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -231,10 +231,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\opencltest\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\opencltest\..\GLFW;C:\Users\casht\repos\opencltest\opencltest\..\SDL2-2.0.22\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\opencltest\..\glm-master\glm;C:\Users\casht\repos\opencltest\opencltest\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -242,7 +242,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\RelWithDebInfo\imgui.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\RelWithDebInfo\imgui.lib;..\SLikeNet\RelWithDebInfo\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -326,6 +326,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\SLikeNet\SLikeNet.vcxproj">
+      <Project>{D9FBD729-91FB-399B-8398-1B6264E4AA50}</Project>
+      <Name>SLikeNet</Name>
     </ProjectReference>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\imgui.vcxproj">
       <Project>{B026A10B-95D7-3CE9-AF12-804942B93F78}</Project>
