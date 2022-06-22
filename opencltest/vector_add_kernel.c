@@ -66,6 +66,82 @@ void PeepUpdateGravity(__global GameState* gameState, Peep* peep)
 
     }
 }
+
+
+
+
+
+void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
+{
+    cl_int x = ((peep->map_x_Q15_16 >> 16) / (SECTOR_SIZE));
+    cl_int y = ((peep->map_y_Q15_16 >> 16) / (SECTOR_SIZE));
+
+    //clamp
+    if (x < -SQRT_MAXSECTORS / 2)
+        x = -SQRT_MAXSECTORS / 2;
+    if (y < -SQRT_MAXSECTORS / 2)
+        y = -SQRT_MAXSECTORS / 2;
+    if (x >= SQRT_MAXSECTORS / 2)
+        x = SQRT_MAXSECTORS / 2 - 1;
+    if (y >= SQRT_MAXSECTORS / 2)
+        y = SQRT_MAXSECTORS / 2 - 1;
+
+    MapSector* newSector = &gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2];
+    if ((peep->mapSector != newSector))
+    {
+        if (peep->mapSector != NULL)
+        {
+            //remove peep from old sector
+            if ((peep->prevSectorPeep != NULL))
+            {
+                peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;
+            }
+            if ((peep->nextSectorPeep != NULL))
+            {
+                peep->nextSectorPeep->prevSectorPeep = peep->prevSectorPeep;
+            }
+
+
+            if (peep->mapSector->lastPeep == peep) {
+                peep->mapSector->lastPeep = peep->prevSectorPeep;
+                if (peep->mapSector->lastPeep != NULL)
+                    peep->mapSector->lastPeep->nextSectorPeep = NULL;
+            }
+
+            //completely detach
+            peep->nextSectorPeep = NULL;
+            peep->prevSectorPeep = NULL;
+
+        }
+
+        //assign new sector for next stage
+        peep->mapSector_pending = newSector;
+    }
+}
+void AssignPeepToSector_Insert(GameState* gameState, Peep* peep)
+{
+    //assign new sector
+    if (peep->mapSector != peep->mapSector_pending)
+    {
+        peep->mapSector = peep->mapSector_pending;
+
+        //put peep in the sector.  extend list
+        if (peep->mapSector->lastPeep != NULL)
+        {
+            peep->mapSector->lastPeep->nextSectorPeep = peep;
+            peep->prevSectorPeep = peep->mapSector->lastPeep;
+        }
+        peep->mapSector->lastPeep = peep;
+    }
+}
+
+
+
+
+
+
+
+
 void PeepUpdate(__global GameState* gameState, Peep* peep)
 {
 
@@ -106,13 +182,65 @@ void PeepUpdate(__global GameState* gameState, Peep* peep)
  
 
 }
-__kernel void game_init_single(__global const GameState* gameState) {
-    for (int pi = 0; pi < MAX_PEEPS; pi++)
+
+
+
+__kernel void game_init_single(__global GameState* gameState) 
+{
+    printf("Game Initializing...\n");
+
+    gameState->numClients = 1;
+    gameState->clientStates[0].mousescroll = 0;
+    for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
+    {
+        for (int secy = 0; secy < SQRT_MAXSECTORS; secy++)
+        {
+            gameState->sectors[secx][secy].xidx = secx;
+            gameState->sectors[secx][secy].yidx = secy;
+            gameState->sectors[secx][secy].lastPeep = NULL;
+            gameState->sectors[secx][secy].lock = 0;
+        }
+    }
+    printf("Sectors Initialized.\n");
+    for (cl_uint p = 0; p < MAX_PEEPS; p++)
+    {
+        gameState->peeps[p].map_x_Q15_16 = RandomRange(p,-1000, 1000) << 16;
+        gameState->peeps[p].map_y_Q15_16 = RandomRange(p+1,-1000, 1000) << 16;
+
+        gameState->peeps[p].xv_Q15_16 = RandomRange(p,-4, 4) << 16;
+        gameState->peeps[p].yv_Q15_16 = RandomRange(p+1,-4, 4) << 16;
+        gameState->peeps[p].netForcex_Q16 = 0;
+        gameState->peeps[p].netForcey_Q16 = 0;
+        gameState->peeps[p].minDistPeep = NULL;
+        gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
+        gameState->peeps[p].mapSector = NULL;
+        gameState->peeps[p].mapSector_pending = NULL;
+        gameState->peeps[p].nextSectorPeep = NULL;
+        gameState->peeps[p].prevSectorPeep = NULL;
+        gameState->peeps[p].target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
+        gameState->peeps[p].target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
+        if (gameState->peeps[p].map_x_Q15_16 >> 16 < 0)
+        {
+            gameState->peeps[p].faction = 0;
+        }
+        else
+        {
+            gameState->peeps[p].faction = 1;
+        }
+    }
+
+    printf("Peeps Initialized.\n");
+
+    for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
     {
         __global Peep* p = &gameState->peeps[pi];
 
-        AssignPeepToSector(gameState, p);
+        AssignPeepToSector_Detach(gameState, p);
+        AssignPeepToSector_Insert(gameState, p);
+
     }
+
+    printf("Peep Sector Assigment Finished\n");
 }
 
 
@@ -132,12 +260,11 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
     // Get the index of the current element to be processed
     
     int globalid = get_global_id(0);
-    if (globalid >= WORKGROUPSIZE)
+    if (globalid >= WARPSIZE)
         return;
-
-
-    const cl_uint chunkSize = MAX_PEEPS / WORKGROUPSIZE;
-    for (cl_uint pi = 0; pi < MAX_PEEPS / WORKGROUPSIZE; pi++)
+   
+    const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
+    for (cl_uint pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
         Peep* p = &gameState->peeps[pi + globalid*chunkSize];
         p->map_x_Q15_16 += p->xv_Q15_16;
@@ -150,16 +277,17 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
         global volatile cl_uint* lock = (global volatile cl_uint*)&mapSector->lock;
         
 
+        cl_uint reservation;
 
+        reservation = atomic_add(lock, 1)+1;
+        barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
 
-        int reservation = atomic_add(lock, 1) + 1;
-        barrier(CLK_GLOBAL_MEM_FENCE);
+        while (*lock != reservation) { }
 
-        while (atomic_add(lock, 0) != reservation) {  }
-            
-            AssignPeepToSector_Detach(gameState, p);
+        AssignPeepToSector_Detach(gameState, p);
 
         atomic_dec(lock);
+       
     }
 }
 
@@ -168,12 +296,12 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
    
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
-    if (globalid >= WORKGROUPSIZE)
+    if (globalid >= WARPSIZE)
         return;
 
-
-    const cl_uint chunkSize = MAX_PEEPS / WORKGROUPSIZE;
-    for (cl_uint pi = 0; pi < MAX_PEEPS / WORKGROUPSIZE; pi++)
+   // printf("Preupdate2");
+    const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
+    for (cl_uint pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
         Peep* p = &gameState->peeps[pi + globalid * chunkSize];
 
@@ -183,9 +311,8 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
         global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
 
 
-
-
         int reservation = atomic_add(lock, 1) + 1;
+        
         barrier(CLK_GLOBAL_MEM_FENCE);
 
         while (atomic_add(lock, 0) != reservation) {}
@@ -201,62 +328,60 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
     if (globalid != 0)
         return;
 
+    for (int cli = 0; cli < gameState->numClients; cli++) {
 
-    if (gameState->action_DoSelect)
-    {
-        gameState->selectedPeepsLast = NULL;
-        for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
+        ClientState* client = &gameState->clientStates[cli];
+        if (client->action_DoSelect)
         {
-            Peep* p = &gameState->peeps[pi + globalid * chunkSize];
-            p->selectedByClient = 0;
-            if ((p->map_x_Q15_16 > gameState->params_DoSelect_StartX_Q16) && (p->map_x_Q15_16 < gameState->params_DoSelect_EndX_Q16))
+            client->selectedPeepsLast = NULL;
+            for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
             {
+                Peep* p = &gameState->peeps[pi + globalid * chunkSize];
+                p->selectedByClient = -1;
 
-                if ((p->map_y_Q15_16 < gameState->params_DoSelect_StartY_Q16) && (p->map_y_Q15_16 > gameState->params_DoSelect_EndY_Q16))
+
+                if ((p->map_x_Q15_16 > client->params_DoSelect_StartX_Q16) && (p->map_x_Q15_16 < client->params_DoSelect_EndX_Q16))
                 {
 
-                    p->selectedByClient = 1;
+                    if ((p->map_y_Q15_16 < client->params_DoSelect_StartY_Q16) && (p->map_y_Q15_16 > client->params_DoSelect_EndY_Q16))
+                    {
 
-                    if (gameState->selectedPeepsLast != NULL)
-                    {
-                        gameState->selectedPeepsLast->nextSelectionPeep = p;
-                        p->prevSelectionPeep = gameState->selectedPeepsLast;
-                        p->nextSelectionPeep = NULL;
+                        p->selectedByClient = cli;
+
+                        if (client->selectedPeepsLast != NULL)
+                        {
+                            client->selectedPeepsLast->nextSelectionPeep = p;
+                            p->prevSelectionPeep = client->selectedPeepsLast;
+                            p->nextSelectionPeep = NULL;
+                        }
+                        else
+                        {
+                            p->prevSelectionPeep = NULL;
+                            p->nextSelectionPeep = NULL;
+                        }
+                        client->selectedPeepsLast = p;
                     }
-                    else
-                    {
-                        p->prevSelectionPeep = NULL;
-                        p->nextSelectionPeep = NULL;
-                    }
-                    gameState->selectedPeepsLast = p;
                 }
 
-            } 
-        }
+            }
 
-        gameState->action_DoSelect = 0;
-    }
-    else if (gameState->action_CommandToLocation)
-    {
-        Peep* curPeep = gameState->selectedPeepsLast;
-        while (curPeep != NULL)
+            client->action_DoSelect = 0;
+        }
+        else if (client->action_CommandToLocation)
         {
-            curPeep->target_x_Q16 = gameState->params_CommandToLocation_X_Q16;
-            curPeep->target_y_Q16 = gameState->params_CommandToLocation_Y_Q16;
+            Peep* curPeep = client->selectedPeepsLast;
+            while (curPeep != NULL)
+            {
+                curPeep->target_x_Q16 = client->params_CommandToLocation_X_Q16;
+                curPeep->target_y_Q16 = client->params_CommandToLocation_Y_Q16;
 
-            curPeep = curPeep->prevSelectionPeep;
+                curPeep = curPeep->prevSelectionPeep;
+            }
+
+            client->action_CommandToLocation = 0;
         }
-
-        gameState->action_CommandToLocation = 0;
     }
 
-
-
-
-
-        cl_int action_CommandToLocation;
-    cl_int params_CommandToLocation_X_Q16;
-    cl_int params_CommandToLocation_Y_Q16;
 
 
 

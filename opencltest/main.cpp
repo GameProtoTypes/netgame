@@ -262,43 +262,7 @@ int main(int argc, char* args[])
 
 
         GameState* gameState = new GameState();
-        for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
-        {
-            for (int secy = 0; secy < SQRT_MAXSECTORS; secy++)
-            {
-                gameState->sectors[secx][secy].xidx = secx;
-                gameState->sectors[secx][secy].yidx = secy;
-                gameState->sectors[secx][secy].lastPeep = NULL;
-                gameState->sectors[secx][secy].lock = 0;
-            }
-        }
-        for (int p = 0; p < MAX_PEEPS; p++)
-        {
-            gameState->peeps[p].map_x_Q15_16 = random(-1000, 1000)  << 16;
-            gameState->peeps[p].map_y_Q15_16 = random(-1000, 1000)  << 16;
-
-            gameState->peeps[p].xv_Q15_16 = random(-4, 4) << 16;
-            gameState->peeps[p].yv_Q15_16 = random(-4, 4) << 16;
-            gameState->peeps[p].netForcex_Q16 = 0;
-            gameState->peeps[p].netForcey_Q16 = 0;
-            gameState->peeps[p].minDistPeep = NULL;
-            gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
-            gameState->peeps[p].mapSector = NULL;
-            gameState->peeps[p].mapSector_pending = NULL;
-            gameState->peeps[p].nextSectorPeep = NULL;
-            gameState->peeps[p].prevSectorPeep = NULL;
-            gameState->peeps[p].target_x_Q16 = random(-1000, 1000) << 16;
-            gameState->peeps[p].target_y_Q16 = random(-1000, 1000) << 16;
-            if (gameState->peeps[p].map_x_Q15_16>>16 < 0)
-            {
-                gameState->peeps[p].faction = 0;
-            }
-            else
-            {
-                gameState->peeps[p].faction = 1;
-            }
-        }
-
+        
 
 
         // Load the update_kernel source code into the array source_str
@@ -429,13 +393,12 @@ int main(int argc, char* args[])
         printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
 
         // Execute the OpenCL update_kernel on the list
-        size_t SingleKernelWorkItems[] = { WORKGROUPSIZE };
-        size_t SingleKernelWorkItemsPerWorkGroup[] = { WORKGROUPSIZE };
+        size_t SingleKernelWorkItems[] = { 1 };
+        size_t SingleKernelWorkItemsPerWorkGroup[] = { 1 };
 
 
         size_t WorkItems[] = { TOTALWORKITEMS };
-        size_t WorkItemsPerWorkGroup[] = { WORKGROUPSIZE};
-        
+
         
         //Main loop flag
         bool quit = false;
@@ -448,7 +411,7 @@ int main(int argc, char* args[])
         gameState->mapHeight = SCREEN_HEIGHT;
         gameState->mapWidth = SCREEN_WIDTH;
         gameState->frameIdx = 0;
-        gameState->mousescroll = 0;
+
 
 
         ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
@@ -482,11 +445,11 @@ int main(int argc, char* args[])
             
             
             ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
-                SingleKernelWorkItems, NULL, 0, NULL, &preUpdateEvent1);
+                WorkItems, NULL, 0, NULL, &preUpdateEvent1);
             CL_ERROR_CHECK(ret)
 
             ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
-                SingleKernelWorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
+                WorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
             CL_ERROR_CHECK(ret)
 
 
@@ -535,12 +498,12 @@ int main(int argc, char* args[])
             nanoSeconds = time_end - time_start;
             ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
             
+            ClientState* client = &gameState->clientStates[0];
 
-
-            gameState->mousePrimaryPressed = 0;
-            gameState->mousePrimaryReleased = 0;
-            gameState->mouseSecondaryPressed = 0;
-            gameState->mouseSecondaryReleased = 0;
+            client->mousePrimaryPressed = 0;
+            client->mousePrimaryReleased = 0;
+            client->mouseSecondaryPressed = 0;
+            client->mouseSecondaryReleased = 0;
             //Handle events on queue
             while (SDL_PollEvent(&e) != 0)
             {
@@ -556,40 +519,40 @@ int main(int argc, char* args[])
                     if (e.wheel.y > 0) // scroll up
                     {
                         //if (gameState->viewScale >= 1 && gameState->viewScale < 15)
-                            gameState->mousescroll++;
+                        client->mousescroll++;
                         
                     }
                     else if (e.wheel.y < 0) // scroll down
                     {
                        // if (gameState->viewScale > 1)
-                            gameState->mousescroll--;
+                        client->mousescroll--;
                     }
                 }
                 else if (e.type == SDL_MOUSEBUTTONDOWN)
                 {
                     if (e.button.button == SDL_BUTTON_LEFT)
                     {
-                        gameState->mousePrimaryDown = 1;
-                        gameState->mousePrimaryPressed = 1;
+                        client->mousePrimaryDown = 1;
+                        client->mousePrimaryPressed = 1;
 
                     }
                     else
                     {
-                        gameState->mouseSecondaryDown = 1;
-                        gameState->mouseSecondaryPressed = 1;
+                        client->mouseSecondaryDown = 1;
+                        client->mouseSecondaryPressed = 1;
                     }
                 }
                 else if (e.type == SDL_MOUSEBUTTONUP)
                 {
                     if (e.button.button == SDL_BUTTON_LEFT)
                     {
-                        gameState->mousePrimaryDown = 0;
-                        gameState->mousePrimaryReleased = 1;
+                        client->mousePrimaryDown = 0;
+                        client->mousePrimaryReleased = 1;
                     }
                     else
                     {
-                        gameState->mouseSecondaryDown = 0;
-                        gameState->mouseSecondaryReleased = 1;
+                        client->mouseSecondaryDown = 0;
+                        client->mouseSecondaryReleased = 1;
                     }
                 }
                 else if (SDL_WINDOWEVENT)
@@ -608,25 +571,25 @@ int main(int argc, char* args[])
                 }
             }
             SDL_GetMouseState(&mousex, &mousey);
-            gameState->mousex = mousex;
-            gameState->mousey = mousey;
-            if (gameState->mouseSecondaryPressed)
+            client->mousex = mousex;
+            client->mousey = mousey;
+            if (client->mouseSecondaryPressed)
             {
-                gameState->mouse_dragBeginx = mousex;
-                gameState->mouse_dragBeginy = mousey;
-                gameState->view_beginX = gameState->viewX;
-                gameState->view_beginY = gameState->viewY;
+                client->mouse_dragBeginx = mousex;
+                client->mouse_dragBeginy = mousey;
+                client->view_beginX = client->viewX;
+                client->view_beginY = client->viewY;
             }
-            if (gameState->mousePrimaryPressed)
+            if (client->mousePrimaryPressed)
             {
-                gameState->mouse_dragBeginx = mousex;
-                gameState->mouse_dragBeginy = mousey;
+                client->mouse_dragBeginx = mousex;
+                client->mouse_dragBeginy = mousey;
             }
 
-            if (gameState->mouseSecondaryDown)
+            if (client->mouseSecondaryDown)
             {
-                gameState->viewX = gameState->view_beginX + (gameState->mousex - gameState->mouse_dragBeginx);
-                gameState->viewY = gameState->view_beginY + (gameState->mousey - gameState->mouse_dragBeginy);
+                client->viewX = client->view_beginX + (client->mousex - client->mouse_dragBeginx);
+                client->viewY = client->view_beginY + (client->mousey - client->mouse_dragBeginy);
             }
             gameState->frameIdx++;
             
@@ -637,7 +600,7 @@ int main(int argc, char* args[])
             
             ImGui::SliderFloat("Zoom", &viewScale, 0.001f,0.02f);
 
-            glm::vec3 position = glm::vec3((2.0f*gameState->viewX) / SCREEN_WIDTH, ( - 2.0f * gameState->viewY) / SCREEN_HEIGHT, 0.0f);
+            glm::vec3 position = glm::vec3((2.0f* client->viewX) / SCREEN_WIDTH, ( - 2.0f * client->viewY) / SCREEN_HEIGHT, 0.0f);
             glm::mat4 view = glm::mat4(1.0f);   
             glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
             
@@ -648,12 +611,12 @@ int main(int argc, char* args[])
             glm::mat4 mouseWorldPos(1.0f);
             glm::mat4 mouseWorldPosEnd(1.0f);
             glm::vec4 mouseScreenCoords = glm::vec4(2.0f * (float(mousex) / SCREEN_WIDTH) - 1.0, -2.0f * (float(mousey) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
-            glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(gameState->mouse_dragBeginx) / SCREEN_WIDTH) - 1.0, -2.0f * (float(gameState->mouse_dragBeginy) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
+            glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(client->mouse_dragBeginx) / SCREEN_WIDTH) - 1.0, -2.0f * (float(client->mouse_dragBeginy) / SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
             glm::vec4 worldMouseEnd = glm::inverse(view) * mouseScreenCoords;
             glm::vec4 worldMouseBegin = glm::inverse(view) * mouseBeginScreenCoords;
 
 
-            if (gameState->mousePrimaryReleased)
+            if (client->mousePrimaryReleased)
             {
 
                 float endx   = glm::max(worldMouseBegin.x, worldMouseEnd.x);
@@ -661,19 +624,19 @@ int main(int argc, char* args[])
                 float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
                 float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
 
-                gameState->action_DoSelect = 1;
-                gameState->params_DoSelect_StartX_Q16 = cl_int(startx*(1<<16));
-                gameState->params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
-                gameState->params_DoSelect_EndX_Q16   = cl_int(endx * (1 << 16));
-                gameState->params_DoSelect_EndY_Q16   = cl_int(endy * (1 << 16));
+                client->action_DoSelect = 1;
+                client->params_DoSelect_StartX_Q16 = cl_int(startx*(1<<16));
+                client->params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
+                client->params_DoSelect_EndX_Q16   = cl_int(endx * (1 << 16));
+                client->params_DoSelect_EndY_Q16   = cl_int(endy * (1 << 16));
             }
 
             
-            if (gameState->mouseSecondaryReleased)
+            if (client->mouseSecondaryReleased)
             {
-                gameState->action_CommandToLocation = 1;
-                gameState->params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x*(1<<16)) ;
-                gameState->params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
+                client->action_CommandToLocation = 1;
+                client->params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x*(1<<16)) ;
+                client->params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
             }
 
 
@@ -739,7 +702,7 @@ int main(int argc, char* args[])
                     colors[pi].b = 1.0f;
                 }
 
-                if (p->selectedByClient)
+                if (p->selectedByClient > -1)
                 {
                     factor = 1.0f;
                 }
@@ -807,7 +770,7 @@ int main(int argc, char* args[])
                 glEnableVertexAttribArray(0);
                 glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-                if (gameState->mousePrimaryDown)
+                if (client->mousePrimaryDown)
                     glDrawArrays(GL_LINE_LOOP, 0, 4);
 
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
