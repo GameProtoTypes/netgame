@@ -10,6 +10,7 @@
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameGraphics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
@@ -21,6 +22,7 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameGraphics.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\casht\repos\opencltest\opencltest\CMakeLists.txt" />

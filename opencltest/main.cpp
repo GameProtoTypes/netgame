@@ -148,8 +148,6 @@ int main(int argc, char* args[])
     }
     else
     {
-
-
         printf("started running\n");
 
 
@@ -206,11 +204,6 @@ int main(int argc, char* args[])
 
         glBindAttribLocation(pBasicShadProgram->ProgramID(), 0, "VertexPosition");
         glBindAttribLocation(pBasicShadProgram->ProgramID(), 1, "VertexColor");
-
-
-
-
-
 
 
         pPeepShadProgram->Link();
