@@ -9,10 +9,6 @@
 
 
 
-	// Start the thread for packet receiving
-	//this->isListening = true;
-	//this->listenLoopThread = new std::thread(&GameNetworking::ListenLoop, this);
-
 
 	std::cout << "GameNetworking::Init  End" << std::endl;
 }
@@ -111,7 +107,7 @@
  }
 
 
- void GameNetworking::ListenLoop()
+ void GameNetworking::Update()
 {
 
 	//while (this->isListening)

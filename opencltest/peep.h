@@ -126,7 +126,7 @@ struct GameState {
 	cl_int numActions;
 
 
-	cl_uint frameIdx;
+	cl_uint tickIdx;
 }typedef GameState;
 
 

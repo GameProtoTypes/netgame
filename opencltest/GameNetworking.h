@@ -101,7 +101,7 @@ public:
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
 
 
-	void ListenLoop();
+	void Update();
 	int MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
 

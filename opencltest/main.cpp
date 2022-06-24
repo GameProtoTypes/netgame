@@ -55,7 +55,7 @@ int main(int argc, char* args[])
 
         GameNetworking gameNetworking(gameState);
         gameNetworking.Init();
-        gameNetworking.ListenLoop();
+        gameNetworking.Update();
 
         //Main loop flag
         bool quit = false;
@@ -67,7 +67,7 @@ int main(int argc, char* args[])
 
         gameState->mapHeight = 2000;
         gameState->mapWidth = 2000;
-        gameState->frameIdx = 0;
+        gameState->tickIdx = 0;
 
 
 
@@ -193,7 +193,7 @@ int main(int argc, char* args[])
                 client->viewX = client->view_beginX + (client->mousex - client->mouse_dragBeginx);
                 client->viewY = client->view_beginY + (client->mousey - client->mouse_dragBeginy);
             }
-            gameState->frameIdx++;
+            gameState->tickIdx++;
             
 
 
@@ -261,7 +261,7 @@ int main(int argc, char* args[])
             }
 
 
-            gameNetworking.ListenLoop();
+            gameNetworking.Update();
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
             gameNetworking.CLIENT_ApplyCombinedTurn();
             
@@ -311,7 +311,7 @@ int main(int argc, char* args[])
             if (ImGui::Button("Send Message"))
             {
                 char buffer[256];
-                sprintf(buffer, "HELLOOOO %d", gameState->frameIdx);
+                sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
                 gameNetworking.SendMessage(buffer);
             }
 
@@ -457,12 +457,12 @@ int main(int argc, char* args[])
             ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
-            ImGui::Text("FrameIdx: %d", gameState->frameIdx);
+            ImGui::Text("FrameIdx: %d", gameState->tickIdx);
             ImGui::End();
 
             gameGraphics.Swap();
 
-            if (gameState->frameIdx == 500)
+            if (gameState->tickIdx == 500)
             {
               //  while (true) {}
             }
