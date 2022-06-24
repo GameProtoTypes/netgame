@@ -61,12 +61,12 @@ public:
 
 
 
-	void SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions);
+	void CLIENT_SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions);
 
 
-	void SendActionUpdates_ToClients();
+	void HOST_SendActionUpdates_ToClients();
 
-	void ApplyCombinedTurn()
+	void CLIENT_ApplyCombinedTurn()
 	{
 		for (int a = 0; a < turnActions.size(); a++)
 		{
@@ -77,7 +77,7 @@ public:
 		turnActions.clear();	
 	}
 
-	void SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
+	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
 	{
 		SLNet::BitStream bs;
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));

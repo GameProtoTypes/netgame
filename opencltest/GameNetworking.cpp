@@ -10,14 +10,14 @@
 
 
 	// Start the thread for packet receiving
-	this->isListening = true;
-	this->listenLoopThread = new std::thread(&GameNetworking::ListenLoop, this);
+	//this->isListening = true;
+	//this->listenLoopThread = new std::thread(&GameNetworking::ListenLoop, this);
 
 
 	std::cout << "GameNetworking::Init  End" << std::endl;
 }
 
- void GameNetworking::SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions)
+ void GameNetworking::CLIENT_SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions)
  {
 	 if (actionStateDirty) {
 		 std::cout << "Sending ActionList Update to host " << hostAddr.ToString() << std::endl;
@@ -41,7 +41,7 @@
 	 }
  }
 
- void GameNetworking::SendActionUpdates_ToClients()
+ void GameNetworking::HOST_SendActionUpdates_ToClients()
  {
 	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_TURNDATA to " << clients.size() << " clients" << std::endl;
 	 
@@ -114,8 +114,8 @@
  void GameNetworking::ListenLoop()
 {
 
-	while (this->isListening)
-	{
+	//while (this->isListening)
+	//{
 		for (this->packet = this->peerInterface->Receive();
 			this->packet;
 			this->peerInterface->DeallocatePacket(this->packet),
@@ -157,7 +157,7 @@
 				clients.push_back(cli);
 				nextCliIdx++;
 
-				SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
+				HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
 
 			}
 				break;
@@ -208,7 +208,7 @@
 
 					//all clients have given input
 					//send combined final turn to all clients
-					SendActionUpdates_ToClients();
+					HOST_SendActionUpdates_ToClients();
 					
 				}
 				else if (msgtype == MESSAGE_ENUM_HOST_TURNDATA)
@@ -262,7 +262,7 @@
 		} // package receive loop
 
 
-	} // listening loop
+	//} // listening loop
 
 	
 

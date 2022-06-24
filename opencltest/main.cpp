@@ -55,7 +55,7 @@ int main(int argc, char* args[])
 
         GameNetworking gameNetworking(gameState);
         gameNetworking.Init();
-
+        gameNetworking.ListenLoop();
 
         //Main loop flag
         bool quit = false;
@@ -261,9 +261,9 @@ int main(int argc, char* args[])
             }
 
 
-
-            gameNetworking.SendActionUpdate_ToHost(clientActions);
-            gameNetworking.ApplyCombinedTurn();
+            gameNetworking.ListenLoop();
+            gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
+            gameNetworking.CLIENT_ApplyCombinedTurn();
             
 
 
@@ -331,14 +331,17 @@ int main(int argc, char* args[])
             
 
             cl_uint curPeepIdx = gameState->clientStates[gameNetworking.localClientStateIdx].selectedPeepsLastIdx;
+            PeepRenderSupport peepRenderSupport[MAX_PEEPS];
             while (curPeepIdx != OFFSET_NULL)
             {
                 Peep* p  = &gameState->peeps[curPeepIdx];
 
-                p->render_selectedByClient = 1;
+                peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
                 curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.localClientStateIdx];
             }
+
+
 
                     
             for (int pi = 0; pi < MAX_PEEPS; pi++)
@@ -360,10 +363,10 @@ int main(int argc, char* args[])
                     gameGraphics.colors[pi].b = 1.0f;
                 }
 
-                if (p->render_selectedByClient)
+                if (peepRenderSupport[pi].render_selectedByClient)
                 {
                     factor = 1.0f;
-                    p->render_selectedByClient = 0;
+                    peepRenderSupport[pi].render_selectedByClient = 0;
                 }
 
                 gameGraphics.colors[pi] = gameGraphics.colors[pi]*factor;

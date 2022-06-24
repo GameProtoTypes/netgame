@@ -51,17 +51,17 @@ struct Peep {
 	struct Peep* nextSectorPeep;
 	struct Peep* prevSectorPeep;
 
-
-
-
-	//noncore
+	//selection by clients
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
 	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
 
-	cl_int render_selectedByClient;
-
 
 } typedef Peep;
+
+struct PeepRenderSupport {
+	cl_int render_selectedByClient;
+}typedef PeepRenderSupport;
+
 
 struct MapSector {
 	Peep* lastPeep;
@@ -128,10 +128,6 @@ struct GameState {
 
 	cl_uint frameIdx;
 }typedef GameState;
-
-
-
-
 
 
 
