@@ -44,7 +44,12 @@ public:
 
 	enum MESSAGE_ENUMS {
 		MESSAGE_ENUM_GENERIC_MESSAGE = 0,
-		MESSAGE_ENUM_HOST_SYNCDATA,
+
+		MESSAGE_ENUM_HOST_SYNCDATA1,
+		MESSAGE_ENUM_HOST_SYNCDATA2,
+
+		MESSAGE_ROUTINE_TICKSYNC,
+
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
 		MESSAGE_ENUM_HOST_TURNDATA
 	};
@@ -68,22 +73,37 @@ public:
 
 	void CLIENT_ApplyCombinedTurn()
 	{
+		std::vector<int> removals;
+		std::vector<ClientAction> newList;
+		int i = 0;
 		for (int a = 0; a < turnActions.size(); a++)
 		{
-			std::cout << "got a client action!" << std::endl;
-			gameState->clientActions[a] = turnActions[a];
+			if (turnActions[a].scheduledTickIdx == gameState->tickIdx)
+			{
+				gameState->clientActions[i] = turnActions[a];
+				i++;
+			}
+			else if (turnActions[a].scheduledTickIdx < gameState->tickIdx)
+			{
+				std::cout << "expired action!!!!!!";
+			}
+			else
+			{
+				newList.push_back(turnActions[a]);
+			}
 		}
-		gameState->numActions = turnActions.size();
-		turnActions.clear();	
+		turnActions = newList;
+		gameState->numActions = i;
 	}
 
 	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
 	{
 		SLNet::BitStream bs;
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_SYNCDATA));
-		bs.Write(static_cast<unsigned int>(sizeof(unsigned char)));
+		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_SYNCDATA1));
+		bs.Write(static_cast<unsigned int>(sizeof(unsigned char) + sizeof(GameState)));
 		bs.Write(cliIdx);
+		bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
 
 		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 	}
@@ -97,6 +117,20 @@ public:
 
 	//send null terminated message
 	void SendMessage(char* message);
+
+	void SendTickSyncToHost()
+	{
+		SLNet::BitStream bs;
+
+		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<unsigned char>(MESSAGE_ROUTINE_TICKSYNC));
+		bs.Write(static_cast<unsigned int>(gameState->tickIdx));
+		bs.Write(static_cast<int>(minTickTimeMs));
+
+		
+		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
+			1, hostAddr, false);
+	}
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
 
@@ -131,6 +165,7 @@ public:
 	
 	std::vector<std::pair<unsigned char, SLNet::SystemAddress>> clients;
 	unsigned char nextCliIdx = 0;
+	int clientTickLags[MAX_CLIENTS] = { 0 };
 
 	SLNet::SystemAddress hostAddr;
 
@@ -142,7 +177,7 @@ public:
 	std::vector<ClientAction> turnActions;
 	
 
-
+	int minTickTimeMs = 33;
 
 };
 

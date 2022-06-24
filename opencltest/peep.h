@@ -72,6 +72,11 @@ struct MapSector {
 
 struct ClientAction {
 	cl_int clientId;
+
+	cl_uint submittedTickIdx;//the client tickidx when the action was created
+	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
+
+
 	cl_int action_DoSelect;
 	cl_int params_DoSelect_StartX_Q16;
 	cl_int params_DoSelect_StartY_Q16;

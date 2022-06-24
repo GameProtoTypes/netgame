@@ -29,8 +29,8 @@
 			 bs.Write(reinterpret_cast<char*>(&action), sizeof(ClientAction));
 
 		 }
-		 //broadcast to host
-		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, SLNet::UNASSIGNED_RAKNET_GUID, true);
+		 
+		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostAddr, false);
 
 
 		 actionStateDirty = false;
@@ -109,157 +109,192 @@
 
  void GameNetworking::Update()
 {
+	if(connectedToHost)
+		SendTickSyncToHost();
 
-	//while (this->isListening)
-	//{
-		for (this->packet = this->peerInterface->Receive();
-			this->packet;
-			this->peerInterface->DeallocatePacket(this->packet),
-			this->packet = this->peerInterface->Receive())
+	for (this->packet = this->peerInterface->Receive();
+		this->packet;
+		this->peerInterface->DeallocatePacket(this->packet),
+		this->packet = this->peerInterface->Receive())
+	{
+		SLNet::BitStream bts(this->packet->data,
+			this->packet->length,
+			false);
+
+		// Check the packet identifier
+		switch (this->packet->data[0])
 		{
-			SLNet::BitStream bts(this->packet->data,
-				this->packet->length,
-				false);
+		case ID_CONNECTION_REQUEST_ACCEPTED:
+		{
+			std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
+			hostAddr = this->packet->systemAddress;
+			connectedToHost = true;
 
-			// Check the packet identifier
-			switch (this->packet->data[0])
+			if (serverRunning)
 			{
-			case ID_CONNECTION_REQUEST_ACCEPTED:
-			{
-				std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
-				hostAddr = this->packet->systemAddress;
-				connectedToHost = true;
-
-				if (serverRunning)
-				{
-					std::pair<unsigned char, SLNet::SystemAddress> cli;
-					cli.first = nextCliIdx;
-					cli.second = hostAddr;
-					clients.push_back(cli);
-					nextCliIdx++;
-				}
-
-			}
-				break;
-			case ID_NEW_INCOMING_CONNECTION:
-			{
-				std::cout << "[HOST] Peer: A peer " << this->packet->systemAddress.ToString(true)
-					<< " has connected." << std::endl;
-
-
 				std::pair<unsigned char, SLNet::SystemAddress> cli;
 				cli.first = nextCliIdx;
-				cli.second = this->packet->systemAddress;
+				cli.second = hostAddr;
 				clients.push_back(cli);
 				nextCliIdx++;
 
 				HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
 
 			}
-				break;
+
+		}
+			break;
+		case ID_NEW_INCOMING_CONNECTION:
+		{
+			std::cout << "[HOST] Peer: A peer " << this->packet->systemAddress.ToString(true)
+				<< " has connected." << std::endl;
+
+
+			std::pair<unsigned char, SLNet::SystemAddress> cli;
+			cli.first = nextCliIdx;
+			cli.second = this->packet->systemAddress;
+			clients.push_back(cli);
+			nextCliIdx++;
+
+			HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
+
+		}
+			break;
 			
-			case ID_USER_PACKET_ENUM:
-				unsigned char rcv_id;
-				bts.Read(rcv_id);
+		case ID_USER_PACKET_ENUM:
+			unsigned char rcv_id;
+			bts.Read(rcv_id);
 
-				unsigned char msgtype;
-				bts.Read(msgtype);
+			unsigned char msgtype;
+			bts.Read(msgtype);
 
 
+
+				
+
+			if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
+			{	
 				unsigned int length;
 				bts.Read(length);
 
 				
+				
+				char message[MAX_USER_MESSAGE_LENGTH];
 
-				if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
-				{	char message[MAX_USER_MESSAGE_LENGTH];
+				bts.Read(message, length);
+				message[length] = '\0';
+				std::cout << "Peer: MESSAGE_ENUM_GENERIC_MESSAGE received: " << message << std::endl;
+			}
+			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
+			{
 
-					bts.Read(message, length);
-					message[length] = '\0';
-					std::cout << "Peer: MESSAGE_ENUM_GENERIC_MESSAGE received: " << message << std::endl;
-				}
-				else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA)
+				unsigned int length;
+				bts.Read(length);
+
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
+
+				bts.Read(localClientStateIdx);
+				bool s = bts.Read(reinterpret_cast<char*>(gameState), length-sizeof(unsigned char));
+				if (!s) assert(0);
+			}
+			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
+			{
+				unsigned int length;
+				bts.Read(length);
+
+				unsigned char numActions;
+				bts.Read(numActions);
+				for (int i = 0; i < numActions; i++)
 				{
-					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA received" << std::endl;
+					ClientAction action;
+					bts.Read(reinterpret_cast<char*>(&action), length);
 
-					bts.Read(localClientStateIdx);
+					int tickLatency = (gameState->tickIdx - action.submittedTickIdx);
+						
 
+					action.scheduledTickIdx = gameState->tickIdx + tickLatency*2;
+					turnActions.push_back(action);
 				}
-				else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
-				{
-
-					unsigned char numActions;
-					bts.Read(numActions);
-					for (int i = 0; i < numActions; i++)
-					{
-						ClientAction action;
-						bts.Read(reinterpret_cast<char*>(&action), length);
-						turnActions.push_back(action);
-					}
 						
 					
-					std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received" << std::endl;
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received" << std::endl;
 
 
 
-					//all clients have given input
-					//send combined final turn to all clients
-					HOST_SendActionUpdates_ToClients();
+				//all clients have given input
+				//send combined final turn to all clients
+				HOST_SendActionUpdates_ToClients();
 					
-				}
-				else if (msgtype == MESSAGE_ENUM_HOST_TURNDATA)
+			}
+			else if (msgtype == MESSAGE_ENUM_HOST_TURNDATA)
+			{
+				unsigned int length;
+				bts.Read(length);
+
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_TURNDATA received" << std::endl;
+					
+				unsigned char numClients;
+				bts.Read(numClients);
+				gameState->numClients = numClients;
+
+				//sync client id as assigned by the host.
+				unsigned char cliId;
+				bts.Read(cliId);
+
+				localClientStateIdx = cliId;
+
+
+
+
+
+				for (unsigned char cli = 0; cli < numClients; cli++)
 				{
-					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_TURNDATA received" << std::endl;
-					
-					unsigned char numClients;
-					bts.Read(numClients);
-					gameState->numClients = numClients;
-
-					//sync client id as assigned by the host.
-					unsigned char cliId;
-					bts.Read(cliId);
-
-					localClientStateIdx = cliId;
-
-					for (unsigned char cli = 0; cli < numClients; cli++)
-					{
-						ClientAction actionSet;
-						bts.Read(reinterpret_cast<char*>(&actionSet), sizeof(ClientAction));
-						turnActions.push_back(actionSet);
-					}
+					ClientAction actionSet;
+					bts.Read(reinterpret_cast<char*>(&actionSet), sizeof(ClientAction));
+					turnActions.push_back(actionSet);
 				}
+			}
+			else if (msgtype == MESSAGE_ROUTINE_TICKSYNC)
+			{
+				unsigned int client_tickIdx;
+				bts.Read(client_tickIdx);
 
-				break;
-			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-				std::cout << "Peer: Remote peer has disconnected." << std::endl;
+				int tickTime;
+				bts.Read(tickTime);
+
+				int error = gameState->tickIdx - client_tickIdx;
+				//std::cout << "[HOST] Peer: MESSAGE_ROUTINE_TICKSYNC received. error: " << error << std::endl;
+			}
+
+			break;
+		case ID_REMOTE_DISCONNECTION_NOTIFICATION:
+			std::cout << "Peer: Remote peer has disconnected." << std::endl;
 
 				
 
-				break;
-			case ID_REMOTE_CONNECTION_LOST:
-				std::cout << "Peer: Remote peer lost connection." << std::endl;
-				break;
-			case ID_DISCONNECTION_NOTIFICATION:
-				std::cout << "Peer: A peer has disconnected." << std::endl;
-				break;
-			case ID_CONNECTION_LOST:
-				std::cout << "Peer: A connection was lost." << std::endl;
-				break;
-			case ID_CONNECTION_ATTEMPT_FAILED:
-				std::cout << "Peer: A connection failed." << std::endl;
-				break;
-			default:
+			break;
+		case ID_REMOTE_CONNECTION_LOST:
+			std::cout << "Peer: Remote peer lost connection." << std::endl;
+			break;
+		case ID_DISCONNECTION_NOTIFICATION:
+			std::cout << "Peer: A peer has disconnected." << std::endl;
+			break;
+		case ID_CONNECTION_LOST:
+			std::cout << "Peer: A connection was lost." << std::endl;
+			break;
+		case ID_CONNECTION_ATTEMPT_FAILED:
+			std::cout << "Peer: A connection failed." << std::endl;
+			break;
+		default:
 
-				std::cout << "Peer: Received a packet with unspecified message identifier: " << int(this->packet->data[0]) << std::endl;
-
-
-				break;
-			} // check package identifier
-		} // package receive loop
+			std::cout << "Peer: Received a packet with unspecified message identifier: " << int(this->packet->data[0]) << std::endl;
 
 
-	//} // listening loop
+			break;
+		} // check package identifier
+	} // package receive loop
 
-	
+
+
 
 }

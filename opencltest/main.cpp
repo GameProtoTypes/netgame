@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string>
 #include <iostream>
+#include <chrono>
+#include <thread>
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -36,10 +38,6 @@
 
 
 
-
-
-
-
 int random(int min, int max) { return rand() % (max - min + 1) + min; }
 
 
@@ -70,11 +68,12 @@ int main(int argc, char* args[])
         gameState->tickIdx = 0;
 
 
-
-
-
+        uint64_t timerStartMs = SDL_GetTicks64();
         while (!quit)
         {
+            timerStartMs = SDL_GetTicks64();
+
+
 
             gameGraphics.BeginDraw();
             
@@ -237,6 +236,7 @@ int main(int argc, char* args[])
                 action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
                 action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
 
+                action.submittedTickIdx = gameState->tickIdx;
                 clientActions.push_back(action);
 
                 gameNetworking.actionStateDirty = true;
@@ -253,12 +253,13 @@ int main(int argc, char* args[])
                 action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
                 action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
 
-
+                action.submittedTickIdx = gameState->tickIdx;
                 clientActions.push_back(action);
 
                 gameNetworking.actionStateDirty = true;
 
             }
+
 
 
             gameNetworking.Update();
@@ -442,11 +443,7 @@ int main(int argc, char* args[])
 
 
 
-
-
-
             gameCompute.WriteGameState();
-
 
 
 
@@ -457,15 +454,18 @@ int main(int argc, char* args[])
             ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
-            ImGui::Text("FrameIdx: %d", gameState->tickIdx);
+            ImGui::Text("TickIdx: %d", gameState->tickIdx);
             ImGui::End();
 
             gameGraphics.Swap();
 
-            if (gameState->tickIdx == 500)
-            {
-              //  while (true) {}
-            }
+
+
+            int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
+            int sleepTime = glm::clamp(int(gameNetworking.minTickTimeMs - frameTimeMS), 0, gameNetworking.minTickTimeMs);
+            std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+
+            
         }
 
 
