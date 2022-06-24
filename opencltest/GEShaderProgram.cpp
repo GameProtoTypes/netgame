@@ -43,11 +43,6 @@ void GEShaderProgram::Link(void)
 		}
 
 	}
-		
-
-
-
-
 }
 
 void GEShaderProgram::Use(void)

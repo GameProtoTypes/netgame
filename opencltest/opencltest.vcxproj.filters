@@ -10,7 +10,15 @@
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameGraphics.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameNetworking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
@@ -22,7 +30,21 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameGraphics.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameNetworking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PeepFuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\casht\repos\opencltest\opencltest\CMakeLists.txt" />

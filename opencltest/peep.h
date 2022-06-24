@@ -2,6 +2,10 @@
 
 
 
+
+
+
+
 #define MAX_PEEPS (1024*8)
 
 #define WARPSIZE (32)
@@ -64,6 +68,20 @@ struct MapSector {
 	cl_uint lock;
 } typedef MapSector;
 
+struct ClientAction {
+	cl_int clientId;
+	cl_int action_DoSelect;
+	cl_int params_DoSelect_StartX_Q16;
+	cl_int params_DoSelect_StartY_Q16;
+	cl_int params_DoSelect_EndX_Q16;
+	cl_int params_DoSelect_EndY_Q16;
+
+	cl_int action_CommandToLocation;
+	cl_int params_CommandToLocation_X_Q16;
+	cl_int params_CommandToLocation_Y_Q16;
+} typedef ClientAction;
+
+
 
 
 struct ClientState {
@@ -89,19 +107,8 @@ struct ClientState {
 	cl_float view_beginY;
 	cl_float viewScale;
 
-
-	cl_int action_DoSelect;
-	cl_int params_DoSelect_StartX_Q16;
-	cl_int params_DoSelect_StartY_Q16;
-	cl_int params_DoSelect_EndX_Q16;
-	cl_int params_DoSelect_EndY_Q16;
-
-	cl_int action_CommandToLocation;
-	cl_int params_CommandToLocation_X_Q16;
-	cl_int params_CommandToLocation_Y_Q16;
-
 	Peep* selectedPeepsLast;
-}typedef ClientState;
+} typedef ClientState;
 
 struct GameState {
 	Peep peeps[MAX_PEEPS];
@@ -112,6 +119,10 @@ struct GameState {
 
 	ClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
+
+	ClientAction clientActions[32];
+	cl_int numActions;
+
 
 	cl_uint frameIdx;
 }typedef GameState;

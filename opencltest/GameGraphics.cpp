@@ -1,4 +1,33 @@
+#include "glew.h"
+
+
 #include "GameGraphics.h"
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <iostream>
+
+
+#include "glfw3native.h"
+
+
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
+
+#include "glm.hpp"
+#include <gtc/matrix_transform.hpp>
+#include <gtx/transform2.hpp>
+#include <gtx/string_cast.hpp>
+
+#include "peep.h"
+
+
+
 
 GameGraphics::GameGraphics()
 {
@@ -59,6 +88,107 @@ GameGraphics::GameGraphics()
     ImGui_ImplOpenGL3_Init();
 
 
+
+
+
+    const GLubyte* renderer = glGetString(GL_RENDERER);
+    const GLubyte* vendor = glGetString(GL_VENDOR);
+    const GLubyte* version = glGetString(GL_VERSION);
+    const GLubyte* glslVersion =
+        glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+    GLint major, minor;
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+    printf("GL Vendor    : %s\n", vendor);
+    printf("GL Renderer  : %s\n", renderer);
+    printf("GL Version (string)  : %s\n", version);
+    printf("GL Version (integer) : %d.%d\n", major, minor);
+    printf("GLSL Version : %s\n", glslVersion);
+
+
+
+    GEShader* pVertShad = new GEShader(GL_VERTEX_SHADER, "vertPeep.shad");
+    GEShader* pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragPeep.shad");
+    shaderList.push_back(pVertShad);
+    shaderList.push_back(pFragShad);
+
+    //create programs to use those shaders.
+    pPeepShadProgram = new GEShaderProgram();
+    pPeepShadProgram->AttachShader(pVertShad);
+    pPeepShadProgram->AttachShader(pFragShad);
+
+    shaderProgramList.push_back(pPeepShadProgram);
+
+
+    pVertShad = new GEShader(GL_VERTEX_SHADER, "vertShader.shad");
+    pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragShader.shad");
+    shaderList.push_back(pVertShad);
+    shaderList.push_back(pFragShad);
+
+    //create programs to use those shaders.
+    pBasicShadProgram = new GEShaderProgram();
+    pBasicShadProgram->AttachShader(pVertShad);
+    pBasicShadProgram->AttachShader(pFragShad);
+
+    shaderProgramList.push_back(pBasicShadProgram);
+
+
+    glBindAttribLocation(pPeepShadProgram->ProgramID(), 0, "VertexPosition");
+    glBindAttribLocation(pPeepShadProgram->ProgramID(), 1, "VertexColor");
+
+    glBindAttribLocation(pBasicShadProgram->ProgramID(), 0, "VertexPosition");
+    glBindAttribLocation(pBasicShadProgram->ProgramID(), 1, "VertexColor");
+
+
+    pPeepShadProgram->Link();
+    pBasicShadProgram->Link();
+
+
+    // store instance data in an array buffer
+    // --------------------------------------
+    
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3)) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    float quadVertices[] = {
+        // positions    
+        -1.0f,  1.0f,
+         1.0f, -1.0f,
+        -1.0f, -1.0f,
+
+        -1.0f,  1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f
+    };
+    
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+
+    // also set instance data
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)0);//position
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)sizeof(glm::vec2));//color
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+
+
+    worldPositions = new glm::vec2[MAX_PEEPS];
+    colors = new glm::vec3[MAX_PEEPS];
+
 }
 
 GameGraphics::~GameGraphics()
@@ -73,8 +203,50 @@ GameGraphics::~GameGraphics()
     SDL_Quit();
 
 
+
+
+
+
+
+
+    //cleanup
+    for (auto* s : shaderProgramList)
+        delete s;
+    for (auto* s : shaderList)
+        delete s;
+
+    delete[] worldPositions;
+    delete[] colors;
+
+
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+
 }
 
-void GameGraphics::Draw()
+void GameGraphics::BeginDraw()
 {
+            //Clear screen
+            glClearColor(0, 0, 0, 1);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL2_NewFrame(gWindow);
+            ImGui::NewFrame();
+
+}
+
+void GameGraphics::Swap()
+{
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    //Update screen
+    SDL_GL_SwapWindow(gWindow);
+
 }

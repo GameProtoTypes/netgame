@@ -8,6 +8,9 @@ set(Header_Files
     "peep.h"
     "GEShaderProgram.h"
     "GEShader.h"
+    "GameGraphics.h"
+    "clLimits.h"
+    "GameGPUCompute.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -15,6 +18,8 @@ set(Source_Files
     "main.cpp"
     "GEShaderProgram.cpp"
     "GEShader.cpp"
+    "GameGraphics.cpp"
+    "GameGPUCompute.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 

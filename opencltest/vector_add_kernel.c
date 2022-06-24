@@ -328,10 +328,12 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
     if (globalid != 0)
         return;
 
-    for (int cli = 0; cli < gameState->numClients; cli++) {
 
-        ClientState* client = &gameState->clientStates[cli];
-        if (client->action_DoSelect)
+    for (int a = 0; a < gameState->numActions; a++) {
+        ClientAction* clientAction = &gameState->clientActions[a];
+        ClientState* client = &gameState->clientStates[clientAction->clientId];
+       
+        if (clientAction->action_DoSelect)
         {
             client->selectedPeepsLast = NULL;
             for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
@@ -340,13 +342,15 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
                 p->selectedByClient = -1;
 
 
-                if ((p->map_x_Q15_16 > client->params_DoSelect_StartX_Q16) && (p->map_x_Q15_16 < client->params_DoSelect_EndX_Q16))
+                if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16) 
+                    && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                 {
 
-                    if ((p->map_y_Q15_16 < client->params_DoSelect_StartY_Q16) && (p->map_y_Q15_16 > client->params_DoSelect_EndY_Q16))
+                    if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16) 
+                        && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
                     {
 
-                        p->selectedByClient = cli;
+                        p->selectedByClient = clientAction->clientId;
 
                         if (client->selectedPeepsLast != NULL)
                         {
@@ -362,25 +366,25 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
                         client->selectedPeepsLast = p;
                     }
                 }
-
             }
 
-            client->action_DoSelect = 0;
+            clientAction->action_DoSelect = 0;
         }
-        else if (client->action_CommandToLocation)
+        else if (clientAction->action_CommandToLocation)
         {
             Peep* curPeep = client->selectedPeepsLast;
             while (curPeep != NULL)
             {
-                curPeep->target_x_Q16 = client->params_CommandToLocation_X_Q16;
-                curPeep->target_y_Q16 = client->params_CommandToLocation_Y_Q16;
+                curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
+                curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
 
                 curPeep = curPeep->prevSelectionPeep;
             }
 
-            client->action_CommandToLocation = 0;
+            clientAction->action_CommandToLocation = 0;
         }
     }
+    
 
 
 
