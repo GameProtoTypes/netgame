@@ -328,6 +328,17 @@ int main(int argc, char* args[])
             gameGraphics.pPeepShadProgram->Use();
             gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
+            
+
+            cl_uint curPeepIdx = gameState->clientStates[gameNetworking.localClientStateIdx].selectedPeepsLastIdx;
+            while (curPeepIdx != OFFSET_NULL)
+            {
+                Peep* p  = &gameState->peeps[curPeepIdx];
+
+                p->render_selectedByClient = 1;
+
+                curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.localClientStateIdx];
+            }
 
                     
             for (int pi = 0; pi < MAX_PEEPS; pi++)
@@ -349,9 +360,10 @@ int main(int argc, char* args[])
                     gameGraphics.colors[pi].b = 1.0f;
                 }
 
-                if (p->selectedByClient == gameNetworking.localClientStateIdx)
+                if (p->render_selectedByClient)
                 {
                     factor = 1.0f;
+                    p->render_selectedByClient = 0;
                 }
 
                 gameGraphics.colors[pi] = gameGraphics.colors[pi]*factor;

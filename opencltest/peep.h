@@ -16,6 +16,9 @@
 
 #define MAX_CLIENTS (256)
 
+#define OFFSET_NULL (0xFFFFFFFF)
+
+
 
 struct Cell;
 struct MapSector;
@@ -48,15 +51,14 @@ struct Peep {
 	struct Peep* nextSectorPeep;
 	struct Peep* prevSectorPeep;
 
-	struct Peep* nextSelectionPeep;
-	struct Peep* prevSelectionPeep;
+
 
 
 	//noncore
-	cl_int selectedByClient;
+	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
+	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
 
-
-
+	cl_int render_selectedByClient;
 
 
 } typedef Peep;
@@ -107,7 +109,7 @@ struct ClientState {
 	cl_float view_beginY;
 	cl_float viewScale;
 
-	Peep* selectedPeepsLast;
+	cl_uint selectedPeepsLastIdx;
 } typedef ClientState;
 
 struct GameState {

@@ -20,7 +20,7 @@
 
 
 
-#define MAX_HOST_CONNECTIONS 10 // maximum number of peers connected to a single peer.
+#define MAX_HOST_CONNECTIONS 256 
 #define MAX_USER_MESSAGE_LENGTH 255
 
 

@@ -4,6 +4,7 @@
 #include "peep.h"
 #include "random.h"
 
+
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
 void RobotInteraction(Peep* peep, Peep* otherPeep)
@@ -190,7 +191,11 @@ __kernel void game_init_single(__global GameState* gameState)
     printf("Game Initializing...\n");
 
     gameState->numClients = 1;
-    gameState->clientStates[0].mousescroll = 0;
+
+
+
+
+
     for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
     {
         for (int secy = 0; secy < SQRT_MAXSECTORS; secy++)
@@ -227,6 +232,19 @@ __kernel void game_init_single(__global GameState* gameState)
         {
             gameState->peeps[p].faction = 1;
         }
+
+
+        for (int i = 0; i < MAX_CLIENTS; i++)
+        {
+            gameState->clientStates[i].mousescroll = 0;
+            gameState->clientStates[i].selectedPeepsLastIdx = OFFSET_NULL;
+
+
+
+            gameState->peeps[p].nextSelectionPeepIdx[i] = OFFSET_NULL;
+            gameState->peeps[p].prevSelectionPeepIdx[i] = OFFSET_NULL;
+        }
+        
     }
 
     printf("Peeps Initialized.\n");
@@ -331,15 +349,15 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
 
     for (int a = 0; a < gameState->numActions; a++) {
         ClientAction* clientAction = &gameState->clientActions[a];
-        ClientState* client = &gameState->clientStates[clientAction->clientId];
+        cl_uchar cliId = clientAction->clientId;
+        ClientState* client = &gameState->clientStates[cliId];
        
         if (clientAction->action_DoSelect)
         {
-            client->selectedPeepsLast = NULL;
+            client->selectedPeepsLastIdx = OFFSET_NULL;
             for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
             {
                 Peep* p = &gameState->peeps[pi + globalid * chunkSize];
-                p->selectedByClient = -1;
 
 
                 if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16) 
@@ -350,42 +368,40 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
                         && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
                     {
 
-                        p->selectedByClient = clientAction->clientId;
-
-                        if (client->selectedPeepsLast != NULL)
+                        if (client->selectedPeepsLastIdx != OFFSET_NULL)
                         {
-                            client->selectedPeepsLast->nextSelectionPeep = p;
-                            p->prevSelectionPeep = client->selectedPeepsLast;
-                            p->nextSelectionPeep = NULL;
+                            gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
+                            p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
+                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
                         }
                         else
                         {
-                            p->prevSelectionPeep = NULL;
-                            p->nextSelectionPeep = NULL;
+                            p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
+                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
                         }
-                        client->selectedPeepsLast = p;
+                        client->selectedPeepsLastIdx = pi;
                     }
                 }
             }
 
-            clientAction->action_DoSelect = 0;
         }
         else if (clientAction->action_CommandToLocation)
         {
-            Peep* curPeep = client->selectedPeepsLast;
-            while (curPeep != NULL)
+            cl_uint curPeepIdx = client->selectedPeepsLastIdx;
+            while (curPeepIdx != OFFSET_NULL)
             {
+                Peep* curPeep = &gameState->peeps[curPeepIdx];
                 curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
                 curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
 
-                curPeep = curPeep->prevSelectionPeep;
+                curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
 
-            clientAction->action_CommandToLocation = 0;
+
         }
     }
     
-
+    gameState->numActions = 0;
 
 
 
