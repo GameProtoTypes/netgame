@@ -448,7 +448,7 @@ int main(int argc, char* args[])
                 Peep* p = &gameState->peeps[pi];
 
 
-                float factor = 0.6f;
+                float brightFactor = 0.6f;
                 if (p->faction == 1)
                 {
                     gameGraphics.colors[pi].r = 0.0f;
@@ -464,11 +464,28 @@ int main(int argc, char* args[])
 
                 if (peepRenderSupport[pi].render_selectedByClient)
                 {
-                    factor = 1.0f;
+                    brightFactor = 1.0f;
                     peepRenderSupport[pi].render_selectedByClient = 0;
                 }
+                if (p->deathState == 1)
+                {
+                    brightFactor = 0.6f;
+                    gameGraphics.colors[pi].r = 0.5f;
+                    gameGraphics.colors[pi].g = 0.5f;
+                    gameGraphics.colors[pi].b = 0.5f;
+                }
+                if (p->attackState == 1)
+                {
+                    brightFactor = 1.0f;
+                    gameGraphics.colors[pi].r = 1.0f;
+                    gameGraphics.colors[pi].g = 1.0f;
+                    gameGraphics.colors[pi].b = 1.0f;
+                }
 
-                gameGraphics.colors[pi] = gameGraphics.colors[pi]*factor;
+
+    
+                
+                gameGraphics.colors[pi] = gameGraphics.colors[pi]*brightFactor;
                 
                 float x = float(p->map_x_Q15_16) / float(1 << 16);
                 float y = float(p->map_y_Q15_16) / float(1 << 16);

@@ -34,8 +34,13 @@ void RobotUpdate(Peep* peep)
 
     cl_int len_Q16;
     normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
-
-
+    
+    
+    peep->attackState = 0;
+    if (peep->deathState == 1)
+    {
+        return;
+    }
     if ((peep->minDistPeep_Q16 >> 16) < 5)
     {
         deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
@@ -44,9 +49,27 @@ void RobotUpdate(Peep* peep)
         normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
         peep->xv_Q15_16 = -deltax_Q16/8;
         peep->yv_Q15_16 = -deltay_Q16/8;
+
+        if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
+        {
+            peep->attackState = 1;
+            peep->health -= 1;
+            if (peep->health <= 0)
+            {
+                peep->deathState = 1;
+                peep->attackState = 0;
+                peep->xv_Q15_16 = 0;
+                peep->yv_Q15_16 = 0;
+            }
+        }
+
+
+
+
     }
     else
     {
+        peep->attackState = 0;
         if ((len_Q16 >> 16) < 2)
         {
             peep->xv_Q15_16 = 0;
@@ -57,7 +80,6 @@ void RobotUpdate(Peep* peep)
             peep->xv_Q15_16 = deltax_Q16;
             peep->yv_Q15_16 = deltay_Q16;
         }
-
     }
 
 
@@ -235,6 +257,10 @@ __kernel void game_init_single(__global GameState* gameState)
         gameState->peeps[p].prevSectorPeep = NULL;
         gameState->peeps[p].target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
         gameState->peeps[p].target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
+        gameState->peeps[p].attackState = 0;
+        gameState->peeps[p].health = 100;
+        gameState->peeps[p].deathState = 0;
+
         if (gameState->peeps[p].map_x_Q15_16 >> 16 < 0)
         {
             gameState->peeps[p].faction = 0;

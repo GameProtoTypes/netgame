@@ -35,7 +35,9 @@ struct Peep {
 
 	int faction;
 
-
+	cl_int attackState;
+	cl_int health;
+	cl_int deathState;
 
 
 	cl_long netForcex_Q16;
