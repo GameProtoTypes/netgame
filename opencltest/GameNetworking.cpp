@@ -193,7 +193,7 @@
 
 				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
 
-				bts.Read(localClientStateIdx);
+				bts.Read(clientId);
 				bool s = bts.Read(reinterpret_cast<char*>(gameState), length-sizeof(unsigned char));
 				if (!s) assert(0);
 			}
@@ -215,7 +215,7 @@
 					int tickLatency = (gameState->tickIdx - action.submittedTickIdx);
 						
 
-					action.scheduledTickIdx = gameState->tickIdx + 50;
+					action.scheduledTickIdx = gameState->tickIdx + 5;
 					turnActions.push_back(action);
 				}
 						
@@ -242,7 +242,7 @@
 				//sync client id as assigned by the host.
 				unsigned char cliId;
 				bts.Read(cliId);
-				localClientStateIdx = cliId;
+				clientId = cliId;
 
 
 				unsigned char numActions;

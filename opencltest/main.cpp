@@ -224,7 +224,7 @@ int main(int argc, char* args[])
 
                 ClientAction action;
                 ClientActionInit(&action);
-                action.clientId = gameNetworking.localClientStateIdx;
+                action.clientId = gameNetworking.clientId;
                 float endx   = glm::max(worldMouseBegin.x, worldMouseEnd.x);
                 float endy   = glm::min(worldMouseBegin.y, worldMouseEnd.y);
                 float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
@@ -248,7 +248,7 @@ int main(int argc, char* args[])
 
                 ClientAction action;
                 ClientActionInit(&action);
-                action.clientId = gameNetworking.localClientStateIdx;
+                action.clientId = gameNetworking.clientId;
                 action.action_CommandToLocation = 1;
                 action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
                 action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
@@ -280,7 +280,7 @@ int main(int argc, char* args[])
                     {
                         Peep* p = &gameState->peeps[pi];
 
-
+                        if(p->faction == clientAction->clientId)
                         if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                             && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                         {
@@ -380,7 +380,7 @@ int main(int argc, char* args[])
             ImGui::InputInt("Port", &port, 1, 1);
             ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
             ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
-            ImGui::Text("GameState Client Idx: %d", gameNetworking.localClientStateIdx);
+            ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
 
             ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
             if (ImGui::Button("Start Server"))
@@ -429,7 +429,7 @@ int main(int argc, char* args[])
 
             
 
-            cl_uint curPeepIdx = gameState->clientStates[gameNetworking.localClientStateIdx].selectedPeepsLastIdx;
+            cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;
             PeepRenderSupport peepRenderSupport[MAX_PEEPS];
             while (curPeepIdx != OFFSET_NULL)
             {
@@ -437,7 +437,7 @@ int main(int argc, char* args[])
 
                 peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
-                curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.localClientStateIdx];
+                curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.clientId];
             }
 
 

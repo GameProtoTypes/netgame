@@ -125,7 +125,7 @@ public:
 
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<unsigned char>(MESSAGE_ROUTINE_TICKSYNC));
-		bs.Write(static_cast<unsigned char>(localClientStateIdx));
+		bs.Write(static_cast<unsigned char>(clientId));
 		bs.Write(static_cast<unsigned int>(gameState->tickIdx));
 		bs.Write(static_cast<int>(minTickTimeMs));
 
@@ -201,7 +201,7 @@ public:
 	SLNet::SystemAddress hostAddr;
 
 	GameState* gameState;
-	unsigned char localClientStateIdx = 0;
+	unsigned char clientId = 0;
 	bool actionStateDirty = false;
 
 
