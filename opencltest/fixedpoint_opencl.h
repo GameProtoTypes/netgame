@@ -32,9 +32,9 @@ cl_int length_Q16(cl_int x1_Q16, cl_int y1_Q16, cl_int x2_Q16, cl_int y2_Q16)
     return (cl_int)dist_Q16;
 }
 
-void normalize_Q16(cl_int* x_Q16, cl_int* y_Q16)
+void normalize_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
 {
-    cl_int len_Q16 = length_Q16(*x_Q16, *y_Q16, 0, 0);
-    *x_Q16 = (((cl_long)(*x_Q16)) << 16) / len_Q16;
-    *y_Q16 = (((cl_long)(*y_Q16)) << 16) / len_Q16;
+    *len_Q16 = length_Q16(*x_Q16, *y_Q16, 0, 0);
+    *x_Q16 = (((cl_long)(*x_Q16)) << 16) / (* len_Q16);
+    *y_Q16 = (((cl_long)(*y_Q16)) << 16) / (* len_Q16);
 }

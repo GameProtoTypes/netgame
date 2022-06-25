@@ -47,9 +47,9 @@
 		 SLNet::BitStream bs;
 		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_TURNDATA));
-		 bs.Write(static_cast<unsigned int>(clients.size() * sizeof(ClientAction)));
 		 bs.Write(static_cast<unsigned char>(clients.size()));
-		 bs.Write(static_cast<unsigned char>(client.first));
+		 bs.Write(static_cast<unsigned char>(client.first.cliId));
+		 bs.Write(static_cast<unsigned char>(turnActions.size()));
 		 for (ClientAction& action : turnActions)
 		 {
 			 bs.Write(reinterpret_cast<char*>(&action), sizeof(ClientAction));
@@ -112,6 +112,13 @@
 	if(connectedToHost)
 		SendTickSyncToHost();
 
+
+	if (serverRunning)
+	{
+		//slow down simulation to bring in client 
+	}
+
+
 	for (this->packet = this->peerInterface->Receive();
 		this->packet;
 		this->peerInterface->DeallocatePacket(this->packet),
@@ -132,11 +139,7 @@
 
 			if (serverRunning)
 			{
-				std::pair<unsigned char, SLNet::SystemAddress> cli;
-				cli.first = nextCliIdx;
-				cli.second = hostAddr;
-				clients.push_back(cli);
-				nextCliIdx++;
+				Host_AddClientInternal(hostAddr);
 
 				HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
 
@@ -150,11 +153,8 @@
 				<< " has connected." << std::endl;
 
 
-			std::pair<unsigned char, SLNet::SystemAddress> cli;
-			cli.first = nextCliIdx;
-			cli.second = this->packet->systemAddress;
-			clients.push_back(cli);
-			nextCliIdx++;
+			Host_AddClientInternal(this->packet->systemAddress);
+
 
 			HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
 
@@ -204,6 +204,9 @@
 
 				unsigned char numActions;
 				bts.Read(numActions);
+
+
+
 				for (int i = 0; i < numActions; i++)
 				{
 					ClientAction action;
@@ -212,7 +215,7 @@
 					int tickLatency = (gameState->tickIdx - action.submittedTickIdx);
 						
 
-					action.scheduledTickIdx = gameState->tickIdx + tickLatency*2;
+					action.scheduledTickIdx = gameState->tickIdx + 50;
 					turnActions.push_back(action);
 				}
 						
@@ -228,11 +231,10 @@
 			}
 			else if (msgtype == MESSAGE_ENUM_HOST_TURNDATA)
 			{
-				unsigned int length;
-				bts.Read(length);
 
 				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_TURNDATA received" << std::endl;
 					
+				//get info on how many total clients there are...
 				unsigned char numClients;
 				bts.Read(numClients);
 				gameState->numClients = numClients;
@@ -240,14 +242,14 @@
 				//sync client id as assigned by the host.
 				unsigned char cliId;
 				bts.Read(cliId);
-
 				localClientStateIdx = cliId;
 
 
+				unsigned char numActions;
+				bts.Read(numActions);
 
 
-
-				for (unsigned char cli = 0; cli < numClients; cli++)
+				for (unsigned char a = 0; a < numActions; a++)
 				{
 					ClientAction actionSet;
 					bts.Read(reinterpret_cast<char*>(&actionSet), sizeof(ClientAction));
@@ -256,13 +258,33 @@
 			}
 			else if (msgtype == MESSAGE_ROUTINE_TICKSYNC)
 			{
+				unsigned char cliId;
+				bts.Read(cliId);
+
+
 				unsigned int client_tickIdx;
 				bts.Read(client_tickIdx);
 
 				int tickTime;
 				bts.Read(tickTime);
 
-				int error = gameState->tickIdx - client_tickIdx;
+				int error = int(gameState->tickIdx) - int(client_tickIdx);
+
+				clientMeta* meta = GetClientMetaDataFromCliId(cliId);
+				meta->tickLag = error;
+
+
+				//update maxTickLag
+				maxTickLag = -99999;
+				for (auto pair : clients)
+				{
+					if (pair.first.tickLag > maxTickLag)
+					{
+						maxTickLag = pair.first.tickLag;
+					}
+				}
+
+
 				//std::cout << "[HOST] Peer: MESSAGE_ROUTINE_TICKSYNC received. error: " << error << std::endl;
 			}
 

@@ -32,21 +32,32 @@ void RobotUpdate(Peep* peep)
     cl_int deltax_Q16 = peep->target_x_Q16 - peep->map_x_Q15_16;
     cl_int deltay_Q16 = peep->target_y_Q16 - peep->map_y_Q15_16;
 
-    normalize_Q16(&deltax_Q16, &deltay_Q16);
+    cl_int len_Q16;
+    normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
 
 
     if ((peep->minDistPeep_Q16 >> 16) < 5)
     {
         deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
         deltay_Q16 = peep->minDistPeep->map_y_Q15_16 - peep->map_y_Q15_16;
-        normalize_Q16(&deltax_Q16, &deltay_Q16);
+        cl_int len_Q16;
+        normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
         peep->xv_Q15_16 = -deltax_Q16/8;
         peep->yv_Q15_16 = -deltay_Q16/8;
     }
     else
     {
-        peep->xv_Q15_16 = deltax_Q16;
-        peep->yv_Q15_16 = deltay_Q16;
+        if ((len_Q16 >> 16) < 2)
+        {
+            peep->xv_Q15_16 = 0;
+            peep->yv_Q15_16 = 0;
+        }
+        else
+        {
+            peep->xv_Q15_16 = deltax_Q16;
+            peep->yv_Q15_16 = deltay_Q16;
+        }
+
     }
 
 
@@ -342,66 +353,7 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
 
 
 
-    //some singlethreaded update stuff
-    if (globalid != 0)
-        return;
 
-
-    for (int a = 0; a < gameState->numActions; a++) {
-        ClientAction* clientAction = &gameState->clientActions[a];
-        cl_uchar cliId = clientAction->clientId;
-        ClientState* client = &gameState->clientStates[cliId];
-       
-        if (clientAction->action_DoSelect)
-        {
-            client->selectedPeepsLastIdx = OFFSET_NULL;
-            for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
-            {
-                Peep* p = &gameState->peeps[pi + globalid * chunkSize];
-
-
-                if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16) 
-                    && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
-                {
-
-                    if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16) 
-                        && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
-                    {
-
-                        if (client->selectedPeepsLastIdx != OFFSET_NULL)
-                        {
-                            gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
-                            p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
-                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
-                        }
-                        else
-                        {
-                            p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
-                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
-                        }
-                        client->selectedPeepsLastIdx = pi;
-                    }
-                }
-            }
-
-        }
-        else if (clientAction->action_CommandToLocation)
-        {
-            cl_uint curPeepIdx = client->selectedPeepsLastIdx;
-            while (curPeepIdx != OFFSET_NULL)
-            {
-                Peep* curPeep = &gameState->peeps[curPeepIdx];
-                curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
-                curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
-
-                curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
-            }
-
-
-        }
-    }
-    
-    gameState->numActions = 0;
 
 
 

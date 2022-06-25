@@ -267,6 +267,90 @@ int main(int argc, char* args[])
             gameNetworking.CLIENT_ApplyCombinedTurn();
             
 
+            //apply turns
+            for (int a = 0; a < gameState->numActions; a++) {
+                ClientAction* clientAction = &gameState->clientActions[a];
+                cl_uchar cliId = clientAction->clientId;
+                ClientState* client = &gameState->clientStates[cliId];
+
+                if (clientAction->action_DoSelect)
+                {
+                    client->selectedPeepsLastIdx = OFFSET_NULL;
+                    for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
+                    {
+                        Peep* p = &gameState->peeps[pi];
+
+
+                        if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
+                            && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                        {
+
+                            if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
+                                && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
+                            {
+
+                                if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                                {
+                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
+                                    p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
+                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                }
+                                else
+                                {
+                                    p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                }
+                                client->selectedPeepsLastIdx = pi;
+                            }
+                        }
+                    }
+
+                }
+                else if (clientAction->action_CommandToLocation)
+                {
+                    cl_uint curPeepIdx = client->selectedPeepsLastIdx;
+                    while (curPeepIdx != OFFSET_NULL)
+                    {
+                        Peep* curPeep = &gameState->peeps[curPeepIdx];
+                        curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
+                        curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+
+                        curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
+                    }
+
+
+                }
+            }
+
+            gameState->numActions = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             ImGui::Begin("Company");
             ImGui::Button("Assets");
@@ -315,6 +399,20 @@ int main(int argc, char* args[])
                 sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
                 gameNetworking.SendMessage(buffer);
             }
+
+
+
+
+            if (gameNetworking.serverRunning)
+            {
+                for (auto pair : gameNetworking.clients)
+                {
+                    ImGui::Text("CliId: %d, TickLag: %d", pair.first.cliId, pair.first.tickLag);
+                }
+                ImGui::Text("Max TickLag: %d", gameNetworking.maxTickLag);
+            }
+
+           
 
 
             

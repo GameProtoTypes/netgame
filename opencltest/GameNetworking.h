@@ -80,6 +80,7 @@ public:
 		{
 			if (turnActions[a].scheduledTickIdx == gameState->tickIdx)
 			{
+				std::cout << "Pushing Action" << std::endl;
 				gameState->clientActions[i] = turnActions[a];
 				i++;
 			}
@@ -124,6 +125,7 @@ public:
 
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<unsigned char>(MESSAGE_ROUTINE_TICKSYNC));
+		bs.Write(static_cast<unsigned char>(localClientStateIdx));
 		bs.Write(static_cast<unsigned int>(gameState->tickIdx));
 		bs.Write(static_cast<int>(minTickTimeMs));
 
@@ -136,6 +138,9 @@ public:
 
 
 	void Update();
+	
+	
+	
 	int MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
 
@@ -160,12 +165,38 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening;
 
+	void Host_AddClientInternal(SLNet::SystemAddress addr)
+	{
+		std::pair<clientMeta, SLNet::SystemAddress> cli;
+		clientMeta meta;
+		meta.cliId = nextCliIdx;
+		cli.first = meta;
+		cli.second = addr;
+		clients.push_back(cli);
+		nextCliIdx++;
+	}
+
 	SLNet::RakPeerInterface* peerInterface;
 	
-	
-	std::vector<std::pair<unsigned char, SLNet::SystemAddress>> clients;
+	struct clientMeta {
+		unsigned char cliId;
+		int tickLag;
+	};
+	std::vector<std::pair<clientMeta, SLNet::SystemAddress>> clients;
 	unsigned char nextCliIdx = 0;
-	int clientTickLags[MAX_CLIENTS] = { 0 };
+	clientMeta* GetClientMetaDataFromCliId(unsigned char cliId)
+	{
+		for (int i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].first.cliId == cliId)
+				return &clients[i].first;
+		}
+
+		return nullptr;
+	}
+
+	int maxTickLag = 999999; // tick lag of slowest client
+
 
 	SLNet::SystemAddress hostAddr;
 
@@ -174,8 +205,22 @@ public:
 	bool actionStateDirty = false;
 
 
+	struct ActionTrackData {
+		//ClientAction action;
+		uint32_t hostGivenId;
+		uint32_t clientGivenId;
+		
+		bool late;//action could not be applied on client at scheduled tickId;
+
+
+		bool finalActionVerified;
+
+	};
+
 	std::vector<ClientAction> turnActions;
 	
+	unsigned int lastFreezeTick = 0;
+	int freezeFreq = 20;
 
 	int minTickTimeMs = 33;
 
