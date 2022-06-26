@@ -6,8 +6,7 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 
-
-
+	lastFreezeGameState = new GameState();
 
 
 	std::cout << "GameNetworking::Init  End" << std::endl;
@@ -27,7 +26,6 @@
 		 for (ActionWrap& actionWrap : clientActions)
 		 {
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-
 		 }
 		 
 		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostAddr, false);
@@ -39,20 +37,19 @@
 
  void GameNetworking::HOST_SendActionUpdates_ToClients()
  {
-	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_TURNDATA to " << clients.size() << " clients" << std::endl;
+	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA to " << clients.size() << " clients" << std::endl;
 	 
 
 	 for (auto client : clients)
 	 {
 		 SLNet::BitStream bs;
 		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_TURNDATA));
+		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
 		 bs.Write(static_cast<unsigned char>(clients.size()));
 		 bs.Write(static_cast<unsigned char>(client.first.cliId));
 		 bs.Write(static_cast<unsigned char>(turnActions.size()));
 		 for (ActionWrap& actionWrap : turnActions)
 		 {
-			 std::cout << "sending wrap.";
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 		 }
 
@@ -75,14 +72,15 @@
 
  void GameNetworking::ConnectToHost(SLNet::SystemAddress hostAddress)
 {
-	std::cout << "Connecting To Host: " << hostAddress.ToString(false) << " Port: " << hostAddress.GetPort() << std::endl;
+	std::cout << "[CLIENT] Connecting To Host: " << hostAddress.ToString(false) << " Port: " << hostAddress.GetPort() << std::endl;
 	SLNet::SocketDescriptor desc;
 	peerInterface->Startup(1, &desc, 1);
-	bool connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
+	SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
 	
+
 	if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
 	{
-		std::cout << "Connect Init Failure: " << int(connectInitSuccess) << std::endl;
+		std::cout << "[CLIENT] Connect Init Failure: " << int(connectInitSuccess) << std::endl;
 
 
 	}
@@ -114,9 +112,28 @@
 		SendTickSyncToHost();
 
 
+
 	if (serverRunning)
 	{
+
+		if (gameState->tickIdx % freezeFreq == 0)
+		{
+			memcpy(reinterpret_cast<void*>(lastFreezeGameState), 
+				reinterpret_cast<void*>(gameState), sizeof(GameState));
+
+			freezeFrameActions_1 = freezeFrameActions;
+			freezeFrameActions.clear();
+		}
+
+		//check if running actions are accounted for.
+		
+
+
+
 		//slow down simulation to bring in client 
+
+
+
 	}
 
 
@@ -142,8 +159,9 @@
 			{
 				Host_AddClientInternal(hostAddr);
 
+				paused = true;
 				HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
-
+				
 			}
 
 		}
@@ -189,14 +207,24 @@
 			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			{
 
-				unsigned int length;
-				bts.Read(length);
 
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, sending acknologement." << std::endl;
 
 				bts.Read(clientId);
-				bool s = bts.Read(reinterpret_cast<char*>(gameState), length-sizeof(unsigned char));
+				bool s = bts.Read(reinterpret_cast<char*>(gameState), sizeof(GameState));
 				if (!s) assert(0);
+
+
+
+				CLIENT_SendSyncComplete();
+
+				fullyConnectedToHost = true;
+			}
+			else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
+			{
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
+
+				paused = false;
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			{
@@ -215,12 +243,13 @@
 					int tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
 						
 
-					actionWrap.action.scheduledTickIdx = gameState->tickIdx + 5;
+					actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
 					turnActions.push_back(actionWrap);
+					runningActions.push_back(actionWrap);
+					freezeFrameActions.push_back(actionWrap);
 				}
 						
 					
-				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received" << std::endl;
 
 
 
@@ -229,10 +258,10 @@
 				HOST_SendActionUpdates_ToClients();
 					
 			}
-			else if (msgtype == MESSAGE_ENUM_HOST_TURNDATA)
+			else if (msgtype == MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA)
 			{
 
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_TURNDATA received" << std::endl;
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA received" << std::endl;
 					
 				//get info on how many total clients there are...
 				unsigned char numClients;
@@ -253,9 +282,15 @@
 				{
 					ActionWrap actionWrap;
 					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-					std::cout << "[CLIENT] sdfsdfsdfsf" << std::endl;
 					turnActions.push_back(actionWrap);
 				}
+			}
+			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
+			{
+				ActionTracking actionTracking;
+				bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
+				std::cout << "[HOST] Recieved Expired Action Error " << std::endl;
+				std::cout << "[HOST] REVERTING........" << std::endl;
 			}
 			else if (msgtype == MESSAGE_ROUTINE_TICKSYNC)
 			{

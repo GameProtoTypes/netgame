@@ -49,9 +49,11 @@ int main(int argc, char* args[])
         GameGraphics gameGraphics;
 
         GameState* gameState = new GameState();
+
         GameGPUCompute gameCompute(gameState);
 
         GameNetworking gameNetworking(gameState);
+        
         gameNetworking.Init();
         gameNetworking.Update();
 
@@ -67,6 +69,7 @@ int main(int argc, char* args[])
         gameState->mapWidth = 2000;
         gameState->tickIdx = 0;
 
+        std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
 
         uint64_t timerStartMs = SDL_GetTicks64();
         while (!quit)
@@ -77,6 +80,7 @@ int main(int argc, char* args[])
 
             gameGraphics.BeginDraw();
             
+
             gameCompute.Stage1();
 
             cl_ulong time_start;
@@ -221,25 +225,24 @@ int main(int argc, char* args[])
             std::vector<ActionWrap> clientActions;
             if (client->mousePrimaryReleased)
             {
-
-                ClientAction action;
-                ClientActionInit(&action);
-                action.clientId = gameNetworking.clientId;
+                ActionWrap actionWrap;
+                ActionWrapInit(&actionWrap);
+                actionWrap.tracking.clientId = gameNetworking.clientId;
                 float endx   = glm::max(worldMouseBegin.x, worldMouseEnd.x);
                 float endy   = glm::min(worldMouseBegin.y, worldMouseEnd.y);
                 float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
                 float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
 
-                action.action_DoSelect = 1;
-                action.params_DoSelect_StartX_Q16 = cl_int(startx * (1 << 16));
-                action.params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
-                action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
-                action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
+                actionWrap.action.action_DoSelect = 1;
+                actionWrap.action.params_DoSelect_StartX_Q16 = cl_int(startx * (1 << 16));
+                actionWrap.action.params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
+                actionWrap.action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
+                actionWrap.action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
 
-                action.submittedTickIdx = gameState->tickIdx;
+                actionWrap.action.submittedTickIdx = gameState->tickIdx;
 
-                ActionWrap actionWrap;
-                actionWrap.action = action;
+                
+               
                 clientActions.push_back(actionWrap);
 
                 gameNetworking.actionStateDirty = true;
@@ -249,18 +252,16 @@ int main(int argc, char* args[])
             if (client->mouseSecondaryReleased)
             {
 
-                ClientAction action;
-                ClientActionInit(&action);
-                action.clientId = gameNetworking.clientId;
-                action.action_CommandToLocation = 1;
-                action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
-                action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
-
-                action.submittedTickIdx = gameState->tickIdx;
-
-
                 ActionWrap actionWrap;
-                actionWrap.action = action;
+                ActionWrapInit(&actionWrap);
+                actionWrap.tracking.clientId = gameNetworking.clientId;
+                actionWrap.action.action_CommandToLocation = 1;
+                actionWrap.action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
+                actionWrap.action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
+
+                actionWrap.action.submittedTickIdx = gameState->tickIdx;
+
+
                 clientActions.push_back(actionWrap);
 
                 gameNetworking.actionStateDirty = true;
@@ -268,17 +269,23 @@ int main(int argc, char* args[])
             }
 
 
-
+            do{
             gameNetworking.Update();
-            gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
-            gameNetworking.CLIENT_ApplyCombinedTurn();
-            
+            } while (gameNetworking.paused);
+
+            if (gameNetworking.fullyConnectedToHost)
+            {
+                gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
+
+                gameNetworking.CLIENT_ApplyCombinedTurn();
+            }
 
             //apply turns
             for (int a = 0; a < gameState->numActions; a++) 
             {
                 ClientAction* clientAction = &gameState->clientActions[a].action;
-                cl_uchar cliId = clientAction->clientId;
+                ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
+                cl_uchar cliId = actionTracking->clientId;
                 ClientState* client = &gameState->clientStates[cliId];
 
                 if (clientAction->action_DoSelect)
@@ -288,7 +295,7 @@ int main(int argc, char* args[])
                     {
                         Peep* p = &gameState->peeps[pi];
 
-                        if(p->faction == clientAction->clientId)
+                        if(p->faction == actionTracking->clientId)
                         if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                             && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                         {
@@ -415,7 +422,7 @@ int main(int argc, char* args[])
             {
                 for (auto pair : gameNetworking.clients)
                 {
-                    ImGui::Text("CliId: %d, TickLag: %d", pair.first.cliId, pair.first.tickLag);
+                    ImGui::Text("CliId: %d, TickLag: %d, Ping: %d", pair.first.cliId, pair.first.tickLag, gameNetworking.peerInterface->GetAveragePing(pair.second));
                 }
                 ImGui::Text("Max TickLag: %d", gameNetworking.maxTickLag);
             }

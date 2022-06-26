@@ -75,7 +75,6 @@ struct MapSector {
 } typedef MapSector;
 
 struct ClientAction {
-	cl_int clientId;
 
 	cl_uint submittedTickIdx;//the client tickidx when the action was created
 	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
@@ -92,15 +91,20 @@ struct ClientAction {
 	cl_int params_CommandToLocation_Y_Q16;
 } typedef ClientAction;
 
-struct ActionWrap {
-	ClientAction action;
+struct ActionTracking {	
+
+	cl_int clientId;
+
 	cl_uint hostGivenId;
 	cl_uint clientGivenId;
-
-	bool late;//action could not be applied on client at scheduled tickId;
-
-
+	cl_int ticksLate;//action could not be applied on client at scheduled tickId;
 	bool finalActionVerified;
+} typedef ActionTracking;
+
+
+struct ActionWrap {
+	ClientAction action;
+	ActionTracking tracking;
 
 } typedef ActionWrap;
 

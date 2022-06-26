@@ -8,9 +8,10 @@
 
 
 #include "peep.h"
+#include "assert.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
-#define CL_ERROR_CHECK(ret) if (ret != 0) {printf("ret at %d is %d\n", __LINE__, ret); fflush(stdout); }
+#define CL_ERROR_CHECK(ret) if (ret != 0) {printf("ret at %d is %d\n", __LINE__, ret); fflush(stdout); assert(0);}
 
 class GameGPUCompute
 {

@@ -48,10 +48,14 @@ public:
 		MESSAGE_ENUM_HOST_SYNCDATA1,
 		MESSAGE_ENUM_HOST_SYNCDATA2,
 
+		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
+
 		MESSAGE_ROUTINE_TICKSYNC,
 
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
-		MESSAGE_ENUM_HOST_TURNDATA
+		MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA,
+		MESSAGE_ENUM_CLIENT_ACTION_ERROR,
+
 	};
 
 
@@ -74,15 +78,30 @@ public:
 		for (int a = 0; a < turnActions.size(); a++)
 		{
 			ClientAction* action = &turnActions[a].action;
+			ActionTracking* actTracking = &turnActions[a].tracking;
 			if (action->scheduledTickIdx == gameState->tickIdx)
 			{
-				std::cout << "Pushing Action" << std::endl;
+				std::cout << "[CLIENT] Using Action" << std::endl;
 				gameState->clientActions[i] = turnActions[a];
 				i++;
+
 			}
 			else if (action->scheduledTickIdx < gameState->tickIdx)
 			{
-				std::cout << "expired action!!!!!!";
+
+				actTracking->ticksLate = gameState->tickIdx - action->scheduledTickIdx;
+				std::cout << "[CLIENT] Expired Action "
+					<< actTracking->ticksLate << " Ticks Late" << std::endl;
+
+
+				SLNet::BitStream bs;
+				bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
+				bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
+				bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
+
+
+				this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostAddr, false);
+
 			}
 			else
 			{
@@ -93,13 +112,22 @@ public:
 		gameState->numActions = i;
 	}
 
-	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
+	void CLIENT_SendSyncComplete()
 	{
 		SLNet::BitStream bs;
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
+
+		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostAddr, false);
+	}
+
+	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
+	{
+		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client" << std::endl;
+		SLNet::BitStream bs;
+		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_SYNCDATA1));
-		bs.Write(static_cast<unsigned int>(sizeof(unsigned char) + sizeof(GameState)));
-		bs.Write(cliIdx);
+		bs.Write(static_cast<unsigned char>(cliIdx));
 		bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
 
 		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
@@ -193,18 +221,23 @@ public:
 
 	int maxTickLag = 999999; // tick lag of slowest client
 
-
+	bool fullyConnectedToHost = false;
+	bool paused = false;
 	SLNet::SystemAddress hostAddr;
 
-	GameState* gameState;
+	GameState* gameState = nullptr;
 	unsigned char clientId = 0;
 	bool actionStateDirty = false;
 
 
-
 	std::vector<ActionWrap> turnActions;
-	
+
+	std::vector<ActionWrap> runningActions;
+	std::vector<ActionWrap> freezeFrameActions;
+	std::vector<ActionWrap> freezeFrameActions_1;
+
 	unsigned int lastFreezeTick = 0;
+	GameState* lastFreezeGameState = nullptr;
 	int freezeFreq = 20;
 
 	int minTickTimeMs = 33;
