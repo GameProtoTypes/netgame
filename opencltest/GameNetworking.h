@@ -100,7 +100,7 @@ public:
 				bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
 
 
-				this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostAddr, false);
+				this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 
 			}
 			else
@@ -118,10 +118,10 @@ public:
 		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
 
-		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostAddr, false);
+		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 	}
 
-	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::SystemAddress clientAddr)
+	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::RakNetGUID clientAddr)
 	{
 		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client" << std::endl;
 		SLNet::BitStream bs;
@@ -155,7 +155,7 @@ public:
 
 		
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
-			1, hostAddr, false);
+			1, hostPeer, false);
 	}
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
@@ -189,14 +189,13 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening;
 
-	void Host_AddClientInternal(SLNet::SystemAddress addr)
+	void Host_AddClientInternal(SLNet::RakNetGUID guid)
 	{
-		std::pair<clientMeta, SLNet::SystemAddress> cli;
 		clientMeta meta;
 		meta.cliId = nextCliIdx;
-		cli.first = meta;
-		cli.second = addr;
-		clients.push_back(cli);
+		meta.rakGuid = guid;
+		meta.tickLag = 0;
+		clients.push_back(meta);
 		nextCliIdx++;
 	}
 
@@ -205,15 +204,16 @@ public:
 	struct clientMeta {
 		unsigned char cliId;
 		int tickLag;
+		SLNet::RakNetGUID rakGuid;
 	};
-	std::vector<std::pair<clientMeta, SLNet::SystemAddress>> clients;
+	std::vector<clientMeta> clients;
 	unsigned char nextCliIdx = 0;
 	clientMeta* GetClientMetaDataFromCliId(unsigned char cliId)
 	{
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].first.cliId == cliId)
-				return &clients[i].first;
+			if (clients[i].cliId == cliId)
+				return &clients[i];
 		}
 
 		return nullptr;
@@ -223,7 +223,7 @@ public:
 
 	bool fullyConnectedToHost = false;
 	bool paused = false;
-	SLNet::SystemAddress hostAddr;
+	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;
 	unsigned char clientId = 0;

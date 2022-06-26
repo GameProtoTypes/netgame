@@ -15,7 +15,7 @@
  void GameNetworking::CLIENT_SendActionUpdate_ToHost(std::vector<ActionWrap>& clientActions)
  {
 	 if (actionStateDirty) {
-		 std::cout << "Sending ActionList Update to host " << hostAddr.ToString() << std::endl;
+		 std::cout << "Sending ActionList Update to host " << hostPeer.ToString() << std::endl;
 
 
 		 SLNet::BitStream bs;
@@ -28,7 +28,7 @@
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 		 }
 		 
-		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostAddr, false);
+		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
 
 
 		 actionStateDirty = false;
@@ -46,14 +46,14 @@
 		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
 		 bs.Write(static_cast<unsigned char>(clients.size()));
-		 bs.Write(static_cast<unsigned char>(client.first.cliId));
+		 bs.Write(static_cast<unsigned char>(client.cliId));
 		 bs.Write(static_cast<unsigned char>(turnActions.size()));
 		 for (ActionWrap& actionWrap : turnActions)
 		 {
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 		 }
 
-		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.second, false);
+		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
 	 }
 	 turnActions.clear();
  }
@@ -131,7 +131,11 @@
 
 
 		//slow down simulation to bring in client 
-
+		
+		if (maxTickLag > 2)
+			minTickTimeMs = 66;
+		else
+			minTickTimeMs = 33;
 
 
 	}
@@ -146,36 +150,40 @@
 			this->packet->length,
 			false);
 
+
+		SLNet::RakNetGUID systemGUID = peerInterface->GetGuidFromSystemAddress(this->packet->systemAddress);
+
 		// Check the packet identifier
 		switch (this->packet->data[0])
 		{
 		case ID_CONNECTION_REQUEST_ACCEPTED:
 		{
 			std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
-			hostAddr = this->packet->systemAddress;
 			connectedToHost = true;
 
 			if (serverRunning)
 			{
-				Host_AddClientInternal(hostAddr);
+				Host_AddClientInternal(systemGUID);
 
 				paused = true;
-				HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
+				HOST_SendSync_ToClient(clients.size() - 1, systemGUID);
 				
 			}
+
+			hostPeer = systemGUID;
 
 		}
 			break;
 		case ID_NEW_INCOMING_CONNECTION:
 		{
-			std::cout << "[HOST] Peer: A peer " << this->packet->systemAddress.ToString(true)
+			std::cout << "[HOST] Peer: A peer " << systemGUID.ToString()
 				<< " has connected." << std::endl;
 
 
-			Host_AddClientInternal(this->packet->systemAddress);
+			Host_AddClientInternal(systemGUID);
 
 
-			HOST_SendSync_ToClient(clients.size() - 1, this->packet->systemAddress);
+			HOST_SendSync_ToClient(clients.size() - 1, systemGUID);
 
 		}
 			break;
@@ -312,11 +320,11 @@
 
 				//update maxTickLag
 				maxTickLag = -99999;
-				for (auto pair : clients)
+				for (auto meta : clients)
 				{
-					if (pair.first.tickLag > maxTickLag)
+					if (meta.tickLag > maxTickLag)
 					{
-						maxTickLag = pair.first.tickLag;
+						maxTickLag = meta.tickLag;
 					}
 				}
 

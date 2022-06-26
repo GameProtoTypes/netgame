@@ -58,7 +58,7 @@ void RobotUpdate(Peep* peep)
             peep->attackState = 1;
 
 
-            peep->health -= RandomRange((int)peep, 0,3);
+            peep->health -= RandomRange((int)peep, 1,20);
 
             if (peep->health <= 0)
             {

@@ -196,7 +196,7 @@ int main(int argc, char* args[])
                 client->viewX = client->view_beginX + (client->mousex - client->mouse_dragBeginx);
                 client->viewY = client->view_beginY + (client->mousey - client->mouse_dragBeginy);
             }
-            gameState->tickIdx++;
+            
             
 
 
@@ -270,7 +270,8 @@ int main(int argc, char* args[])
 
 
             do{
-            gameNetworking.Update();
+                gameNetworking.Update();
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
             } while (gameNetworking.paused);
 
             if (gameNetworking.fullyConnectedToHost)
@@ -338,7 +339,7 @@ int main(int argc, char* args[])
             }
 
             gameState->numActions = 0;
-
+            gameState->tickIdx++;
 
 
 
@@ -422,7 +423,7 @@ int main(int argc, char* args[])
             {
                 for (auto pair : gameNetworking.clients)
                 {
-                    ImGui::Text("CliId: %d, TickLag: %d, Ping: %d", pair.first.cliId, pair.first.tickLag, gameNetworking.peerInterface->GetAveragePing(pair.second));
+                    ImGui::Text("CliId: %d, TickLag: %d, Ping: %d", pair.cliId, pair.tickLag, gameNetworking.peerInterface->GetAveragePing(pair.rakGuid));
                 }
                 ImGui::Text("Max TickLag: %d", gameNetworking.maxTickLag);
             }
