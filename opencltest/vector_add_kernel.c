@@ -9,6 +9,9 @@
 
 void RobotInteraction(Peep* peep, Peep* otherPeep)
 {
+    if (peep->deathState || otherPeep->deathState)
+        return;
+
     cl_int dist_Q16 = length_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
 
     if (dist_Q16 < peep->minDistPeep_Q16)
@@ -53,7 +56,10 @@ void RobotUpdate(Peep* peep)
         if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
         {
             peep->attackState = 1;
-            peep->health -= 1;
+
+
+            peep->health -= RandomRange((int)peep, 0,3);
+
             if (peep->health <= 0)
             {
                 peep->deathState = 1;
@@ -258,7 +264,7 @@ __kernel void game_init_single(__global GameState* gameState)
         gameState->peeps[p].target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
         gameState->peeps[p].target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
         gameState->peeps[p].attackState = 0;
-        gameState->peeps[p].health = 100;
+        gameState->peeps[p].health = 10;
         gameState->peeps[p].deathState = 0;
 
         if (gameState->peeps[p].map_x_Q15_16 >> 16 < 0)

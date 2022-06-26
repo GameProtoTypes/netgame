@@ -61,7 +61,7 @@ public:
 
 
 
-	void CLIENT_SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions);
+	void CLIENT_SendActionUpdate_ToHost(std::vector<ActionWrap>& clientActions);
 
 
 	void HOST_SendActionUpdates_ToClients();
@@ -69,17 +69,18 @@ public:
 	void CLIENT_ApplyCombinedTurn()
 	{
 		std::vector<int> removals;
-		std::vector<ClientAction> newList;
+		std::vector<ActionWrap> newList;
 		int i = 0;
 		for (int a = 0; a < turnActions.size(); a++)
 		{
-			if (turnActions[a].scheduledTickIdx == gameState->tickIdx)
+			ClientAction* action = &turnActions[a].action;
+			if (action->scheduledTickIdx == gameState->tickIdx)
 			{
 				std::cout << "Pushing Action" << std::endl;
 				gameState->clientActions[i] = turnActions[a];
 				i++;
 			}
-			else if (turnActions[a].scheduledTickIdx < gameState->tickIdx)
+			else if (action->scheduledTickIdx < gameState->tickIdx)
 			{
 				std::cout << "expired action!!!!!!";
 			}
@@ -200,19 +201,8 @@ public:
 	bool actionStateDirty = false;
 
 
-	struct ActionTrackData {
-		//ClientAction action;
-		uint32_t hostGivenId;
-		uint32_t clientGivenId;
-		
-		bool late;//action could not be applied on client at scheduled tickId;
 
-
-		bool finalActionVerified;
-
-	};
-
-	std::vector<ClientAction> turnActions;
+	std::vector<ActionWrap> turnActions;
 	
 	unsigned int lastFreezeTick = 0;
 	int freezeFreq = 20;

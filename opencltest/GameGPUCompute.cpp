@@ -33,7 +33,7 @@ GameGPUCompute::GameGPUCompute(GameState* gameState)
 
 
     cl_int ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
-    printf("num platforms: %d", ret_num_platforms);
+    printf("num cl platforms: %d\n", ret_num_platforms);
 
 
     cl_platform_id* platforms = NULL;

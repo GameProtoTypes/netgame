@@ -218,7 +218,7 @@ int main(int argc, char* args[])
 
 
 
-            std::vector<ClientAction> clientActions;
+            std::vector<ActionWrap> clientActions;
             if (client->mousePrimaryReleased)
             {
 
@@ -237,7 +237,10 @@ int main(int argc, char* args[])
                 action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
 
                 action.submittedTickIdx = gameState->tickIdx;
-                clientActions.push_back(action);
+
+                ActionWrap actionWrap;
+                actionWrap.action = action;
+                clientActions.push_back(actionWrap);
 
                 gameNetworking.actionStateDirty = true;
             }
@@ -254,7 +257,11 @@ int main(int argc, char* args[])
                 action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
 
                 action.submittedTickIdx = gameState->tickIdx;
-                clientActions.push_back(action);
+
+
+                ActionWrap actionWrap;
+                actionWrap.action = action;
+                clientActions.push_back(actionWrap);
 
                 gameNetworking.actionStateDirty = true;
 
@@ -268,8 +275,9 @@ int main(int argc, char* args[])
             
 
             //apply turns
-            for (int a = 0; a < gameState->numActions; a++) {
-                ClientAction* clientAction = &gameState->clientActions[a];
+            for (int a = 0; a < gameState->numActions; a++) 
+            {
+                ClientAction* clientAction = &gameState->clientActions[a].action;
                 cl_uchar cliId = clientAction->clientId;
                 ClientState* client = &gameState->clientStates[cliId];
 

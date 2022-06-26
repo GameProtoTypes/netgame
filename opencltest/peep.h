@@ -6,7 +6,7 @@
 
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*16)
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -25,6 +25,7 @@ struct MapSector;
 struct Peep {
 
 	//State:
+	cl_int valid;
 	int map_x_Q15_16;
 	int map_y_Q15_16;
 	int xv_Q15_16;
@@ -38,6 +39,7 @@ struct Peep {
 	cl_int attackState;
 	cl_int health;
 	cl_int deathState;
+	
 
 
 	cl_long netForcex_Q16;
@@ -90,7 +92,17 @@ struct ClientAction {
 	cl_int params_CommandToLocation_Y_Q16;
 } typedef ClientAction;
 
+struct ActionWrap {
+	ClientAction action;
+	cl_uint hostGivenId;
+	cl_uint clientGivenId;
 
+	bool late;//action could not be applied on client at scheduled tickId;
+
+
+	bool finalActionVerified;
+
+} typedef ActionWrap;
 
 
 struct ClientState {
@@ -129,7 +141,7 @@ struct GameState {
 	ClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
 
-	ClientAction clientActions[32];
+	ActionWrap clientActions[32];
 	cl_int numActions;
 
 

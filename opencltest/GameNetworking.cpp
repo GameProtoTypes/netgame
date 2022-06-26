@@ -13,7 +13,7 @@
 	std::cout << "GameNetworking::Init  End" << std::endl;
 }
 
- void GameNetworking::CLIENT_SendActionUpdate_ToHost(std::vector<ClientAction>& clientActions)
+ void GameNetworking::CLIENT_SendActionUpdate_ToHost(std::vector<ActionWrap>& clientActions)
  {
 	 if (actionStateDirty) {
 		 std::cout << "Sending ActionList Update to host " << hostAddr.ToString() << std::endl;
@@ -22,11 +22,11 @@
 		 SLNet::BitStream bs;
 		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_ACTIONUPDATE));
-		 bs.Write(static_cast<unsigned int>(clientActions.size() * sizeof(ClientAction)));
-		 bs.Write(static_cast<unsigned char>(clientActions.size()));
-		 for (ClientAction& action : clientActions)
+		 bs.Write(static_cast<unsigned int>(clientActions.size()));
+		
+		 for (ActionWrap& actionWrap : clientActions)
 		 {
-			 bs.Write(reinterpret_cast<char*>(&action), sizeof(ClientAction));
+			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
 		 }
 		 
@@ -50,9 +50,10 @@
 		 bs.Write(static_cast<unsigned char>(clients.size()));
 		 bs.Write(static_cast<unsigned char>(client.first.cliId));
 		 bs.Write(static_cast<unsigned char>(turnActions.size()));
-		 for (ClientAction& action : turnActions)
+		 for (ActionWrap& actionWrap : turnActions)
 		 {
-			 bs.Write(reinterpret_cast<char*>(&action), sizeof(ClientAction));
+			 std::cout << "sending wrap.";
+			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 		 }
 
 		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.second, false);
@@ -199,24 +200,23 @@
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			{
-				unsigned int length;
-				bts.Read(length);
 
-				unsigned char numActions;
+				unsigned int numActions;
 				bts.Read(numActions);
 
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int(numActions) << " actions)" << std::endl;
 
 
 				for (int i = 0; i < numActions; i++)
 				{
-					ClientAction action;
-					bts.Read(reinterpret_cast<char*>(&action), length);
+					ActionWrap actionWrap;
+					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					int tickLatency = (gameState->tickIdx - action.submittedTickIdx);
+					int tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
 						
 
-					action.scheduledTickIdx = gameState->tickIdx + 5;
-					turnActions.push_back(action);
+					actionWrap.action.scheduledTickIdx = gameState->tickIdx + 5;
+					turnActions.push_back(actionWrap);
 				}
 						
 					
@@ -251,9 +251,10 @@
 
 				for (unsigned char a = 0; a < numActions; a++)
 				{
-					ClientAction actionSet;
-					bts.Read(reinterpret_cast<char*>(&actionSet), sizeof(ClientAction));
-					turnActions.push_back(actionSet);
+					ActionWrap actionWrap;
+					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
+					std::cout << "[CLIENT] sdfsdfsdfsf" << std::endl;
+					turnActions.push_back(actionWrap);
 				}
 			}
 			else if (msgtype == MESSAGE_ROUTINE_TICKSYNC)
