@@ -59,7 +59,7 @@ void GEShaderProgram::AttachShader(GEShader* shader)
 
 void GEShaderProgram::DetachShader(GEShader* shader)
 {
-	for(unsigned int i = 0; i < shaderList.size(); i++)
+	for(uint32_t i = 0; i < shaderList.size(); i++)
 	{
 		if(shaderList[i] == shader)
 		{

@@ -48,8 +48,8 @@ public:
 	GEShaderProgram* pBasicShadProgram;
 	
 	
-	unsigned int quadVAO, quadVBO;
-	unsigned int instanceVBO;        
+	uint32_t quadVAO, quadVBO;
+	uint32_t instanceVBO;        
 	
 	glm::vec2* worldPositions =  nullptr;
     glm::vec3* colors = nullptr;

@@ -46,7 +46,13 @@ public:
 
 		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
 
-		MESSAGE_ROUTINE_TICKSYNC,
+
+
+
+		MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC,
+		MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC,
+
+
 
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
 		MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA,
@@ -90,8 +96,8 @@ public:
 
 
 				SLNet::BitStream bs;
-				bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-				bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
+				bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+				bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
 				bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
 
 
@@ -110,19 +116,19 @@ public:
 	void CLIENT_SendSyncComplete()
 	{
 		SLNet::BitStream bs;
-		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
+		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
 
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 	}
 
-	void HOST_SendSync_ToClient(unsigned char cliIdx, SLNet::RakNetGUID clientAddr)
+	void HOST_SendSync_ToClient(uint8_t cliIdx, SLNet::RakNetGUID clientAddr)
 	{
 		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client" << std::endl;
 		SLNet::BitStream bs;
-		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_SYNCDATA1));
-		bs.Write(static_cast<unsigned char>(cliIdx));
+		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
+		bs.Write(static_cast<uint8_t>(cliIdx));
 		bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
 
 		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
@@ -142,10 +148,10 @@ public:
 	{
 		SLNet::BitStream bs;
 
-		bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<unsigned char>(MESSAGE_ROUTINE_TICKSYNC));
-		bs.Write(static_cast<unsigned char>(clientId));
-		bs.Write(static_cast<unsigned int>(gameState->tickIdx));
+		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
+		bs.Write(static_cast<uint8_t>(clientId));
+		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
 		bs.Write(static_cast<int>(minTickTimeMs));
 
 		
@@ -189,13 +195,13 @@ public:
 	SLNet::RakPeerInterface* peerInterface;
 	
 	struct clientMeta {
-		unsigned char cliId;
+		uint8_t cliId;
 		int hostTickOffset;
 		SLNet::RakNetGUID rakGuid;
 	};
 	std::vector<clientMeta> clients;
-	unsigned char nextCliIdx = 0;
-	clientMeta* GetClientMetaDataFromCliId(unsigned char cliId)
+	uint8_t nextCliIdx = 0;
+	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId)
 	{
 		for (int i = 0; i < clients.size(); i++)
 		{
@@ -212,7 +218,7 @@ public:
 	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;
-	unsigned char clientId = 0;
+	uint8_t clientId = 0;
 	bool actionStateDirty = false;
 
 
@@ -222,7 +228,7 @@ public:
 	std::vector<ActionWrap> freezeFrameActions;
 	std::vector<ActionWrap> freezeFrameActions_1;
 
-	unsigned int lastFreezeTick = 0;
+	uint32_t lastFreezeTick = 0;
 	GameState* lastFreezeGameState = nullptr;
 	int freezeFreq = 20;
 

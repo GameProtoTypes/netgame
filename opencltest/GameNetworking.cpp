@@ -19,9 +19,9 @@
 
 
 		 SLNet::BitStream bs;
-		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_CLIENT_ACTIONUPDATE));
-		 bs.Write(static_cast<unsigned int>(clientActions.size()));
+		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ACTIONUPDATE));
+		 bs.Write(static_cast<uint32_t>(clientActions.size()));
 		
 		 for (ActionWrap& actionWrap : clientActions)
 		 {
@@ -43,11 +43,11 @@
 	 for (auto client : clients)
 	 {
 		 SLNet::BitStream bs;
-		 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-		 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
-		 bs.Write(static_cast<unsigned char>(clients.size()));
-		 bs.Write(static_cast<unsigned char>(client.cliId));
-		 bs.Write(static_cast<unsigned char>(turnActions.size()));
+		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
+		 bs.Write(static_cast<uint8_t>(clients.size()));
+		 bs.Write(static_cast<uint8_t>(client.cliId));
+		 bs.Write(static_cast<uint8_t>(turnActions.size()));
 		 for (ActionWrap& actionWrap : turnActions)
 		 {
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
@@ -89,15 +89,15 @@
  {
 	 SLNet::BitStream bs;
 	 int32_t len = strlen(message);
-	 bs.Write(static_cast<unsigned char>(ID_USER_PACKET_ENUM));
-	 bs.Write(static_cast<unsigned char>(MESSAGE_ENUM_GENERIC_MESSAGE));
-	 bs.Write(static_cast<unsigned int>(len));
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_GENERIC_MESSAGE));
+	 bs.Write(static_cast<uint32_t>(len));
 
 	 
 	 if (len > MAX_USER_MESSAGE_LENGTH)
 		 len = MAX_USER_MESSAGE_LENGTH;
 
-	 bs.Write(message, static_cast<unsigned int>(len));
+	 bs.Write(message, static_cast<uint32_t>(len));
 
 
 	 //broadcast to all
@@ -189,10 +189,10 @@
 			break;
 			
 		case ID_USER_PACKET_ENUM:
-			unsigned char rcv_id;
+			uint8_t rcv_id;
 			bts.Read(rcv_id);
 
-			unsigned char msgtype;
+			uint8_t msgtype;
 			bts.Read(msgtype);
 
 
@@ -201,7 +201,7 @@
 
 			if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
 			{	
-				unsigned int length;
+				uint32_t length;
 				bts.Read(length);
 
 				
@@ -237,7 +237,7 @@
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			{
 
-				unsigned int numActions;
+				uint32_t numActions;
 				bts.Read(numActions);
 
 				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int(numActions) << " actions)" << std::endl;
@@ -272,21 +272,21 @@
 				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA received" << std::endl;
 					
 				//get info on how many total clients there are...
-				unsigned char numClients;
+				uint8_t numClients;
 				bts.Read(numClients);
 				gameState->numClients = numClients;
 
 				//sync client id as assigned by the host.
-				unsigned char cliId;
+				uint8_t cliId;
 				bts.Read(cliId);
 				clientId = cliId;
 
 
-				unsigned char numActions;
+				uint8_t numActions;
 				bts.Read(numActions);
 
 
-				for (unsigned char a = 0; a < numActions; a++)
+				for (uint8_t a = 0; a < numActions; a++)
 				{
 					ActionWrap actionWrap;
 					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
@@ -300,13 +300,13 @@
 				std::cout << "[HOST] Recieved Expired Action Error " << std::endl;
 				std::cout << "[HOST] REVERTING........" << std::endl;
 			}
-			else if (msgtype == MESSAGE_ROUTINE_TICKSYNC)
+			else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
 			{
-				unsigned char cliId;
+				uint8_t cliId;
 				bts.Read(cliId);
 
 
-				unsigned int client_tickIdx;
+				uint32_t client_tickIdx;
 				bts.Read(client_tickIdx);
 
 				int tickTime;

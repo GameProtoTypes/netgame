@@ -40,7 +40,12 @@
 
 int random(int min, int max) { return rand() % (max - min + 1) + min; }
 
-
+void WaitMinTickTime(uint64_t timerStartMs, GameNetworking* gameNetworking)
+{
+    int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
+    int sleepTime = glm::clamp(int(gameNetworking->minTickTimeMs - frameTimeMS), 0, gameNetworking->minTickTimeMs);
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+}
 
 int main(int argc, char* args[]) 
 {
@@ -539,7 +544,7 @@ int main(int argc, char* args[])
                        mouseBeginScreenCoords.x, mouseScreenCoords.y
                     };
 
-                    unsigned int mouseVAO, mouseVBO;
+                    uint32_t mouseVAO, mouseVBO;
                     glGenVertexArrays(1, &mouseVAO);
                     glGenBuffers(1, &mouseVBO);
                     glBindVertexArray(mouseVAO);
@@ -554,6 +559,10 @@ int main(int argc, char* args[])
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
                     glBindVertexArray(0);
                 }
+
+                //still maintain ticktiming even though tickidx will not be incrementing.
+                if(gameState->pauseState)
+                    WaitMinTickTime(timerStartMs, &gameNetworking);
 
             } while (gameState->pauseState);//end pause loop
 
@@ -575,11 +584,7 @@ int main(int argc, char* args[])
 
 
 
-            int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
-            int sleepTime = glm::clamp(int(gameNetworking.minTickTimeMs - frameTimeMS), 0, gameNetworking.minTickTimeMs);
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
-
-            
+            WaitMinTickTime(timerStartMs, &gameNetworking);
         }
 
 
