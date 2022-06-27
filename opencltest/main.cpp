@@ -269,310 +269,293 @@ int main(int argc, char* args[])
             }
 
 
-            do{
+
+            do 
+            {
                 gameNetworking.Update();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            } while (gameNetworking.paused);
 
-            if (gameNetworking.fullyConnectedToHost)
-            {
-                gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
-
-                gameNetworking.CLIENT_ApplyCombinedTurn();
-            }
-
-            //apply turns
-            for (int a = 0; a < gameState->numActions; a++) 
-            {
-                ClientAction* clientAction = &gameState->clientActions[a].action;
-                ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
-                cl_uchar cliId = actionTracking->clientId;
-                ClientState* client = &gameState->clientStates[cliId];
-
-                if (clientAction->action_DoSelect)
+                if (gameNetworking.fullyConnectedToHost)
                 {
-                    client->selectedPeepsLastIdx = OFFSET_NULL;
-                    for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
-                    {
-                        Peep* p = &gameState->peeps[pi];
+                    gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
 
-                        if(p->faction == actionTracking->clientId)
-                        if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
-                            && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                    gameNetworking.CLIENT_ApplyCombinedTurn();
+                }
+
+
+            
+                //apply turns
+                for (int a = 0; a < gameState->numActions; a++)
+                {
+                    ClientAction* clientAction = &gameState->clientActions[a].action;
+                    ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
+                    cl_uchar cliId = actionTracking->clientId;
+                    ClientState* client = &gameState->clientStates[cliId];
+
+                    if (clientAction->action_DoSelect)
+                    {
+                        client->selectedPeepsLastIdx = OFFSET_NULL;
+                        for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
                         {
+                            Peep* p = &gameState->peeps[pi];
 
-                            if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
-                                && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
-                            {
+                            if (p->faction == actionTracking->clientId)
+                                if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
+                                    && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                                {
 
-                                if (client->selectedPeepsLastIdx != OFFSET_NULL)
-                                {
-                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
-                                    p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                    if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
+                                        && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
+                                    {
+
+                                        if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                                        {
+                                            gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
+                                            p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
+                                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                        }
+                                        else
+                                        {
+                                            p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                            p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                        }
+                                        client->selectedPeepsLastIdx = pi;
+                                    }
                                 }
-                                else
-                                {
-                                    p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                }
-                                client->selectedPeepsLastIdx = pi;
-                            }
                         }
-                    }
 
-                }
-                else if (clientAction->action_CommandToLocation)
-                {
-                    cl_uint curPeepIdx = client->selectedPeepsLastIdx;
-                    while (curPeepIdx != OFFSET_NULL)
+                    }
+                    else if (clientAction->action_CommandToLocation)
                     {
-                        Peep* curPeep = &gameState->peeps[curPeepIdx];
-                        curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
-                        curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+                        cl_uint curPeepIdx = client->selectedPeepsLastIdx;
+                        while (curPeepIdx != OFFSET_NULL)
+                        {
+                            Peep* curPeep = &gameState->peeps[curPeepIdx];
+                            curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
+                            curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
 
-                        curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
+                            curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
+                        }
+
+
+                    }
+                }
+
+                gameState->numActions = 0;
+                gameState->tickIdx++;
+
+
+
+
+
+
+
+
+
+
+                ImGui::Begin("Company");
+                ImGui::Button("Assets");
+                ImGui::Button("Profit/Loss");
+                ImGui::End();
+
+                ImGui::Begin("Build");
+                ImGui::Button("Tracks");
+                ImGui::Button("Machines");
+                ImGui::Button("Bulldoze");
+
+                ImGui::End();
+
+                ImGui::Begin("Routines");
+
+                ImGui::End();
+
+                ImGui::Begin("Miner Bots");
+                ImGui::Button("New Miner");
+                ImGui::Button("Destroy Miner");
+                ImGui::End();
+
+
+
+                ImGui::Begin("Network");
+                static int port = 50010;
+                ImGui::InputInt("Port", &port, 1, 1);
+                ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
+                ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
+                ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
+
+                ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
+                if (ImGui::Button("Start Server"))
+                {
+                    gameNetworking.StartServer(port);
+                }
+
+                if (ImGui::Button("Connect To Local Server"))
+                {
+                    gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", port));
+                }
+
+                if (ImGui::Button("Send Message"))
+                {
+                    char buffer[256];
+                    sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
+                    gameNetworking.SendMessage(buffer);
+                }
+
+
+
+
+                if (gameNetworking.serverRunning)
+                {
+                    for (auto pair : gameNetworking.clients)
+                    {
+                        ImGui::Text("CliId: %d, HostTickOffset: %d, Ping: %d", pair.cliId, pair.hostTickOffset, gameNetworking.peerInterface->GetAveragePing(pair.rakGuid));
+                    }
+                }
+
+
+
+
+
+                ImGui::End();
+
+
+
+
+
+
+
+                gameGraphics.pPeepShadProgram->Use();
+                gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
+
+
+                cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;
+                PeepRenderSupport peepRenderSupport[MAX_PEEPS];
+                while (curPeepIdx != OFFSET_NULL)
+                {
+                    Peep* p = &gameState->peeps[curPeepIdx];
+
+                    peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
+
+                    curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.clientId];
+                }
+
+
+
+
+                for (int pi = 0; pi < MAX_PEEPS; pi++)
+                {
+                    Peep* p = &gameState->peeps[pi];
+
+
+                    float brightFactor = 0.6f;
+                    if (p->faction == 1)
+                    {
+                        gameGraphics.colors[pi].r = 0.0f;
+                        gameGraphics.colors[pi].g = 1.0f;
+                        gameGraphics.colors[pi].b = 1.0f;
+                    }
+                    else
+                    {
+                        gameGraphics.colors[pi].r = 1.0f;
+                        gameGraphics.colors[pi].g = 0.0f;
+                        gameGraphics.colors[pi].b = 1.0f;
+                    }
+
+                    if (peepRenderSupport[pi].render_selectedByClient)
+                    {
+                        brightFactor = 1.0f;
+                        peepRenderSupport[pi].render_selectedByClient = 0;
+                    }
+                    if (p->deathState == 1)
+                    {
+                        brightFactor = 0.6f;
+                        gameGraphics.colors[pi].r = 0.5f;
+                        gameGraphics.colors[pi].g = 0.5f;
+                        gameGraphics.colors[pi].b = 0.5f;
+                    }
+                    if (p->attackState == 1)
+                    {
+                        brightFactor = 1.0f;
+                        gameGraphics.colors[pi].r = 1.0f;
+                        gameGraphics.colors[pi].g = 1.0f;
+                        gameGraphics.colors[pi].b = 1.0f;
                     }
 
 
-                }
-            }
-
-            gameState->numActions = 0;
-            gameState->tickIdx++;
 
 
+                    gameGraphics.colors[pi] = gameGraphics.colors[pi] * brightFactor;
+
+                    float x = float(p->map_x_Q15_16) / float(1 << 16);
+                    float y = float(p->map_y_Q15_16) / float(1 << 16);
+
+                    float xv = p->xv_Q15_16 / float(1 << 16);
+                    float yv = p->yv_Q15_16 / float(1 << 16);
+
+                    float angle = atan2f(yv, xv);
 
 
+                    gameGraphics.worldPositions[pi] = glm::vec2(x, y);
 
 
+                    glm::mat4 localMatrix = glm::mat4(1.0f);
+                    localMatrix = glm::translate(localMatrix, glm::vec3(x, y, 0));
+                    localMatrix = glm::rotate(localMatrix, angle * (180.0f / 3.1415f) - 90.0f, glm::vec3(0, 0, 1));
 
+                    glm::vec2 location2D = glm::vec2(x, y);
+                    glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.instanceVBO);
+                    int stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
+                    glBufferSubData(GL_ARRAY_BUFFER, pi * stride, sizeof(glm::vec2), &location2D.x);
+                    glBufferSubData(GL_ARRAY_BUFFER, pi * stride + sizeof(glm::vec2), sizeof(glm::vec3), &gameGraphics.colors[pi].r);
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            ImGui::Begin("Company");
-            ImGui::Button("Assets");
-            ImGui::Button("Profit/Loss");
-            ImGui::End();
-
-            ImGui::Begin("Build");
-            ImGui::Button("Tracks");
-            ImGui::Button("Machines");
-            ImGui::Button("Bulldoze");
-            
-            ImGui::End();
-
-            ImGui::Begin("Routines");
-            
-            ImGui::End();
-
-            ImGui::Begin("Miner Bots");
-            ImGui::Button("New Miner");
-            ImGui::Button("Destroy Miner");
-            ImGui::End();
-
-
-
-            ImGui::Begin("Network");
-            static int port = 50010;
-            ImGui::InputInt("Port", &port, 1, 1);
-            ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
-            ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
-            ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
-
-            ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
-            if (ImGui::Button("Start Server"))
-            {
-                gameNetworking.StartServer(port);
-            }
-
-            if (ImGui::Button("Connect To Local Server"))
-            {
-                gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", port));
-            }
-
-            if (ImGui::Button("Send Message"))
-            {
-                char buffer[256];
-                sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
-                gameNetworking.SendMessage(buffer);
-            }
-
-
-
-
-            if (gameNetworking.serverRunning)
-            {
-                for (auto pair : gameNetworking.clients)
-                {
-                    ImGui::Text("CliId: %d, TickLag: %d, Ping: %d", pair.cliId, pair.tickLag, gameNetworking.peerInterface->GetAveragePing(pair.rakGuid));
-                }
-                ImGui::Text("Max TickLag: %d", gameNetworking.maxTickLag);
-            }
-
-           
-
-
-            
-            ImGui::End();
-
-
-            
-
-
-
-
-            gameGraphics.pPeepShadProgram->Use();
-            gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
-
-            
-
-            cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;
-            PeepRenderSupport peepRenderSupport[MAX_PEEPS];
-            while (curPeepIdx != OFFSET_NULL)
-            {
-                Peep* p  = &gameState->peeps[curPeepIdx];
-
-                peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
-
-                curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.clientId];
-            }
-
-
-
-                    
-            for (int pi = 0; pi < MAX_PEEPS; pi++)
-            {
-                Peep* p = &gameState->peeps[pi];
-
-
-                float brightFactor = 0.6f;
-                if (p->faction == 1)
-                {
-                    gameGraphics.colors[pi].r = 0.0f;
-                    gameGraphics.colors[pi].g = 1.0f;
-                    gameGraphics.colors[pi].b = 1.0f;
-                }
-                else
-                {
-                    gameGraphics.colors[pi].r = 1.0f;
-                    gameGraphics.colors[pi].g = 0.0f;
-                    gameGraphics.colors[pi].b = 1.0f;
-                }
-
-                if (peepRenderSupport[pi].render_selectedByClient)
-                {
-                    brightFactor = 1.0f;
-                    peepRenderSupport[pi].render_selectedByClient = 0;
-                }
-                if (p->deathState == 1)
-                {
-                    brightFactor = 0.6f;
-                    gameGraphics.colors[pi].r = 0.5f;
-                    gameGraphics.colors[pi].g = 0.5f;
-                    gameGraphics.colors[pi].b = 0.5f;
-                }
-                if (p->attackState == 1)
-                {
-                    brightFactor = 1.0f;
-                    gameGraphics.colors[pi].r = 1.0f;
-                    gameGraphics.colors[pi].g = 1.0f;
-                    gameGraphics.colors[pi].b = 1.0f;
                 }
 
 
-    
-                
-                gameGraphics.colors[pi] = gameGraphics.colors[pi]*brightFactor;
-                
-                float x = float(p->map_x_Q15_16) / float(1 << 16);
-                float y = float(p->map_y_Q15_16) / float(1 << 16);
-
-                float xv = p->xv_Q15_16 / float(1 << 16);
-                float yv = p->yv_Q15_16 / float(1 << 16);
-
-                float angle = atan2f(yv, xv) ;
-
-
-                gameGraphics.worldPositions[pi] = glm::vec2(x, y);
-
-
-                glm::mat4 localMatrix = glm::mat4(1.0f);
-                localMatrix = glm::translate(localMatrix, glm::vec3(x, y, 0));
-                localMatrix = glm::rotate(localMatrix, angle * (180.0f / 3.1415f) - 90.0f, glm::vec3(0, 0, 1));
-
-                glm::vec2 location2D = glm::vec2(x, y);
-                glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.instanceVBO);
-                int stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
-                glBufferSubData(GL_ARRAY_BUFFER, pi * stride, sizeof(glm::vec2), &location2D.x);
-                glBufferSubData(GL_ARRAY_BUFFER, pi * stride + sizeof(glm::vec2), sizeof(glm::vec3), &gameGraphics.colors[pi].r);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            }
-
-
-            //draw all peeps
-            glBindVertexArray(gameGraphics.quadVAO);
-            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
-            glBindVertexArray(0);
-
-            //draw mouse
-            {
-               
-                gameGraphics.pBasicShadProgram->Use();
-
-
-                gameGraphics.pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
-
-
-                glm::mat4 drawingTransform(1.0f);
-                gameGraphics.pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
-                gameGraphics.pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
-
-                float mouseSelectVerts[] = {
-                    //positions    
-                   mouseBeginScreenCoords.x,  mouseBeginScreenCoords.y,
-                   mouseScreenCoords.x, mouseBeginScreenCoords.y,
-                   mouseScreenCoords.x , mouseScreenCoords.y ,
-                   mouseBeginScreenCoords.x, mouseScreenCoords.y
-                };
-
-                unsigned int mouseVAO, mouseVBO;
-                glGenVertexArrays(1, &mouseVAO);
-                glGenBuffers(1, &mouseVBO);
-                glBindVertexArray(mouseVAO);
-                glBindBuffer(GL_ARRAY_BUFFER, mouseVBO);
-                glBufferData(GL_ARRAY_BUFFER, sizeof(mouseSelectVerts), mouseSelectVerts, GL_STATIC_DRAW);
-                glEnableVertexAttribArray(0);
-                glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-
-                if (client->mousePrimaryDown)
-                    glDrawArrays(GL_LINE_LOOP, 0, 4);
-
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                //draw all peeps
+                glBindVertexArray(gameGraphics.quadVAO);
+                glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
                 glBindVertexArray(0);
-            }
+
+                //draw mouse
+                {
+
+                    gameGraphics.pBasicShadProgram->Use();
 
 
+                    gameGraphics.pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
+
+
+                    glm::mat4 drawingTransform(1.0f);
+                    gameGraphics.pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
+                    gameGraphics.pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+
+                    float mouseSelectVerts[] = {
+                        //positions    
+                       mouseBeginScreenCoords.x,  mouseBeginScreenCoords.y,
+                       mouseScreenCoords.x, mouseBeginScreenCoords.y,
+                       mouseScreenCoords.x , mouseScreenCoords.y ,
+                       mouseBeginScreenCoords.x, mouseScreenCoords.y
+                    };
+
+                    unsigned int mouseVAO, mouseVBO;
+                    glGenVertexArrays(1, &mouseVAO);
+                    glGenBuffers(1, &mouseVBO);
+                    glBindVertexArray(mouseVAO);
+                    glBindBuffer(GL_ARRAY_BUFFER, mouseVBO);
+                    glBufferData(GL_ARRAY_BUFFER, sizeof(mouseSelectVerts), mouseSelectVerts, GL_STATIC_DRAW);
+                    glEnableVertexAttribArray(0);
+                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+
+                    if (client->mousePrimaryDown)
+                        glDrawArrays(GL_LINE_LOOP, 0, 4);
+
+                    glBindBuffer(GL_ARRAY_BUFFER, 0);
+                    glBindVertexArray(0);
+                }
+
+            } while (gameState->pauseState);//end pause loop
 
             gameCompute.WriteGameState();
 

@@ -165,7 +165,7 @@
 			{
 				Host_AddClientInternal(systemGUID);
 
-				paused = true;
+				gameState->pauseState = 1;
 				HOST_SendSync_ToClient(clients.size() - 1, systemGUID);
 				
 			}
@@ -232,7 +232,7 @@
 			{
 				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
 
-				paused = false;
+				gameState->pauseState = 0;
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			{
@@ -312,24 +312,10 @@
 				int tickTime;
 				bts.Read(tickTime);
 
-				int error = int(gameState->tickIdx) - int(client_tickIdx);
+				int offset = int(client_tickIdx) - int(gameState->tickIdx);
 
 				clientMeta* meta = GetClientMetaDataFromCliId(cliId);
-				meta->tickLag = error;
-
-
-				//update maxTickLag
-				maxTickLag = -99999;
-				for (auto meta : clients)
-				{
-					if (meta.tickLag > maxTickLag)
-					{
-						maxTickLag = meta.tickLag;
-					}
-				}
-
-
-				//std::cout << "[HOST] Peer: MESSAGE_ROUTINE_TICKSYNC received. error: " << error << std::endl;
+				meta->hostTickOffset = offset;
 			}
 
 			break;

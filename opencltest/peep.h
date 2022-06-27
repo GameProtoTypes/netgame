@@ -16,7 +16,15 @@
 
 #define MAX_CLIENTS (256)
 
+
+
+
+
+
 #define OFFSET_NULL (0xFFFFFFFF)
+#define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } ARRAY[INDEX] = VALUE; }
+#define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} POINTER = &ARRAY[INDEX];}
+#define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
 
 
 
@@ -150,6 +158,7 @@ struct GameState {
 
 
 	cl_uint tickIdx;
+	int pauseState;
 }typedef GameState;
 
 

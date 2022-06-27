@@ -36,10 +36,6 @@ public:
 		this->gameState = gameState;
 	}
 	~GameNetworking() {}
-	
-
-
-
 
 
 	enum MESSAGE_ENUMS {
@@ -55,7 +51,6 @@ public:
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
 		MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA,
 		MESSAGE_ENUM_CLIENT_ACTION_ERROR,
-
 	};
 
 
@@ -171,18 +166,10 @@ public:
 	bool serverRunning = false;
 	bool connectedToHost = false;
 
-	//bool EnableNatPunch = false;
 	SLNet::SocketDescriptor SocketDesc = SLNet::SocketDescriptor();
 
 	//current recieving package
 	SLNet::Packet* packet;
-	SLNet::SystemAddress natPunchServerAddress;
-	//SLNet::NatPunchthroughClient natPunchthroughClient;
-
-	// Flag for deciding if the current peer should send a connection
-	// request to the remote peer upon a successful NAT punchthrough.
-	bool sentNatPunchthroughRequest = false;
-
 
 	// The  thread for receiving packets in the background.
 	std::thread* listenLoopThread;
@@ -194,7 +181,7 @@ public:
 		clientMeta meta;
 		meta.cliId = nextCliIdx;
 		meta.rakGuid = guid;
-		meta.tickLag = 0;
+		meta.hostTickOffset = 0;
 		clients.push_back(meta);
 		nextCliIdx++;
 	}
@@ -203,7 +190,7 @@ public:
 	
 	struct clientMeta {
 		unsigned char cliId;
-		int tickLag;
+		int hostTickOffset;
 		SLNet::RakNetGUID rakGuid;
 	};
 	std::vector<clientMeta> clients;
@@ -222,7 +209,6 @@ public:
 	int maxTickLag = 999999; // tick lag of slowest client
 
 	bool fullyConnectedToHost = false;
-	bool paused = false;
 	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;

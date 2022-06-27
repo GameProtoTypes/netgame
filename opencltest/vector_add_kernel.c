@@ -127,6 +127,7 @@ void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
         y = SQRT_MAXSECTORS / 2 - 1;
 
     MapSector* newSector = &gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2];
+    CL_CHECK_NULL(newSector)
     if ((peep->mapSector != newSector))
     {
         if (peep->mapSector != NULL)
@@ -230,9 +231,7 @@ __kernel void game_init_single(__global GameState* gameState)
     printf("Game Initializing...\n");
 
     gameState->numClients = 1;
-
-
-
+    gameState->pauseState = 0;
 
 
     for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
@@ -283,9 +282,8 @@ __kernel void game_init_single(__global GameState* gameState)
             gameState->clientStates[i].selectedPeepsLastIdx = OFFSET_NULL;
 
 
-
-            gameState->peeps[p].nextSelectionPeepIdx[i] = OFFSET_NULL;
-            gameState->peeps[p].prevSelectionPeepIdx[i] = OFFSET_NULL;
+            CL_CHECKED_ARRAY_SET(gameState->peeps[p].nextSelectionPeepIdx, MAX_CLIENTS, i, OFFSET_NULL)
+            CL_CHECKED_ARRAY_SET(gameState->peeps[p].prevSelectionPeepIdx, MAX_CLIENTS, i, OFFSET_NULL)
         }
         
     }
@@ -327,7 +325,10 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
     for (cl_uint pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
-        Peep* p = &gameState->peeps[pi + globalid*chunkSize];
+
+        //Peep* p = &gameState->peeps[pi + globalid*chunkSize];
+        Peep* p;
+        CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
         p->map_x_Q15_16 += p->xv_Q15_16;
         p->map_y_Q15_16 += p->yv_Q15_16;
 
@@ -335,8 +336,9 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
         p->netForcey_Q16 = 0;
 
         global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
+        CL_CHECK_NULL(mapSector)
         global volatile cl_uint* lock = (global volatile cl_uint*)&mapSector->lock;
-        
+        CL_CHECK_NULL(lock)
 
         cl_uint reservation;
 
@@ -367,9 +369,11 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
         Peep* p = &gameState->peeps[pi + globalid * chunkSize];
 
         global volatile MapSector* mapSector = (global volatile MapSector*)p->mapSector_pending;
+        CL_CHECK_NULL(mapSector)
         if (mapSector == NULL)
             continue;
         global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
+        CL_CHECK_NULL(lock)
 
 
         int reservation = atomic_add(lock, 1) + 1;

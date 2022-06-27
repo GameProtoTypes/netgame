@@ -36,8 +36,7 @@ GameGPUCompute::GameGPUCompute(GameState* gameState)
     printf("num cl platforms: %d\n", ret_num_platforms);
 
 
-    cl_platform_id* platforms = NULL;
-    platforms = (cl_platform_id*)malloc(ret_num_platforms * sizeof(cl_platform_id));
+    cl_platform_id* platforms = new cl_platform_id[ret_num_platforms];
 
     ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
     CL_ERROR_CHECK(ret)
@@ -146,13 +145,13 @@ GameGPUCompute::GameGPUCompute(GameState* gameState)
 
 GameGPUCompute::~GameGPUCompute()
 {
-    cl_int ret = clFlush(command_queue);
-    ret = clFinish(command_queue);
-    ret = clReleaseKernel(update_kernel);
-    ret = clReleaseProgram(program);
-    ret = clReleaseMemObject(gamestate_mem_obj);
-    ret = clReleaseCommandQueue(command_queue);
-    ret = clReleaseContext(context);
+    cl_int ret = clFlush(command_queue); CL_ERROR_CHECK(ret)
+    ret = clFinish(command_queue); CL_ERROR_CHECK(ret)
+    ret = clReleaseKernel(update_kernel); CL_ERROR_CHECK(ret)
+    ret = clReleaseProgram(program); CL_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(gamestate_mem_obj); CL_ERROR_CHECK(ret)
+    ret = clReleaseCommandQueue(command_queue); CL_ERROR_CHECK(ret)
+    ret = clReleaseContext(context); CL_ERROR_CHECK(ret)
 }
 
 void GameGPUCompute::RunInitCompute()
@@ -178,13 +177,23 @@ void GameGPUCompute::Stage1()
         WorkItems, NULL, 0, NULL, &preUpdateEvent1);
     CL_ERROR_CHECK(ret)
 
-        ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
-            WorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
+    ret = clFinish(command_queue);
+    CL_ERROR_CHECK(ret)
+
+    ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
+        WorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
     CL_ERROR_CHECK(ret)
 
 
-        clWaitForEvents(1, &preUpdateEvent2);
+    ret = clFinish(command_queue);
+    CL_ERROR_CHECK(ret)
+
+    clWaitForEvents(1, &preUpdateEvent2);
     cl_uint waitListCnt = 1;
+
+    ret = clFinish(command_queue);
+    CL_ERROR_CHECK(ret)
+
 
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
         WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
