@@ -24,7 +24,8 @@
 #define MAX_USER_MESSAGE_LENGTH 255
 
 
-
+#define MINTICKTIMEMS (33)
+#define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 
 
 
@@ -266,7 +267,7 @@ public:
 
 	void SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID)
 	{
-		Host_AddClientInternal(clientGUID, systemGUID);
+		AddClientInternal(clientGUID, systemGUID);
 		connectedToHost = true;
 		std::cout << "Pausing." << std::endl;
 		gameState->pauseState = 1;
@@ -290,13 +291,14 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening = false;
 
-	void Host_AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
+	void AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
 	{
 		clientMeta meta;
 		meta.cliId = nextCliIdx;
 		meta.rakGuid = rakguid;
 		meta.clientGUID = clientGUID;
 		meta.hostTickOffset = 0;
+		meta.ticksSinceLastCommunication = 0;
 		clients.push_back(meta);
 		gameState->clientStates[meta.cliId].connected = 1;
 
@@ -358,7 +360,7 @@ public:
 	GameState* lastFreezeGameState = nullptr;
 	int32_t freezeFreq = 20;
 
-	int32_t minTickTimeMs = 33;
+	int32_t minTickTimeMs = MINTICKTIMEMS;
 
 	uint32_t clientGUID;
 };

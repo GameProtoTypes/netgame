@@ -416,7 +416,7 @@ int32_t main(int32_t argc, char* args[])
                     sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
                     gameNetworking.SendMessage(buffer);
                 }
-
+                ImGui::Text("tickTime: %d", gameNetworking.minTickTimeMs);
 
 
 

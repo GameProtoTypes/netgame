@@ -103,17 +103,24 @@
 		peerInterface->Startup(1, &desc, 1);
 	
 
-		SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
-		if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
+	SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
+	if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
+	{
+		if(serverRunning && (connectInitSuccess != SLNet::ALREADY_CONNECTED_TO_ENDPOINT))
+			std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
+		else
 		{
-			if(serverRunning && (connectInitSuccess != SLNet::ALREADY_CONNECTED_TO_ENDPOINT))
-				std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
-			else
+			if (serverRunning)//fake reconnect and start process.
 			{
-				SHARED_CLIENT_CONNECT(clientGUID, hostPeer);
-
+				std::cout << "[CLIENT] Fake Reconnecting.." << std::endl;
+				connectedToHost = true;
+				
+				CLIENT_SENDInitialData_ToHost();
 			}
+
+
 		}
+	}
 	
 }
  void GameNetworking::SendMessage(char* message)
@@ -139,6 +146,7 @@
 
  void GameNetworking::Update()
 {
+
 	if(connectedToHost && fullyConnectedToHost)
 		SendTickSyncToHost();
 
@@ -168,24 +176,64 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 50)
+			if (clients[i].ticksSinceLastCommunication > 200)
 			{
-				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID << std::endl;
+				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
+					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
 				HOST_HandleDisconnectByCLientGUID(clients[i].clientGUID);
 			}
 		}
-
-
-
-		//slow down simulation to bring in client 
-		
-		//if (maxTickLag > 2)
-		//	minTickTimeMs = 66;
-		//else
-		//	minTickTimeMs = 33;
-
-
 	}
+
+	//get stats on client swarm and slow down 
+	int32_t maxOffset = -9999;
+	int32_t minOffset = 9999;
+	int32_t safetyOffset = 5;
+	clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
+	for (int i = 0; i < clients.size(); i++)
+	{
+		clientMeta* client = &clients[i];
+		if (client == thisClient)
+			continue;
+
+		if (client->hostTickOffset > maxOffset)
+			maxOffset = client->hostTickOffset;
+		if (client->hostTickOffset < minOffset)
+			minOffset = client->hostTickOffset;
+	}
+	if (clients.size() > 1)
+	{
+		if (thisClient != nullptr)
+		{
+			int32_t distToMin = thisClient->hostTickOffset - minOffset;
+			int32_t distToMax = thisClient->hostTickOffset - maxOffset;
+
+			if (serverRunning)
+			{
+				//slow down for the fastest guy.
+				if (distToMax > safetyOffset)
+					minTickTimeMs = SLOWTICKTIMEMS;
+				else
+					minTickTimeMs = MINTICKTIMEMS;
+
+			
+			}
+			else
+			{
+				//slow down for the slow guy.
+				if (distToMin > safetyOffset)
+					minTickTimeMs = SLOWTICKTIMEMS;
+				else
+					minTickTimeMs = MINTICKTIMEMS;
+
+				if (thisClient->hostTickOffset > -safetyOffset)
+					minTickTimeMs = SLOWTICKTIMEMS;
+
+			}
+		}
+	}
+
+
 
 
 	for (this->packet = this->peerInterface->Receive();
