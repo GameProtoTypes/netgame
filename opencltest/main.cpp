@@ -38,16 +38,16 @@
 
 
 
-int random(int min, int max) { return rand() % (max - min + 1) + min; }
+int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
 void WaitMinTickTime(uint64_t timerStartMs, GameNetworking* gameNetworking)
 {
     int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
-    int sleepTime = glm::clamp(int(gameNetworking->minTickTimeMs - frameTimeMS), 0, gameNetworking->minTickTimeMs);
+    int32_t sleepTime = glm::clamp(int32_t(gameNetworking->minTickTimeMs - frameTimeMS), 0, gameNetworking->minTickTimeMs);
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
 
-int main(int argc, char* args[]) 
+int32_t main(int32_t argc, char* args[]) 
 {
 
 
@@ -68,7 +68,7 @@ int main(int argc, char* args[])
         //Event handler
         SDL_Event e;
 
-        int mousex, mousey;
+        int32_t mousex, mousey;
 
         gameState->mapHeight = 2000;
         gameState->mapWidth = 2000;
@@ -171,8 +171,8 @@ int main(int argc, char* args[])
                     switch (e.window.event)
                     {
                     case SDL_WINDOWEVENT_RESIZED:
-                        int windowWidth = e.window.data1;
-                        int windowHeight = e.window.data2;
+                        int32_t windowWidth = e.window.data1;
+                        int32_t windowHeight = e.window.data2;
                         glViewport(0, 0, windowWidth, windowHeight);
                         break;
                     }
@@ -289,7 +289,7 @@ int main(int argc, char* args[])
 
             
                 //apply turns
-                for (int a = 0; a < gameState->numActions; a++)
+                for (int32_t a = 0; a < gameState->numActions; a++)
                 {
                     ClientAction* clientAction = &gameState->clientActions[a].action;
                     ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
@@ -381,7 +381,7 @@ int main(int argc, char* args[])
 
 
                 ImGui::Begin("Network");
-                static int port = 50010;
+                static int32_t port = 50010;
                 ImGui::InputInt("Port", &port, 1, 1);
                 ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
                 ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
@@ -447,7 +447,7 @@ int main(int argc, char* args[])
 
 
 
-                for (int pi = 0; pi < MAX_PEEPS; pi++)
+                for (int32_t pi = 0; pi < MAX_PEEPS; pi++)
                 {
                     Peep* p = &gameState->peeps[pi];
 
@@ -509,7 +509,7 @@ int main(int argc, char* args[])
 
                     glm::vec2 location2D = glm::vec2(x, y);
                     glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.instanceVBO);
-                    int stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
+                    int32_t stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
                     glBufferSubData(GL_ARRAY_BUFFER, pi * stride, sizeof(glm::vec2), &location2D.x);
                     glBufferSubData(GL_ARRAY_BUFFER, pi * stride + sizeof(glm::vec2), sizeof(glm::vec3), &gameGraphics.colors[pi].r);
                     glBindBuffer(GL_ARRAY_BUFFER, 0);

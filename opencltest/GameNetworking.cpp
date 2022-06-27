@@ -58,7 +58,7 @@
 	 turnActions.clear();
  }
 
- void GameNetworking::StartServer(int port)
+ void GameNetworking::StartServer(int32_t port)
  {	
 	std::cout << "GameNetworking, Starting Server.." << std::endl;
 
@@ -80,7 +80,7 @@
 
 	if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
 	{
-		std::cout << "[CLIENT] Connect Init Failure: " << int(connectInitSuccess) << std::endl;
+		std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
 
 
 	}
@@ -240,15 +240,15 @@
 				uint32_t numActions;
 				bts.Read(numActions);
 
-				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int(numActions) << " actions)" << std::endl;
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int32_t(numActions) << " actions)" << std::endl;
 
 
-				for (int i = 0; i < numActions; i++)
+				for (int32_t i = 0; i < numActions; i++)
 				{
 					ActionWrap actionWrap;
 					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					int tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
+					int32_t tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
 						
 
 					actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
@@ -309,10 +309,10 @@
 				uint32_t client_tickIdx;
 				bts.Read(client_tickIdx);
 
-				int tickTime;
+				int32_t tickTime;
 				bts.Read(tickTime);
 
-				int offset = int(client_tickIdx) - int(gameState->tickIdx);
+				int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
 
 				clientMeta* meta = GetClientMetaDataFromCliId(cliId);
 				meta->hostTickOffset = offset;
@@ -339,7 +339,7 @@
 			break;
 		default:
 
-			std::cout << "Peer: Received a packet with unspecified message identifier: " << int(this->packet->data[0]) << std::endl;
+			std::cout << "Peer: Received a packet with unspecified message identifier: " << int32_t(this->packet->data[0]) << std::endl;
 
 
 			break;

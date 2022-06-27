@@ -73,10 +73,10 @@ public:
 
 	void CLIENT_ApplyCombinedTurn()
 	{
-		std::vector<int> removals;
+		std::vector<int32_t> removals;
 		std::vector<ActionWrap> newList;
-		int i = 0;
-		for (int a = 0; a < turnActions.size(); a++)
+		int32_t i = 0;
+		for (int32_t a = 0; a < turnActions.size(); a++)
 		{
 			ClientAction* action = &turnActions[a].action;
 			ActionTracking* actTracking = &turnActions[a].tracking;
@@ -134,7 +134,7 @@ public:
 		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 	}
 
-	void StartServer(int port);
+	void StartServer(int32_t port);
 	
 	void StopServer()
 	{
@@ -152,7 +152,7 @@ public:
 		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
 		bs.Write(static_cast<uint8_t>(clientId));
 		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
-		bs.Write(static_cast<int>(minTickTimeMs));
+		bs.Write(static_cast<int32_t>(minTickTimeMs));
 
 		
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
@@ -166,7 +166,7 @@ public:
 	
 	
 	
-	int MaxStandardConnections = MAX_HOST_CONNECTIONS;
+	int32_t MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
 
 	bool serverRunning = false;
@@ -196,14 +196,14 @@ public:
 	
 	struct clientMeta {
 		uint8_t cliId;
-		int hostTickOffset;
+		int32_t hostTickOffset;
 		SLNet::RakNetGUID rakGuid;
 	};
 	std::vector<clientMeta> clients;
 	uint8_t nextCliIdx = 0;
 	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId)
 	{
-		for (int i = 0; i < clients.size(); i++)
+		for (int32_t i = 0; i < clients.size(); i++)
 		{
 			if (clients[i].cliId == cliId)
 				return &clients[i];
@@ -212,7 +212,7 @@ public:
 		return nullptr;
 	}
 
-	int maxTickLag = 999999; // tick lag of slowest client
+	int32_t maxTickLag = 999999; // tick lag of slowest client
 
 	bool fullyConnectedToHost = false;
 	SLNet::RakNetGUID hostPeer;
@@ -230,9 +230,9 @@ public:
 
 	uint32_t lastFreezeTick = 0;
 	GameState* lastFreezeGameState = nullptr;
-	int freezeFreq = 20;
+	int32_t freezeFreq = 20;
 
-	int minTickTimeMs = 33;
+	int32_t minTickTimeMs = 33;
 
 };
 

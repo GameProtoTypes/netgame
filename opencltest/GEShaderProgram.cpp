@@ -37,7 +37,7 @@ void GEShaderProgram::Link(void)
 		std::vector<GLchar> infoLog(maxLength);
 		glGetProgramInfoLog(programID, maxLength, &maxLength, &infoLog[0]);
 
-		for (int i = 0; i < infoLog.size(); i++)
+		for (int32_t i = 0; i < infoLog.size(); i++)
 		{
 			std::cout << infoLog[i];
 		}
