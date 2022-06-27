@@ -14,7 +14,7 @@
 
  void GameNetworking::CLIENT_SendActionUpdate_ToHost(std::vector<ActionWrap>& clientActions)
  {
-	 if (actionStateDirty) {
+	 if (actionStateDirty && fullyConnectedToHost) {
 		 std::cout << "Sending ActionList Update to host " << hostPeer.ToString() << std::endl;
 
 
@@ -46,7 +46,7 @@
 		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
 		 bs.Write(static_cast<uint8_t>(clients.size()));
-		 bs.Write(static_cast<uint8_t>(client.cliId));
+		 bs.Write(static_cast<int32_t>(client.cliId));
 		 bs.Write(static_cast<uint8_t>(turnActions.size()));
 		 for (ActionWrap& actionWrap : turnActions)
 		 {
@@ -74,16 +74,22 @@
 {
 	std::cout << "[CLIENT] Connecting To Host: " << hostAddress.ToString(false) << " Port: " << hostAddress.GetPort() << std::endl;
 	SLNet::SocketDescriptor desc;
-	peerInterface->Startup(1, &desc, 1);
-	SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
+	if(!serverRunning)
+		peerInterface->Startup(1, &desc, 1);
 	
 
-	if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
-	{
-		std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
+		SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
+		if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
+		{
+			if(serverRunning && (connectInitSuccess != SLNet::ALREADY_CONNECTED_TO_ENDPOINT))
+				std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
+			else
+			{
+				SHARED_CLIENT_CONNECT(hostPeer);
 
-
-	}
+			}
+		}
+	
 }
  void GameNetworking::SendMessage(char* message)
  {
@@ -108,9 +114,11 @@
 
  void GameNetworking::Update()
 {
-	if(connectedToHost)
+	if(connectedToHost && fullyConnectedToHost)
 		SendTickSyncToHost();
 
+	//if (serverRunning)
+	//	SendTickSyncToClients();
 
 
 	if (serverRunning)
@@ -132,10 +140,10 @@
 
 		//slow down simulation to bring in client 
 		
-		if (maxTickLag > 2)
-			minTickTimeMs = 66;
-		else
-			minTickTimeMs = 33;
+		//if (maxTickLag > 2)
+		//	minTickTimeMs = 66;
+		//else
+		//	minTickTimeMs = 33;
 
 
 	}
@@ -163,11 +171,7 @@
 
 			if (serverRunning)
 			{
-				Host_AddClientInternal(systemGUID);
-
-				gameState->pauseState = 1;
-				HOST_SendSync_ToClient(clients.size() - 1, systemGUID);
-				
+				SHARED_CLIENT_CONNECT(systemGUID);
 			}
 
 			hostPeer = systemGUID;
@@ -183,7 +187,7 @@
 			Host_AddClientInternal(systemGUID);
 
 
-			HOST_SendSync_ToClient(clients.size() - 1, systemGUID);
+			HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
 
 		}
 			break;
@@ -216,9 +220,12 @@
 			{
 
 
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, sending acknologement." << std::endl;
 
-				bts.Read(clientId);
+				bts.Read(this->clientId);
+				
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, CLientId is now " << this->clientId <<", sending acknologement." << std::endl;
+
+
 				bool s = bts.Read(reinterpret_cast<char*>(gameState), sizeof(GameState));
 				if (!s) assert(0);
 
@@ -277,9 +284,9 @@
 				gameState->numClients = numClients;
 
 				//sync client id as assigned by the host.
-				uint8_t cliId;
+				int32_t cliId;
 				bts.Read(cliId);
-				clientId = cliId;
+				this->clientId = cliId;
 
 
 				uint8_t numActions;
@@ -302,7 +309,7 @@
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
 			{
-				uint8_t cliId;
+				int32_t cliId;
 				bts.Read(cliId);
 
 
@@ -319,20 +326,19 @@
 			}
 
 			break;
-		case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-			std::cout << "Peer: Remote peer has disconnected." << std::endl;
-
-				
-
-			break;
 		case ID_REMOTE_CONNECTION_LOST:
 			std::cout << "Peer: Remote peer lost connection." << std::endl;
+			HOST_HandleDisconnectByGUID(systemGUID);
 			break;
 		case ID_DISCONNECTION_NOTIFICATION:
 			std::cout << "Peer: A peer has disconnected." << std::endl;
+			HOST_HandleDisconnectByGUID(systemGUID);
+
 			break;
 		case ID_CONNECTION_LOST:
 			std::cout << "Peer: A connection was lost." << std::endl;
+
+			HOST_HandleDisconnectByGUID(systemGUID);
 			break;
 		case ID_CONNECTION_ATTEMPT_FAILED:
 			std::cout << "Peer: A connection failed." << std::endl;

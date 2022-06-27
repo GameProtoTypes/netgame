@@ -26,10 +26,7 @@
 #define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (32)
 
-#define MAX_CLIENTS (256)
-
-
-
+#define MAX_CLIENTS (1024)
 
 
 
@@ -132,6 +129,8 @@ struct ActionWrap {
 
 
 struct ClientState {
+
+
 
 	cl_int mousex;
 	cl_int mousey;

@@ -122,13 +122,13 @@ public:
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 	}
 
-	void HOST_SendSync_ToClient(uint8_t cliIdx, SLNet::RakNetGUID clientAddr)
+	void HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr)
 	{
-		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client" << std::endl;
+		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client ( ClientId: " << cliIdx << ")" << std::endl;
 		SLNet::BitStream bs;
 		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
-		bs.Write(static_cast<uint8_t>(cliIdx));
+		bs.Write(static_cast<int32_t>(cliIdx));
 		bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
 
 		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
@@ -150,7 +150,7 @@ public:
 
 		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
-		bs.Write(static_cast<uint8_t>(clientId));
+		bs.Write(static_cast<int32_t>(clientId));
 		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
 		bs.Write(static_cast<int32_t>(minTickTimeMs));
 
@@ -158,19 +158,91 @@ public:
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
 			1, hostPeer, false);
 	}
+	void SendTickSyncToClients()
+	{
+
+
+		SLNet::BitStream bs;
+		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC));
+
+		
+
+
+	}
+
+
+
+
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
 
+	void CLIENT_Disconnect()
+	{
+
+		if (serverRunning)
+		{
+			//"fake" disconnect to self
+			peerInterface->CloseConnection(SLNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+			
+			HOST_HandleDisconnectByID(clientId);
+		}
+		else
+		{
+			peerInterface->CloseConnection(hostPeer, true);
+			peerInterface->Shutdown(1000);
+		}
+
+		clientId = -1;
+		connectedToHost = false;
+		fullyConnectedToHost = false;
+
+	}
 
 	void Update();
 	
-	
+	void HOST_HandleDisconnectByGUID(SLNet::RakNetGUID clientGUID)
+	{
+		std::cout << "[HOST] Removing Client Entry " << std::endl;
+		int removeIdx = -1;
+		for (int i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].rakGuid == clientGUID)
+			{
+				removeIdx = i;
+			}
+		}
+		clients.erase(std::next(clients.begin(), removeIdx));
+	}
+	void HOST_HandleDisconnectByID(int32_t clientID)
+	{
+		std::cout << "[HOST] Removing Client Entry " << std::endl;
+		int removeIdx = -1;
+		for (int i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].cliId == clientID)
+			{
+				removeIdx = i;
+			}
+		}
+		clients.erase(std::next(clients.begin(), removeIdx));
+	}
+
+	void SHARED_CLIENT_CONNECT(SLNet::RakNetGUID systemGUID)
+	{
+		Host_AddClientInternal(systemGUID);
+		connectedToHost = true;
+		gameState->pauseState = 1;
+		HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
+
+	}
 	
 	int32_t MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
 
 	bool serverRunning = false;
 	bool connectedToHost = false;
+	bool fullyConnectedToHost = false;
 
 	SLNet::SocketDescriptor SocketDesc = SLNet::SocketDescriptor();
 
@@ -195,12 +267,15 @@ public:
 	SLNet::RakPeerInterface* peerInterface;
 	
 	struct clientMeta {
-		uint8_t cliId;
+
+		int32_t cliId;
 		int32_t hostTickOffset;
 		SLNet::RakNetGUID rakGuid;
 	};
 	std::vector<clientMeta> clients;
-	uint8_t nextCliIdx = 0;
+	int32_t nextCliIdx = 0;	
+	int32_t clientId = -1;
+
 	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId)
 	{
 		for (int32_t i = 0; i < clients.size(); i++)
@@ -214,11 +289,10 @@ public:
 
 	int32_t maxTickLag = 999999; // tick lag of slowest client
 
-	bool fullyConnectedToHost = false;
 	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;
-	uint8_t clientId = 0;
+
 	bool actionStateDirty = false;
 
 

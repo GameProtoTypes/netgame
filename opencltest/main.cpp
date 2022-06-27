@@ -388,15 +388,27 @@ int32_t main(int32_t argc, char* args[])
                 ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
 
                 ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
-                if (ImGui::Button("Start Server"))
+                if(!gameNetworking.serverRunning && !gameNetworking.connectedToHost)
+                    if (ImGui::Button("Start Server"))
+                    {
+                        gameNetworking.StartServer(port);
+                    }
+
+                if(!gameNetworking.connectedToHost)
+                    if (ImGui::Button("Connect To Local Server"))
+                    {
+                        gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", port));
+                    }
+
+                if (gameNetworking.connectedToHost)
                 {
-                    gameNetworking.StartServer(port);
+                    if (ImGui::Button("CLIENT_Disconnect"))
+                    {
+                        gameNetworking.CLIENT_Disconnect();
+                    }
                 }
 
-                if (ImGui::Button("Connect To Local Server"))
-                {
-                    gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", port));
-                }
+
 
                 if (ImGui::Button("Send Message"))
                 {
