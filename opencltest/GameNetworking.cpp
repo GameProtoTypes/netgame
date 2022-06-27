@@ -142,8 +142,8 @@
 	if(connectedToHost && fullyConnectedToHost)
 		SendTickSyncToHost();
 
-	//if (serverRunning)
-	//	SendTickSyncToClients();
+	if (serverRunning)
+		SendTickSyncToClients();
 
 
 	if (serverRunning)
@@ -373,14 +373,35 @@
 				int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
 
 				clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
-				meta->hostTickOffset = offset;
-				meta->ticksSinceLastCommunication = 0;
+				if (meta != nullptr)
+				{
+					
+					meta->hostTickOffset = offset;
+					meta->ticksSinceLastCommunication = 0;
+				}
+				else
+				{
+					std::cout << "[HOST] recieved MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC but no entry for GUID:" << clientGUID <<  " in client list!" << std::endl;
+				}
+			}
+			else if (msgtype == MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC)
+			{
 
 				
+				uint8_t numClients;
+				bts.Read(numClients);
 
+				std::vector<clientMeta> clientList;
+				for (int i = 0; i < numClients; i++)
+				{
+					clientMeta clientData;
+					bts.Read(reinterpret_cast<char*>(&clientData), sizeof(clientMeta));
+					clientList.push_back(clientData);
+				}
+				if (!serverRunning)
+					clients = clientList;
 
 			}
-
 			break;
 		case ID_REMOTE_CONNECTION_LOST:
 			//std::cout << "Peer: Remote peer lost connection.(but who knows which one)" << std::endl;

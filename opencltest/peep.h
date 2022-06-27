@@ -130,7 +130,7 @@ struct ActionWrap {
 
 struct ClientState {
 
-
+	cl_int connected;
 
 	cl_int mousex;
 	cl_int mousey;

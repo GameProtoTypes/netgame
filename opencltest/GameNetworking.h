@@ -174,15 +174,21 @@ public:
 	}
 	void SendTickSyncToClients()
 	{
+		for (int i = 0; i < clients.size(); i++)
+		{
+			clientMeta* client = &clients[i];
 
+			SLNet::BitStream bs;
+			bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+			bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC));
+			bs.Write(static_cast<uint8_t>(clients.size()));
+			for (int c = 0; c < clients.size(); c++)
+			{
+				bs.Write(reinterpret_cast<char*>(&clients[c]), sizeof(clientMeta));
+			}
 
-		SLNet::BitStream bs;
-		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC));
-
-		
-
-
+			this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
+		}
 	}
 
 
@@ -205,9 +211,12 @@ public:
 		{
 			peerInterface->CloseConnection(hostPeer, true);
 			peerInterface->Shutdown(1000);
+
+			clients.clear();
 		}
 
 		clientId = -1;
+
 		connectedToHost = false;
 		fullyConnectedToHost = false;
 
@@ -226,10 +235,14 @@ public:
 			if (clients[i].clientGUID == clientGUID)
 			{
 				removeIdx = i;
+				gameState->clientStates[clientId].connected = false;
 			}
 		}
 		if (removeIdx >= 0)
+		{
 			clients.erase(std::next(clients.begin(), removeIdx));
+			
+		}
 		else
 			assert(0);
 	}
@@ -242,6 +255,7 @@ public:
 			if (clients[i].cliId == clientID)
 			{
 				removeIdx = i;
+				gameState->clientStates[clientId].connected = false;
 			}
 		}
 		if (removeIdx >= 0)
@@ -254,7 +268,7 @@ public:
 	{
 		Host_AddClientInternal(clientGUID, systemGUID);
 		connectedToHost = true;
-		std::cout << "pausing." << std::endl;
+		std::cout << "Pausing." << std::endl;
 		gameState->pauseState = 1;
 		HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
 
@@ -272,8 +286,7 @@ public:
 	//current recieving package
 	SLNet::Packet* packet;
 
-	// The  thread for receiving packets in the background.
-	std::thread* listenLoopThread;
+
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening = false;
 
@@ -285,6 +298,8 @@ public:
 		meta.clientGUID = clientGUID;
 		meta.hostTickOffset = 0;
 		clients.push_back(meta);
+		gameState->clientStates[meta.cliId].connected = 1;
+
 		nextCliIdx++;
 	}
 
