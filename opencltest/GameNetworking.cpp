@@ -1,8 +1,33 @@
 #include "GameNetworking.h"
 
+
+
+
+
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <random>
+#include <climits>
+#include <algorithm>
+#include <functional>
+#include <string>
+
+
+
+
+
  void GameNetworking::Init()
 {
 	std::cout << "GameNetworking::Init" << std::endl;
+
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<uint32_t> dis(0, -1);
+	clientGUID = static_cast<uint32_t>(dis(gen));
+
+	std::cout << "GameNetworking::Client GUID: " << clientGUID << std::endl;
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 
@@ -85,7 +110,7 @@
 				std::cout << "[CLIENT] Connect Init Failure: " << int32_t(connectInitSuccess) << std::endl;
 			else
 			{
-				SHARED_CLIENT_CONNECT(hostPeer);
+				SHARED_CLIENT_CONNECT(clientGUID, hostPeer);
 
 			}
 		}
@@ -136,6 +161,20 @@
 		//check if running actions are accounted for.
 		
 
+		//handle timeout disconnects.
+		for (int i = 0; i < clients.size(); i++)
+		{
+			clients[i].ticksSinceLastCommunication++;
+		}		
+		for (int i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].ticksSinceLastCommunication > 50)
+			{
+				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID << std::endl;
+				HOST_HandleDisconnectByCLientGUID(clients[i].clientGUID);
+			}
+		}
+
 
 
 		//slow down simulation to bring in client 
@@ -159,7 +198,7 @@
 			false);
 
 
-		SLNet::RakNetGUID systemGUID = peerInterface->GetGuidFromSystemAddress(this->packet->systemAddress);
+		SLNet::RakNetGUID systemGUID = this->packet->guid;
 
 		// Check the packet identifier
 		switch (this->packet->data[0])
@@ -169,12 +208,9 @@
 			std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
 			connectedToHost = true;
 
-			if (serverRunning)
-			{
-				SHARED_CLIENT_CONNECT(systemGUID);
-			}
-
 			hostPeer = systemGUID;
+
+			CLIENT_SENDInitialData_ToHost();
 
 		}
 			break;
@@ -184,10 +220,6 @@
 				<< " has connected." << std::endl;
 
 
-			Host_AddClientInternal(systemGUID);
-
-
-			HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
 
 		}
 			break;
@@ -216,6 +248,17 @@
 				message[length] = '\0';
 				std::cout << "Peer: MESSAGE_ENUM_GENERIC_MESSAGE received: " << message << std::endl;
 			}
+			else if (msgtype == MESSAGE_ENUM_CLIENT_INITIALDATA)
+			{
+
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
+
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
+
+				
+				SHARED_CLIENT_CONNECT(clientGUID, systemGUID);
+			}
 			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			{
 
@@ -223,12 +266,13 @@
 
 				bts.Read(this->clientId);
 				
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, CLientId is now " << this->clientId <<", sending acknologement." << std::endl;
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, CLientId is now " 
+					<< this->clientId <<", sending acknologement." << std::endl;
 
 
 				bool s = bts.Read(reinterpret_cast<char*>(gameState), sizeof(GameState));
 				if (!s) assert(0);
-
+				gameState->pauseState = 0;
 
 
 				CLIENT_SendSyncComplete();
@@ -238,7 +282,7 @@
 			else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
 			{
 				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
-
+				std::cout << "un-pausing." << std::endl;
 				gameState->pauseState = 0;
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
@@ -319,26 +363,36 @@
 				int32_t tickTime;
 				bts.Read(tickTime);
 
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
+
+
+
+
+
 				int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
 
-				clientMeta* meta = GetClientMetaDataFromCliId(cliId);
+				clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
 				meta->hostTickOffset = offset;
+				meta->ticksSinceLastCommunication = 0;
+
+				
+
+
 			}
 
 			break;
 		case ID_REMOTE_CONNECTION_LOST:
-			std::cout << "Peer: Remote peer lost connection." << std::endl;
-			HOST_HandleDisconnectByGUID(systemGUID);
+			//std::cout << "Peer: Remote peer lost connection.(but who knows which one)" << std::endl;
+
 			break;
 		case ID_DISCONNECTION_NOTIFICATION:
-			std::cout << "Peer: A peer has disconnected." << std::endl;
-			HOST_HandleDisconnectByGUID(systemGUID);
+			//std::cout << "Peer: A peer has disconnected. (but who knows which one)" << std::endl;
 
 			break;
 		case ID_CONNECTION_LOST:
-			std::cout << "Peer: A connection was lost." << std::endl;
+			//std::cout << "Peer: A connection was lost.(but who knows which one)" << std::endl;
 
-			HOST_HandleDisconnectByGUID(systemGUID);
 			break;
 		case ID_CONNECTION_ATTEMPT_FAILED:
 			std::cout << "Peer: A connection failed." << std::endl;

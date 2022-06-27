@@ -422,13 +422,11 @@ int32_t main(int32_t argc, char* args[])
 
                 if (gameNetworking.serverRunning)
                 {
-                    for (auto pair : gameNetworking.clients)
+                    for (auto client : gameNetworking.clients)
                     {
-                        ImGui::Text("CliId: %d, HostTickOffset: %d, Ping: %d", pair.cliId, pair.hostTickOffset, gameNetworking.peerInterface->GetAveragePing(pair.rakGuid));
+                        ImGui::Text("CliId: %d, GUID %d, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID, client.hostTickOffset, gameNetworking.peerInterface->GetAveragePing(client.rakGuid));
                     }
                 }
-
-
 
 
 

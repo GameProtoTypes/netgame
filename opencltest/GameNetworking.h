@@ -41,6 +41,8 @@ public:
 	enum MESSAGE_ENUMS {
 		MESSAGE_ENUM_GENERIC_MESSAGE = 0,
 
+		MESSAGE_ENUM_CLIENT_INITIALDATA, 
+
 		MESSAGE_ENUM_HOST_SYNCDATA1,
 		MESSAGE_ENUM_HOST_SYNCDATA2,
 
@@ -70,6 +72,17 @@ public:
 
 
 	void HOST_SendActionUpdates_ToClients();
+
+	void CLIENT_SENDInitialData_ToHost()
+	{
+		SLNet::BitStream bs;
+
+		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_INITIALDATA));
+		bs.Write(static_cast<uint32_t>(clientGUID));
+
+		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
+	}
 
 	void CLIENT_ApplyCombinedTurn()
 	{
@@ -153,6 +166,7 @@ public:
 		bs.Write(static_cast<int32_t>(clientId));
 		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
 		bs.Write(static_cast<int32_t>(minTickTimeMs));
+		bs.Write(static_cast<uint32_t>(clientGUID));
 
 		
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
@@ -179,7 +193,7 @@ public:
 
 	void CLIENT_Disconnect()
 	{
-
+		std::cout << "[CLIENT] Disconnecting..." << std::endl;
 		if (serverRunning)
 		{
 			//"fake" disconnect to self
@@ -201,22 +215,27 @@ public:
 
 	void Update();
 	
-	void HOST_HandleDisconnectByGUID(SLNet::RakNetGUID clientGUID)
+
+
+	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
 	{
-		std::cout << "[HOST] Removing Client Entry " << std::endl;
+		std::cout << "[HOST] Removing Client Entry clientGUID: " << clientGUID << std::endl;
 		int removeIdx = -1;
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].rakGuid == clientGUID)
+			if (clients[i].clientGUID == clientGUID)
 			{
 				removeIdx = i;
 			}
 		}
-		clients.erase(std::next(clients.begin(), removeIdx));
+		if (removeIdx >= 0)
+			clients.erase(std::next(clients.begin(), removeIdx));
+		else
+			assert(0);
 	}
 	void HOST_HandleDisconnectByID(int32_t clientID)
 	{
-		std::cout << "[HOST] Removing Client Entry " << std::endl;
+		std::cout << "[HOST] Removing Client Entry clientID: " << clientID << std::endl;
 		int removeIdx = -1;
 		for (int i = 0; i < clients.size(); i++)
 		{
@@ -225,13 +244,17 @@ public:
 				removeIdx = i;
 			}
 		}
-		clients.erase(std::next(clients.begin(), removeIdx));
+		if (removeIdx >= 0)
+			clients.erase(std::next(clients.begin(), removeIdx));
+		else
+			assert(0);
 	}
 
-	void SHARED_CLIENT_CONNECT(SLNet::RakNetGUID systemGUID)
+	void SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID)
 	{
-		Host_AddClientInternal(systemGUID);
+		Host_AddClientInternal(clientGUID, systemGUID);
 		connectedToHost = true;
+		std::cout << "pausing." << std::endl;
 		gameState->pauseState = 1;
 		HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
 
@@ -254,11 +277,12 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening = false;
 
-	void Host_AddClientInternal(SLNet::RakNetGUID guid)
+	void Host_AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
 	{
 		clientMeta meta;
 		meta.cliId = nextCliIdx;
-		meta.rakGuid = guid;
+		meta.rakGuid = rakguid;
+		meta.clientGUID = clientGUID;
 		meta.hostTickOffset = 0;
 		clients.push_back(meta);
 		nextCliIdx++;
@@ -270,7 +294,9 @@ public:
 
 		int32_t cliId;
 		int32_t hostTickOffset;
+		uint32_t clientGUID;
 		SLNet::RakNetGUID rakGuid;
+		int ticksSinceLastCommunication;
 	};
 	std::vector<clientMeta> clients;
 	int32_t nextCliIdx = 0;	
@@ -281,6 +307,17 @@ public:
 		for (int32_t i = 0; i < clients.size(); i++)
 		{
 			if (clients[i].cliId == cliId)
+				return &clients[i];
+		}
+
+		return nullptr;
+	}
+
+	clientMeta* GetClientMetaDataFromCliGUID(uint32_t cliGUID)
+	{
+		for (int32_t i = 0; i < clients.size(); i++)
+		{
+			if (clients[i].clientGUID == cliGUID)
 				return &clients[i];
 		}
 
@@ -308,5 +345,6 @@ public:
 
 	int32_t minTickTimeMs = 33;
 
+	uint32_t clientGUID;
 };
 
