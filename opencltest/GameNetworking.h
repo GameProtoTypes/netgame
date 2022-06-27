@@ -180,7 +180,7 @@ public:
 	// The  thread for receiving packets in the background.
 	std::thread* listenLoopThread;
 	// The flag for breaking the loop inside the packet listening thread.
-	bool isListening;
+	bool isListening = false;
 
 	void Host_AddClientInternal(SLNet::RakNetGUID guid)
 	{

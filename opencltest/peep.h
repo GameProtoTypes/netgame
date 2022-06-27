@@ -2,6 +2,18 @@
 
 
 
+#ifndef __OPENCL_VERSION__
+#include <stdint.h>
+
+#else
+
+
+
+#include <cl_type_glue.h>
+
+
+
+#endif
 
 
 
@@ -28,21 +40,23 @@
 
 
 
+
+
 struct Cell;
 struct MapSector;
 struct Peep {
 
 	//State:
 	cl_int valid;
-	int map_x_Q15_16;
-	int map_y_Q15_16;
-	int xv_Q15_16;
-	int yv_Q15_16;
+	int32_t map_x_Q15_16;
+	int32_t map_y_Q15_16;
+	int32_t xv_Q15_16;
+	int32_t yv_Q15_16;
 
-	int target_x_Q16;
-	int target_y_Q16;
+	int32_t target_x_Q16;
+	int32_t target_y_Q16;
 
-	int faction;
+	int32_t faction;
 
 	cl_int attackState;
 	cl_int health;
@@ -77,8 +91,8 @@ struct PeepRenderSupport {
 
 struct MapSector {
 	Peep* lastPeep;
-	int xidx;
-	int yidx;
+	int32_t xidx;
+	int32_t yidx;
 	cl_uint lock;
 } typedef MapSector;
 
@@ -158,7 +172,7 @@ struct GameState {
 
 
 	cl_uint tickIdx;
-	int pauseState;
+	int32_t pauseState;
 }typedef GameState;
 
 

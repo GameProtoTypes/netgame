@@ -10,7 +10,9 @@ set(Header_Files
     "GEShader.h"
     "GameGraphics.h"
     "clLimits.h"
+    "cl_type_glue.h"
     "GameGPUCompute.h"
+    "GameNetworking.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -20,6 +22,7 @@ set(Source_Files
     "GEShader.cpp"
     "GameGraphics.cpp"
     "GameGPUCompute.cpp"
+    "GameNetworking.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
 

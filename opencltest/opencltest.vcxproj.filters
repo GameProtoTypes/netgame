@@ -16,7 +16,7 @@
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameNetworking.cpp">
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -36,13 +36,13 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameNetworking.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PeepFuncs.h">
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

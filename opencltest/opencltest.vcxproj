@@ -313,20 +313,20 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GameNetworking.cpp" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\main.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp" />
-    <ClInclude Include="GameNetworking.h" />
-    <ClInclude Include="PeepFuncs.h" />
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\ZERO_CHECK.vcxproj">
