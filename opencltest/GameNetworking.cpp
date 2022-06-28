@@ -176,7 +176,7 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 200)
+			if (clients[i].ticksSinceLastCommunication > 2000)
 			{
 				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
 					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
@@ -208,28 +208,46 @@
 			int32_t distToMin = thisClient->hostTickOffset - minOffset;
 			int32_t distToMax = thisClient->hostTickOffset - maxOffset;
 
+			int32_t distToCompare;
 			if (serverRunning)
-			{
-				//slow down for the fastest guy.
-				if (distToMax > safetyOffset)
-					minTickTimeMs = SLOWTICKTIMEMS;
-				else
-					minTickTimeMs = MINTICKTIMEMS;
+				distToCompare = distToMax;
+			else
+				distToCompare = distToMin;
+
+			tickPIDError = distToCompare - safetyOffset;
+			
+			//integralAccumulatorTickPID += 0.02 * error;
+
+			float pFactor = 8.0f;
 
 			
+			if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
+			{
+				targetTickTimeMs = MINTICKTIMEMS*(thisClient->hostTickOffset- (-safetyOffset));
 			}
 			else
 			{
-				//slow down for the slow guy.
-				if (distToMin > safetyOffset)
-					minTickTimeMs = SLOWTICKTIMEMS;
-				else
-					minTickTimeMs = MINTICKTIMEMS;
-
-				if (thisClient->hostTickOffset > -safetyOffset)
-					minTickTimeMs = SLOWTICKTIMEMS;
-
+				//slow down for fastest if server, slow down for slowest if client.
+				targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
 			}
+
+
+
+			// clamp to min
+			if (thisClient->hostTickOffset < -50)
+			{
+				if (targetTickTimeMs <= 0)
+					targetTickTimeMs = 0;
+			}
+			else
+			{
+				if (targetTickTimeMs <= MINTICKTIMEMS)
+					targetTickTimeMs = MINTICKTIMEMS;
+			}
+
+
+			if (targetTickTimeMs >= MAXTICKTIMEMS)
+				targetTickTimeMs = MAXTICKTIMEMS;
 		}
 	}
 

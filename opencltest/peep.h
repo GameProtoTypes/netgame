@@ -18,7 +18,7 @@
 
 
 
-#define MAX_PEEPS (1024*16)
+#define MAX_PEEPS (1024*1)
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS

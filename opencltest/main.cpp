@@ -43,7 +43,7 @@ int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min
 void WaitMinTickTime(uint64_t timerStartMs, GameNetworking* gameNetworking)
 {
     int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
-    int32_t sleepTime = glm::clamp(int32_t(gameNetworking->minTickTimeMs - frameTimeMS), 0, gameNetworking->minTickTimeMs);
+    int32_t sleepTime = glm::clamp(int32_t(gameNetworking->targetTickTimeMs - frameTimeMS), 0, gameNetworking->targetTickTimeMs);
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
 
@@ -416,8 +416,8 @@ int32_t main(int32_t argc, char* args[])
                     sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
                     gameNetworking.SendMessage(buffer);
                 }
-                ImGui::Text("tickTime: %d", gameNetworking.minTickTimeMs);
-
+                ImGui::Text("tickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
+                
 
 
 

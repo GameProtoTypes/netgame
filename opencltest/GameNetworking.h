@@ -26,7 +26,7 @@
 
 #define MINTICKTIMEMS (33)
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
-
+#define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
 
 class GameNetworking
@@ -166,7 +166,7 @@ public:
 		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
 		bs.Write(static_cast<int32_t>(clientId));
 		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
-		bs.Write(static_cast<int32_t>(minTickTimeMs));
+		bs.Write(static_cast<int32_t>(targetTickTimeMs));
 		bs.Write(static_cast<uint32_t>(clientGUID));
 
 		
@@ -360,7 +360,9 @@ public:
 	GameState* lastFreezeGameState = nullptr;
 	int32_t freezeFreq = 20;
 
-	int32_t minTickTimeMs = MINTICKTIMEMS;
+	int32_t targetTickTimeMs = MINTICKTIMEMS;
+	float integralAccumulatorTickPID = 0.0f;
+	float tickPIDError = 0.0f;
 
 	uint32_t clientGUID;
 };
