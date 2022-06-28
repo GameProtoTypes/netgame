@@ -28,7 +28,7 @@
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
-
+#define REALLYBIGPING (10000)
 class GameNetworking
 {
 public:
@@ -72,18 +72,8 @@ public:
 	void CLIENT_SendActionUpdate_ToHost(std::vector<ActionWrap>& clientActions);
 
 
-	void HOST_SendActionUpdates_ToClients();
 
-	void CLIENT_SENDInitialData_ToHost()
-	{
-		SLNet::BitStream bs;
-
-		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_INITIALDATA));
-		bs.Write(static_cast<uint32_t>(clientGUID));
-
-		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
-	}
+	void CLIENT_SENDInitialData_ToHost();
 
 	void CLIENT_ApplyCombinedTurn()
 	{
@@ -127,26 +117,14 @@ public:
 		gameState->numActions = i;
 	}
 
-	void CLIENT_SendSyncComplete()
-	{
-		SLNet::BitStream bs;
-		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
-		bs.Write(static_cast<uint32_t>(clientGUID));
-		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
-	}
+	void CLIENT_SendSyncComplete();
 
-	void HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr)
-	{
-		std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client ( ClientId: " << cliIdx << ")" << std::endl;
-		SLNet::BitStream bs;
-		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
-		bs.Write(static_cast<int32_t>(cliIdx));
-		bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
 
-		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
-	}
+
+	void HOST_SendActionUpdates_ToClients();
+	void HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
+	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID);
+	void HOST_HandleDisconnectByID(int32_t clientID);
 
 	void StartServer(int32_t port);
 	
@@ -158,122 +136,23 @@ public:
 	//send null terminated message
 	void SendMessage(char* message);
 
-	void SendTickSyncToHost()
-	{
-		SLNet::BitStream bs;
-
-		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
-		bs.Write(static_cast<int32_t>(clientId));
-		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
-		bs.Write(static_cast<int32_t>(targetTickTimeMs));
-		bs.Write(static_cast<uint32_t>(clientGUID));
-		bs.Write(static_cast<int32_t>(peerInterface->GetAveragePing(hostPeer)));
-		
-		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
-			1, hostPeer, false);
-	}
-	void SendTickSyncToClients()
-	{
-		for (int i = 0; i < clients.size(); i++)
-		{
-			clientMeta* client = &clients[i];
-
-			SLNet::BitStream bs;
-			bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-			bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC));
-			bs.Write(static_cast<uint8_t>(clients.size()));
-			for (int c = 0; c < clients.size(); c++)
-			{
-				bs.Write(reinterpret_cast<char*>(&clients[c]), sizeof(clientMeta));
-			}
-
-			this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
-		}
-	}
+	void SendTickSyncToHost();
+	void SendTickSyncToClients();
 
 
-
+	uint64_t CheckSumGameState();
 
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
 
-	void CLIENT_Disconnect()
-	{
-		std::cout << "[CLIENT] Disconnecting..." << std::endl;
-		if (serverRunning)
-		{
-			//"fake" disconnect to self
-			peerInterface->CloseConnection(SLNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-			
-			HOST_HandleDisconnectByID(clientId);
-		}
-		else
-		{
-			peerInterface->CloseConnection(hostPeer, true);
-			peerInterface->Shutdown(1000);
-
-			clients.clear();
-		}
-
-		clientId = -1;
-		connectedToHost = false;
-		fullyConnectedToHost = false;
-
-	}
+	void CLIENT_Disconnect();
 
 	void Update();
 	
 
 
-	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
-	{
-		std::cout << "[HOST] Removing Client Entry clientGUID: " << clientGUID << std::endl;
-		int removeIdx = -1;
-		for (int i = 0; i < clients.size(); i++)
-		{
-			if (clients[i].clientGUID == clientGUID)
-			{
-				removeIdx = i;
-				gameState->clientStates[clientId].connected = false;
-			}
-		}
-		if (removeIdx >= 0)
-		{
-			clients.erase(std::next(clients.begin(), removeIdx));
-			
-		}
-		else
-			assert(0);
-	}
-	void HOST_HandleDisconnectByID(int32_t clientID)
-	{
-		std::cout << "[HOST] Removing Client Entry clientID: " << clientID << std::endl;
-		int removeIdx = -1;
-		for (int i = 0; i < clients.size(); i++)
-		{
-			if (clients[i].cliId == clientID)
-			{
-				removeIdx = i;
-				gameState->clientStates[clientId].connected = false;
-			}
-		}
-		if (removeIdx >= 0)
-			clients.erase(std::next(clients.begin(), removeIdx));
-		else
-			assert(0);
-	}
 
-	void SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID)
-	{
-		AddClientInternal(clientGUID, systemGUID);
-		connectedToHost = true;
-		std::cout << "Pausing." << std::endl;
-		gameState->pauseState = 1;
-		clients.back().downloadingState = 1;
-		HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
-
-	}
+	void SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID);
 	
 	int32_t MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
@@ -291,20 +170,7 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening = false;
 
-	void AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
-	{
-		clientMeta meta;
-		meta.cliId = nextCliIdx;
-		meta.rakGuid = rakguid;
-		meta.clientGUID = clientGUID;
-		meta.hostTickOffset = 0;
-		meta.ticksSinceLastCommunication = 0;
-		meta.downloadingState = 0;
-		clients.push_back(meta);
-		gameState->clientStates[meta.cliId].connected = 1;
-
-		nextCliIdx++;
-	}
+	void AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid);
 
 	SLNet::RakPeerInterface* peerInterface;
 	
@@ -322,27 +188,9 @@ public:
 	int32_t nextCliIdx = 0;	
 	int32_t clientId = -1;
 
-	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId)
-	{
-		for (int32_t i = 0; i < clients.size(); i++)
-		{
-			if (clients[i].cliId == cliId)
-				return &clients[i];
-		}
+	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId);
 
-		return nullptr;
-	}
-
-	clientMeta* GetClientMetaDataFromCliGUID(uint32_t cliGUID)
-	{
-		for (int32_t i = 0; i < clients.size(); i++)
-		{
-			if (clients[i].clientGUID == cliGUID)
-				return &clients[i];
-		}
-
-		return nullptr;
-	}
+	clientMeta* GetClientMetaDataFromCliGUID(uint32_t cliGUID);
 
 	int32_t maxTickLag = 999999; // tick lag of slowest client
 

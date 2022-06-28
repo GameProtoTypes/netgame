@@ -83,6 +83,39 @@
 	 turnActions.clear();
  }
 
+ inline void GameNetworking::CLIENT_SENDInitialData_ToHost()
+ {
+	 SLNet::BitStream bs;
+
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_INITIALDATA));
+	 bs.Write(static_cast<uint32_t>(clientGUID));
+
+	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
+ }
+
+ inline void GameNetworking::CLIENT_SendSyncComplete()
+ {
+	 SLNet::BitStream bs;
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
+	 bs.Write(static_cast<uint32_t>(clientGUID));
+	 this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
+ }
+
+ inline void GameNetworking::HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr)
+ {
+	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client ( ClientId: " << cliIdx << ")" << std::endl;
+	 SLNet::BitStream bs;
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
+	 bs.Write(static_cast<int32_t>(cliIdx));
+	 bs.Write(CheckSumGameState());
+	 bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
+
+	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
+ }
+
  void GameNetworking::StartServer(int32_t port)
  {	
 	std::cout << "GameNetworking, Starting Server.." << std::endl;
@@ -93,6 +126,54 @@
 
 	//this->peerInterface->ApplyNetworkSimulator(0.5f, 1000000, 200);
 	serverRunning = true;
+ }
+
+ inline void GameNetworking::SendTickSyncToHost()
+ {
+	 int32_t ping = peerInterface->GetAveragePing(hostPeer);
+	 if (ping <= 0) ping = REALLYBIGPING;
+
+	 SLNet::BitStream bs;
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
+	 bs.Write(static_cast<int32_t>(clientId));
+	 bs.Write(static_cast<uint32_t>(gameState->tickIdx));
+	 bs.Write(static_cast<int32_t>(targetTickTimeMs));
+	 bs.Write(static_cast<uint32_t>(clientGUID));
+	 bs.Write(static_cast<int32_t>(peerInterface->GetAveragePing(hostPeer)));
+
+	 this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
+		 1, hostPeer, false);
+ }
+
+ inline void GameNetworking::SendTickSyncToClients()
+ {
+	 for (int i = 0; i < clients.size(); i++)
+	 {
+		 clientMeta* client = &clients[i];
+
+		 SLNet::BitStream bs;
+		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC));
+		 bs.Write(static_cast<uint8_t>(clients.size()));
+		 for (int c = 0; c < clients.size(); c++)
+		 {
+			 bs.Write(reinterpret_cast<char*>(&clients[c]), sizeof(clientMeta));
+		 }
+
+		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
+	 }
+ }
+
+ inline uint64_t GameNetworking::CheckSumGameState()
+ {
+	 uint64_t sum = 0;
+	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(gameState);
+	 for (uint64_t i = 0; i < sizeof(GameState); i++)
+	 {
+		 sum += bytePtr[i];
+	 }
+	 return sum;
  }
 
  void GameNetworking::ConnectToHost(SLNet::SystemAddress hostAddress)
@@ -123,6 +204,29 @@
 	}
 	
 }
+ void GameNetworking::CLIENT_Disconnect()
+ {
+	 std::cout << "[CLIENT] Disconnecting..." << std::endl;
+	 if (serverRunning)
+	 {
+		 //"fake" disconnect to self
+		 peerInterface->CloseConnection(SLNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+
+		 HOST_HandleDisconnectByID(clientId);
+	 }
+	 else
+	 {
+		 peerInterface->CloseConnection(hostPeer, true);
+		 peerInterface->Shutdown(1000);
+
+		 clients.clear();
+	 }
+
+	 clientId = -1;
+	 connectedToHost = false;
+	 fullyConnectedToHost = false;
+
+ }
  void GameNetworking::SendMessage(char* message)
  {
 	 SLNet::BitStream bs;
@@ -301,10 +405,6 @@
 			uint8_t msgtype;
 			bts.Read(msgtype);
 
-
-
-				
-
 			if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
 			{	
 				uint32_t length;
@@ -331,20 +431,27 @@
 			}
 			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			{
-
-
-
 				bts.Read(this->clientId);
+
+				uint64_t checkSum;
+				bts.Read(checkSum);
 				
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received, CLientId is now " 
-					<< this->clientId <<", sending acknologement." << std::endl;
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
 
 
 				bool s = bts.Read(reinterpret_cast<char*>(gameState), sizeof(GameState));
 				if (!s) assert(0);
+
+				if (checkSum != CheckSumGameState())
+				{
+					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received CHECKSUM MISSMATCH!"<< std::endl;
+					assert(0);
+				}
+
+
 				gameState->pauseState = 0;
 
-
+				std::cout << "CLientId is now " << this->clientId << ", sending acknologement." << std::endl;
 				CLIENT_SendSyncComplete();
 
 				fullyConnectedToHost = true;
@@ -455,6 +562,7 @@
 					meta->avgHostPing = ping;
 					meta->hostTickOffset = offset;
 					meta->ticksSinceLastCommunication = 0;
+						
 				}
 				else
 				{
@@ -507,4 +615,92 @@
 
 
 
+}
+
+ void GameNetworking::HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
+{
+	std::cout << "[HOST] Removing Client Entry clientGUID: " << clientGUID << std::endl;
+	int removeIdx = -1;
+	for (int i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].clientGUID == clientGUID)
+		{
+			removeIdx = i;
+			gameState->clientStates[clientId].connected = false;
+		}
+	}
+	if (removeIdx >= 0)
+	{
+		clients.erase(std::next(clients.begin(), removeIdx));
+
+	}
+	else
+		assert(0);
+}
+
+ void GameNetworking::HOST_HandleDisconnectByID(int32_t clientID)
+{
+	std::cout << "[HOST] Removing Client Entry clientID: " << clientID << std::endl;
+	int removeIdx = -1;
+	for (int i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].cliId == clientID)
+		{
+			removeIdx = i;
+			gameState->clientStates[clientId].connected = false;
+		}
+	}
+	if (removeIdx >= 0)
+		clients.erase(std::next(clients.begin(), removeIdx));
+	else
+		assert(0);
+}
+
+ void GameNetworking::SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID)
+{
+	AddClientInternal(clientGUID, systemGUID);
+	connectedToHost = true;
+	std::cout << "Pausing." << std::endl;
+	gameState->pauseState = 1;
+	clients.back().downloadingState = 1;
+	HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
+
+}
+
+void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
+{
+	clientMeta meta;
+	meta.cliId = nextCliIdx;
+	meta.rakGuid = rakguid;
+	meta.clientGUID = clientGUID;
+	meta.hostTickOffset = 0;
+	meta.avgHostPing = REALLYBIGPING;
+	meta.ticksSinceLastCommunication = 0;
+	meta.downloadingState = 0;
+	clients.push_back(meta);
+	gameState->clientStates[meta.cliId].connected = 1;
+
+	nextCliIdx++;
+}
+
+GameNetworking::clientMeta* GameNetworking::GetClientMetaDataFromCliId(uint8_t cliId)
+{
+	for (int32_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].cliId == cliId)
+			return &clients[i];
+	}
+
+	return nullptr;
+}
+
+GameNetworking::clientMeta* GameNetworking::GetClientMetaDataFromCliGUID(uint32_t cliGUID)
+{
+	for (int32_t i = 0; i < clients.size(); i++)
+	{
+		if (clients[i].clientGUID == cliGUID)
+			return &clients[i];
+	}
+
+	return nullptr;
 }

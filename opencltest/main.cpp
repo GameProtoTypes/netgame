@@ -40,10 +40,10 @@
 
 int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
-void WaitMinTickTime(uint64_t timerStartMs, GameNetworking* gameNetworking)
+void WaitMinTickTime(uint64_t timerStartMs, int32_t targetTimeMs)
 {
     int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
-    int32_t sleepTime = glm::clamp(int32_t(gameNetworking->targetTickTimeMs - frameTimeMS), 0, gameNetworking->targetTickTimeMs);
+    int32_t sleepTime = glm::clamp(int32_t(targetTimeMs - frameTimeMS), 0, targetTimeMs);
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
 
@@ -303,7 +303,7 @@ int32_t main(int32_t argc, char* args[])
                         {
                             Peep* p = &gameState->peeps[pi];
 
-                            if (p->faction == actionTracking->clientId)
+                            //if (p->faction == actionTracking->clientId)
                                 if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                                     && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                                 {
@@ -423,7 +423,8 @@ int32_t main(int32_t argc, char* args[])
 
                 for (auto client : gameNetworking.clients)
                 {
-                    ImGui::Text("CliId: %d, GUID %u, RakGUID: %u, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID, SLNet::RakNetGUID::ToUint32(client.rakGuid), client.hostTickOffset, client.avgHostPing);
+                    ImGui::Text("CliId: %d, GUID %u, RakGUID: %u, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID,
+                        SLNet::RakNetGUID::ToUint32(client.rakGuid), client.hostTickOffset, client.avgHostPing);
                 }
                 
 
@@ -571,7 +572,7 @@ int32_t main(int32_t argc, char* args[])
 
                 //still maintain ticktiming even though tickidx will not be incrementing.
                 if(gameState->pauseState)
-                    WaitMinTickTime(timerStartMs, &gameNetworking);
+                    WaitMinTickTime(timerStartMs, 33);
 
             } while (gameState->pauseState);//end pause loop
 
@@ -594,7 +595,7 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-            WaitMinTickTime(timerStartMs, &gameNetworking);
+            WaitMinTickTime(timerStartMs, gameNetworking.targetTickTimeMs);
         }
 
 
