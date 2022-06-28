@@ -346,7 +346,7 @@ int32_t main(int32_t argc, char* args[])
                 }
 
                 gameState->numActions = 0;
-                gameState->tickIdx++;
+                
 
 
 
@@ -575,6 +575,7 @@ int32_t main(int32_t argc, char* args[])
 
             } while (gameState->pauseState);//end pause loop
 
+            gameState->tickIdx++;
             gameCompute.WriteGameState();
 
 

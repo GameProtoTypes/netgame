@@ -175,7 +175,7 @@
 			if(clients[i].downloadingState == 0)
 				clients[i].ticksSinceLastCommunication++;
 
-			clients[i].avgHostPing = peerInterface->GetAveragePing(clients[i].rakGuid);
+			
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
@@ -443,7 +443,8 @@
 				bts.Read(clientGUID);
 
 
-
+				int32_t ping;
+				bts.Read(ping);
 
 
 				int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
@@ -451,7 +452,7 @@
 				clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
 				if (meta != nullptr)
 				{
-					
+					meta->avgHostPing = ping;
 					meta->hostTickOffset = offset;
 					meta->ticksSinceLastCommunication = 0;
 				}

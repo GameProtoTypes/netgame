@@ -168,7 +168,7 @@ public:
 		bs.Write(static_cast<uint32_t>(gameState->tickIdx));
 		bs.Write(static_cast<int32_t>(targetTickTimeMs));
 		bs.Write(static_cast<uint32_t>(clientGUID));
-
+		bs.Write(static_cast<int32_t>(peerInterface->GetAveragePing(hostPeer)));
 		
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, UNRELIABLE,
 			1, hostPeer, false);
