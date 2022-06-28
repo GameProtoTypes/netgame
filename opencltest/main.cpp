@@ -416,14 +416,14 @@ int32_t main(int32_t argc, char* args[])
                     sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
                     gameNetworking.SendMessage(buffer);
                 }
-                ImGui::Text("tickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
+                ImGui::Text("TargetTickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
                 
 
 
 
                 for (auto client : gameNetworking.clients)
                 {
-                    ImGui::Text("CliId: %d, GUID %d, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID, client.hostTickOffset, gameNetworking.peerInterface->GetAveragePing(client.rakGuid));
+                    ImGui::Text("CliId: %d, GUID %u, RakGUID: %u, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID, SLNet::RakNetGUID::ToUint32(client.rakGuid), client.hostTickOffset, client.avgHostPing);
                 }
                 
 

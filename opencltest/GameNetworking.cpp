@@ -30,7 +30,7 @@
 	std::cout << "GameNetworking::Client GUID: " << clientGUID << std::endl;
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
-
+	
 	lastFreezeGameState = new GameState();
 
 
@@ -172,7 +172,10 @@
 		//handle timeout disconnects.
 		for (int i = 0; i < clients.size(); i++)
 		{
-			clients[i].ticksSinceLastCommunication++;
+			if(clients[i].downloadingState == 0)
+				clients[i].ticksSinceLastCommunication++;
+
+			clients[i].avgHostPing = peerInterface->GetAveragePing(clients[i].rakGuid);
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
@@ -184,12 +187,12 @@
 			}
 		}
 	}
-
+	clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
 	//get stats on client swarm and slow down 
 	int32_t maxOffset = -9999;
 	int32_t minOffset = 9999;
 	int32_t safetyOffset = 5;
-	clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
+
 	for (int i = 0; i < clients.size(); i++)
 	{
 		clientMeta* client = &clients[i];
@@ -205,6 +208,7 @@
 	{
 		if (thisClient != nullptr)
 		{
+			safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
 			int32_t distToMin = thisClient->hostTickOffset - minOffset;
 			int32_t distToMax = thisClient->hostTickOffset - maxOffset;
 
@@ -234,9 +238,9 @@
 
 
 			// clamp to min
-			if (thisClient->hostTickOffset < -50)
+			if (thisClient->hostTickOffset < -safetyOffset*10)
 			{
-				if (targetTickTimeMs <= 0)
+				if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
 					targetTickTimeMs = 0;
 			}
 			else
@@ -349,6 +353,12 @@
 			{
 				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
 				std::cout << "un-pausing." << std::endl;
+
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
+
+				clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+				client->downloadingState = 0;
 				gameState->pauseState = 0;
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
@@ -452,8 +462,6 @@
 			}
 			else if (msgtype == MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC)
 			{
-
-				
 				uint8_t numClients;
 				bts.Read(numClients);
 
@@ -462,6 +470,8 @@
 				{
 					clientMeta clientData;
 					bts.Read(reinterpret_cast<char*>(&clientData), sizeof(clientMeta));
+					//invalidate stuff useless to clients
+					clientData.rakGuid = SLNet::RakNetGUID();
 					clientList.push_back(clientData);
 				}
 				if (!serverRunning)

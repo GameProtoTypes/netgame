@@ -132,7 +132,7 @@ public:
 		SLNet::BitStream bs;
 		bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_SYNC_COMPLETE));
-
+		bs.Write(static_cast<uint32_t>(clientGUID));
 		this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 	}
 
@@ -217,7 +217,6 @@ public:
 		}
 
 		clientId = -1;
-
 		connectedToHost = false;
 		fullyConnectedToHost = false;
 
@@ -271,6 +270,7 @@ public:
 		connectedToHost = true;
 		std::cout << "Pausing." << std::endl;
 		gameState->pauseState = 1;
+		clients.back().downloadingState = 1;
 		HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
 
 	}
@@ -299,6 +299,7 @@ public:
 		meta.clientGUID = clientGUID;
 		meta.hostTickOffset = 0;
 		meta.ticksSinceLastCommunication = 0;
+		meta.downloadingState = 0;
 		clients.push_back(meta);
 		gameState->clientStates[meta.cliId].connected = 1;
 
@@ -314,6 +315,8 @@ public:
 		uint32_t clientGUID;
 		SLNet::RakNetGUID rakGuid;
 		int ticksSinceLastCommunication;
+		int downloadingState;
+		int32_t avgHostPing;
 	};
 	std::vector<clientMeta> clients;
 	int32_t nextCliIdx = 0;	
