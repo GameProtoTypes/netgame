@@ -201,8 +201,10 @@ public:
 	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;
-	GameState* gameStateTransfer = nullptr;
-	uint64_t nextTransferOffset = 0;
+	GameState* HOST_gameStateSnapshot = nullptr;
+	GameState* CLIENT_gameStateTransfer = nullptr;
+	uint64_t HOST_nextTransferOffset = 0;
+	uint64_t CLIENT_nextTransferOffset = 0;
 	uint64_t transferFullCheckSum = 0;
 
 	bool actionStateDirty = false;
