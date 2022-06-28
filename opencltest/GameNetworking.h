@@ -29,6 +29,7 @@
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
 #define REALLYBIGPING (10000)
+#define TRANSFERCHUNKSIZE (1024*128)
 class GameNetworking
 {
 public:
@@ -45,7 +46,8 @@ public:
 		MESSAGE_ENUM_CLIENT_INITIALDATA, 
 
 		MESSAGE_ENUM_HOST_SYNCDATA1,
-		MESSAGE_ENUM_HOST_SYNCDATA2,
+		MESSAGE_ENUM_HOST_GAMEDATA_PART,
+		MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK,
 
 		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
 
@@ -117,12 +119,14 @@ public:
 		gameState->numActions = i;
 	}
 
+	void CLIENT_SendGamePartAck();
 	void CLIENT_SendSyncComplete();
 
 
 
 	void HOST_SendActionUpdates_ToClients();
-	void HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
+	void HOST_SendSyncStart_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
+	void HOST_SendGamePart_ToClient(uint32_t clientGUID);
 	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID);
 	void HOST_HandleDisconnectByID(int32_t clientID);
 
@@ -140,7 +144,7 @@ public:
 	void SendTickSyncToClients();
 
 
-	uint64_t CheckSumGameState();
+	uint64_t CheckSumGameState(GameState* state);
 
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
@@ -197,6 +201,9 @@ public:
 	SLNet::RakNetGUID hostPeer;
 
 	GameState* gameState = nullptr;
+	GameState* gameStateTransfer = nullptr;
+	uint64_t nextTransferOffset = 0;
+	uint64_t transferFullCheckSum = 0;
 
 	bool actionStateDirty = false;
 

@@ -31,6 +31,7 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 	
+	gameStateTransfer = new GameState();
 	lastFreezeGameState = new GameState();
 
 
@@ -71,7 +72,6 @@
 		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
 		 bs.Write(static_cast<uint8_t>(clients.size()));
-		 bs.Write(static_cast<int32_t>(client.cliId));
 		 bs.Write(static_cast<uint8_t>(turnActions.size()));
 		 for (ActionWrap& actionWrap : turnActions)
 		 {
@@ -94,6 +94,17 @@
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
  }
 
+ void GameNetworking::CLIENT_SendGamePartAck()
+ {
+	 SLNet::BitStream bs;
+
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK));
+	 bs.Write(static_cast<uint32_t>(clientGUID));
+
+	 this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
+ }
+
  inline void GameNetworking::CLIENT_SendSyncComplete()
  {
 	 SLNet::BitStream bs;
@@ -103,17 +114,36 @@
 	 this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
  }
 
- inline void GameNetworking::HOST_SendSync_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr)
+ inline void GameNetworking::HOST_SendSyncStart_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr)
  {
 	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_SYNCDATA1 To client ( ClientId: " << cliIdx << ")" << std::endl;
 	 SLNet::BitStream bs;
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState());
-	 bs.Write(reinterpret_cast<char*>(gameState), sizeof(GameState));
+	 bs.Write(CheckSumGameState(gameStateTransfer));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
+ }
+
+ void GameNetworking::HOST_SendGamePart_ToClient(uint32_t clientGUID) {
+
+	 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+	 SLNet::BitStream bs;
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_GAMEDATA_PART));
+
+	 uint64_t gameStateSize = sizeof(GameState);
+	 uint32_t chunkSize = TRANSFERCHUNKSIZE;
+	 uint64_t n = nextTransferOffset + chunkSize;
+	 if (n >= gameStateSize)
+		 chunkSize -= n - gameStateSize +1;
+
+	 bs.Write(chunkSize);
+	 bs.Write(reinterpret_cast<char*>(gameStateTransfer) + nextTransferOffset, chunkSize);
+	 nextTransferOffset += chunkSize;
+
+	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
  }
 
  void GameNetworking::StartServer(int32_t port)
@@ -165,10 +195,10 @@
 	 }
  }
 
- inline uint64_t GameNetworking::CheckSumGameState()
+ inline uint64_t GameNetworking::CheckSumGameState(GameState* state)
  {
 	 uint64_t sum = 0;
-	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(gameState);
+	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state);
 	 for (uint64_t i = 0; i < sizeof(GameState); i++)
 	 {
 		 sum += bytePtr[i];
@@ -291,7 +321,16 @@
 			}
 		}
 	}
+	
 	clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
+	clientMeta serverDummyClientThing;
+	if (thisClient == nullptr)
+	{
+		thisClient = &serverDummyClientThing;
+		thisClient->hostTickOffset = 0;
+		thisClient->avgHostPing = 0;
+	}
+
 	//get stats on client swarm and slow down 
 	int32_t maxOffset = -9999;
 	int32_t minOffset = 9999;
@@ -308,56 +347,54 @@
 		if (client->hostTickOffset < minOffset)
 			minOffset = client->hostTickOffset;
 	}
-	if (clients.size() > 1)
+
+		
+	safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
+	int32_t distToMin = thisClient->hostTickOffset - minOffset;
+	int32_t distToMax = thisClient->hostTickOffset - maxOffset;
+
+	int32_t distToCompare;
+	if (serverRunning)
+		distToCompare = distToMax;
+	else
+		distToCompare = distToMin;
+
+	tickPIDError = distToCompare - safetyOffset;
+			
+	//integralAccumulatorTickPID += 0.02 * error;
+
+	float pFactor = 8.0f;
+
+			
+	if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
 	{
-		if (thisClient != nullptr)
-		{
-			safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
-			int32_t distToMin = thisClient->hostTickOffset - minOffset;
-			int32_t distToMax = thisClient->hostTickOffset - maxOffset;
-
-			int32_t distToCompare;
-			if (serverRunning)
-				distToCompare = distToMax;
-			else
-				distToCompare = distToMin;
-
-			tickPIDError = distToCompare - safetyOffset;
-			
-			//integralAccumulatorTickPID += 0.02 * error;
-
-			float pFactor = 8.0f;
-
-			
-			if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
-			{
-				targetTickTimeMs = MINTICKTIMEMS*(thisClient->hostTickOffset- (-safetyOffset));
-			}
-			else
-			{
-				//slow down for fastest if server, slow down for slowest if client.
-				targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
-			}
-
-
-
-			// clamp to min
-			if (thisClient->hostTickOffset < -safetyOffset*10)
-			{
-				if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
-					targetTickTimeMs = 0;
-			}
-			else
-			{
-				if (targetTickTimeMs <= MINTICKTIMEMS)
-					targetTickTimeMs = MINTICKTIMEMS;
-			}
-
-
-			if (targetTickTimeMs >= MAXTICKTIMEMS)
-				targetTickTimeMs = MAXTICKTIMEMS;
-		}
+		targetTickTimeMs = MINTICKTIMEMS*(thisClient->hostTickOffset- (-safetyOffset));
 	}
+	else
+	{
+		//slow down for fastest if server, slow down for slowest if client.
+		targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
+	}
+
+
+
+	// clamp to min
+	if (thisClient->hostTickOffset < -safetyOffset*10)
+	{
+		if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
+			targetTickTimeMs = 0;
+	}
+	else
+	{
+		if (targetTickTimeMs <= MINTICKTIMEMS)
+			targetTickTimeMs = MINTICKTIMEMS;
+	}
+
+
+	if (targetTickTimeMs >= MAXTICKTIMEMS)
+		targetTickTimeMs = MAXTICKTIMEMS;
+		
+	
 
 
 
@@ -432,29 +469,47 @@
 			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			{
 				bts.Read(this->clientId);
+				std::cout << "[CLIENT] CLientId is now " << this->clientId << std::endl;
 
-				uint64_t checkSum;
-				bts.Read(checkSum);
+
+				bts.Read(transferFullCheckSum);
 				
 				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
 
 
-				bool s = bts.Read(reinterpret_cast<char*>(gameState), sizeof(GameState));
-				if (!s) assert(0);
-
-				if (checkSum != CheckSumGameState())
-				{
-					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received CHECKSUM MISSMATCH!"<< std::endl;
-					assert(0);
+			}
+			else if (msgtype == MESSAGE_ENUM_HOST_GAMEDATA_PART)
+			{
+				uint32_t chunkSize;
+				bts.Read(chunkSize);
+				bts.Read(reinterpret_cast<char*>(gameStateTransfer)+nextTransferOffset, chunkSize);
+				nextTransferOffset += chunkSize;
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100*(float(nextTransferOffset)/sizeof(GameState))  << "%" << std::endl;
+				
+				
+				if (chunkSize < TRANSFERCHUNKSIZE)
+				{	
+					if (transferFullCheckSum != CheckSumGameState(gameStateTransfer))
+					{
+						std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received CHECKSUM MISSMATCH!"<< std::endl;
+						assert(0);
+					}
+					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
+					memcpy(gameState, gameStateTransfer, sizeof(GameState));
+					
+					gameState->pauseState = 0;				
+					CLIENT_SendSyncComplete();
+					fullyConnectedToHost = true;
 				}
+				else
+					CLIENT_SendGamePartAck();
+			}
+			else if (msgtype == MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK)
+			{
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
 
-
-				gameState->pauseState = 0;
-
-				std::cout << "CLientId is now " << this->clientId << ", sending acknologement." << std::endl;
-				CLIENT_SendSyncComplete();
-
-				fullyConnectedToHost = true;
+				HOST_SendGamePart_ToClient(clientGUID);
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
 			{
@@ -509,11 +564,6 @@
 				uint8_t numClients;
 				bts.Read(numClients);
 				gameState->numClients = numClients;
-
-				//sync client id as assigned by the host.
-				int32_t cliId;
-				bts.Read(cliId);
-				this->clientId = cliId;
 
 
 				uint8_t numActions;
@@ -663,8 +713,11 @@
 	std::cout << "Pausing." << std::endl;
 	gameState->pauseState = 1;
 	clients.back().downloadingState = 1;
-	HOST_SendSync_ToClient(clients.back().cliId, systemGUID);
+	
+	memcpy(this->gameStateTransfer, gameState, sizeof(GameState));
 
+	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
+	HOST_SendGamePart_ToClient(clients.back().clientGUID);
 }
 
 void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
