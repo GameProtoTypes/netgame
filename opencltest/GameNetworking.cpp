@@ -34,7 +34,6 @@
 	HOST_gameStateSnapshot = new GameState();
 	CLIENT_gameStateTransfer = new GameState();
 
-	lastFreezeGameState = new GameState();
 
 
 	std::cout << "GameNetworking::Init  End" << std::endl;
@@ -126,6 +125,8 @@
 	 bs.Write(CheckSumGameState(HOST_gameStateSnapshot));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
+
+	 HOST_snapshotLocked = true;
  }
 
  void GameNetworking::HOST_SendGamePart_ToClient(uint32_t clientGUID) {
@@ -289,6 +290,94 @@
 		 1, SLNet::UNASSIGNED_RAKNET_GUID, true);
  }
 
+ void GameNetworking::UpdateThrottling()
+ {
+	 clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
+	 clientMeta serverDummyClientThing;
+	 if (thisClient == nullptr)
+	 {
+		 //std::cout << "USING DUMMY CLIENT FOR THROTTLE" << std::endl;
+		 thisClient = &serverDummyClientThing;
+		 thisClient->hostTickOffset = 0;
+		 thisClient->avgHostPing = 0;
+	 }
+
+	 //get stats on client swarm and slow down 
+	 int32_t maxOffset = -9999;
+	 int32_t minOffset = 9999;
+	 int32_t safetyOffset = 5;
+
+	 for (int i = 0; i < clients.size(); i++)
+	 {
+		 clientMeta* client = &clients[i];
+		 if (client == thisClient)
+			 continue;
+
+		 if (client->hostTickOffset > maxOffset)
+			 maxOffset = client->hostTickOffset;
+		 if (client->hostTickOffset < minOffset)
+			 minOffset = client->hostTickOffset;
+	 }
+
+
+	 safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
+	 int32_t distToMin = thisClient->hostTickOffset - minOffset;
+	 int32_t distToMax = thisClient->hostTickOffset - maxOffset;
+
+	 int32_t distToCompare;
+	 if (serverRunning)
+		 distToCompare = distToMax;
+	 else
+		 distToCompare = distToMin;
+
+	 tickPIDError = distToCompare - safetyOffset;
+
+	 //integralAccumulatorTickPID += 0.02 * error;
+
+	 float pFactor = 8.0f;
+
+	 if (clients.size() > 1 && fullyConnectedToHost)
+	 {
+
+		 if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
+		 {
+			 targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
+		 }
+		 else
+		 {
+
+			 //slow down for fastest if server, slow down for slowest if client.
+			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
+		 }
+
+
+
+		 // clamp to min
+		 if (thisClient->hostTickOffset < -safetyOffset * 10)
+		 {
+			 if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
+				 targetTickTimeMs = 0;
+		 }
+		 else
+		 {
+			 if (targetTickTimeMs <= MINTICKTIMEMS)
+				 targetTickTimeMs = MINTICKTIMEMS;
+		 }
+
+
+		 if (targetTickTimeMs >= MAXTICKTIMEMS)
+			 targetTickTimeMs = MAXTICKTIMEMS;
+
+	 }
+	 else
+	 {
+		 targetTickTimeMs = MINTICKTIMEMS;
+	 }
+
+	 if (!fullyConnectedToHost)
+		 targetTickTimeMs = 0;
+
+ }
 
  void GameNetworking::Update()
 {
@@ -303,9 +392,9 @@
 	if (serverRunning)
 	{
 
-		if (gameState->tickIdx % freezeFreq == 0)
+		if (gameState->tickIdx % freezeFreq == 0 && !HOST_snapshotLocked)
 		{
-			memcpy(reinterpret_cast<void*>(lastFreezeGameState), 
+			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshot),
 				reinterpret_cast<void*>(gameState), sizeof(GameState));
 
 			freezeFrameActions_1 = freezeFrameActions;
@@ -334,91 +423,7 @@
 		}
 	}
 	
-	clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
-	clientMeta serverDummyClientThing;
-	if (thisClient == nullptr)
-	{
-		//std::cout << "USING DUMMY CLIENT FOR THROTTLE" << std::endl;
-		thisClient = &serverDummyClientThing;
-		thisClient->hostTickOffset = 0;
-		thisClient->avgHostPing = 0;
-	}
-
-	//get stats on client swarm and slow down 
-	int32_t maxOffset = -9999;
-	int32_t minOffset = 9999;
-	int32_t safetyOffset = 5;
-
-	for (int i = 0; i < clients.size(); i++)
-	{
-		clientMeta* client = &clients[i];
-		if (client == thisClient)
-			continue;
-
-		if (client->hostTickOffset > maxOffset)
-			maxOffset = client->hostTickOffset;
-		if (client->hostTickOffset < minOffset)
-			minOffset = client->hostTickOffset;
-	}
-
-		
-	safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
-	int32_t distToMin = thisClient->hostTickOffset - minOffset;
-	int32_t distToMax = thisClient->hostTickOffset - maxOffset;
-
-	int32_t distToCompare;
-	if (serverRunning)
-		distToCompare = distToMax;
-	else
-		distToCompare = distToMin;
-
-	tickPIDError = distToCompare - safetyOffset;
-			
-	//integralAccumulatorTickPID += 0.02 * error;
-
-	float pFactor = 8.0f;
-
-	if (clients.size() > 1 && fullyConnectedToHost)
-	{
-
-		if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
-		{
-			targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
-		}
-		else
-		{
-
-			//slow down for fastest if server, slow down for slowest if client.
-			targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
-		}
-
-
-
-		// clamp to min
-		if (thisClient->hostTickOffset < -safetyOffset * 10)
-		{
-			if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
-				targetTickTimeMs = 0;
-		}
-		else
-		{
-			if (targetTickTimeMs <= MINTICKTIMEMS)
-				targetTickTimeMs = MINTICKTIMEMS;
-		}
-
-
-		if (targetTickTimeMs >= MAXTICKTIMEMS)
-			targetTickTimeMs = MAXTICKTIMEMS;
-
-	}
-	else
-	{
-		targetTickTimeMs = MINTICKTIMEMS;
-	}
-
-	if (!fullyConnectedToHost)
-		targetTickTimeMs = 0;
-
+	UpdateThrottling();
 
 	for (this->packet = this->peerInterface->Receive();
 		this->packet;
@@ -553,7 +558,7 @@
 				clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
 				client->downloadingState = 0;
 				gameState->pauseState = 0;
-
+				HOST_snapshotLocked = false;
 
 				HOST_nextTransferOffset[client->cliId] = 0;
 			}

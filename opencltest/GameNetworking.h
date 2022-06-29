@@ -155,7 +155,7 @@ public:
 	void CLIENT_Disconnect();
 
 	void Update();
-	
+	void UpdateThrottling();
 
 
 
@@ -209,6 +209,7 @@ public:
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
 	uint64_t CLIENT_nextTransferOffset = 0;
 	uint64_t transferFullCheckSum = 0;
+	bool HOST_snapshotLocked = false;//snapshot locked because its being transfered or other reason.
 	float gameStateTransferPercent = 0.0f;
 
 	bool actionStateDirty = false;
@@ -221,7 +222,6 @@ public:
 	std::vector<ActionWrap> freezeFrameActions_1;
 
 	uint32_t lastFreezeTick = 0;
-	GameState* lastFreezeGameState = nullptr;
 	int32_t freezeFreq = 20;
 
 	int32_t targetTickTimeMs = MINTICKTIMEMS;
