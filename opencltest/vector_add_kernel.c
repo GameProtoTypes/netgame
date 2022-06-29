@@ -12,7 +12,7 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
     if (peep->deathState || otherPeep->deathState)
         return;
 
-    cl_int dist_Q16 = distance2_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
+    cl_int dist_Q16 = distance_s2_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -38,7 +38,7 @@ void RobotUpdate(Peep* peep)
     cl_int deltay_Q16 = peep->target_y_Q16 - peep->map_y_Q15_16;
 
     cl_int len_Q16;
-    normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
+    normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
     
     
     peep->attackState = 0;
@@ -51,7 +51,7 @@ void RobotUpdate(Peep* peep)
         deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
         deltay_Q16 = peep->minDistPeep->map_y_Q15_16 - peep->map_y_Q15_16;
         cl_int len_Q16;
-        normalize_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
+        normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
         peep->xv_Q15_16 = -deltax_Q16/8;
         peep->yv_Q15_16 = -deltay_Q16/8;
 
