@@ -51,7 +51,7 @@ int32_t main(int32_t argc, char* args[])
 {
     GameGraphics gameGraphics;
 
-    GameState* gameState = new GameState();
+    std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
 
     GameGPUCompute gameCompute(gameState);
 
@@ -613,8 +613,6 @@ int32_t main(int32_t argc, char* args[])
 
 
     // Clean up
-
-    free(gameState);
         
     return 0;
 

@@ -9,7 +9,7 @@
 
 #include "glew.h"
 
-GameGPUCompute::GameGPUCompute(GameState* gameState)
+GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState)
 {
 
     // Load the update_kernel source code into the array source_str
@@ -162,7 +162,7 @@ GameGPUCompute::~GameGPUCompute()
 void GameGPUCompute::RunInitCompute()
 {
     cl_int ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState, 0, NULL, NULL);
+        sizeof(GameState), gameState.get(), 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
 
@@ -216,7 +216,7 @@ void GameGPUCompute::Stage1()
     // Read the memory buffer C on the device to the local variable C
 
     ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState, 0, NULL, &readEvent);
+        sizeof(GameState), gameState.get(), 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
         ret = clFinish(command_queue);
@@ -230,6 +230,6 @@ void GameGPUCompute::WriteGameState()
 {
     
     cl_int ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState, 0, NULL, &writeEvent);
+        sizeof(GameState), gameState.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 }

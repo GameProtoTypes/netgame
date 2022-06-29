@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <queue>
+#include <memory>
 
 #include "slikenet/peerinterface.h"
 #include "slikenet/peer.h"
@@ -36,7 +38,7 @@
 class GameNetworking
 {
 public:
-	GameNetworking(GameState* gameState) {
+	GameNetworking(std::shared_ptr<GameState> gameState) {
 	
 		this->gameState = gameState;
 	}
@@ -116,14 +118,19 @@ public:
 
 				//this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
 				std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
-				if (CLIENT_recentGameStateSnapshotStorage->tickIdx > action->scheduledTickIdx)
+				while (CLIENT_snapshotStorageQueue.size() && CLIENT_snapshotStorageQueue.back()->tickIdx > action->scheduledTickIdx)
 				{
-					std::cout << "[CLIENT] Snapshot not far enough back!" << std::endl;
+					std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
+					CLIENT_snapshotStorageQueue.pop_back();
 				}
 
-				
-				memcpy(gameState, CLIENT_recentGameStateSnapshotStorage, sizeof(GameState));
-
+				if(CLIENT_snapshotStorageQueue.size())
+					memcpy(gameState.get(), CLIENT_snapshotStorageQueue.back().get(), sizeof(GameState));
+				else
+				{
+					std::cout << "[CLIENT] All is lost!  Disconnecting..." << std::endl;
+					CLIENT_Disconnect();
+				}
 			}
 			else
 			{
@@ -221,13 +228,12 @@ public:
 	SLNet::RakNetGUID hostPeer;
 
 
-	GameState* gameState = nullptr;
-	GameState* HOST_gameStateSnapshotStorage = nullptr;
-	GameState* CLIENT_gameStateTransfer = nullptr; 
+	std::shared_ptr<GameState> gameState;
+	std::shared_ptr<GameState> HOSTHYBRID_gameStateSnapshotStorage;
+	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
 	
 
-	GameState* CLIENT_recentGameStateSnapshotStorage = nullptr;
-	std::vector<GameState*> CLIENT_snapshotStorageQueue;
+	std::vector<std::shared_ptr<GameState>> CLIENT_snapshotStorageQueue;
 
 
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };

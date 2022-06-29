@@ -31,10 +31,10 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 	
-	HOST_gameStateSnapshotStorage = new GameState();
-	CLIENT_recentGameStateSnapshotStorage = new GameState();
+	HOSTHYBRID_gameStateSnapshotStorage = std::make_shared<GameState>();
+	CLIENT_snapshotStorageQueue.push_back(std::make_shared<GameState>());
 
-	CLIENT_gameStateTransfer = new GameState();
+	CLIENT_gameStateTransfer = std::make_shared<GameState>();
 
 
 
@@ -137,7 +137,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState(HOST_gameStateSnapshotStorage));
+	 bs.Write(CheckSumGameState(HOSTHYBRID_gameStateSnapshotStorage.get()));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -161,7 +161,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshotStorage) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOSTHYBRID_gameStateSnapshotStorage.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -481,7 +481,7 @@
 				 bts.Read(chunkSize);
 
 				 SLNet::DataCompressor compressor;
-				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer) + CLIENT_nextTransferOffset);
+				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer.get()) + CLIENT_nextTransferOffset);
 
 
 
@@ -492,15 +492,15 @@
 
 				 if (chunkSize < TRANSFERCHUNKSIZE)
 				 {
-					 if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer))
+					 if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer.get()))
 					 {
 						 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!" << std::endl;
-						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer) << std::endl;
+						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer.get()) << std::endl;
 
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState, CLIENT_gameStateTransfer, sizeof(GameState));
+					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), sizeof(GameState));
 
 					 gameState->pauseState = 0;
 					 CLIENT_nextTransferOffset = 0;
@@ -598,7 +598,7 @@
 					 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
 					 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
 
-					 memcpy(gameState, HOST_gameStateSnapshotStorage, sizeof(GameState));
+					 memcpy(gameState.get(), HOSTHYBRID_gameStateSnapshotStorage.get(), sizeof(GameState));
 
 					 HOST_SendReSync_ToClients();
 				 }
@@ -662,13 +662,6 @@
 					 clients = clientList;
 
 			 }
-			 else if (msgtype == MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION)
-			 {
-				std::cout << "[CLIENT] Recieved MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION, resetting game state to most recent snapshot.." << std::endl;
-
-				memcpy(gameState, CLIENT_recentGameStateSnapshotStorage, sizeof(GameState));
-				
-			 }
 			 break;
 		 case ID_REMOTE_CONNECTION_LOST:
 			 //std::cout << "Peer: Remote peer lost connection.(untrackable client at this point)" << std::endl;
@@ -707,11 +700,20 @@
 	{
 		if (serverRunning)
 		{
-			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshotStorage),
-				reinterpret_cast<void*>(gameState), sizeof(GameState));
+			memcpy(reinterpret_cast<void*>(HOSTHYBRID_gameStateSnapshotStorage.get()),
+				reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
 		}
-		memcpy(reinterpret_cast<void*>(CLIENT_recentGameStateSnapshotStorage),
-			reinterpret_cast<void*>(gameState), sizeof(GameState));
+
+		
+		while (CLIENT_snapshotStorageQueue.size() > 4)
+		{
+			CLIENT_snapshotStorageQueue.erase(CLIENT_snapshotStorageQueue.begin());
+		}
+		CLIENT_snapshotStorageQueue.push_back(std::make_shared<GameState>());
+
+
+		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().get()),
+			reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
 
 
 
@@ -737,7 +739,7 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 25)
+			if (clients[i].ticksSinceLastCommunication > 200)
 			{
 				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
 					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
@@ -798,7 +800,7 @@
 	gameState->pauseState = 1;
 	clients.back().downloadingState = 1;
 	
-	memcpy(this->HOST_gameStateSnapshotStorage, gameState, sizeof(GameState));
+	memcpy(this->HOSTHYBRID_gameStateSnapshotStorage.get(), gameState.get(), sizeof(GameState));
 
 	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
 	HOST_SendGamePart_ToClient(clients.back().clientGUID);

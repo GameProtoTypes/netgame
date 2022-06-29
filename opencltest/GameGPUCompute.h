@@ -6,6 +6,7 @@
 #include <CL/cl.h>
 #endif
 
+#include <memory>
 
 #include "peep.h"
 #include "assert.h"
@@ -18,7 +19,7 @@ class GameGPUCompute
 public:
 
 
-	GameGPUCompute(GameState* gameState);
+	GameGPUCompute(std::shared_ptr<GameState> gameState);
 	~GameGPUCompute();
 
 	void RunInitCompute();
@@ -57,7 +58,7 @@ public:
 
 	cl_mem gamestate_mem_obj;
 
-	GameState* gameState;
+	std::shared_ptr<GameState> gameState;
 
 	bool errorState = false;
 };
