@@ -12,7 +12,7 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
     if (peep->deathState || otherPeep->deathState)
         return;
 
-    cl_int dist_Q16 = length_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
+    cl_int dist_Q16 = distance2_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16, otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -30,6 +30,8 @@ void ForceUpdate(Peep* peep)
     peep->xv_Q15_16 += peep->netForcex_Q16;
     peep->yv_Q15_16 += peep->netForcey_Q16;
 }
+
+
 void RobotUpdate(Peep* peep)
 {
     cl_int deltax_Q16 = peep->target_x_Q16 - peep->map_x_Q15_16;
@@ -56,8 +58,6 @@ void RobotUpdate(Peep* peep)
         if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
         {
             peep->attackState = 1;
-
-
             peep->health -= RandomRange((int)peep, 1,20);
 
             if (peep->health <= 0)
@@ -68,10 +68,6 @@ void RobotUpdate(Peep* peep)
                 peep->yv_Q15_16 = 0;
             }
         }
-
-
-
-
     }
     else
     {

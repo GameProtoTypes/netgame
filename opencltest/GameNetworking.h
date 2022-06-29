@@ -18,7 +18,7 @@
 
 #include "peep.h"
 
-
+#define GAMESERVERPORT (50010)
 
 #define MAX_HOST_CONNECTIONS 256 
 #define MAX_USER_MESSAGE_LENGTH 255
@@ -203,7 +203,7 @@ public:
 	GameState* gameState = nullptr;
 	GameState* HOST_gameStateSnapshot = nullptr;
 	GameState* CLIENT_gameStateTransfer = nullptr;
-	uint64_t HOST_nextTransferOffset = 0;
+	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
 	uint64_t CLIENT_nextTransferOffset = 0;
 	uint64_t transferFullCheckSum = 0;
 

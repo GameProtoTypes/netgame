@@ -303,7 +303,7 @@ int32_t main(int32_t argc, char* args[])
                         {
                             Peep* p = &gameState->peeps[pi];
 
-                            //if (p->faction == actionTracking->clientId)
+                            if (p->faction == actionTracking->clientId)
                                 if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                                     && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                                 {
@@ -386,7 +386,7 @@ int32_t main(int32_t argc, char* args[])
                 ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
                 ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
                 ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
-
+                
                 ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
                 if(!gameNetworking.serverRunning && !gameNetworking.connectedToHost)
                     if (ImGui::Button("Start Server"))
@@ -394,12 +394,16 @@ int32_t main(int32_t argc, char* args[])
                         gameNetworking.StartServer(port);
                     }
 
-                if(!gameNetworking.connectedToHost)
+
+                static char connectIPString[256] = "localhost";
+                if (!gameNetworking.connectedToHost)
+                {
+                    ImGui::InputText("IP", connectIPString, 256);
                     if (ImGui::Button("Connect To Local Server"))
                     {
-                        gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", port));
+                        gameNetworking.ConnectToHost(SLNet::SystemAddress(&connectIPString[0], port));
                     }
-
+                }
                 if (gameNetworking.connectedToHost)
                 {
                     if (ImGui::Button("CLIENT_Disconnect"))

@@ -138,15 +138,15 @@
 
 	 uint64_t gameStateSize = sizeof(GameState);
 	 uint32_t chunkSize = TRANSFERCHUNKSIZE;
-	 uint64_t n = HOST_nextTransferOffset + chunkSize;
+	 uint64_t n = HOST_nextTransferOffset[client->cliId] + chunkSize;
 	 if (n >= gameStateSize)
 		 chunkSize -= n - gameStateSize +1;
 
 	 bs.Write(chunkSize);
-	 bs.Write(reinterpret_cast<char*>(HOST_gameStateSnapshot) + HOST_nextTransferOffset, chunkSize);
+	 bs.Write(reinterpret_cast<char*>(HOST_gameStateSnapshot) + HOST_nextTransferOffset[client->cliId], chunkSize);
 
 
-	 HOST_nextTransferOffset += chunkSize;
+	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
 
 
@@ -221,8 +221,11 @@
 	if(!serverRunning)
 		peerInterface->Startup(1, &desc, 1);
 	
+	int port = hostAddress.GetPort();
+	if (port == 0)
+		port = GAMESERVERPORT;
 
-	SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), hostAddress.GetPort(), nullptr, 0, nullptr);
+	SLNet::ConnectionAttemptResult connectInitSuccess = peerInterface->Connect(hostAddress.ToString(false), port, nullptr, 0, nullptr);
 	if (connectInitSuccess != SLNet::CONNECTION_ATTEMPT_STARTED)
 	{
 		if(serverRunning && (connectInitSuccess != SLNet::ALREADY_CONNECTED_TO_ENDPOINT))
@@ -321,7 +324,7 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 2000)
+			if (clients[i].ticksSinceLastCommunication > 100)
 			{
 				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
 					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
@@ -538,7 +541,7 @@
 				gameState->pauseState = 0;
 
 
-				HOST_nextTransferOffset = 0;
+				HOST_nextTransferOffset[client->cliId] = 0;
 			}
 			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			{
