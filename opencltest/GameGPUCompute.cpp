@@ -148,6 +148,11 @@ GameGPUCompute::~GameGPUCompute()
     cl_int ret = clFlush(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clFinish(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(update_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(init_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
+
+
     ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseCommandQueue(command_queue); CL_HOST_ERROR_CHECK(ret)
@@ -172,6 +177,8 @@ void GameGPUCompute::RunInitCompute()
 
 void GameGPUCompute::Stage1()
 {
+    if (gameState->pauseState != 0)
+        return;
 
     cl_int ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
         WorkItems, NULL, 0, NULL, &preUpdateEvent1);

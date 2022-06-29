@@ -76,3 +76,28 @@ unsigned DataCompressor::DecompressAndAllocate(SLNet::BitStream * input, unsigne
 	RakAssert(decompressedBytes==destinationSizeInBytes);
 	return destinationSizeInBytes;
 }
+unsigned DataCompressor::Decompress(SLNet::BitStream* input, unsigned char* output)
+{
+	HuffmanEncodingTree tree;
+	unsigned int bitsUsed, destinationSizeInBytes;
+	unsigned int decompressedBytes;
+	unsigned int frequencyTable[256];
+	unsigned i;
+
+	input->ReadCompressed(destinationSizeInBytes);
+	for (i = 0; i < 256; i++)
+		input->ReadCompressed(frequencyTable[i]);
+	input->AlignReadToByteBoundary();
+	if (input->Read(bitsUsed) == false)
+	{
+		// Read error
+#ifdef _DEBUG
+		RakAssert(0);
+#endif
+		return 0;
+	}
+	tree.GenerateFromFrequencyTable(frequencyTable);
+	decompressedBytes = tree.DecodeArray(input, bitsUsed, destinationSizeInBytes, output);
+	RakAssert(decompressedBytes == destinationSizeInBytes);
+	return destinationSizeInBytes;
+}

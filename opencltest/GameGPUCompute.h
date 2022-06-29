@@ -11,7 +11,7 @@
 #include "assert.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
-#define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("ret at %d is %d\n", __LINE__, ret); fflush(stdout); assert(0);}
+#define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
 
 class GameGPUCompute
 {
@@ -58,5 +58,7 @@ public:
 	cl_mem gamestate_mem_obj;
 
 	GameState* gameState;
+
+	bool errorState = false;
 };
 

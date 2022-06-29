@@ -9,6 +9,7 @@
 #include "slikenet/NatPunchthroughClient.h"
 #include "slikenet/MessageIdentifiers.h"
 #include "slikenet/BitStream.h"
+#include "slikenet/DataCompressor.h"
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -29,7 +30,9 @@
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
 #define REALLYBIGPING (10000)
-#define TRANSFERCHUNKSIZE (1024*128)
+#define TRANSFERCHUNKSIZE (1024*1024)
+
+#define CLIENT_TIMEOUT_TICKS (25)
 class GameNetworking
 {
 public:
@@ -206,6 +209,7 @@ public:
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
 	uint64_t CLIENT_nextTransferOffset = 0;
 	uint64_t transferFullCheckSum = 0;
+	float gameStateTransferPercent = 0.0f;
 
 	bool actionStateDirty = false;
 

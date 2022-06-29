@@ -275,8 +275,7 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-            do 
-            {
+
                 gameNetworking.Update();
 
                 if (gameNetworking.fullyConnectedToHost)
@@ -378,8 +377,16 @@ int32_t main(int32_t argc, char* args[])
                 ImGui::Button("Destroy Miner");
                 ImGui::End();
 
-
-
+                if (gameState->pauseState == 0)
+                {
+                    if (ImGui::Button("PAUSE"))
+                        gameState->pauseState = 1;
+                }
+                else
+                {
+                    if (ImGui::Button("RESUME"))
+                        gameState->pauseState = 0;
+                }
                 ImGui::Begin("Network");
                 static int32_t port = 50010;
                 ImGui::InputInt("Port", &port, 1, 1);
@@ -422,6 +429,13 @@ int32_t main(int32_t argc, char* args[])
                 }
                 ImGui::Text("TargetTickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
                 
+                if (gameNetworking.gameStateTransferPercent > 0.0f)
+                {
+                   
+                    ImGui::Text("Downloading:");
+                    ImGui::SameLine();
+                    ImGui::ProgressBar(gameNetworking.gameStateTransferPercent);
+                }
 
 
 
@@ -574,13 +588,9 @@ int32_t main(int32_t argc, char* args[])
                     glBindVertexArray(0);
                 }
 
-                //still maintain ticktiming even though tickidx will not be incrementing.
-                if(gameState->pauseState)
-                    WaitMinTickTime(timerStartMs, 33);
+            if(gameState->pauseState==0)
+                gameState->tickIdx++;
 
-            } while (gameState->pauseState);//end pause loop
-
-            gameState->tickIdx++;
             gameCompute.WriteGameState();
 
 
@@ -595,11 +605,12 @@ int32_t main(int32_t argc, char* args[])
             ImGui::Text("TickIdx: %d", gameState->tickIdx);
             ImGui::End();
 
+
             gameGraphics.Swap();
-
-
-
             WaitMinTickTime(timerStartMs, gameNetworking.targetTickTimeMs);
+
+            if (gameCompute.errorState)
+                quit = true;
         }
 
 

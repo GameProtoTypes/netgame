@@ -38,6 +38,7 @@ public:
 
 	static void Compress( unsigned char *userData, unsigned sizeInBytes, SLNet::BitStream * output );
 	static unsigned DecompressAndAllocate(SLNet::BitStream * input, unsigned char **output );
+	static unsigned Decompress(SLNet::BitStream* input, unsigned char* output);
 };
 
 } // namespace SLNet

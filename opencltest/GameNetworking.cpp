@@ -143,8 +143,9 @@
 		 chunkSize -= n - gameStateSize +1;
 
 	 bs.Write(chunkSize);
-	 bs.Write(reinterpret_cast<char*>(HOST_gameStateSnapshot) + HOST_nextTransferOffset[client->cliId], chunkSize);
-
+	 
+	 SLNet::DataCompressor compressor;
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshot) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -324,7 +325,7 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 100)
+			if (clients[i].ticksSinceLastCommunication > 25)
 			{
 				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
 					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
@@ -409,6 +410,10 @@
 		if (targetTickTimeMs >= MAXTICKTIMEMS)
 			targetTickTimeMs = MAXTICKTIMEMS;
 
+	}
+	else
+	{
+		targetTickTimeMs = MINTICKTIMEMS;
 	}
 
 	if (!fullyConnectedToHost)
@@ -498,9 +503,15 @@
 			{
 				uint32_t chunkSize;
 				bts.Read(chunkSize);
-				bts.Read(reinterpret_cast<char*>(CLIENT_gameStateTransfer)+ CLIENT_nextTransferOffset, chunkSize);
+
+				SLNet::DataCompressor compressor;
+				compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer) + CLIENT_nextTransferOffset);
+
+
+
 				CLIENT_nextTransferOffset += chunkSize;
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100*(float(CLIENT_nextTransferOffset)/sizeof(GameState))  << "%" << std::endl;
+				gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / sizeof(GameState));
+				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
 				
 				
 				if (chunkSize < TRANSFERCHUNKSIZE)
@@ -508,6 +519,8 @@
 					if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer))
 					{
 						std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!"<< std::endl;
+						std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer) << std::endl;
+
 						assert(0);
 					}
 					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
@@ -515,6 +528,7 @@
 					
 					gameState->pauseState = 0;		
 					CLIENT_nextTransferOffset = 0;
+					gameStateTransferPercent = 0.0f;
 					CLIENT_SendSyncComplete();
 					fullyConnectedToHost = true;
 				}
