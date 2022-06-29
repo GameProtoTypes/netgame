@@ -87,8 +87,53 @@ public:
 
 	void CLIENT_ApplyCombinedTurn()
 	{
+
 		std::vector<int32_t> removals;
 		std::vector<ActionWrap> newList;
+
+		
+		//first pass check all turns for lateness
+		uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
+		for (int32_t b = 0; b < turnActions.size(); b++)
+		{
+			ClientAction* action = &turnActions[b].action;
+			ActionTracking* actTracking = &turnActions[b].tracking;
+			if (action->scheduledTickIdx < gameState->tickIdx)
+			{
+				if (action->scheduledTickIdx < earliestExpiredScheduledTick)
+					earliestExpiredScheduledTick = action->scheduledTickIdx;
+			}
+		}
+			
+		if (earliestExpiredScheduledTick != static_cast<uint32_t>(-1))
+		{
+			int32_t ticksLate = gameState->tickIdx - earliestExpiredScheduledTick;
+
+			std::cout << "[CLIENT] Expired Action "
+				<< ticksLate << " Ticks Late" << std::endl;
+
+			//this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
+			std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
+			while (CLIENT_snapshotStorageQueue.size() && CLIENT_snapshotStorageQueue.back()->tickIdx > earliestExpiredScheduledTick)
+			{
+				std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
+				CLIENT_snapshotStorageQueue.pop_back();
+			}
+
+			if (CLIENT_snapshotStorageQueue.size())
+			{
+				memcpy(gameState.get(), CLIENT_snapshotStorageQueue.back().get(), sizeof(GameState));
+			}
+			else
+			{
+				std::cout << "[CLIENT] All is lost!  Disconnecting..." << std::endl;
+				CLIENT_Disconnect();
+				return;
+			}
+		}
+		
+		//at this point game state may be reverted from above.
+
 		int32_t i = 0;
 		for (int32_t a = 0; a < turnActions.size(); a++)
 		{
@@ -99,46 +144,16 @@ public:
 				std::cout << "[CLIENT] Using Action" << std::endl;
 				gameState->clientActions[i] = turnActions[a];
 				i++;
-
-			}
-			else if (action->scheduledTickIdx < gameState->tickIdx)
-			{
-
-				actTracking->ticksLate = gameState->tickIdx - action->scheduledTickIdx;
-				std::cout << "[CLIENT] Expired Action "
-					<< actTracking->ticksLate << " Ticks Late" << std::endl;
-
-
-				//SLNet::BitStream bs;
-				//bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-				//bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
-				//bs.Write(static_cast<uint32_t>(clientGUID));
-				//bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
-
-
-				//this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
-				std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
-				while (CLIENT_snapshotStorageQueue.size() && CLIENT_snapshotStorageQueue.back()->tickIdx > action->scheduledTickIdx)
-				{
-					std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
-					CLIENT_snapshotStorageQueue.pop_back();
-				}
-
-				if(CLIENT_snapshotStorageQueue.size())
-					memcpy(gameState.get(), CLIENT_snapshotStorageQueue.back().get(), sizeof(GameState));
-				else
-				{
-					std::cout << "[CLIENT] All is lost!  Disconnecting..." << std::endl;
-					CLIENT_Disconnect();
-				}
 			}
 			else
 			{
 				newList.push_back(turnActions[a]);
 			}
 		}
+
 		turnActions = newList;
 		gameState->numActions = i;
+		
 	}
 
 	void CLIENT_SendGamePartAck();
@@ -229,10 +244,13 @@ public:
 
 
 	std::shared_ptr<GameState> gameState;
-	std::shared_ptr<GameState> HOSTHYBRID_gameStateSnapshotStorage;
+	std::shared_ptr<GameState> HOST_gameStateSnapshotStorage;
 	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
 	
-
+	struct snapshotWrap {
+		std::shared_ptr<GameState> gameState;
+		std::vector<ActionWrap> actionsUpToSnapshot;
+	};
 	std::vector<std::shared_ptr<GameState>> CLIENT_snapshotStorageQueue;
 
 

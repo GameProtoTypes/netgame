@@ -31,7 +31,7 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 	
-	HOSTHYBRID_gameStateSnapshotStorage = std::make_shared<GameState>();
+	HOST_gameStateSnapshotStorage = std::make_shared<GameState>();
 	CLIENT_snapshotStorageQueue.push_back(std::make_shared<GameState>());
 
 	CLIENT_gameStateTransfer = std::make_shared<GameState>();
@@ -137,7 +137,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState(HOSTHYBRID_gameStateSnapshotStorage.get()));
+	 bs.Write(CheckSumGameState(HOST_gameStateSnapshotStorage.get()));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -161,7 +161,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOSTHYBRID_gameStateSnapshotStorage.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshotStorage.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -598,7 +598,7 @@
 					 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
 					 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
 
-					 memcpy(gameState.get(), HOSTHYBRID_gameStateSnapshotStorage.get(), sizeof(GameState));
+					 memcpy(gameState.get(), HOST_gameStateSnapshotStorage.get(), sizeof(GameState));
 
 					 HOST_SendReSync_ToClients();
 				 }
@@ -700,7 +700,7 @@
 	{
 		if (serverRunning)
 		{
-			memcpy(reinterpret_cast<void*>(HOSTHYBRID_gameStateSnapshotStorage.get()),
+			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshotStorage.get()),
 				reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
 		}
 
@@ -800,7 +800,6 @@
 	gameState->pauseState = 1;
 	clients.back().downloadingState = 1;
 	
-	memcpy(this->HOSTHYBRID_gameStateSnapshotStorage.get(), gameState.get(), sizeof(GameState));
 
 	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
 	HOST_SendGamePart_ToClient(clients.back().clientGUID);
