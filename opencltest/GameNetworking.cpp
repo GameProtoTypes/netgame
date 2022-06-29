@@ -31,7 +31,9 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 	
-	HOST_gameStateSnapshot = new GameState();
+	HOST_gameStateSnapshotStorage = new GameState();
+	CLIENT_recentGameStateSnapshotStorage = new GameState();
+
 	CLIENT_gameStateTransfer = new GameState();
 
 
@@ -84,6 +86,19 @@
 	 turnActions.clear();
  }
 
+ void GameNetworking::HOST_SendReSync_ToClients()
+ {
+	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION to " << clients.size() << " clients" << std::endl;
+
+	 for (const auto& client : clients)
+	 {
+		 SLNet::BitStream bs;
+		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION));
+		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
+	 }
+ }
+
  inline void GameNetworking::CLIENT_SENDInitialData_ToHost()
  {
 	 SLNet::BitStream bs;
@@ -122,7 +137,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState(HOST_gameStateSnapshot));
+	 bs.Write(CheckSumGameState(HOST_gameStateSnapshotStorage));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -146,7 +161,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshot) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshotStorage) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -378,7 +393,307 @@
 		 targetTickTimeMs = 0;
 
  }
+ void GameNetworking::UpdateHandleMessages()
+ {
 
+	 for (this->packet = this->peerInterface->Receive();
+		 this->packet;
+		 this->peerInterface->DeallocatePacket(this->packet),
+		 this->packet = this->peerInterface->Receive())
+	 {
+		 SLNet::BitStream bts(this->packet->data,
+			 this->packet->length,
+			 false);
+
+
+		 SLNet::RakNetGUID systemGUID = this->packet->guid;
+
+		 // Check the packet identifier
+		 switch (this->packet->data[0])
+		 {
+		 case ID_CONNECTION_REQUEST_ACCEPTED:
+		 {
+			 std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
+			 connectedToHost = true;
+
+			 hostPeer = systemGUID;
+
+			 CLIENT_SENDInitialData_ToHost();
+
+		 }
+		 break;
+		 case ID_NEW_INCOMING_CONNECTION:
+		 {
+			 std::cout << "[HOST] Peer: A peer " << systemGUID.ToString()
+				 << " has connected." << std::endl;
+
+
+
+		 }
+		 break;
+
+		 case ID_USER_PACKET_ENUM:
+			 uint8_t rcv_id;
+			 bts.Read(rcv_id);
+
+			 uint8_t msgtype;
+			 bts.Read(msgtype);
+
+			 if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
+			 {
+				 uint32_t length;
+				 bts.Read(length);
+
+
+
+				 char message[MAX_USER_MESSAGE_LENGTH];
+
+				 bts.Read(message, length);
+				 message[length] = '\0';
+				 std::cout << "Peer: MESSAGE_ENUM_GENERIC_MESSAGE received: " << message << std::endl;
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_INITIALDATA)
+			 {
+
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+
+				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
+
+
+				 SHARED_CLIENT_CONNECT(clientGUID, systemGUID);
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
+			 {
+				 bts.Read(this->clientId);
+				 std::cout << "[CLIENT] CLientId is now " << this->clientId << std::endl;
+
+
+				 bts.Read(transferFullCheckSum);
+
+				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
+
+
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_GAMEDATA_PART)
+			 {
+				 uint32_t chunkSize;
+				 bts.Read(chunkSize);
+
+				 SLNet::DataCompressor compressor;
+				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer) + CLIENT_nextTransferOffset);
+
+
+
+				 CLIENT_nextTransferOffset += chunkSize;
+				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / sizeof(GameState));
+				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
+
+
+				 if (chunkSize < TRANSFERCHUNKSIZE)
+				 {
+					 if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer))
+					 {
+						 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!" << std::endl;
+						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer) << std::endl;
+
+						 assert(0);
+					 }
+					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
+					 memcpy(gameState, CLIENT_gameStateTransfer, sizeof(GameState));
+
+					 gameState->pauseState = 0;
+					 CLIENT_nextTransferOffset = 0;
+					 gameStateTransferPercent = 0.0f;
+					 CLIENT_SendSyncComplete();
+					 fullyConnectedToHost = true;
+				 }
+				 else
+					 CLIENT_SendGamePartAck();
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK)
+			 {
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+
+				 HOST_SendGamePart_ToClient(clientGUID);
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
+			 {
+				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
+				 std::cout << "un-pausing." << std::endl;
+
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+
+				 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+				 client->downloadingState = 0;
+				 gameState->pauseState = 0;
+				 HOST_snapshotLocked = false;
+
+				 HOST_nextTransferOffset[client->cliId] = 0;
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
+			 {
+
+				 uint32_t numActions;
+				 bts.Read(numActions);
+
+				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int32_t(numActions) << " actions)" << std::endl;
+
+
+				 for (int32_t i = 0; i < numActions; i++)
+				 {
+					 ActionWrap actionWrap;
+					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
+
+					 int32_t tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
+
+
+					 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
+					 turnActions.push_back(actionWrap);
+					 runningActions.push_back(actionWrap);
+					 freezeFrameActions.push_back(actionWrap);
+				 }
+
+
+
+
+
+				 //all clients have given input
+				 //send combined final turn to all clients
+				 HOST_SendActionUpdates_ToClients();
+
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA)
+			 {
+
+				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA received" << std::endl;
+
+				 //get info on how many total clients there are...
+				 uint8_t numClients;
+				 bts.Read(numClients);
+				 gameState->numClients = numClients;
+
+
+				 uint8_t numActions;
+				 bts.Read(numActions);
+
+
+				 for (uint8_t a = 0; a < numActions; a++)
+				 {
+					 ActionWrap actionWrap;
+					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
+					 turnActions.push_back(actionWrap);
+				 }
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
+			 {
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+				 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+				 if (client != nullptr)
+				 {
+					 ActionTracking actionTracking;
+					 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
+					 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
+
+					 memcpy(gameState, HOST_gameStateSnapshotStorage, sizeof(GameState));
+
+					 HOST_SendReSync_ToClients();
+				 }
+				 else
+				 {
+					 assert(0);
+				 }
+				
+
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
+			 {
+				 int32_t cliId;
+				 bts.Read(cliId);
+
+
+				 uint32_t client_tickIdx;
+				 bts.Read(client_tickIdx);
+
+				 int32_t tickTime;
+				 bts.Read(tickTime);
+
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+
+
+				 int32_t ping;
+				 bts.Read(ping);
+
+
+				 int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
+
+				 clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
+				 if (meta != nullptr)
+				 {
+					 meta->avgHostPing = ping;
+					 meta->hostTickOffset = offset;
+					 meta->ticksSinceLastCommunication = 0;
+
+				 }
+				 else
+				 {
+					 std::cout << "[HOST] recieved MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC but no entry for GUID:" << clientGUID << " in client list!" << std::endl;
+				 }
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC)
+			 {
+				 uint8_t numClients;
+				 bts.Read(numClients);
+
+				 std::vector<clientMeta> clientList;
+				 for (int i = 0; i < numClients; i++)
+				 {
+					 clientMeta clientData;
+					 bts.Read(reinterpret_cast<char*>(&clientData), sizeof(clientMeta));
+					 //invalidate stuff useless to clients
+					 clientData.rakGuid = SLNet::RakNetGUID();
+					 clientList.push_back(clientData);
+				 }
+				 if (!serverRunning)
+					 clients = clientList;
+
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION)
+			 {
+				std::cout << "[CLIENT] Recieved MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION, resetting game state to most recent snapshot.." << std::endl;
+
+				memcpy(gameState, CLIENT_recentGameStateSnapshotStorage, sizeof(GameState));
+				
+			 }
+			 break;
+		 case ID_REMOTE_CONNECTION_LOST:
+			 //std::cout << "Peer: Remote peer lost connection.(untrackable client at this point)" << std::endl;
+
+			 break;
+		 case ID_DISCONNECTION_NOTIFICATION:
+			 //std::cout << "Peer: A peer has disconnected. (untrackable client at this point)" << std::endl;
+
+			 break;
+		 case ID_CONNECTION_LOST:
+			 //std::cout << "Peer: A connection was lost.(untrackable client at this point)" << std::endl;
+
+			 break;
+		 case ID_CONNECTION_ATTEMPT_FAILED:
+			 std::cout << "Peer: A connection failed." << std::endl;
+			 break;
+		 default:
+
+			 std::cout << "Peer: Received a packet with unspecified message identifier: " << int32_t(this->packet->data[0]) << std::endl;
+
+
+			 break;
+		 } // check package identifier
+	 } // package receive loop
+ }
  void GameNetworking::Update()
 {
 
@@ -388,18 +703,26 @@
 	if (serverRunning)
 		SendTickSyncToClients();
 
+	if (gameState->tickIdx % freezeFreq == 0 && !HOST_snapshotLocked)
+	{
+		if (serverRunning)
+		{
+			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshotStorage),
+				reinterpret_cast<void*>(gameState), sizeof(GameState));
+		}
+		memcpy(reinterpret_cast<void*>(CLIENT_recentGameStateSnapshotStorage),
+			reinterpret_cast<void*>(gameState), sizeof(GameState));
 
+
+
+
+		freezeFrameActions_1 = freezeFrameActions;
+		freezeFrameActions.clear();
+	}
 	if (serverRunning)
 	{
 
-		if (gameState->tickIdx % freezeFreq == 0 && !HOST_snapshotLocked)
-		{
-			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshot),
-				reinterpret_cast<void*>(gameState), sizeof(GameState));
 
-			freezeFrameActions_1 = freezeFrameActions;
-			freezeFrameActions.clear();
-		}
 
 		//check if running actions are accounted for.
 		
@@ -425,285 +748,7 @@
 	
 	UpdateThrottling();
 
-	for (this->packet = this->peerInterface->Receive();
-		this->packet;
-		this->peerInterface->DeallocatePacket(this->packet),
-		this->packet = this->peerInterface->Receive())
-	{
-		SLNet::BitStream bts(this->packet->data,
-			this->packet->length,
-			false);
-
-
-		SLNet::RakNetGUID systemGUID = this->packet->guid;
-
-		// Check the packet identifier
-		switch (this->packet->data[0])
-		{
-		case ID_CONNECTION_REQUEST_ACCEPTED:
-		{
-			std::cout << "[CLIENT] Peer: ID_CONNECTION_REQUEST_ACCEPTED" << std::endl;
-			connectedToHost = true;
-
-			hostPeer = systemGUID;
-
-			CLIENT_SENDInitialData_ToHost();
-
-		}
-			break;
-		case ID_NEW_INCOMING_CONNECTION:
-		{
-			std::cout << "[HOST] Peer: A peer " << systemGUID.ToString()
-				<< " has connected." << std::endl;
-
-
-
-		}
-			break;
-			
-		case ID_USER_PACKET_ENUM:
-			uint8_t rcv_id;
-			bts.Read(rcv_id);
-
-			uint8_t msgtype;
-			bts.Read(msgtype);
-
-			if (msgtype == MESSAGE_ENUM_GENERIC_MESSAGE)
-			{	
-				uint32_t length;
-				bts.Read(length);
-
-				
-				
-				char message[MAX_USER_MESSAGE_LENGTH];
-
-				bts.Read(message, length);
-				message[length] = '\0';
-				std::cout << "Peer: MESSAGE_ENUM_GENERIC_MESSAGE received: " << message << std::endl;
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_INITIALDATA)
-			{
-
-				uint32_t clientGUID;
-				bts.Read(clientGUID);
-
-				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
-
-				
-				SHARED_CLIENT_CONNECT(clientGUID, systemGUID);
-			}
-			else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
-			{
-				bts.Read(this->clientId);
-				std::cout << "[CLIENT] CLientId is now " << this->clientId << std::endl;
-
-
-				bts.Read(transferFullCheckSum);
-				
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
-
-
-			}
-			else if (msgtype == MESSAGE_ENUM_HOST_GAMEDATA_PART)
-			{
-				uint32_t chunkSize;
-				bts.Read(chunkSize);
-
-				SLNet::DataCompressor compressor;
-				compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer) + CLIENT_nextTransferOffset);
-
-
-
-				CLIENT_nextTransferOffset += chunkSize;
-				gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / sizeof(GameState));
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
-				
-				
-				if (chunkSize < TRANSFERCHUNKSIZE)
-				{	
-					if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer))
-					{
-						std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!"<< std::endl;
-						std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer) << std::endl;
-
-						assert(0);
-					}
-					std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					memcpy(gameState, CLIENT_gameStateTransfer, sizeof(GameState));
-					
-					gameState->pauseState = 0;		
-					CLIENT_nextTransferOffset = 0;
-					gameStateTransferPercent = 0.0f;
-					CLIENT_SendSyncComplete();
-					fullyConnectedToHost = true;
-				}
-				else
-					CLIENT_SendGamePartAck();
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK)
-			{
-				uint32_t clientGUID;
-				bts.Read(clientGUID);
-
-				HOST_SendGamePart_ToClient(clientGUID);
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
-			{
-				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
-				std::cout << "un-pausing." << std::endl;
-
-				uint32_t clientGUID;
-				bts.Read(clientGUID);
-
-				clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
-				client->downloadingState = 0;
-				gameState->pauseState = 0;
-				HOST_snapshotLocked = false;
-
-				HOST_nextTransferOffset[client->cliId] = 0;
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
-			{
-
-				uint32_t numActions;
-				bts.Read(numActions);
-
-				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int32_t(numActions) << " actions)" << std::endl;
-
-
-				for (int32_t i = 0; i < numActions; i++)
-				{
-					ActionWrap actionWrap;
-					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-
-					int32_t tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
-						
-
-					actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
-					turnActions.push_back(actionWrap);
-					runningActions.push_back(actionWrap);
-					freezeFrameActions.push_back(actionWrap);
-				}
-						
-					
-
-
-
-				//all clients have given input
-				//send combined final turn to all clients
-				HOST_SendActionUpdates_ToClients();
-					
-			}
-			else if (msgtype == MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA)
-			{
-
-				std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA received" << std::endl;
-					
-				//get info on how many total clients there are...
-				uint8_t numClients;
-				bts.Read(numClients);
-				gameState->numClients = numClients;
-
-
-				uint8_t numActions;
-				bts.Read(numActions);
-
-
-				for (uint8_t a = 0; a < numActions; a++)
-				{
-					ActionWrap actionWrap;
-					bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-					turnActions.push_back(actionWrap);
-				}
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
-			{
-				ActionTracking actionTracking;
-				bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
-				std::cout << "[HOST] Recieved Expired Action Error " << std::endl;
-				std::cout << "[HOST] REVERTING........" << std::endl;
-			}
-			else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
-			{
-				int32_t cliId;
-				bts.Read(cliId);
-
-
-				uint32_t client_tickIdx;
-				bts.Read(client_tickIdx);
-
-				int32_t tickTime;
-				bts.Read(tickTime);
-
-				uint32_t clientGUID;
-				bts.Read(clientGUID);
-
-
-				int32_t ping;
-				bts.Read(ping);
-
-
-				int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
-
-				clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
-				if (meta != nullptr)
-				{
-					meta->avgHostPing = ping;
-					meta->hostTickOffset = offset;
-					meta->ticksSinceLastCommunication = 0;
-						
-				}
-				else
-				{
-					std::cout << "[HOST] recieved MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC but no entry for GUID:" << clientGUID <<  " in client list!" << std::endl;
-				}
-			}
-			else if (msgtype == MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC)
-			{
-				uint8_t numClients;
-				bts.Read(numClients);
-
-				std::vector<clientMeta> clientList;
-				for (int i = 0; i < numClients; i++)
-				{
-					clientMeta clientData;
-					bts.Read(reinterpret_cast<char*>(&clientData), sizeof(clientMeta));
-					//invalidate stuff useless to clients
-					clientData.rakGuid = SLNet::RakNetGUID();
-					clientList.push_back(clientData);
-				}
-				if (!serverRunning)
-					clients = clientList;
-
-			}
-			break;
-		case ID_REMOTE_CONNECTION_LOST:
-			//std::cout << "Peer: Remote peer lost connection.(but who knows which one)" << std::endl;
-
-			break;
-		case ID_DISCONNECTION_NOTIFICATION:
-			//std::cout << "Peer: A peer has disconnected. (but who knows which one)" << std::endl;
-
-			break;
-		case ID_CONNECTION_LOST:
-			//std::cout << "Peer: A connection was lost.(but who knows which one)" << std::endl;
-
-			break;
-		case ID_CONNECTION_ATTEMPT_FAILED:
-			std::cout << "Peer: A connection failed." << std::endl;
-			break;
-		default:
-
-			std::cout << "Peer: Received a packet with unspecified message identifier: " << int32_t(this->packet->data[0]) << std::endl;
-
-
-			break;
-		} // check package identifier
-	} // package receive loop
-
-
-
-
+	UpdateHandleMessages();
 }
 
  void GameNetworking::HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
@@ -753,7 +798,7 @@
 	gameState->pauseState = 1;
 	clients.back().downloadingState = 1;
 	
-	memcpy(this->HOST_gameStateSnapshot, gameState, sizeof(GameState));
+	memcpy(this->HOST_gameStateSnapshotStorage, gameState, sizeof(GameState));
 
 	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
 	HOST_SendGamePart_ToClient(clients.back().clientGUID);

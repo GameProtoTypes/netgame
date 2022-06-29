@@ -25,8 +25,8 @@ public:
 
 
 	//Screen dimension constants
-	const int32_t SCREEN_WIDTH = 1920;
-	const int32_t SCREEN_HEIGHT = 1080;
+	const int32_t SCREEN_WIDTH = 1024;
+	const int32_t SCREEN_HEIGHT = 768;
 
 	void BeginDraw();
 

@@ -46,10 +46,13 @@ public:
 	enum MESSAGE_ENUMS {
 		MESSAGE_ENUM_GENERIC_MESSAGE = 0,
 
-		MESSAGE_ENUM_CLIENT_INITIALDATA, 
+		MESSAGE_ENUM_CLIENT_INITIALDATA,
 
 		MESSAGE_ENUM_HOST_SYNCDATA1,
 		MESSAGE_ENUM_HOST_GAMEDATA_PART,
+
+		MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION,
+
 		MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK,
 
 		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
@@ -104,13 +107,22 @@ public:
 					<< actTracking->ticksLate << " Ticks Late" << std::endl;
 
 
-				SLNet::BitStream bs;
-				bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-				bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
-				bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
+				//SLNet::BitStream bs;
+				//bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+				//bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ACTION_ERROR));
+				//bs.Write(static_cast<uint32_t>(clientGUID));
+				//bs.Write(reinterpret_cast<char*>(actTracking), sizeof(ActionTracking));
 
 
-				this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
+				//this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
+				std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
+				if (CLIENT_recentGameStateSnapshotStorage->tickIdx > action->scheduledTickIdx)
+				{
+					std::cout << "[CLIENT] Snapshot not far enough back!" << std::endl;
+				}
+
+				
+				memcpy(gameState, CLIENT_recentGameStateSnapshotStorage, sizeof(GameState));
 
 			}
 			else
@@ -128,8 +140,12 @@ public:
 
 
 	void HOST_SendActionUpdates_ToClients();
+	void HOST_SendReSync_ToClients();
+
 	void HOST_SendSyncStart_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
 	void HOST_SendGamePart_ToClient(uint32_t clientGUID);
+
+
 	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID);
 	void HOST_HandleDisconnectByID(int32_t clientID);
 
@@ -156,6 +172,7 @@ public:
 
 	void Update();
 	void UpdateThrottling();
+	void UpdateHandleMessages();
 
 
 
@@ -203,9 +220,16 @@ public:
 
 	SLNet::RakNetGUID hostPeer;
 
+
 	GameState* gameState = nullptr;
-	GameState* HOST_gameStateSnapshot = nullptr;
-	GameState* CLIENT_gameStateTransfer = nullptr;
+	GameState* HOST_gameStateSnapshotStorage = nullptr;
+	GameState* CLIENT_gameStateTransfer = nullptr; 
+	
+
+	GameState* CLIENT_recentGameStateSnapshotStorage = nullptr;
+	std::vector<GameState*> CLIENT_snapshotStorageQueue;
+
+
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
 	uint64_t CLIENT_nextTransferOffset = 0;
 	uint64_t transferFullCheckSum = 0;
