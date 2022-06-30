@@ -115,6 +115,7 @@
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
  }
 
+
  void GameNetworking::CLIENT_ApplyActions()
  {
 
@@ -122,15 +123,12 @@
 	 std::vector<ActionWrap> newList;
 
 	 int snapShotIdx = CLIENT_snapshotStorageQueue.size() - 1;
-
 	 std::vector<ActionWrap>& actionSack = CLIENT_snapshotStorageQueue[snapShotIdx].postActions;
 
 	 //first pass check all turns for lateness
 	 uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
 	 for (int32_t b = 0; b < actionSack.size(); b++)
 	 {
-		 if (actionSack[b].tracking.clientApplied)
-			 continue;
 
 		 ClientAction* action = &actionSack[b].action;
 		 ActionTracking* actTracking = &actionSack[b].tracking;
@@ -149,28 +147,22 @@
 			 << ticksLate << " Ticks Late" << std::endl;
 
 
-		 std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
+		 std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up." << std::endl;
 		 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameState->tickIdx > earliestExpiredScheduledTick)
 		 {
 			 std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
 			 snapShotIdx--;
 		 }
+		 std::cout << "[CLIENT] Using Snapshot Idx: " << snapShotIdx << std::endl;
 
 		 if (snapShotIdx >= 0)
 		 {
 			 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), sizeof(GameState));
 			 actionSack = CLIENT_snapshotStorageQueue[snapShotIdx].postActions;
 
-			 //mark all actions as unused again
-			 for (int i = 0; i < actionSack.size(); i++)
-			 {
-				 actionSack[i].tracking.clientApplied = false;
-			 }
-			
-			 //delete newer shapshots to be recreated while catching up.
-			 while (CLIENT_snapshotStorageQueue.size() - 1 > snapShotIdx)
-				 CLIENT_snapshotStorageQueue.pop_back();
 
+			
+			 
 		 }
 		 else
 		 {
@@ -186,16 +178,12 @@
 	 int32_t i = 0;
 	 for (int32_t a = 0; a < actionSack.size(); a++)
 	 {
-		 if (actionSack[a].tracking.clientApplied)
-			 continue;
-
 		 ClientAction* action = &actionSack[a].action;
 		 ActionTracking* actTracking = &actionSack[a].tracking;
 		 if (action->scheduledTickIdx == gameState->tickIdx)
 		 {
 			 std::cout << "[CLIENT] Using Action" << std::endl;
 			 gameState->clientActions[i] = actionSack[a];
-			 actionSack[a].tracking.clientApplied = true;
 			 i++;
 		 }
 		 else
@@ -677,8 +665,9 @@
 					 ActionWrap actionWrap;
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					 //add action to the current snapshot postactions.
+					 //add action to the current snapshot postactions
 					 CLIENT_snapshotStorageQueue.back().postActions.push_back(actionWrap);
+					
 				 }
 			 }
 			 //else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
@@ -839,7 +828,10 @@
 	UpdateHandleMessages();
 
 	if (fullyConnectedToHost)
+	{
+
 		CLIENT_ApplyActions();
+	}
 }
 
  void GameNetworking::HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)

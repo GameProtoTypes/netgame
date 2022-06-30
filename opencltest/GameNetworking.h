@@ -85,6 +85,7 @@ public:
 
 	void CLIENT_SENDInitialData_ToHost();
 
+
 	void CLIENT_ApplyActions();
 
 	void CLIENT_SendGamePartAck();
@@ -169,7 +170,6 @@ public:
 
 	clientMeta* GetClientMetaDataFromCliGUID(uint32_t cliGUID);
 
-	int32_t maxTickLag = 999999; // tick lag of slowest client
 
 	SLNet::RakNetGUID hostPeer;
 
@@ -193,7 +193,7 @@ public:
 
 	bool actionStateDirty = false;
 
-
+	
 
 	uint32_t lastFreezeTick = 0;
 	int32_t snapshotFreq = 200;
