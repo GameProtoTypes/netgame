@@ -43,10 +43,12 @@ struct Cell;
 struct MapSector;
 struct Peep {
 
-	//State:
 	cl_int valid;
 	int32_t map_x_Q15_16;
 	int32_t map_y_Q15_16;
+	
+	
+	
 	int32_t xv_Q15_16;
 	int32_t yv_Q15_16;
 

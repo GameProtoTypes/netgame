@@ -297,7 +297,7 @@ int32_t main(int32_t argc, char* args[])
                 {
                     Peep* p = &gameState->peeps[pi];
 
-                    if (p->faction == actionTracking->clientId)
+                    //if (p->faction == actionTracking->clientId)
                         if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                             && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                         {

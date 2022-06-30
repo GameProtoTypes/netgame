@@ -142,7 +142,7 @@
 			 std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late" << std::endl;
 			 std::cout << ClientConsolePrint() << "Going Back To Last Snapshot to catchback up." << std::endl;
 
-			 exit(1);
+			 
 			 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameState->tickIdx > earliestExpiredScheduledTick)
 			 {
 				 std::cout << ClientConsolePrint() << "Snapshot not far enough back, trying previous snapshot.." << std::endl;

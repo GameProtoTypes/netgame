@@ -57,7 +57,7 @@ void RobotUpdate(Peep* peep)
         if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
         {
             peep->attackState = 1;
-            peep->health -= 4;
+            peep->health -= RandomRange(peep->minDistPeep->map_x_Q15_16, 0, 5);
 
             if (peep->health <= 0)
             {
@@ -172,10 +172,17 @@ void AssignPeepToSector_Insert(GameState* gameState, Peep* peep)
 
 
 
+void PeepPreUpdate(Peep* peep)
+{
+    peep->map_x_Q15_16 += peep->xv_Q15_16;
+    peep->map_y_Q15_16 += peep->yv_Q15_16;
 
+    peep->netForcex_Q16 = 0;
+    peep->netForcey_Q16 = 0;
 
-
-
+    if (peep->health <= 0)
+        peep->deathState = 1;
+}
 
 void PeepUpdate(__global GameState* gameState, Peep* peep)
 {
@@ -322,14 +329,7 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
         //Peep* p = &gameState->peeps[pi + globalid*chunkSize];
         Peep* p;
         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-        p->map_x_Q15_16 += p->xv_Q15_16;
-        p->map_y_Q15_16 += p->yv_Q15_16;
-
-        p->netForcex_Q16 = 0;
-        p->netForcey_Q16 = 0;
-
-        if(p->health <= 0)
-            p->deathState = 1;
+        PeepPreUpdate(p);
 
         global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
         CL_CHECK_NULL(mapSector)
