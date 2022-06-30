@@ -72,7 +72,9 @@
 
  void GameNetworking::HOST_SendActionUpdates_ToClients(const std::vector<ActionWrap>& actions)
  {
-	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA to " << clients.size() << " clients" << std::endl;
+	 if (actions.size() == 0)
+		 return;
+	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA to " << clients.size() << " clients ("<< actions.size() << " actions)" << std::endl;
 	 
 
 	 for (auto client : clients)
@@ -91,18 +93,7 @@
 	 }
  }
 
- void GameNetworking::HOST_SendReSync_ToClients()
- {
-	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION to " << clients.size() << " clients" << std::endl;
 
-	 for (const auto& client : clients)
-	 {
-		 SLNet::BitStream bs;
-		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
-		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION));
-		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
-	 }
- }
 
  inline void GameNetworking::CLIENT_SENDInitialData_ToHost()
  {
@@ -191,6 +182,9 @@
 		 int32_t i = 0;
 		 for (int32_t a = 0; a < actionSack.size(); a++)
 		 {
+			 if (actionSack[a].tracking.clientApplied)
+				 continue;
+
 			 ClientAction* action = &actionSack[a].action;
 			 ActionTracking* actTracking = &actionSack[a].tracking;
 			 if (action->scheduledTickIdx == gameState->tickIdx)
@@ -650,8 +644,9 @@
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
 
-					 if (actionWrap.action.scheduledTickIdx >= HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup.
+					 if (gameState->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
 					 {
+						
 						 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
 						 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
 						 actions.push_back(actionWrap);
@@ -690,28 +685,7 @@
 					
 				 }
 			 }
-			 //else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
-			 //{
-				// uint32_t clientGUID;
-				// bts.Read(clientGUID);
-				// clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
-				// if (client != nullptr)
-				// {
-				//	 ActionTracking actionTracking;
-				//	 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
-				//	 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
-
-				//	 memcpy(gameState.get(), HOST_gameStateSnapshotStorage.get(), sizeof(GameState));
-
-				//	 HOST_SendReSync_ToClients();
-				// }
-				// else
-				// {
-				//	 assert(0);
-				// }
-				//
-
-			 //}
+		
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
 			 {
 				 int32_t cliId;

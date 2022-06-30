@@ -54,8 +54,6 @@ public:
 		MESSAGE_ENUM_HOST_SYNCDATA1,
 		MESSAGE_ENUM_HOST_GAMEDATA_PART,
 
-		MESSAGE_ENUM_HOST_RESYNC_NOTIFICATION,
-
 		MESSAGE_ENUM_CLIENT_GAMEDATA_PART_ACK,
 
 		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
@@ -69,8 +67,7 @@ public:
 
 
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
-		MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA,
-		MESSAGE_ENUM_CLIENT_ACTION_ERROR,
+		MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA
 	};
 
 
@@ -95,7 +92,6 @@ public:
 
 
 	void HOST_SendActionUpdates_ToClients(const std::vector<ActionWrap>& actions);
-	void HOST_SendReSync_ToClients();
 
 	void HOST_SendSyncStart_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
 	void HOST_SendGamePart_ToClient(uint32_t clientGUID);
