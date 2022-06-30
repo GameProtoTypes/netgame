@@ -118,6 +118,7 @@ struct ActionTracking {
 	cl_uint clientGivenId;
 	cl_int ticksLate;//action could not be applied on client at scheduled tickId;
 	bool finalActionVerified;
+	bool clientApplied;
 } typedef ActionTracking;
 
 

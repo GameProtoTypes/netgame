@@ -85,14 +85,14 @@ public:
 
 	void CLIENT_SENDInitialData_ToHost();
 
-	void CLIENT_ApplyCombinedTurn();
+	void CLIENT_ApplyActions();
 
 	void CLIENT_SendGamePartAck();
 	void CLIENT_SendSyncComplete();
 
 
 
-	void HOST_SendActionUpdates_ToClients();
+	void HOST_SendActionUpdates_ToClients(const std::vector<ActionWrap>& actions);
 	void HOST_SendReSync_ToClients();
 
 	void HOST_SendSyncStart_ToClient(int32_t cliIdx, SLNet::RakNetGUID clientAddr);
@@ -175,11 +175,11 @@ public:
 
 
 	std::shared_ptr<GameState> gameState;
-	std::shared_ptr<GameState> HOST_gameStateSnapshotStorage;
 	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
 	
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;
+		uint64_t checksum = static_cast<uint64_t>( -1 );
 		std::vector<ActionWrap> postActions;
 	};
 	std::vector<snapshotWrap> CLIENT_snapshotStorageQueue;
@@ -194,11 +194,9 @@ public:
 	bool actionStateDirty = false;
 
 
-	std::vector<ActionWrap> turnActions;
-
 
 	uint32_t lastFreezeTick = 0;
-	int32_t freezeFreq = 20;
+	int32_t snapshotFreq = 200;
 
 	int32_t targetTickTimeMs = MINTICKTIMEMS;
 	float integralAccumulatorTickPID = 0.0f;

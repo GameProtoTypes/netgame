@@ -270,17 +270,14 @@ int32_t main(int32_t argc, char* args[])
 
         }
 
-
-
-
-        gameNetworking.Update();
-
         if (gameNetworking.fullyConnectedToHost)
         {
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
-
-            gameNetworking.CLIENT_ApplyCombinedTurn();
         }
+        gameNetworking.Update();
+
+
+
 
 
             
@@ -343,10 +340,6 @@ int32_t main(int32_t argc, char* args[])
 
         gameState->numActions = 0;
                 
-
-
-
-
 
 
 

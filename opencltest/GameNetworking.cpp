@@ -31,9 +31,16 @@
 
 	this->peerInterface = SLNet::RakPeerInterface::GetInstance();
 	
-	HOST_gameStateSnapshotStorage = std::make_shared<GameState>();
+
 
 	CLIENT_gameStateTransfer = std::make_shared<GameState>();
+
+
+	snapshotWrap wrap;
+	wrap.gameState = std::make_shared<GameState>();
+
+	memcpy(wrap.gameState.get(), gameState.get(), sizeof(GameState));
+	CLIENT_snapshotStorageQueue.push_back(wrap);
 
 
 
@@ -63,7 +70,7 @@
 	 }
  }
 
- void GameNetworking::HOST_SendActionUpdates_ToClients()
+ void GameNetworking::HOST_SendActionUpdates_ToClients(const std::vector<ActionWrap>& actions)
  {
 	 std::cout << "[HOST] Sending MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA to " << clients.size() << " clients" << std::endl;
 	 
@@ -74,15 +81,14 @@
 		 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 		 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA));
 		 bs.Write(static_cast<uint8_t>(clients.size()));
-		 bs.Write(static_cast<uint8_t>(turnActions.size()));
-		 for (ActionWrap& actionWrap : turnActions)
+		 bs.Write(static_cast<uint8_t>(actions.size()));
+		 for (ActionWrap actionWrap : actions)
 		 {
 			 bs.Write(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 		 }
 
 		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
 	 }
-	 turnActions.clear();
  }
 
  void GameNetworking::HOST_SendReSync_ToClients()
@@ -109,19 +115,25 @@
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
  }
 
- void GameNetworking::CLIENT_ApplyCombinedTurn()
+ void GameNetworking::CLIENT_ApplyActions()
  {
 
 	 std::vector<int32_t> removals;
 	 std::vector<ActionWrap> newList;
 
+	 int snapShotIdx = CLIENT_snapshotStorageQueue.size() - 1;
+
+	 std::vector<ActionWrap>& actionSack = CLIENT_snapshotStorageQueue[snapShotIdx].postActions;
 
 	 //first pass check all turns for lateness
 	 uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
-	 for (int32_t b = 0; b < turnActions.size(); b++)
+	 for (int32_t b = 0; b < actionSack.size(); b++)
 	 {
-		 ClientAction* action = &turnActions[b].action;
-		 ActionTracking* actTracking = &turnActions[b].tracking;
+		 if (actionSack[b].tracking.clientApplied)
+			 continue;
+
+		 ClientAction* action = &actionSack[b].action;
+		 ActionTracking* actTracking = &actionSack[b].tracking;
 		 if (action->scheduledTickIdx < gameState->tickIdx)
 		 {
 			 if (action->scheduledTickIdx < earliestExpiredScheduledTick)
@@ -138,15 +150,27 @@
 
 
 		 std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
-		 while (CLIENT_snapshotStorageQueue.size() && CLIENT_snapshotStorageQueue.back().gameState->tickIdx > earliestExpiredScheduledTick)
+		 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameState->tickIdx > earliestExpiredScheduledTick)
 		 {
 			 std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
-			 CLIENT_snapshotStorageQueue.pop_back();
+			 snapShotIdx--;
 		 }
 
-		 if (CLIENT_snapshotStorageQueue.size())
+		 if (snapShotIdx >= 0)
 		 {
-			 memcpy(gameState.get(), CLIENT_snapshotStorageQueue.back().gameState.get(), sizeof(GameState));
+			 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), sizeof(GameState));
+			 actionSack = CLIENT_snapshotStorageQueue[snapShotIdx].postActions;
+
+			 //mark all actions as unused again
+			 for (int i = 0; i < actionSack.size(); i++)
+			 {
+				 actionSack[i].tracking.clientApplied = false;
+			 }
+			
+			 //delete newer shapshots to be recreated while catching up.
+			 while (CLIENT_snapshotStorageQueue.size() - 1 > snapShotIdx)
+				 CLIENT_snapshotStorageQueue.pop_back();
+
 		 }
 		 else
 		 {
@@ -156,26 +180,29 @@
 		 }
 	 }
 
+
 	 //at this point game state may be reverted from above.
 
 	 int32_t i = 0;
-	 for (int32_t a = 0; a < turnActions.size(); a++)
+	 for (int32_t a = 0; a < actionSack.size(); a++)
 	 {
-		 ClientAction* action = &turnActions[a].action;
-		 ActionTracking* actTracking = &turnActions[a].tracking;
+		 if (actionSack[a].tracking.clientApplied)
+			 continue;
+
+		 ClientAction* action = &actionSack[a].action;
+		 ActionTracking* actTracking = &actionSack[a].tracking;
 		 if (action->scheduledTickIdx == gameState->tickIdx)
 		 {
 			 std::cout << "[CLIENT] Using Action" << std::endl;
-			 gameState->clientActions[i] = turnActions[a];
+			 gameState->clientActions[i] = actionSack[a];
+			 actionSack[a].tracking.clientApplied = true;
 			 i++;
 		 }
 		 else
 		 {
-			 newList.push_back(turnActions[a]);
+			 newList.push_back(actionSack[a]);
 		 }
 	 }
-
-	 turnActions = newList;
 	 gameState->numActions = i;
 
  }
@@ -207,7 +234,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState(HOST_gameStateSnapshotStorage.get()));
+	 bs.Write(CheckSumGameState(gameState.get()));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -231,7 +258,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateSnapshotStorage.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(gameState.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -611,7 +638,8 @@
 
 				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_ACTIONUPDATE received (" << int32_t(numActions) << " actions)" << std::endl;
 
-
+				 //schedule and send out actions right away.
+				 std::vector<ActionWrap> actions;
 				 for (int32_t i = 0; i < numActions; i++)
 				 {
 					 ActionWrap actionWrap;
@@ -621,16 +649,12 @@
 
 
 					 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
-					 turnActions.push_back(actionWrap);
+					 actions.push_back(actionWrap);
 				 }
-
-
-
-
 
 				 //all clients have given input
 				 //send combined final turn to all clients
-				 HOST_SendActionUpdates_ToClients();
+				 HOST_SendActionUpdates_ToClients(actions);
 
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_ACTION_SCHEDULE_DATA)
@@ -652,31 +676,33 @@
 				 {
 					 ActionWrap actionWrap;
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-					 turnActions.push_back(actionWrap);
+
+					 //add action to the current snapshot postactions.
+					 CLIENT_snapshotStorageQueue.back().postActions.push_back(actionWrap);
 				 }
 			 }
-			 else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
-			 {
-				 uint32_t clientGUID;
-				 bts.Read(clientGUID);
-				 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
-				 if (client != nullptr)
-				 {
-					 ActionTracking actionTracking;
-					 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
-					 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
+			 //else if (msgtype == MESSAGE_ENUM_CLIENT_ACTION_ERROR)
+			 //{
+				// uint32_t clientGUID;
+				// bts.Read(clientGUID);
+				// clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+				// if (client != nullptr)
+				// {
+				//	 ActionTracking actionTracking;
+				//	 bts.Read(reinterpret_cast<char*>(&actionTracking), sizeof(ActionTracking));
+				//	 std::cout << "[HOST] Recieved Expired Action Error from client: " << clientGUID << " (Throttling)" << std::endl;
 
-					 memcpy(gameState.get(), HOST_gameStateSnapshotStorage.get(), sizeof(GameState));
+				//	 memcpy(gameState.get(), HOST_gameStateSnapshotStorage.get(), sizeof(GameState));
 
-					 HOST_SendReSync_ToClients();
-				 }
-				 else
-				 {
-					 assert(0);
-				 }
-				
+				//	 HOST_SendReSync_ToClients();
+				// }
+				// else
+				// {
+				//	 assert(0);
+				// }
+				//
 
-			 }
+			 //}
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
 			 {
 				 int32_t cliId;
@@ -764,15 +790,11 @@
 	if (serverRunning)
 		SendTickSyncToClients();
 
-	if (gameState->tickIdx % freezeFreq == 0 && !HOST_snapshotLocked)
-	{
-		if (serverRunning)
-		{
-			memcpy(reinterpret_cast<void*>(HOST_gameStateSnapshotStorage.get()),
-				reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
-		}
 
-		
+
+
+	if (gameState->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
+	{
 		while (CLIENT_snapshotStorageQueue.size() > 4)
 		{
 			CLIENT_snapshotStorageQueue.erase(CLIENT_snapshotStorageQueue.begin());
@@ -780,18 +802,16 @@
 		snapshotWrap wrap;
 		wrap.gameState = std::make_shared<GameState>();
 		CLIENT_snapshotStorageQueue.push_back(wrap);
-
+		std::cout << "Snapshot Taken" << std::endl;
 
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
 			reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
 
+		CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
 
 	}
 	if (serverRunning)
 	{
-
-
-
 		//check if running actions are accounted for.
 		
 
@@ -817,6 +837,9 @@
 	UpdateThrottling();
 
 	UpdateHandleMessages();
+
+	if (fullyConnectedToHost)
+		CLIENT_ApplyActions();
 }
 
  void GameNetworking::HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
