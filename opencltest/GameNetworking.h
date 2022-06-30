@@ -5,6 +5,7 @@
 #include <thread>
 #include <queue>
 #include <memory>
+#include <sstream>
 
 #include "slikenet/peerinterface.h"
 #include "slikenet/peer.h"
@@ -170,6 +171,16 @@ public:
 
 	clientMeta* GetClientMetaDataFromCliGUID(uint32_t cliGUID);
 
+	std::string HostConsolePrint() { std::string str;
+		char buff[100];
+		snprintf(buff, sizeof(buff), "[HOST (tickIdx: %d)] ", gameState->tickIdx);
+		return buff;
+	}
+	std::string ClientConsolePrint() {
+		char buff[100];
+		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameState->tickIdx);
+		return buff;
+	}
 
 	SLNet::RakNetGUID hostPeer;
 
@@ -180,10 +191,10 @@ public:
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;
 		uint64_t checksum = static_cast<uint64_t>( -1 );
-		std::vector<ActionWrap> postActions;
+		
 	};
 	std::vector<snapshotWrap> CLIENT_snapshotStorageQueue;
-
+	std::vector<ActionWrap> CLIENT_actionList;
 
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
 	uint64_t CLIENT_nextTransferOffset = 0;

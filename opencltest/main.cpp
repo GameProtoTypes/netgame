@@ -269,13 +269,13 @@ int32_t main(int32_t argc, char* args[])
             gameNetworking.actionStateDirty = true;
 
         }
-
+        std::cout << "A" << std::endl;
         if (gameNetworking.fullyConnectedToHost)
         {
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
         }
         gameNetworking.Update();
-
+        std::cout << "B" << std::endl;
 
 
 
