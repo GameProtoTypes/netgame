@@ -34,7 +34,7 @@
 
 
 	CLIENT_gameStateTransfer = std::make_shared<GameState>();
-
+	HOST_gameStateTransfer = std::make_shared<GameState>();
 
 	snapshotWrap wrap;
 	wrap.gameState = std::make_shared<GameState>();
@@ -142,7 +142,7 @@
 			 std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late" << std::endl;
 			 std::cout << ClientConsolePrint() << "Going Back To Last Snapshot to catchback up." << std::endl;
 
-
+			 exit(1);
 			 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameState->tickIdx > earliestExpiredScheduledTick)
 			 {
 				 std::cout << ClientConsolePrint() << "Snapshot not far enough back, trying previous snapshot.." << std::endl;
@@ -232,7 +232,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
-	 bs.Write(CheckSumGameState(gameState.get()));
+	 bs.Write(CheckSumGameState(HOST_gameStateTransfer.get()));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -256,7 +256,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(gameState.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateTransfer.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -880,10 +880,11 @@
 {
 	AddClientInternal(clientGUID, systemGUID);
 	connectedToHost = true;
-	std::cout << "Pausing." << std::endl;
+	//std::cout << "Pausing." << std::endl;
 	gameState->pauseState = 1;
 	clients.back().downloadingState = 1;
 	
+	memcpy(HOST_gameStateTransfer.get(), gameState.get(), sizeof(GameState));
 
 	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
 	HOST_SendGamePart_ToClient(clients.back().clientGUID);

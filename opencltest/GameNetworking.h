@@ -184,6 +184,7 @@ public:
 
 	std::shared_ptr<GameState> gameState;
 	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
+	std::shared_ptr<GameState> HOST_gameStateTransfer;
 	
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;

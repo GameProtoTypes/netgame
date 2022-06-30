@@ -57,7 +57,7 @@ void RobotUpdate(Peep* peep)
         if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
         {
             peep->attackState = 1;
-            peep->health -= RandomRange((int)peep, 1,20);
+            peep->health -= 4;
 
             if (peep->health <= 0)
             {
