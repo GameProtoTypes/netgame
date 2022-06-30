@@ -189,7 +189,10 @@
 			 ActionTracking* actTracking = &actionSack[a].tracking;
 			 if (action->scheduledTickIdx == gameState->tickIdx)
 			 {
-				 std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: CS:" << CheckSumAction(&actionSack[a]) << std::endl;
+
+				 std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: ACS: [" << CheckSumAction(&actionSack[a]) 
+					 << "]" << std::endl;
+
 				 actionSack[a].tracking.clientApplied = true;
 				 gameState->clientActions[i] = actionSack[a];
 
@@ -567,7 +570,18 @@
 				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
 
 
-				 SHARED_CLIENT_CONNECT(clientGUID, systemGUID);
+				 AddClientInternal(clientGUID, systemGUID);
+				 connectedToHost = true;//for hybrid
+
+				 clients.back().downloadingState = 1;
+
+				 memcpy(HOST_gameStateTransfer.get(), gameState.get(), sizeof(GameState));
+
+				 std::cout << "Pausing." << std::endl;
+				 gameState->pauseState = 1;
+
+				 HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
+				 HOST_SendGamePart_ToClient(clients.back().clientGUID);
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			 {
@@ -598,17 +612,19 @@
 
 				 if (chunkSize < TRANSFERCHUNKSIZE)
 				 {
-					 if (transferFullCheckSum != CheckSumGameState(CLIENT_gameStateTransfer.get()))
+					 uint64_t recievedCS = CheckSumGameState(CLIENT_gameStateTransfer.get());
+
+					 if (transferFullCheckSum != recievedCS)
 					 {
 						 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!" << std::endl;
-						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << CheckSumGameState(CLIENT_gameStateTransfer.get()) << std::endl;
+						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << recievedCS << std::endl;
 
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
 					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), sizeof(GameState));
+					 std::cout << "[CLIENT] GSCS: " << recievedCS << std::endl;
 
-					 gameState->pauseState = 0;
 					 CLIENT_nextTransferOffset = 0;
 					 gameStateTransferPercent = 0.0f;
 					 CLIENT_SendSyncComplete();
@@ -638,6 +654,8 @@
 				 HOST_snapshotLocked = false;
 
 				 HOST_nextTransferOffset[client->cliId] = 0;
+
+				 std::cout << "[HOST] GSCS: " << CheckSumGameState(gameState.get()) << std::endl;
 			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			 {
@@ -649,20 +667,21 @@
 
 				 //schedule and send out actions right away.
 				 std::vector<ActionWrap> actions;
-				 for (int32_t i = 0; i < numActions; i++)
-				 {
-					 ActionWrap actionWrap;
-					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
-
-
-					 if (gameState->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
+				 if (gameState.get()->pauseState == 0) {
+					 for (int32_t i = 0; i < numActions; i++)
 					 {
-						 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 10;
-						 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
-						 actions.push_back(actionWrap);
+						 ActionWrap actionWrap;
+						 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
+
+
+						 if (gameState->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
+						 {
+							 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
+							 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
+							 actions.push_back(actionWrap);
+						 }
 					 }
 				 }
-
 				 //all clients have given input
 				 //send combined final turn to all clients
 				 HOST_SendActionUpdates_ToClients(actions);
@@ -676,7 +695,6 @@
 				 //get info on how many total clients there are...
 				 uint8_t numClients;
 				 bts.Read(numClients);
-				 gameState->numClients = numClients;
 
 
 				 uint8_t numActions;
@@ -799,7 +817,7 @@
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
 			reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
 
-		CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
+		//CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
 
 	}
 	if (serverRunning)
@@ -874,20 +892,6 @@
 		clients.erase(std::next(clients.begin(), removeIdx));
 	else
 		assert(0);
-}
-
- void GameNetworking::SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID)
-{
-	AddClientInternal(clientGUID, systemGUID);
-	connectedToHost = true;
-	//std::cout << "Pausing." << std::endl;
-	gameState->pauseState = 1;
-	clients.back().downloadingState = 1;
-	
-	memcpy(HOST_gameStateTransfer.get(), gameState.get(), sizeof(GameState));
-
-	HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
-	HOST_SendGamePart_ToClient(clients.back().clientGUID);
 }
 
 void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)

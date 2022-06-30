@@ -61,7 +61,6 @@ void RobotUpdate(Peep* peep)
 
             if (peep->health <= 0)
             {
-                peep->deathState = 1;
                 peep->attackState = 0;
                 peep->xv_Q15_16 = 0;
                 peep->yv_Q15_16 = 0;
@@ -273,7 +272,6 @@ __kernel void game_init_single(__global GameState* gameState)
 
         for (int i = 0; i < MAX_CLIENTS; i++)
         {
-            gameState->clientStates[i].mousescroll = 0;
             gameState->clientStates[i].selectedPeepsLastIdx = OFFSET_NULL;
 
 
@@ -329,6 +327,9 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
 
         p->netForcex_Q16 = 0;
         p->netForcey_Q16 = 0;
+
+        if(p->health <= 0)
+            p->deathState = 1;
 
         global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
         CL_CHECK_NULL(mapSector)

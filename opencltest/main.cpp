@@ -36,7 +36,12 @@
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
-
+//#define GSCSTESTS
+#ifdef GSCSTESTS
+#define GSCS(ID) { std::cout << #ID << ": GSCS: " << gameNetworking.CheckSumGameState(gameState.get()) << " TickIdx: " << gameState.get()->tickIdx << std::endl;}
+#else
+#define GSCS(ID) {}
+#endif
 
 int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
@@ -75,6 +80,10 @@ int32_t main(int32_t argc, char* args[])
     std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
 
     uint64_t timerStartMs = SDL_GetTicks64();
+
+
+    std::shared_ptr<ClientSideClientState> client = std::make_shared<ClientSideClientState>();
+
     while (!quit)
     {
         timerStartMs = SDL_GetTicks64();
@@ -83,6 +92,8 @@ int32_t main(int32_t argc, char* args[])
             
         gameCompute.Stage1();
 
+        
+        GSCS(A)
         cl_ulong time_start;
         cl_ulong time_end;
 
@@ -102,8 +113,6 @@ int32_t main(int32_t argc, char* args[])
         clGetEventProfilingInfo(gameCompute.readEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
         nanoSeconds = time_end - time_start;
         ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-            
-        ClientState* client = &gameState->clientStates[0];
 
         client->mousePrimaryPressed = 0;
         client->mousePrimaryReleased = 0;
@@ -264,14 +273,14 @@ int32_t main(int32_t argc, char* args[])
             gameNetworking.actionStateDirty = true;
 
         }
-        //std::cout << "A" << std::endl;
+        GSCS(B)
         if (gameNetworking.fullyConnectedToHost)
         {
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
         }
         gameNetworking.Update();
 
-
+        GSCS(C)
             
         //apply turns
         for (int32_t a = 0; a < gameState->numActions; a++)
@@ -279,7 +288,7 @@ int32_t main(int32_t argc, char* args[])
             ClientAction* clientAction = &gameState->clientActions[a].action;
             ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
             cl_uchar cliId = actionTracking->clientId;
-            ClientState* client = &gameState->clientStates[cliId];
+            SynchronizedClientState* client = &gameState->clientStates[cliId];
 
             if (clientAction->action_DoSelect)
             {
@@ -437,7 +446,6 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-
         gameGraphics.pPeepShadProgram->Use();
         gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
@@ -573,6 +581,7 @@ int32_t main(int32_t argc, char* args[])
         if(gameState->pauseState==0)
             gameState->tickIdx++;
 
+        GSCS(D)
         gameCompute.WriteGameState();
 
 

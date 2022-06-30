@@ -128,8 +128,7 @@ public:
 
 
 
-	void SHARED_CLIENT_CONNECT(uint32_t clientGUID, SLNet::RakNetGUID systemGUID);
-	
+
 	int32_t MaxStandardConnections = MAX_HOST_CONNECTIONS;
 
 

@@ -129,11 +129,7 @@ struct ActionWrap {
 
 } typedef ActionWrap;
 
-
-struct ClientState {
-
-	cl_int connected;
-
+struct ClientSideClientState {
 	cl_int mousex;
 	cl_int mousey;
 	cl_int mouse_dragBeginx;
@@ -154,9 +150,12 @@ struct ClientState {
 	cl_float view_beginX;
 	cl_float view_beginY;
 	cl_float viewScale;
+};
+struct SynchronizedClientState {
 
+	cl_int connected;
 	cl_uint selectedPeepsLastIdx;
-} typedef ClientState;
+} typedef SynchronizedClientState;
 
 struct GameState {
 	Peep peeps[MAX_PEEPS];
@@ -165,7 +164,7 @@ struct GameState {
 	cl_int mapHeight;
 
 
-	ClientState clientStates[MAX_CLIENTS];
+	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
 
 	ActionWrap clientActions[32];
