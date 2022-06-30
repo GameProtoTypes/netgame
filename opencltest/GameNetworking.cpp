@@ -189,7 +189,7 @@
 			 ActionTracking* actTracking = &actionSack[a].tracking;
 			 if (action->scheduledTickIdx == gameState->tickIdx)
 			 {
-				 std::cout << "[CLIENT] Using Action" << std::endl;
+				 std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: CS:" << CheckSumAction(&actionSack[a]) << std::endl;
 				 actionSack[a].tracking.clientApplied = true;
 				 gameState->clientActions[i] = actionSack[a];
 
@@ -320,6 +320,17 @@
 	 uint64_t sum = 0;
 	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state);
 	 for (uint64_t i = 0; i < sizeof(GameState); i++)
+	 {
+		 sum += bytePtr[i];
+	 }
+	 return sum;
+ }
+
+ uint64_t GameNetworking::CheckSumAction(ActionWrap* state)
+ {
+	 uint64_t sum = 0;
+	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state);
+	 for (uint64_t i = 0; i < sizeof(ActionWrap); i++)
 	 {
 		 sum += bytePtr[i];
 	 }
@@ -646,8 +657,7 @@
 
 					 if (gameState->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
 					 {
-						
-						 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
+						 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 10;
 						 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
 						 actions.push_back(actionWrap);
 					 }
@@ -678,11 +688,10 @@
 					 ActionWrap actionWrap;
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					 std::cout << ClientConsolePrint() << "Adding action scheduled for tick " << actionWrap.action.scheduledTickIdx;
+					 std::cout << ClientConsolePrint() << "Adding action scheduled for tick " << actionWrap.action.scheduledTickIdx << std::endl;
 
 					 //add action to the current snapshot postactions
 					 CLIENT_actionList.push_back(actionWrap);
-					
 				 }
 			 }
 		

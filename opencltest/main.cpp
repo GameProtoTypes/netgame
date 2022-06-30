@@ -79,11 +79,8 @@ int32_t main(int32_t argc, char* args[])
     {
         timerStartMs = SDL_GetTicks64();
 
-
-
         gameGraphics.BeginDraw();
             
-
         gameCompute.Stage1();
 
         cl_ulong time_start;
@@ -273,9 +270,6 @@ int32_t main(int32_t argc, char* args[])
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
         }
         gameNetworking.Update();
-        //std::cout << "B" << std::endl;
-
-
 
 
             

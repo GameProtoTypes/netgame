@@ -115,6 +115,7 @@ public:
 
 
 	uint64_t CheckSumGameState(GameState* state);
+	uint64_t CheckSumAction(ActionWrap* state);
 
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
