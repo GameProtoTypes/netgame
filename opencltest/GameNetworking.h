@@ -85,76 +85,7 @@ public:
 
 	void CLIENT_SENDInitialData_ToHost();
 
-	void CLIENT_ApplyCombinedTurn()
-	{
-
-		std::vector<int32_t> removals;
-		std::vector<ActionWrap> newList;
-
-		
-		//first pass check all turns for lateness
-		uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
-		for (int32_t b = 0; b < turnActions.size(); b++)
-		{
-			ClientAction* action = &turnActions[b].action;
-			ActionTracking* actTracking = &turnActions[b].tracking;
-			if (action->scheduledTickIdx < gameState->tickIdx)
-			{
-				if (action->scheduledTickIdx < earliestExpiredScheduledTick)
-					earliestExpiredScheduledTick = action->scheduledTickIdx;
-			}
-		}
-			
-		if (earliestExpiredScheduledTick != static_cast<uint32_t>(-1))
-		{
-			int32_t ticksLate = gameState->tickIdx - earliestExpiredScheduledTick;
-
-			std::cout << "[CLIENT] Expired Action "
-				<< ticksLate << " Ticks Late" << std::endl;
-
-			//this->peerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE, 1, hostPeer, false);
-			std::cout << "[CLIENT] Going Back To Last Snapshot to catchback up.";
-			while (CLIENT_snapshotStorageQueue.size() && CLIENT_snapshotStorageQueue.back()->tickIdx > earliestExpiredScheduledTick)
-			{
-				std::cout << "[CLIENT] Snapshot not far enough back, trying previous snapshot.." << std::endl;
-				CLIENT_snapshotStorageQueue.pop_back();
-			}
-
-			if (CLIENT_snapshotStorageQueue.size())
-			{
-				memcpy(gameState.get(), CLIENT_snapshotStorageQueue.back().get(), sizeof(GameState));
-			}
-			else
-			{
-				std::cout << "[CLIENT] All is lost!  Disconnecting..." << std::endl;
-				CLIENT_Disconnect();
-				return;
-			}
-		}
-		
-		//at this point game state may be reverted from above.
-
-		int32_t i = 0;
-		for (int32_t a = 0; a < turnActions.size(); a++)
-		{
-			ClientAction* action = &turnActions[a].action;
-			ActionTracking* actTracking = &turnActions[a].tracking;
-			if (action->scheduledTickIdx == gameState->tickIdx)
-			{
-				std::cout << "[CLIENT] Using Action" << std::endl;
-				gameState->clientActions[i] = turnActions[a];
-				i++;
-			}
-			else
-			{
-				newList.push_back(turnActions[a]);
-			}
-		}
-
-		turnActions = newList;
-		gameState->numActions = i;
-		
-	}
+	void CLIENT_ApplyCombinedTurn();
 
 	void CLIENT_SendGamePartAck();
 	void CLIENT_SendSyncComplete();
@@ -249,9 +180,9 @@ public:
 	
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;
-		std::vector<ActionWrap> actionsUpToSnapshot;
+		std::vector<ActionWrap> postActions;
 	};
-	std::vector<std::shared_ptr<GameState>> CLIENT_snapshotStorageQueue;
+	std::vector<snapshotWrap> CLIENT_snapshotStorageQueue;
 
 
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };
@@ -265,9 +196,6 @@ public:
 
 	std::vector<ActionWrap> turnActions;
 
-	std::vector<ActionWrap> runningActions;
-	std::vector<ActionWrap> freezeFrameActions;
-	std::vector<ActionWrap> freezeFrameActions_1;
 
 	uint32_t lastFreezeTick = 0;
 	int32_t freezeFreq = 20;
