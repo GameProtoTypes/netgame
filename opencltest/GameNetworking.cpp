@@ -649,11 +649,13 @@
 					 ActionWrap actionWrap;
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					 int32_t tickLatency = (gameState->tickIdx - actionWrap.action.submittedTickIdx);
 
-
-					 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
-					 actions.push_back(actionWrap);
+					 if (actionWrap.action.scheduledTickIdx >= HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup.
+					 {
+						 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
+						 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
+						 actions.push_back(actionWrap);
+					 }
 				 }
 
 				 //all clients have given input

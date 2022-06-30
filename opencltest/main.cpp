@@ -242,7 +242,6 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
             actionWrap.action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
 
-            actionWrap.action.submittedTickIdx = gameState->tickIdx;
 
                 
             clientActions.push_back(actionWrap);
@@ -261,7 +260,6 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
             actionWrap.action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
 
-            actionWrap.action.submittedTickIdx = gameState->tickIdx;
 
 
             clientActions.push_back(actionWrap);
@@ -269,13 +267,13 @@ int32_t main(int32_t argc, char* args[])
             gameNetworking.actionStateDirty = true;
 
         }
-        std::cout << "A" << std::endl;
+        //std::cout << "A" << std::endl;
         if (gameNetworking.fullyConnectedToHost)
         {
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
         }
         gameNetworking.Update();
-        std::cout << "B" << std::endl;
+        //std::cout << "B" << std::endl;
 
 
 

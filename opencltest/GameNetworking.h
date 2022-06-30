@@ -204,7 +204,7 @@ public:
 
 	bool actionStateDirty = false;
 
-	
+	uint32_t HOST_lastActionScheduleTickIdx = 0;//keep schedule order.
 
 	uint32_t lastFreezeTick = 0;
 	int32_t snapshotFreq = 200;
