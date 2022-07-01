@@ -39,30 +39,39 @@
 
 struct Cell;
 struct MapSector;
-struct Peep {
 
+
+struct PeepState_RenderLevel
+{
 	cl_int valid;
 	int32_t map_x_Q15_16;
 	int32_t map_y_Q15_16;
-	
-	
-	
-	int32_t xv_Q15_16;
-	int32_t yv_Q15_16;
-
-	int32_t target_x_Q16;
-	int32_t target_y_Q16;
 
 	int32_t faction;
 
 	cl_int attackState;
 	cl_int health;
 	cl_int deathState;
-	
+}typedef PeepState_RenderLevel;
 
+
+struct PeepState_SimLevel
+{
+	int32_t xv_Q15_16;
+	int32_t yv_Q15_16;
+
+	int32_t target_x_Q16;
+	int32_t target_y_Q16;
 
 	cl_long netForcex_Q16;
 	cl_long netForcey_Q16;
+}typedef PeepState_SimLevel;
+
+
+struct Peep {
+
+	struct PeepState_RenderLevel stateRender;
+	struct PeepState_SimLevel stateSim;
 
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;
@@ -129,7 +138,7 @@ struct ActionWrap {
 
 } typedef ActionWrap;
 
-struct ClientSideClientState {
+struct RenderClientState {
 	cl_int mousex;
 	cl_int mousey;
 	cl_int mouse_dragBeginx;
@@ -177,4 +186,7 @@ struct GameState {
 }typedef GameState;
 
 
+struct GameStateRenderData {
+	
+}typedef GameStateRenderData;
 

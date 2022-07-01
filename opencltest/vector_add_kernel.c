@@ -9,11 +9,11 @@
 
 void RobotInteraction(Peep* peep, Peep* otherPeep)
 {
-    if (peep->deathState || otherPeep->deathState)
+    if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
         return;
 
-    cl_int dist_Q16 = distance_s2_Q16(peep->map_x_Q15_16, peep->map_y_Q15_16,
-        otherPeep->map_x_Q15_16, otherPeep->map_y_Q15_16);
+    cl_int dist_Q16 = distance_s2_Q16(peep->stateRender.map_x_Q15_16, peep->stateRender.map_y_Q15_16,
+        otherPeep->stateRender.map_x_Q15_16, otherPeep->stateRender.map_y_Q15_16);
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -22,63 +22,57 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
     }
 }
 
-void ForceUpdate(Peep* peep)
-{
-    peep->netForcex_Q16 += -peep->xv_Q15_16 >> 5;//drag
-    peep->netForcey_Q16 += -peep->yv_Q15_16 >> 5;
-    peep->xv_Q15_16 += peep->netForcex_Q16;
-    peep->yv_Q15_16 += peep->netForcey_Q16;
-}
+
 
 
 void RobotUpdate(Peep* peep)
 {
-    cl_int deltax_Q16 = peep->target_x_Q16 - peep->map_x_Q15_16;
-    cl_int deltay_Q16 = peep->target_y_Q16 - peep->map_y_Q15_16;
+    cl_int deltax_Q16 = peep->stateSim.target_x_Q16 - peep->stateRender.map_x_Q15_16;
+    cl_int deltay_Q16 = peep->stateSim.target_y_Q16 - peep->stateRender.map_y_Q15_16;
 
     cl_int len_Q16;
     normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
     
     
-    peep->attackState = 0;
-    if (peep->deathState == 1)
+    peep->stateRender.attackState = 0;
+    if (peep->stateRender.deathState == 1)
     {
         return;
     }
     if ((peep->minDistPeep_Q16 >> 16) < 5)
     {
-        deltax_Q16 = peep->minDistPeep->map_x_Q15_16 - peep->map_x_Q15_16;
-        deltay_Q16 = peep->minDistPeep->map_y_Q15_16 - peep->map_y_Q15_16;
+        deltax_Q16 = peep->minDistPeep->stateRender.map_x_Q15_16 - peep->stateRender.map_x_Q15_16;
+        deltay_Q16 = peep->minDistPeep->stateRender.map_y_Q15_16 - peep->stateRender.map_y_Q15_16;
         cl_int len_Q16;
         normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
-        peep->xv_Q15_16 = -deltax_Q16/8;
-        peep->yv_Q15_16 = -deltay_Q16/8;
+        peep->stateSim.xv_Q15_16 = -deltax_Q16/8;
+        peep->stateSim.yv_Q15_16 = -deltay_Q16/8;
 
-        if (peep->minDistPeep->faction != peep->faction && (peep->minDistPeep->deathState != 1))
+        if (peep->minDistPeep->stateRender.faction != peep->stateRender.faction && (peep->minDistPeep->stateRender.deathState != 1))
         {
-            peep->attackState = 1;
-            peep->health -= RandomRange(peep->minDistPeep->map_x_Q15_16, 0, 5);
+            peep->stateRender.attackState = 1;
+            peep->stateRender.health -= RandomRange(peep->minDistPeep->stateRender.map_x_Q15_16, 0, 5);
 
-            if (peep->health <= 0)
+            if (peep->stateRender.health <= 0)
             {
-                peep->attackState = 0;
-                peep->xv_Q15_16 = 0;
-                peep->yv_Q15_16 = 0;
+                peep->stateRender.attackState = 0;
+                peep->stateSim.xv_Q15_16 = 0;
+                peep->stateSim.yv_Q15_16 = 0;
             }
         }
     }
     else
     {
-        peep->attackState = 0;
+        peep->stateRender.attackState = 0;
         if ((len_Q16 >> 16) < 2)
         {
-            peep->xv_Q15_16 = 0;
-            peep->yv_Q15_16 = 0;
+            peep->stateSim.xv_Q15_16 = 0;
+            peep->stateSim.yv_Q15_16 = 0;
         }
         else
         {
-            peep->xv_Q15_16 = deltax_Q16;
-            peep->yv_Q15_16 = deltay_Q16;
+            peep->stateSim.xv_Q15_16 = deltax_Q16;
+            peep->stateSim.yv_Q15_16 = deltay_Q16;
         }
     }
 
@@ -88,27 +82,11 @@ void RobotUpdate(Peep* peep)
 
 }
 
-void PeepUpdateGravity(__global GameState* gameState, Peep* peep)
-{
-
-    for (int p = 0; p < MAX_PEEPS; p++)
-    {
-        Peep* otherPeep = &gameState->peeps[p];
-        if (otherPeep != peep) {
-            ForceInteraction(peep, otherPeep);
-        }
-
-    }
-}
-
-
-
-
 
 void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
 {
-    cl_int x = ((peep->map_x_Q15_16 >> 16) / (SECTOR_SIZE));
-    cl_int y = ((peep->map_y_Q15_16 >> 16) / (SECTOR_SIZE));
+    cl_int x = ((peep->stateRender.map_x_Q15_16 >> 16) / (SECTOR_SIZE));
+    cl_int y = ((peep->stateRender.map_y_Q15_16 >> 16) / (SECTOR_SIZE));
 
     //clamp
     if (x < -SQRT_MAXSECTORS / 2)
@@ -174,14 +152,14 @@ void AssignPeepToSector_Insert(GameState* gameState, Peep* peep)
 
 void PeepPreUpdate(Peep* peep)
 {
-    peep->map_x_Q15_16 += peep->xv_Q15_16;
-    peep->map_y_Q15_16 += peep->yv_Q15_16;
+    peep->stateRender.map_x_Q15_16 += peep->stateSim.xv_Q15_16;
+    peep->stateRender.map_y_Q15_16 += peep->stateSim.yv_Q15_16;
 
-    peep->netForcex_Q16 = 0;
-    peep->netForcey_Q16 = 0;
+    peep->stateSim.netForcex_Q16 = 0;
+    peep->stateSim.netForcey_Q16 = 0;
 
-    if (peep->health <= 0)
-        peep->deathState = 1;
+    if (peep->stateRender.health <= 0)
+        peep->stateRender.deathState = 1;
 }
 
 void PeepUpdate(__global GameState* gameState, Peep* peep)
@@ -248,32 +226,33 @@ __kernel void game_init_single(__global GameState* gameState)
     printf("Sectors Initialized.\n");
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
-        gameState->peeps[p].map_x_Q15_16 = RandomRange(p,-1000, 1000) << 16;
-        gameState->peeps[p].map_y_Q15_16 = RandomRange(p+1,-1000, 1000) << 16;
+        gameState->peeps[p].stateRender.map_x_Q15_16 = RandomRange(p,-1000, 1000) << 16;
+        gameState->peeps[p].stateRender.map_y_Q15_16 = RandomRange(p+1,-1000, 1000) << 16;
+        gameState->peeps[p].stateRender.attackState = 0;
+        gameState->peeps[p].stateRender.health = 10;
+        gameState->peeps[p].stateRender.deathState = 0;
 
-        gameState->peeps[p].xv_Q15_16 = RandomRange(p,-4, 4) << 16;
-        gameState->peeps[p].yv_Q15_16 = RandomRange(p+1,-4, 4) << 16;
-        gameState->peeps[p].netForcex_Q16 = 0;
-        gameState->peeps[p].netForcey_Q16 = 0;
+        gameState->peeps[p].stateSim.xv_Q15_16 = RandomRange(p,-4, 4) << 16;
+        gameState->peeps[p].stateSim.yv_Q15_16 = RandomRange(p+1,-4, 4) << 16;
+        gameState->peeps[p].stateSim.netForcex_Q16 = 0;
+        gameState->peeps[p].stateSim.netForcey_Q16 = 0;
         gameState->peeps[p].minDistPeep = NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
         gameState->peeps[p].mapSector = NULL;
         gameState->peeps[p].mapSector_pending = NULL;
         gameState->peeps[p].nextSectorPeep = NULL;
         gameState->peeps[p].prevSectorPeep = NULL;
-        gameState->peeps[p].target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
-        gameState->peeps[p].target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
-        gameState->peeps[p].attackState = 0;
-        gameState->peeps[p].health = 10;
-        gameState->peeps[p].deathState = 0;
+        gameState->peeps[p].stateSim.target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
+        gameState->peeps[p].stateSim.target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
 
-        if (gameState->peeps[p].map_x_Q15_16 >> 16 < 0)
+
+        if (gameState->peeps[p].stateRender.map_x_Q15_16 >> 16 < 0)
         {
-            gameState->peeps[p].faction = 0;
+            gameState->peeps[p].stateRender.faction = 0;
         }
         else
         {
-            gameState->peeps[p].faction = 1;
+            gameState->peeps[p].stateRender.faction = 1;
         }
 
 

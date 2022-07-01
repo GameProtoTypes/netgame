@@ -84,7 +84,7 @@ int32_t main(int32_t argc, char* args[])
     uint64_t timerStartMs = SDL_GetTicks64();
 
 
-    std::shared_ptr<ClientSideClientState> client = std::make_shared<ClientSideClientState>();
+    std::shared_ptr<RenderClientState> client = std::make_shared<RenderClientState>();
 
     while (!quit)
     {
@@ -318,13 +318,13 @@ int32_t main(int32_t argc, char* args[])
                 {
                     Peep* p = &gameState->peeps[pi];
 
-                    if (p->faction == actionTracking->clientId)
-                        if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
-                            && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                    if (p->stateRender.faction == actionTracking->clientId)
+                        if ((p->stateRender.map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
+                            && (p->stateRender.map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                         {
 
-                            if ((p->map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
-                                && (p->map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
+                            if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
+                                && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
                             {
 
                                 if (client->selectedPeepsLastIdx != OFFSET_NULL)
@@ -350,8 +350,8 @@ int32_t main(int32_t argc, char* args[])
                 while (curPeepIdx != OFFSET_NULL)
                 {
                     Peep* curPeep = &gameState->peeps[curPeepIdx];
-                    curPeep->target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
-                    curPeep->target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+                    curPeep->stateSim.target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
+                    curPeep->stateSim.target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
 
                     curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
                 }
@@ -493,7 +493,7 @@ int32_t main(int32_t argc, char* args[])
 
 
             float brightFactor = 0.6f;
-            if (p->faction == 1)
+            if (p->stateRender.faction == 1)
             {
                 gameGraphics.colors[pi].r = 0.0f;
                 gameGraphics.colors[pi].g = 1.0f;
@@ -511,14 +511,14 @@ int32_t main(int32_t argc, char* args[])
                 brightFactor = 1.0f;
                 peepRenderSupport[pi].render_selectedByClient = 0;
             }
-            if (p->deathState == 1)
+            if (p->stateRender.deathState == 1)
             {
                 brightFactor = 0.6f;
                 gameGraphics.colors[pi].r = 0.5f;
                 gameGraphics.colors[pi].g = 0.5f;
                 gameGraphics.colors[pi].b = 0.5f;
             }
-            if (p->attackState == 1)
+            if (p->stateRender.attackState == 1)
             {
                 brightFactor = 1.0f;
                 gameGraphics.colors[pi].r = 1.0f;
@@ -531,11 +531,11 @@ int32_t main(int32_t argc, char* args[])
 
             gameGraphics.colors[pi] = gameGraphics.colors[pi] * brightFactor;
 
-            float x = float(p->map_x_Q15_16) / float(1 << 16);
-            float y = float(p->map_y_Q15_16) / float(1 << 16);
+            float x = float(p->stateRender.map_x_Q15_16) / float(1 << 16);
+            float y = float(p->stateRender.map_y_Q15_16) / float(1 << 16);
 
-            float xv = p->xv_Q15_16 / float(1 << 16);
-            float yv = p->yv_Q15_16 / float(1 << 16);
+            float xv = p->stateSim.xv_Q15_16 / float(1 << 16);
+            float yv = p->stateSim.yv_Q15_16 / float(1 << 16);
 
             float angle = atan2f(yv, xv);
 
