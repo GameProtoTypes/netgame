@@ -8,14 +8,14 @@ layout(location = 3) in vec3 InstanceColor;
 out vec3 Color;
 
 uniform float Scale;
-uniform vec2 PositionOffset;
+uniform mat4 WorldToScreenTransform;
 
 
 void main()
 {
 
 
-   gl_Position = mat4(1.0) * vec4(Scale*((InstanceWorldPos + VertexPosition.xy) + PositionOffset/Scale), 0.0, 1.0);
+   gl_Position = WorldToScreenTransform * vec4((InstanceWorldPos + VertexPosition.xy), 0.0, 1.0);
    Color =InstanceColor;
 
 }

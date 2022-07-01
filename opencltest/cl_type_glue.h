@@ -1,4 +1,9 @@
 #pragma once
+
+//typedefs to use cL_**** types and _t types from host api direct in opencl c
+
+
+
 typedef char        cl_char;
 typedef uchar        cl_uchar;
 typedef short       cl_short;
@@ -11,6 +16,23 @@ typedef ulong        cl_ulong;
 typedef half       cl_half;
 typedef float                   cl_float;
 typedef double                  cl_double;
+
+typedef float2 cl_float2;
+typedef float3 cl_float3;
+typedef float4 cl_float4;
+
+typedef int2 cl_int2;
+typedef int3 cl_int3;
+typedef int4 cl_int4;
+
+typedef long2 cl_long2;
+typedef long3 cl_long3;
+typedef long4 cl_long4;
+
+
+
+
+
 
 
 

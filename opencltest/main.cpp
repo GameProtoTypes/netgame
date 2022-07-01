@@ -27,6 +27,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtx/transform2.hpp>
 #include <gtx/string_cast.hpp>
+#include "glmHelpers.h"
+
 
 #include "GameNetworking.h"
 #include "GameGraphics.h"
@@ -187,6 +189,8 @@ int32_t main(int32_t argc, char* args[])
         SDL_GetMouseState(&mousex, &mousey);
         client->mousex = mousex;
         client->mousey = mousey;
+        client->viewFrameDelta.x = 0;
+        client->viewFrameDelta.y = 0;
         if (client->mouseSecondaryPressed)
         {
             client->mouse_dragBeginx = mousex;
@@ -202,25 +206,41 @@ int32_t main(int32_t argc, char* args[])
 
         if (client->mouseSecondaryDown)
         {
-            client->viewX = client->view_beginX + (client->mousex - client->mouse_dragBeginx);
-            client->viewY = client->view_beginY + (client->mousey - client->mouse_dragBeginy);
+            client->viewFrameDelta.x = (client->mousex - client->mouse_dragBeginx);
+            client->viewFrameDelta.y = (client->mousey - client->mouse_dragBeginy);
+            client->viewX = client->view_beginX + client->viewFrameDelta.x;
+            client->viewY = client->view_beginY + client->viewFrameDelta.y;
+            
         }
-            
-            
+        
+          
 
 
         //render
-        static float viewScale = 0.02f;
-            
-        ImGui::SliderFloat("Zoom", &viewScale, 0.001f,0.02f);
-
+        static float viewScale = 0.002f;
+        viewScale = client->mousescroll* client->mousescroll*0.01f;
+        viewScale = glm::clamp(viewScale, 0.001f, 0.2f);
+        //ImGui::SliderFloat("Zoom", &viewScale, 0.001f, 0.2f);
+        glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
+           
+        
         glm::vec3 position = glm::vec3((2.0f* client->viewX) / gameGraphics.SCREEN_WIDTH, ( - 2.0f * client->viewY) / gameGraphics.SCREEN_HEIGHT, 0.0f);
         glm::mat4 view = glm::mat4(1.0f);   
-        glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
-            
-        view *= glm::scale(glm::mat4(1.0f), scaleVec);
+        const float a = 2000.0f;
 
-        view *= glm::translate(glm::mat4(1.0f), position / viewScale);
+        client->worldCameraPos.x += ( 1000.0f * client->viewFrameDelta.x* scaleVec.x) / gameGraphics.SCREEN_WIDTH;
+        client->worldCameraPos.y += ( 1000.0f * client->viewFrameDelta.y * scaleVec.x) / gameGraphics.SCREEN_HEIGHT;
+        view = glm::ortho(client->worldCameraPos.x - scaleVec.x * a,
+            client->worldCameraPos.x + scaleVec.x * a,
+            client->worldCameraPos.y + scaleVec.y * a,
+            client->worldCameraPos.y - scaleVec.y * a);
+        
+
+
+        //glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), position/scaleVec);
+        //glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scaleVec);
+
+        //view = scaleMat*translationMat;
 
         
         glm::mat4 mouseWorldPos(1.0f);
@@ -448,8 +468,9 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameGraphics.pPeepShadProgram->Use();
-        gameGraphics.pPeepShadProgram->SetUniform_Float("Scale", viewScale);
-        gameGraphics.pPeepShadProgram->SetUniform_Vec2("PositionOffset", glm::vec2(position.x,position.y));
+        
+        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
 
 
         cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;

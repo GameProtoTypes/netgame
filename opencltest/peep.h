@@ -150,6 +150,9 @@ struct ClientSideClientState {
 	cl_float view_beginX;
 	cl_float view_beginY;
 	cl_float viewScale;
+	cl_float2 viewFrameDelta;
+
+	cl_float2 worldCameraPos;
 };
 struct SynchronizedClientState {
 

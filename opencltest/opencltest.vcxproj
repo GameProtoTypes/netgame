@@ -327,6 +327,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.cpp" />
+    <ClInclude Include="glmHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\ZERO_CHECK.vcxproj">
