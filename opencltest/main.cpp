@@ -218,10 +218,11 @@ int32_t main(int32_t argc, char* args[])
         glm::mat4 view = glm::mat4(1.0f);   
         glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
             
+        view *= glm::scale(glm::mat4(1.0f), scaleVec);
 
-        view = glm::scale(view, scaleVec);
-        view = glm::translate(view,position/ viewScale);
-            
+        view *= glm::translate(glm::mat4(1.0f), position / viewScale);
+
+        
         glm::mat4 mouseWorldPos(1.0f);
         glm::mat4 mouseWorldPosEnd(1.0f);
         glm::vec4 mouseScreenCoords = glm::vec4(2.0f * (float(mousex) / gameGraphics.SCREEN_WIDTH) - 1.0, -2.0f * (float(mousey) / gameGraphics.SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
@@ -297,7 +298,7 @@ int32_t main(int32_t argc, char* args[])
                 {
                     Peep* p = &gameState->peeps[pi];
 
-                    //if (p->faction == actionTracking->clientId)
+                    if (p->faction == actionTracking->clientId)
                         if ((p->map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
                             && (p->map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
                         {
@@ -447,8 +448,8 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameGraphics.pPeepShadProgram->Use();
-        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
-
+        gameGraphics.pPeepShadProgram->SetUniform_Float("Scale", viewScale);
+        gameGraphics.pPeepShadProgram->SetUniform_Vec2("PositionOffset", glm::vec2(position.x,position.y));
 
 
         cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;

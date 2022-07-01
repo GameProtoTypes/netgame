@@ -14,7 +14,8 @@ public:
 
 	void SetUniform_Mat4(std::string name, glm::mat4& val);
 	void SetUniform_Vec3(std::string name, glm::vec3& val);
-
+	void SetUniform_Vec2(std::string name, glm::vec2& val);
+	void SetUniform_Float(std::string name, float val);
 
 	GLuint ProgramID(){ return programID; }
 

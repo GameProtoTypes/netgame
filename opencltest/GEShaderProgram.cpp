@@ -80,6 +80,17 @@ void GEShaderProgram::SetUniform_Mat4(std::string name, glm::mat4& val)
 			&val[0][0]);
 	}
 }
+void GEShaderProgram::SetUniform_Float(std::string name, float val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
+
+	if (location >= 0)
+	{
+		glUniform1f(location, val);
+	}
+}
+
 
 void GEShaderProgram::SetUniform_Vec3(std::string name, glm::vec3& val)
 {
@@ -89,6 +100,18 @@ void GEShaderProgram::SetUniform_Vec3(std::string name, glm::vec3& val)
 	if (location >= 0)
 	{
 		glUniform3f(location, val.x,val.y,val.z);
+
+	}
+
+}
+void GEShaderProgram::SetUniform_Vec2(std::string name, glm::vec2& val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
+
+	if (location >= 0)
+	{
+		glUniform2f(location, val.x, val.y);
 
 	}
 
