@@ -16,7 +16,7 @@
 #endif
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*16)
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -166,13 +166,11 @@ struct GameState {
 	cl_int mapWidth;
 	cl_int mapHeight;
 
-
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
 
 	ActionWrap clientActions[32];
 	cl_int numActions;
-
 
 	cl_uint tickIdx;
 	int32_t pauseState;
