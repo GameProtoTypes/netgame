@@ -9,7 +9,10 @@
 
 #include "glew.h"
 
-GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState)
+#include "GameGraphics.h"
+
+
+GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphics* graphics)
 {
 
     // Load the update_kernel source code into the array source_str
@@ -41,27 +44,42 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState)
     ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
-        ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
+    ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
 
-        // Create an OpenCL context
-         context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
-    CL_HOST_ERROR_CHECK(ret)
-
-
-
-
-        // Create a command queue
-        command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
-    CL_HOST_ERROR_CHECK(ret)
-
-        // Create memory buffers on the device for each vector 
-        //cl_mem peeps_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, LIST_SIZE * sizeof(Peep), nullptr, &ret);
-         gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
+    // Create an OpenCL context
+    std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext);
+    cl_context_properties props[] =
+    { 
+        CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),
+        CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
+        CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0],
+        0
+    };
+    context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
 
-        printf("before building\n");
+
+    // Create a command queue
+    command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+    // Create memory buffers on the device
+    gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+
+
+
+
+    graphics_peeps_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->instanceVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+
+
+
+    printf("Building CL Programs...\n");
     // Create a program from the update_kernel source
      program = clCreateProgramWithSource(context, 1,
         (const char**)&source_str, (const size_t*)&source_size, &ret);
@@ -88,7 +106,7 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState)
     }
     CL_HOST_ERROR_CHECK(ret)
 
-        printf("program built\n");
+        printf("programs built\n");
 
 
     cl_ulong localMemSize;
@@ -125,7 +143,7 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState)
     ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-
+    ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
     //get stats
     cl_ulong usedLocalMemSize;
@@ -155,6 +173,9 @@ GameGPUCompute::~GameGPUCompute()
 
     ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
+
     ret = clReleaseCommandQueue(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseContext(context); CL_HOST_ERROR_CHECK(ret)
 }
@@ -201,12 +222,18 @@ void GameGPUCompute::Stage1()
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
-
-    ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
-        WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
+    ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
 
+        ret = clFinish(command_queue);
+        CL_HOST_ERROR_CHECK(ret)
 
+        ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
+            WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
+        CL_HOST_ERROR_CHECK(ret)
+
+    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)

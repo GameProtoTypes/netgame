@@ -226,6 +226,7 @@ __kernel void game_init_single(__global GameState* gameState)
     printf("Sectors Initialized.\n");
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
+        gameState->peeps[p].Idx = p;
         gameState->peeps[p].stateRender.map_x_Q15_16 = RandomRange(p,-1000, 1000) << 16;
         gameState->peeps[p].stateRender.map_y_Q15_16 = RandomRange(p+1,-1000, 1000) << 16;
         gameState->peeps[p].stateRender.attackState = 0;
@@ -282,15 +283,63 @@ __kernel void game_init_single(__global GameState* gameState)
 }
 
 
+void PeepDraw(Peep* peep, __global float* peepVBOBuffer)
+{
+    float3 drawColor;
+
+    float brightFactor = 0.6f;
+    if (peep->stateRender.faction == 1)
+    {
+        drawColor.x = 0.0f;
+        drawColor.y = 1.0f;
+        drawColor.z = 1.0f;
+    }
+    else
+    {
+        drawColor.x = 1.0f;
+        drawColor.y = 0.0f;
+        drawColor.z = 1.0f;
+    }
+
+    //if (peepRenderSupport[pi].render_selectedByClient)
+    //{
+    //    brightFactor = 1.0f;
+    //    peepRenderSupport[pi].render_selectedByClient = 0;
+    //}
+    if (peep->stateRender.deathState == 1)
+    {
+        brightFactor = 0.6f;
+        drawColor.x = 0.5f;
+        drawColor.y = 0.5f;
+        drawColor.z = 0.5f;
+    }
+    if (peep->stateRender.attackState == 1)
+    {
+        brightFactor = 1.0f;
+        drawColor.x = 1.0f;
+        drawColor.y = 1.0f;
+        drawColor.z = 1.0f;
+    }
 
 
-__kernel void game_update(__global const GameState* gameState) {
+
+    peepVBOBuffer[peep->Idx * 5 + 0] = (float)((float)peep->stateRender.map_x_Q15_16 / (1 << 16));
+    peepVBOBuffer[peep->Idx * 5 + 1] = (float)((float)peep->stateRender.map_y_Q15_16 / (1 << 16));
+
+    peepVBOBuffer[peep->Idx * 5 + 2] = drawColor.x;
+    peepVBOBuffer[peep->Idx * 5 + 3] = drawColor.y;
+    peepVBOBuffer[peep->Idx * 5 + 4] = drawColor.z;
+}
+
+__kernel void game_update(__global const GameState* gameState, __global float* peepVBOBuffer) {
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
 
     
-    PeepUpdate(gameState, &gameState->peeps[globalid]);
+    Peep* p = &gameState->peeps[globalid];
+    PeepUpdate(gameState, p);
+    PeepDraw(p, peepVBOBuffer);
 }
 
 

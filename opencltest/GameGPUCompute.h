@@ -4,7 +4,10 @@
 #include <OpenCL/opencl.h>
 #else
 #include <CL/cl.h>
+#include <CL/cl_gl.h>
+#include <CL/cl_gl_ext.h>
 #endif
+
 
 #include <memory>
 
@@ -13,13 +16,13 @@
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
 #define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
-
+class GameGraphics;
 class GameGPUCompute
 {
 public:
 
 
-	GameGPUCompute(std::shared_ptr<GameState> gameState);
+	GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphics* graphics);
 	~GameGPUCompute();
 
 	void RunInitCompute();
@@ -57,6 +60,7 @@ public:
 
 
 	cl_mem gamestate_mem_obj;
+	cl_mem graphics_peeps_mem_obj;
 
 	std::shared_ptr<GameState> gameState;
 

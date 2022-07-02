@@ -16,7 +16,7 @@
 #endif
 
 
-#define MAX_PEEPS (1024*16)
+#define MAX_PEEPS (1024*32)
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -69,6 +69,7 @@ struct PeepState_SimLevel
 
 
 struct Peep {
+	cl_uint Idx;
 
 	struct PeepState_RenderLevel stateRender;
 	struct PeepState_SimLevel stateSim;
@@ -184,9 +185,4 @@ struct GameState {
 	cl_uint tickIdx;
 	int32_t pauseState;
 }typedef GameState;
-
-
-struct GameStateRenderData {
-	
-}typedef GameStateRenderData;
 

@@ -61,16 +61,18 @@ GameGraphics::GameGraphics()
         }
 
 
-        SDL_GL_CreateContext(gWindow);
+        sdlGLContext = SDL_GL_CreateContext(gWindow);
+        std::cout << " SDL GL CONTEXT ERRORS: " << SDL_GetError() << std::endl;
         //swap buffer at the monitors rate
         SDL_GL_SetSwapInterval(1);
-
 
 
         //GLEW is an OpenGL Loading Library used to reach GL functions
         //Sets all functions available
 
         glewInit();
+
+
     }
 
     // Setup Dear ImGui context
@@ -189,6 +191,7 @@ GameGraphics::GameGraphics()
     worldPositions = new glm::vec2[MAX_PEEPS];
     colors = new glm::vec3[MAX_PEEPS];
 
+    glFinish();
 }
 
 GameGraphics::~GameGraphics()

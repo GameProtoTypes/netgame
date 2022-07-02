@@ -5,6 +5,10 @@
 #include <SDL.h>
 #include "SDL_opengl.h"
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -31,6 +35,8 @@ public:
 	void BeginDraw();
 
 	void Swap();
+
+	SDL_GLContext sdlGLContext;
 
 	SDL_Window* gWindow = nullptr;
 

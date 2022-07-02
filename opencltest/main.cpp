@@ -60,7 +60,7 @@ int32_t main(int32_t argc, char* args[])
 
     std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
 
-    GameGPUCompute gameCompute(gameState);
+    GameGPUCompute gameCompute(gameState, &gameGraphics);
 
     GameNetworking gameNetworking(gameState);
         
@@ -91,7 +91,8 @@ int32_t main(int32_t argc, char* args[])
         timerStartMs = SDL_GetTicks64();
 
         gameGraphics.BeginDraw();
-            
+        
+
         gameCompute.Stage1();
 
         
@@ -486,7 +487,7 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-
+        /*
         for (int32_t pi = 0; pi < MAX_PEEPS; pi++)
         {
             Peep* p = &gameState->peeps[pi];
@@ -556,7 +557,7 @@ int32_t main(int32_t argc, char* args[])
 
         }
 
-
+        */
         //draw all peeps
         glBindVertexArray(gameGraphics.quadVAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
