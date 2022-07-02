@@ -184,5 +184,8 @@ struct GameState {
 
 	cl_uint tickIdx;
 	int32_t pauseState;
+
+
+
 }typedef GameState;
 

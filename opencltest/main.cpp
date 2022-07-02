@@ -465,9 +465,6 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-
-
-
         gameGraphics.pPeepShadProgram->Use();
         
         gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
@@ -487,77 +484,11 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        /*
-        for (int32_t pi = 0; pi < MAX_PEEPS; pi++)
-        {
-            Peep* p = &gameState->peeps[pi];
-
-
-            float brightFactor = 0.6f;
-            if (p->stateRender.faction == 1)
-            {
-                gameGraphics.colors[pi].r = 0.0f;
-                gameGraphics.colors[pi].g = 1.0f;
-                gameGraphics.colors[pi].b = 1.0f;
-            }
-            else
-            {
-                gameGraphics.colors[pi].r = 1.0f;
-                gameGraphics.colors[pi].g = 0.0f;
-                gameGraphics.colors[pi].b = 1.0f;
-            }
-
-            if (peepRenderSupport[pi].render_selectedByClient)
-            {
-                brightFactor = 1.0f;
-                peepRenderSupport[pi].render_selectedByClient = 0;
-            }
-            if (p->stateRender.deathState == 1)
-            {
-                brightFactor = 0.6f;
-                gameGraphics.colors[pi].r = 0.5f;
-                gameGraphics.colors[pi].g = 0.5f;
-                gameGraphics.colors[pi].b = 0.5f;
-            }
-            if (p->stateRender.attackState == 1)
-            {
-                brightFactor = 1.0f;
-                gameGraphics.colors[pi].r = 1.0f;
-                gameGraphics.colors[pi].g = 1.0f;
-                gameGraphics.colors[pi].b = 1.0f;
-            }
 
 
 
 
-            gameGraphics.colors[pi] = gameGraphics.colors[pi] * brightFactor;
 
-            float x = float(p->stateRender.map_x_Q15_16) / float(1 << 16);
-            float y = float(p->stateRender.map_y_Q15_16) / float(1 << 16);
-
-            float xv = p->stateSim.xv_Q15_16 / float(1 << 16);
-            float yv = p->stateSim.yv_Q15_16 / float(1 << 16);
-
-            float angle = atan2f(yv, xv);
-
-
-            gameGraphics.worldPositions[pi] = glm::vec2(x, y);
-
-
-            glm::mat4 localMatrix = glm::mat4(1.0f);
-            localMatrix = glm::translate(localMatrix, glm::vec3(x, y, 0));
-            localMatrix = glm::rotate(localMatrix, angle * (180.0f / 3.1415f) - 90.0f, glm::vec3(0, 0, 1));
-
-            glm::vec2 location2D = glm::vec2(x, y);
-            glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.instanceVBO);
-            int32_t stride = (sizeof(glm::vec2) + sizeof(glm::vec3));
-            glBufferSubData(GL_ARRAY_BUFFER, pi * stride, sizeof(glm::vec2), &location2D.x);
-            glBufferSubData(GL_ARRAY_BUFFER, pi * stride + sizeof(glm::vec2), sizeof(glm::vec3), &gameGraphics.colors[pi].r);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        }
-
-        */
         //draw all peeps
         glBindVertexArray(gameGraphics.quadVAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
