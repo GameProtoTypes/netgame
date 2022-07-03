@@ -22,6 +22,8 @@
 
 #include "peep.h"
 
+#include "GameGPUCompute.h"
+
 #define GAMESERVERPORT (50010)
 
 #define MAX_HOST_CONNECTIONS 256 
@@ -39,9 +41,11 @@
 class GameNetworking
 {
 public:
-	GameNetworking(std::shared_ptr<GameState> gameState) {
+	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGPUCompute* gameCompute) {
 	
 		this->gameState = gameState;
+		this->gameStateB = gameStateB;
+		this->gameCompute = gameCompute;
 	}
 	~GameNetworking() {}
 
@@ -169,24 +173,28 @@ public:
 
 	std::string HostConsolePrint() { std::string str;
 		char buff[100];
-		snprintf(buff, sizeof(buff), "[HOST (tickIdx: %d)] ", gameState->tickIdx);
+		snprintf(buff, sizeof(buff), "[HOST (tickIdx: %d)] ", gameStateB->tickIdx);
 		return buff;
 	}
 	std::string ClientConsolePrint() {
 		char buff[100];
-		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameState->tickIdx);
+		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameStateB->tickIdx);
 		return buff;
 	}
 
 	SLNet::RakNetGUID hostPeer;
 
+	GameGPUCompute* gameCompute = nullptr;
 
 	std::shared_ptr<GameState> gameState;
+	std::shared_ptr<GameStateB> gameStateB;
+
 	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
 	std::shared_ptr<GameState> HOST_gameStateTransfer;
 	
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;
+		std::shared_ptr<GameStateB> gameStateB;
 		uint64_t checksum = static_cast<uint64_t>( -1 );
 		
 	};

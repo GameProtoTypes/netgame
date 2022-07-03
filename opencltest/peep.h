@@ -16,7 +16,7 @@
 #endif
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*16)
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -168,6 +168,8 @@ struct SynchronizedClientState {
 
 	cl_int connected;
 	cl_uint selectedPeepsLastIdx;
+
+	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 } typedef SynchronizedClientState;
 
 struct GameState {
@@ -178,14 +180,16 @@ struct GameState {
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
+}typedef GameState;
 
+struct GameStateB {
 	ActionWrap clientActions[32];
 	cl_int numActions;
+
+	cl_uint clientId;
 
 	cl_uint tickIdx;
 	int32_t pauseState;
 
-
-
-}typedef GameState;
+}typedef GameStateB;
 

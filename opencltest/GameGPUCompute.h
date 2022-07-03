@@ -22,14 +22,18 @@ class GameGPUCompute
 public:
 
 
-	GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphics* graphics);
+	GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics);
 	~GameGPUCompute();
 
 	void RunInitCompute();
 
 	void Stage1();
 
-	void WriteGameState();
+	void ReadFullGameState();
+	void WriteFullGameState();
+
+
+	void WriteGameStateB();
 
 	cl_context context;
 
@@ -40,6 +44,7 @@ public:
 	cl_kernel preupdate_kernel;
 	cl_kernel preupdate_kernel_2;
 	cl_kernel update_kernel;
+	cl_kernel action_kernel;
 	cl_kernel init_kernel;
 
 
@@ -47,6 +52,7 @@ public:
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updateEvent;    
+	cl_event actionEvent;
 	cl_event readEvent;
 	cl_event writeEvent;    
 	
@@ -60,9 +66,12 @@ public:
 
 
 	cl_mem gamestate_mem_obj;
+	cl_mem gamestateB_mem_obj;
+
 	cl_mem graphics_peeps_mem_obj;
 
 	std::shared_ptr<GameState> gameState;
+	std::shared_ptr<GameStateB> gameStateB;
 
 	bool errorState = false;
 };

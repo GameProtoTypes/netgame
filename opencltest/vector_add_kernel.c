@@ -202,15 +202,90 @@ void PeepUpdate(__global GameState* gameState, Peep* peep)
  
 
 }
+__kernel void game_apply_actions(__global GameState* gameState, __global GameStateB* gameStateB)
+{
+
+    cl_uint curPeepIdx = gameState->clientStates[gameStateB->clientId].selectedPeepsLastIdx;
+    PeepRenderSupport peepRenderSupport[MAX_PEEPS];
+    while (curPeepIdx != OFFSET_NULL)
+    {
+        Peep* p = &gameState->peeps[curPeepIdx];
+
+        gameState->clientStates[gameStateB->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
+
+        curPeepIdx = p->prevSelectionPeepIdx[gameStateB->clientId];
+    }
 
 
 
-__kernel void game_init_single(__global GameState* gameState) 
+
+    //apply turns
+    for (int32_t a = 0; a < gameStateB->numActions; a++)
+    {
+        ClientAction* clientAction = &gameStateB->clientActions[a].action;
+        ActionTracking* actionTracking = &gameStateB->clientActions[a].tracking;
+        cl_uchar cliId = actionTracking->clientId;
+        SynchronizedClientState* client = &gameState->clientStates[cliId];
+
+        if (clientAction->action_DoSelect)
+        {
+            client->selectedPeepsLastIdx = OFFSET_NULL;
+            for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
+            {
+                Peep* p = &gameState->peeps[pi];
+
+                if (p->stateRender.faction == actionTracking->clientId)
+                    if ((p->stateRender.map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
+                        && (p->stateRender.map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                    {
+
+                        if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
+                            && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
+                        {
+
+                            if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                            {
+                                gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
+                                p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
+                                p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                            }
+                            else
+                            {
+                                p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                            }
+                            client->selectedPeepsLastIdx = pi;
+                        }
+                    }
+            }
+
+        }
+        else if (clientAction->action_CommandToLocation)
+        {
+            cl_uint curPeepIdx = client->selectedPeepsLastIdx;
+            while (curPeepIdx != OFFSET_NULL)
+            {
+                Peep* curPeep = &gameState->peeps[curPeepIdx];
+                curPeep->stateSim.target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
+                curPeep->stateSim.target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+
+                curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
+            }
+
+
+        }
+    }
+
+    gameStateB->numActions = 0;
+}
+
+
+__kernel void game_init_single(__global GameState* gameState, __global GameStateB* gameStateB)
 {
     printf("Game Initializing...\n");
 
     gameState->numClients = 1;
-    gameState->pauseState = 0;
+    gameStateB->pauseState = 0;
 
 
     for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
@@ -283,7 +358,7 @@ __kernel void game_init_single(__global GameState* gameState)
 }
 
 
-void PeepDraw(Peep* peep, __global float* peepVBOBuffer)
+void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global float* peepVBOBuffer)
 {
     float3 drawColor;
 
@@ -301,11 +376,11 @@ void PeepDraw(Peep* peep, __global float* peepVBOBuffer)
         drawColor.z = 1.0f;
     }
 
-    //if (peepRenderSupport[pi].render_selectedByClient)
-    //{
-    //    brightFactor = 1.0f;
-    //    peepRenderSupport[pi].render_selectedByClient = 0;
-    //}
+    if (gameState->clientStates[gameStateB->clientId].peepRenderSupport[peep->Idx].render_selectedByClient)
+    {
+        brightFactor = 1.0f;
+        gameState->clientStates[gameStateB->clientId].peepRenderSupport[peep->Idx].render_selectedByClient = 0;
+    }
     if (peep->stateRender.deathState == 1)
     {
         brightFactor = 0.6f;
@@ -326,12 +401,12 @@ void PeepDraw(Peep* peep, __global float* peepVBOBuffer)
     peepVBOBuffer[peep->Idx * 5 + 0] = (float)((float)peep->stateRender.map_x_Q15_16 / (1 << 16));
     peepVBOBuffer[peep->Idx * 5 + 1] = (float)((float)peep->stateRender.map_y_Q15_16 / (1 << 16));
 
-    peepVBOBuffer[peep->Idx * 5 + 2] = drawColor.x;
-    peepVBOBuffer[peep->Idx * 5 + 3] = drawColor.y;
-    peepVBOBuffer[peep->Idx * 5 + 4] = drawColor.z;
+    peepVBOBuffer[peep->Idx * 5 + 2] = drawColor.x* brightFactor;
+    peepVBOBuffer[peep->Idx * 5 + 3] = drawColor.y * brightFactor;
+    peepVBOBuffer[peep->Idx * 5 + 4] = drawColor.z * brightFactor;
 }
 
-__kernel void game_update(__global const GameState* gameState, __global float* peepVBOBuffer) {
+__kernel void game_update(__global GameState* gameState, __global GameStateB* gameStateB,  __global float* peepVBOBuffer) {
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
@@ -339,7 +414,7 @@ __kernel void game_update(__global const GameState* gameState, __global float* p
     
     Peep* p = &gameState->peeps[globalid];
     PeepUpdate(gameState, p);
-    PeepDraw(p, peepVBOBuffer);
+    PeepDraw(gameState, gameStateB, p, peepVBOBuffer);
 }
 
 

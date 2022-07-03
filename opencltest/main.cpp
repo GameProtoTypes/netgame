@@ -59,10 +59,11 @@ int32_t main(int32_t argc, char* args[])
     GameGraphics gameGraphics;
 
     std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
+    std::shared_ptr<GameStateB> gameStateB = std::make_shared<GameStateB>();
 
-    GameGPUCompute gameCompute(gameState, &gameGraphics);
+    GameGPUCompute gameCompute(gameState, gameStateB, &gameGraphics);
 
-    GameNetworking gameNetworking(gameState);
+    GameNetworking gameNetworking(gameState, gameStateB, &gameCompute);
         
     gameNetworking.Init();
     gameNetworking.Update();
@@ -77,7 +78,7 @@ int32_t main(int32_t argc, char* args[])
 
     gameState->mapHeight = 2000;
     gameState->mapWidth = 2000;
-    gameState->tickIdx = 0;
+    gameStateB->tickIdx = 0;
 
     std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
 
@@ -304,64 +305,7 @@ int32_t main(int32_t argc, char* args[])
 
         GSCS(C)
             
-        //apply turns
-        for (int32_t a = 0; a < gameState->numActions; a++)
-        {
-            ClientAction* clientAction = &gameState->clientActions[a].action;
-            ActionTracking* actionTracking = &gameState->clientActions[a].tracking;
-            cl_uchar cliId = actionTracking->clientId;
-            SynchronizedClientState* client = &gameState->clientStates[cliId];
-
-            if (clientAction->action_DoSelect)
-            {
-                client->selectedPeepsLastIdx = OFFSET_NULL;
-                for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
-                {
-                    Peep* p = &gameState->peeps[pi];
-
-                    if (p->stateRender.faction == actionTracking->clientId)
-                        if ((p->stateRender.map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
-                            && (p->stateRender.map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
-                        {
-
-                            if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
-                                && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
-                            {
-
-                                if (client->selectedPeepsLastIdx != OFFSET_NULL)
-                                {
-                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
-                                    p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                }
-                                else
-                                {
-                                    p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                }
-                                client->selectedPeepsLastIdx = pi;
-                            }
-                        }
-                }
-
-            }
-            else if (clientAction->action_CommandToLocation)
-            {
-                cl_uint curPeepIdx = client->selectedPeepsLastIdx;
-                while (curPeepIdx != OFFSET_NULL)
-                {
-                    Peep* curPeep = &gameState->peeps[curPeepIdx];
-                    curPeep->stateSim.target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
-                    curPeep->stateSim.target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
-
-                    curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
-                }
-
-
-            }
-        }
-
-        gameState->numActions = 0;
+       
                 
 
 
@@ -390,15 +334,15 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Button("Destroy Miner");
         ImGui::End();
 
-        if (gameState->pauseState == 0)
+        if (gameStateB->pauseState == 0)
         {
             if (ImGui::Button("PAUSE"))
-                gameState->pauseState = 1;
+                gameStateB->pauseState = 1;
         }
         else
         {
             if (ImGui::Button("RESUME"))
-                gameState->pauseState = 0;
+                gameStateB->pauseState = 0;
         }
         ImGui::Begin("Network");
         static int32_t port = 50010;
@@ -437,7 +381,7 @@ int32_t main(int32_t argc, char* args[])
         if (ImGui::Button("Send Message"))
         {
             char buffer[256];
-            sprintf(buffer, "HELLOOOO %d", gameState->tickIdx);
+            sprintf(buffer, "HELLOOOO %d", gameStateB->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
         ImGui::Text("TargetTickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
@@ -470,17 +414,6 @@ int32_t main(int32_t argc, char* args[])
         gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
 
-
-        cl_uint curPeepIdx = gameState->clientStates[gameNetworking.clientId].selectedPeepsLastIdx;
-        PeepRenderSupport peepRenderSupport[MAX_PEEPS];
-        while (curPeepIdx != OFFSET_NULL)
-        {
-            Peep* p = &gameState->peeps[curPeepIdx];
-
-            peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
-
-            curPeepIdx = p->prevSelectionPeepIdx[gameNetworking.clientId];
-        }
 
 
 
@@ -532,11 +465,11 @@ int32_t main(int32_t argc, char* args[])
             glBindVertexArray(0);
         }
 
-        if(gameState->pauseState==0)
-            gameState->tickIdx++;
+        if(gameStateB->pauseState==0)
+            gameStateB->tickIdx++;
 
         GSCS(D)
-        gameCompute.WriteGameState();
+        gameCompute.WriteGameStateB();
 
 
 
@@ -547,7 +480,7 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
-        ImGui::Text("TickIdx: %d", gameState->tickIdx);
+        ImGui::Text("TickIdx: %d", gameStateB->tickIdx);
         ImGui::End();
 
 

@@ -38,8 +38,11 @@
 
 	snapshotWrap wrap;
 	wrap.gameState = std::make_shared<GameState>();
+	wrap.gameStateB = std::make_shared<GameStateB>();
 
 	memcpy(wrap.gameState.get(), gameState.get(), sizeof(GameState));
+	memcpy(wrap.gameStateB.get(), gameStateB.get(), sizeof(GameStateB));
+
 	CLIENT_snapshotStorageQueue.push_back(wrap);
 
 
@@ -128,7 +131,7 @@
 
 			 ClientAction* action = &actionSack[b].action;
 			 ActionTracking* actTracking = &actionSack[b].tracking;
-			 if (action->scheduledTickIdx < gameState->tickIdx)
+			 if (action->scheduledTickIdx < gameStateB->tickIdx)
 			 {
 				 if (action->scheduledTickIdx < earliestExpiredScheduledTick)
 					 earliestExpiredScheduledTick = action->scheduledTickIdx;
@@ -137,13 +140,13 @@
 
 		 if (earliestExpiredScheduledTick != static_cast<uint32_t>(-1))
 		 {
-			 int32_t ticksLate = gameState->tickIdx - earliestExpiredScheduledTick;
+			 int32_t ticksLate = gameStateB->tickIdx - earliestExpiredScheduledTick;
 
 			 std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late" << std::endl;
 			 std::cout << ClientConsolePrint() << "Going Back To Last Snapshot to catchback up." << std::endl;
 
 			 
-			 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameState->tickIdx > earliestExpiredScheduledTick)
+			 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameStateB->tickIdx > earliestExpiredScheduledTick)
 			 {
 				 std::cout << ClientConsolePrint() << "Snapshot not far enough back, trying previous snapshot.." << std::endl;
 				 snapShotIdx--;
@@ -154,14 +157,15 @@
 				 std::cout << ClientConsolePrint() << "Using Snapshot Idx: " << snapShotIdx << std::endl;
 
 				 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), sizeof(GameState));
+				 memcpy(gameStateB.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateB.get(), sizeof(GameState));
 
 
 				 for (int i = 0; i < actionSack.size(); i++)
 				 {
-					 if (actionSack[i].action.scheduledTickIdx >= gameState.get()->tickIdx)
+					 if (actionSack[i].action.scheduledTickIdx >= gameStateB.get()->tickIdx)
 						 actionSack[i].tracking.clientApplied = false;
 
-					 if (actionSack[i].action.scheduledTickIdx == gameState.get()->tickIdx)
+					 if (actionSack[i].action.scheduledTickIdx == gameStateB.get()->tickIdx)
 					 {	
 						 std::cout << ClientConsolePrint()  << "RARE tickIdx equality case..";
 						 repeat = true;
@@ -187,14 +191,14 @@
 
 			 ClientAction* action = &actionSack[a].action;
 			 ActionTracking* actTracking = &actionSack[a].tracking;
-			 if (action->scheduledTickIdx == gameState->tickIdx)
+			 if (action->scheduledTickIdx == gameStateB->tickIdx)
 			 {
 
 				 std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: ACS: [" << CheckSumAction(&actionSack[a]) 
 					 << "]" << std::endl;
 
 				 actionSack[a].tracking.clientApplied = true;
-				 gameState->clientActions[i] = actionSack[a];
+				 gameStateB->clientActions[i] = actionSack[a];
 
 				 i++;
 			 }
@@ -203,7 +207,7 @@
 				 newList.push_back(actionSack[a]);
 			 }
 		 }
-		 gameState->numActions = i;
+		 gameStateB->numActions = i;
 	 } while (repeat);
 
  }
@@ -235,6 +239,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
+	 bs.Write(reinterpret_cast<char*>(gameStateB.get()), sizeof(GameStateB));
 	 bs.Write(CheckSumGameState(HOST_gameStateTransfer.get()));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
@@ -290,7 +295,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC));
 	 bs.Write(static_cast<int32_t>(clientId));
-	 bs.Write(static_cast<uint32_t>(gameState->tickIdx));
+	 bs.Write(static_cast<uint32_t>(gameStateB->tickIdx));
 	 bs.Write(static_cast<int32_t>(targetTickTimeMs));
 	 bs.Write(static_cast<uint32_t>(clientGUID));
 	 bs.Write(static_cast<int32_t>(peerInterface->GetAveragePing(hostPeer)));
@@ -575,12 +580,16 @@
 
 				 clients.back().downloadingState = 1;
 
+				 gameCompute->ReadFullGameState();
+
 				 memcpy(HOST_gameStateTransfer.get(), gameState.get(), sizeof(GameState));
 
 				 std::cout << "Pausing." << std::endl;
-				 gameState->pauseState = 1;
+				 
 
 				 HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
+				 gameStateB->pauseState = 1;
+
 				 HOST_SendGamePart_ToClient(clients.back().clientGUID);
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
@@ -589,6 +598,8 @@
 				 std::cout << "[CLIENT] CLientId is now " << this->clientId << std::endl;
 
 
+				 bts.Read(reinterpret_cast<char*>(gameStateB.get()), sizeof(GameStateB));
+				 gameStateB->pauseState = 1;
 				 bts.Read(transferFullCheckSum);
 
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
@@ -623,7 +634,12 @@
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
 					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), sizeof(GameState));
+					 gameCompute->WriteFullGameState();
+					 
+					 gameStateB->pauseState = 0;
+					 gameStateB->clientId = clientId;
 					 std::cout << "[CLIENT] GSCS: " << recievedCS << std::endl;
+
 
 					 CLIENT_nextTransferOffset = 0;
 					 gameStateTransferPercent = 0.0f;
@@ -650,7 +666,7 @@
 
 				 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
 				 client->downloadingState = 0;
-				 gameState->pauseState = 0;
+				 gameStateB->pauseState = 0;
 				 HOST_snapshotLocked = false;
 
 				 HOST_nextTransferOffset[client->cliId] = 0;
@@ -667,16 +683,16 @@
 
 				 //schedule and send out actions right away.
 				 std::vector<ActionWrap> actions;
-				 if (gameState.get()->pauseState == 0) {
+				 if (gameStateB.get()->pauseState == 0) {
 					 for (int32_t i = 0; i < numActions; i++)
 					 {
 						 ActionWrap actionWrap;
 						 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
 
-						 if (gameState->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
+						 if (gameStateB->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
 						 {
-							 actionWrap.action.scheduledTickIdx = gameState->tickIdx + 0;
+							 actionWrap.action.scheduledTickIdx = gameStateB->tickIdx + 0;
 							 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
 							 actions.push_back(actionWrap);
 						 }
@@ -733,7 +749,7 @@
 				 bts.Read(ping);
 
 
-				 int32_t offset = int32_t(client_tickIdx) - int32_t(gameState->tickIdx);
+				 int32_t offset = int32_t(client_tickIdx) - int32_t(gameStateB->tickIdx);
 
 				 clientMeta* meta = GetClientMetaDataFromCliGUID(clientGUID);
 				 if (meta != nullptr)
@@ -803,7 +819,7 @@
 
 
 
-	if (gameState->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
+	if (gameStateB->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
 	{
 		while (CLIENT_snapshotStorageQueue.size() > 4)
 		{
@@ -811,11 +827,14 @@
 		}
 		snapshotWrap wrap;
 		wrap.gameState = std::make_shared<GameState>();
+		wrap.gameStateB = std::make_shared<GameStateB>();
 		CLIENT_snapshotStorageQueue.push_back(wrap);
 		std::cout << "Snapshot Taken" << std::endl;
 
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
 			reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
+		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameStateB.get()),
+			reinterpret_cast<void*>(gameStateB.get()), sizeof(GameStateB));
 
 		//CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
 

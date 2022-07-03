@@ -12,7 +12,7 @@
 #include "GameGraphics.h"
 
 
-GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphics* graphics)
+GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics)
 {
 
     // Load the update_kernel source code into the array source_str
@@ -69,6 +69,9 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphic
     gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
+
+    gamestateB_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameStateB), nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
 
 
 
@@ -135,15 +138,23 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphic
      preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
      preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
      update_kernel = clCreateKernel(program, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
+     action_kernel = clCreateKernel(program, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
      init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
 
 
     // Set the arguments of the kernels
     ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clSetKernelArg(init_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    
     ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    
+    ret = clSetKernelArg(action_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clSetKernelArg(action_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
     ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clSetKernelArg(update_kernel, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
     //get stats
     cl_ulong usedLocalMemSize;
@@ -157,6 +168,7 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, GameGraphic
 
 
     this->gameState = gameState;
+    this->gameStateB = gameStateB;
 
     RunInitCompute();
 }
@@ -169,10 +181,11 @@ GameGPUCompute::~GameGPUCompute()
     ret = clReleaseKernel(init_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
-
+    ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
 
     ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
 
@@ -186,6 +199,9 @@ void GameGPUCompute::RunInitCompute()
         sizeof(GameState), gameState.get(), 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
+    ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+        sizeof(GameStateB), gameState.get(), 0, NULL, NULL);
+    CL_HOST_ERROR_CHECK(ret)
 
 
     ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
@@ -193,16 +209,20 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
 
     clWaitForEvents(1, &initEvent);
-
+    ReadFullGameState();
 }
 
 void GameGPUCompute::Stage1()
 {
-    if (gameState->pauseState != 0)
+    if (gameStateB->pauseState != 0)
         return;
 
-    cl_int ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
-        WorkItems, NULL, 0, NULL, &preUpdateEvent1);
+    cl_int ret = clEnqueueNDRangeKernel(command_queue, action_kernel, 1, NULL,
+        SingleKernelWorkItems, NULL, 0, NULL, &actionEvent);
+    CL_HOST_ERROR_CHECK(ret)
+
+     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
+        WorkItems, NULL, 1, &actionEvent, &preUpdateEvent1);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);
@@ -241,22 +261,49 @@ void GameGPUCompute::Stage1()
 
 
     // Read the memory buffer C on the device to the local variable C
-
-    ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState.get(), 0, NULL, &readEvent);
+    ret = clEnqueueReadBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+        sizeof(GameStateB), gameStateB.get(), 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-        ret = clFinish(command_queue);
+    ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
 
 
 }
 
-void GameGPUCompute::WriteGameState()
+void GameGPUCompute::ReadFullGameState()
 {
+    // Read the memory buffer C on the device to the local variable C
+    cl_int ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+        sizeof(GameState), gameState.get(), 0, NULL, &readEvent);
+    CL_HOST_ERROR_CHECK(ret)
+
+    // Read the memory buffer C on the device to the local variable C
+    ret = clEnqueueReadBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+        sizeof(GameStateB), gameStateB.get(), 0, NULL, &readEvent);
+    CL_HOST_ERROR_CHECK(ret)
     
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+}
+
+void GameGPUCompute::WriteFullGameState()
+{
     cl_int ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         sizeof(GameState), gameState.get(), 0, NULL, &writeEvent);
+    CL_HOST_ERROR_CHECK(ret)
+
+    WriteGameStateB();
+
+
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+}
+
+void GameGPUCompute::WriteGameStateB()
+{
+    cl_int ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+        sizeof(GameStateB), gameStateB.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 }
