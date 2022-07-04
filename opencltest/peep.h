@@ -16,7 +16,9 @@
 #endif
 
 
-#define MAX_PEEPS (1024*16)
+#define MAX_PEEPS (1024*32)
+#define MAX_TRACKNODES (1024*8)
+
 
 #define WARPSIZE (32)
 #define TOTALWORKITEMS MAX_PEEPS
@@ -94,6 +96,17 @@ struct Peep {
 struct PeepRenderSupport {
 	cl_int render_selectedByClient;
 }typedef PeepRenderSupport;
+
+
+
+
+
+
+
+
+
+
+
 
 
 struct MapSector {
@@ -174,6 +187,9 @@ struct SynchronizedClientState {
 
 struct GameState {
 	Peep peeps[MAX_PEEPS];
+
+
+
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	cl_int mapWidth;
 	cl_int mapHeight;

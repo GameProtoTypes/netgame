@@ -821,7 +821,7 @@
 
 	if (gameStateB->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
 	{
-		while (CLIENT_snapshotStorageQueue.size() > 4)
+		while (CLIENT_snapshotStorageQueue.size() > 1)
 		{
 			CLIENT_snapshotStorageQueue.erase(CLIENT_snapshotStorageQueue.begin());
 		}

@@ -7,6 +7,19 @@
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
+
+
+void PeepPrint(Peep* peep)
+{
+    PrintQ16(peep->stateSim.target_x_Q16);
+
+}
+
+
+
+
+
+
 void RobotInteraction(Peep* peep, Peep* otherPeep)
 {
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
@@ -75,11 +88,6 @@ void RobotUpdate(Peep* peep)
             peep->stateSim.yv_Q15_16 = deltay_Q16;
         }
     }
-
-
-    
-
-
 }
 
 
@@ -242,6 +250,7 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
                         if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
                             && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
                         {
+                            PrintQ16(p->stateRender.map_x_Q15_16);
 
                             if (client->selectedPeepsLastIdx != OFFSET_NULL)
                             {
@@ -258,7 +267,6 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
                         }
                     }
             }
-
         }
         else if (clientAction->action_CommandToLocation)
         {
@@ -283,6 +291,17 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
 __kernel void game_init_single(__global GameState* gameState, __global GameStateB* gameStateB)
 {
     printf("Game Initializing...\n");
+
+
+
+    fixedPointTests();
+
+
+
+
+
+
+
 
     gameState->numClients = 1;
     gameStateB->pauseState = 0;
@@ -313,7 +332,7 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
         gameState->peeps[p].stateSim.netForcex_Q16 = 0;
         gameState->peeps[p].stateSim.netForcey_Q16 = 0;
         gameState->peeps[p].minDistPeep = NULL;
-        gameState->peeps[p].minDistPeep_Q16 = (1 << 31);
+        gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
         gameState->peeps[p].mapSector = NULL;
         gameState->peeps[p].mapSector_pending = NULL;
         gameState->peeps[p].nextSectorPeep = NULL;
@@ -426,7 +445,7 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
         return;
    
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    for (cl_uint pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
 
         //Peep* p = &gameState->peeps[pi + globalid*chunkSize];
@@ -463,7 +482,7 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
 
    // printf("Preupdate2");
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    for (cl_uint pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
         Peep* p = &gameState->peeps[pi + globalid * chunkSize];
 
