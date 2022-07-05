@@ -18,6 +18,8 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
+#define SQRT_MAPSIZE (1024)
+#define MAPDEPTH (64)
 
 
 #define WARPSIZE (32)
@@ -102,9 +104,28 @@ struct PeepRenderSupport {
 
 
 
+enum MapTileBitAttr {
+	MapTileBitAttr_MiningMarkBit = 0
+} typedef MapTileBitAttr;
+
+enum MapTile {
+	MapTile_NONE = 0,
+	MapTile_Rock,
+	MapTile_Iron
+}typedef MapTile;
+
+
+struct MapLevel {
+	cl_short tiles[SQRT_MAPSIZE][SQRT_MAPSIZE];
+} typedef MapLevel;
 
 
 
+struct Map {
+	MapLevel levels[MAPDEPTH];
+	cl_int mapWidth;
+	cl_int mapHeight;
+} typedef Map;
 
 
 
@@ -188,11 +209,10 @@ struct SynchronizedClientState {
 struct GameState {
 	Peep peeps[MAX_PEEPS];
 
-
+	Map map;
 
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
-	cl_int mapWidth;
-	cl_int mapHeight;
+	
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;

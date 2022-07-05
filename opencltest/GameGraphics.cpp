@@ -111,26 +111,28 @@ GameGraphics::GameGraphics()
 
 
 
-    GEShader* pVertShad = new GEShader(GL_VERTEX_SHADER, "vertPeep.shad");
-    GEShader* pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragPeep.shad");
+    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertPeep.shad");
+    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragPeep.shad");
+
+
     shaderList.push_back(pVertShad);
     shaderList.push_back(pFragShad);
 
     //create programs to use those shaders.
-    pPeepShadProgram = new GEShaderProgram();
+    pPeepShadProgram = std::make_shared<GEShaderProgram>();
     pPeepShadProgram->AttachShader(pVertShad);
     pPeepShadProgram->AttachShader(pFragShad);
 
     shaderProgramList.push_back(pPeepShadProgram);
 
 
-    pVertShad = new GEShader(GL_VERTEX_SHADER, "vertShader.shad");
-    pFragShad = new GEShader(GL_FRAGMENT_SHADER, "fragShader.shad");
+    pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertShader.shad");
+    pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragShader.shad");
     shaderList.push_back(pVertShad);
     shaderList.push_back(pFragShad);
 
     //create programs to use those shaders.
-    pBasicShadProgram = new GEShaderProgram();
+    pBasicShadProgram = std::make_shared<GEShaderProgram>();
     pBasicShadProgram->AttachShader(pVertShad);
     pBasicShadProgram->AttachShader(pFragShad);
 
@@ -151,8 +153,8 @@ GameGraphics::GameGraphics()
     // store instance data in an array buffer
     // --------------------------------------
     
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glGenBuffers(1, &peepInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
     glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3)) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -179,7 +181,7 @@ GameGraphics::GameGraphics()
 
     // also set instance data
     glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO); // this attribute comes from a different vertex buffer
+    glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO); // this attribute comes from a different vertex buffer
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)0);//position
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)sizeof(glm::vec2));//color
@@ -188,8 +190,8 @@ GameGraphics::GameGraphics()
     glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
 
 
-    worldPositions = new glm::vec2[MAX_PEEPS];
-    colors = new glm::vec3[MAX_PEEPS];
+
+
 
     glFinish();
 }
@@ -212,14 +214,7 @@ GameGraphics::~GameGraphics()
 
 
 
-    //cleanup
-    for (auto* s : shaderProgramList)
-        delete s;
-    for (auto* s : shaderList)
-        delete s;
 
-    delete[] worldPositions;
-    delete[] colors;
 
 
 

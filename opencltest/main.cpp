@@ -62,9 +62,12 @@ int32_t main(int32_t argc, char* args[])
     std::shared_ptr<GameStateB> gameStateB = std::make_shared<GameStateB>();
 
     GameGPUCompute gameCompute(gameState, gameStateB, &gameGraphics);
-
+   
     GameNetworking gameNetworking(gameState, gameStateB, &gameCompute);
         
+    gameCompute.AddCompileDefinition("SOMEDEF", 123);
+
+    gameCompute.RunInitCompute();
     gameNetworking.Init();
     gameNetworking.Update();
 
@@ -76,8 +79,8 @@ int32_t main(int32_t argc, char* args[])
 
     int32_t mousex, mousey;
 
-    gameState->mapHeight = 2000;
-    gameState->mapWidth = 2000;
+    gameState->map.mapHeight = 2000;
+    gameState->map.mapWidth = 2000;
     gameStateB->tickIdx = 0;
 
     std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
@@ -86,6 +89,7 @@ int32_t main(int32_t argc, char* args[])
 
 
     std::shared_ptr<RenderClientState> client = std::make_shared<RenderClientState>();
+
 
     while (!quit)
     {
@@ -416,6 +420,8 @@ int32_t main(int32_t argc, char* args[])
 
 
 
+        //draw map
+        DOIT.
 
 
 
@@ -432,13 +438,14 @@ int32_t main(int32_t argc, char* args[])
 
             gameGraphics.pBasicShadProgram->Use();
 
-
-            gameGraphics.pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", glm::mat4(1.0f));
+            glm::mat4 I(1.0f);
+            gameGraphics.pBasicShadProgram->SetUniform_Mat4("WorldToScreenTransform", I);
 
 
             glm::mat4 drawingTransform(1.0f);
             gameGraphics.pBasicShadProgram->SetUniform_Mat4("LocalTransform", drawingTransform);
-            gameGraphics.pBasicShadProgram->SetUniform_Vec3("OverallColor", glm::vec3(1.0f, 1.0f, 1.0f));
+            glm::vec3 c(1.0f, 1.0f, 1.0f);
+            gameGraphics.pBasicShadProgram->SetUniform_Vec3("OverallColor", c);
 
 
             float mouseSelectVerts[] = {

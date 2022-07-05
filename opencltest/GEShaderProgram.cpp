@@ -50,14 +50,14 @@ void GEShaderProgram::Use(void)
 	glUseProgram(programID);
 }
 
-void GEShaderProgram::AttachShader(GEShader* shader)
+void GEShaderProgram::AttachShader(std::shared_ptr<GEShader> shader)
 {
 	glAttachShader(programID, shader->shaderID);
 
 	shaderList.push_back(shader);
 }
 
-void GEShaderProgram::DetachShader(GEShader* shader)
+void GEShaderProgram::DetachShader(std::shared_ptr<GEShader> shader)
 {
 	for(uint32_t i = 0; i < shaderList.size(); i++)
 	{

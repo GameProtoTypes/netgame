@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <sstream>
 #include <iostream>
-
+#include <typeinfo>
+#include <variant>
 
 #include "glew.h"
 
@@ -13,6 +15,46 @@
 
 
 GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics)
+{
+
+    this->gameState = gameState;
+    this->gameStateB = gameStateB;
+    this->graphics = graphics;
+
+
+}
+
+GameGPUCompute::~GameGPUCompute()
+{
+
+
+
+
+    cl_int ret = clFlush(command_queue); CL_HOST_ERROR_CHECK(ret)
+    ret = clFinish(command_queue); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(update_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(init_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
+
+    ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
+
+    ret = clReleaseCommandQueue(command_queue); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseContext(context); CL_HOST_ERROR_CHECK(ret)
+}
+
+
+void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant val)
+{
+    compileDefinitions.push_back({ name, val });
+}
+
+void GameGPUCompute::RunInitCompute()
 {
 
     // Load the update_kernel source code into the array source_str
@@ -44,13 +86,13 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared
     ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
+        ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
 
-    // Create an OpenCL context
-    std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext);
+        // Create an OpenCL context
+        std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext);
     cl_context_properties props[] =
-    { 
+    {
         CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),
         CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
         CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0],
@@ -61,35 +103,38 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared
 
 
 
-    // Create a command queue
-    command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+        // Create a command queue
+        command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-    // Create memory buffers on the device
-    gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
-    CL_HOST_ERROR_CHECK(ret)
-
-
-    gamestateB_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameStateB), nullptr, &ret);
+        // Create memory buffers on the device
+        gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
 
-
-
-    graphics_peeps_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->instanceVBO, &ret);
+        gamestateB_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameStateB), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
 
 
 
-    printf("Building CL Programs...\n");
+        graphics_peeps_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->peepInstanceVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+
+
+
+        printf("Building CL Programs...\n");
     // Create a program from the update_kernel source
-     program = clCreateProgramWithSource(context, 1,
+    program = clCreateProgramWithSource(context, 1,
         (const char**)&source_str, (const size_t*)&source_size, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-        // Build the program
-        ret = clBuildProgram(program, 1, &device_id, NULL, NULL, NULL);
+    //make preprocessor defs
+    std::string defs = buildPreProcessorString();
+
+    // Build the program
+    ret = clBuildProgram(program, 1, &device_id, defs.c_str(), NULL, NULL);
 
 
 
@@ -135,29 +180,29 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared
 
 
     // Create the OpenCL update_kernel
-     preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
-     preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
-     update_kernel = clCreateKernel(program, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
-     action_kernel = clCreateKernel(program, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
-     init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
+    preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
+        preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
+        update_kernel = clCreateKernel(program, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
+        action_kernel = clCreateKernel(program, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
+        init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
 
 
-    // Set the arguments of the kernels
-    ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(init_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    
-    ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    
-    ret = clSetKernelArg(action_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(action_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        // Set the arguments of the kernels
+        ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(init_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
-    ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clSetKernelArg(update_kernel, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
-    //get stats
-    cl_ulong usedLocalMemSize;
+        ret = clSetKernelArg(action_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(action_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
+        ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(update_kernel, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
+        //get stats
+        cl_ulong usedLocalMemSize;
     clGetKernelWorkGroupInfo(update_kernel,
         device_id,
         CL_KERNEL_LOCAL_MEM_SIZE,
@@ -167,35 +212,9 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared
     printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
 
 
-    this->gameState = gameState;
-    this->gameStateB = gameStateB;
-
-    RunInitCompute();
-}
-
-GameGPUCompute::~GameGPUCompute()
-{
-    cl_int ret = clFlush(command_queue); CL_HOST_ERROR_CHECK(ret)
-    ret = clFinish(command_queue); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseKernel(update_kernel); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseKernel(init_kernel); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
-
-    ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseMemObject(gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseMemObject(graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
 
-    ret = clReleaseCommandQueue(command_queue); CL_HOST_ERROR_CHECK(ret)
-    ret = clReleaseContext(context); CL_HOST_ERROR_CHECK(ret)
-}
-
-void GameGPUCompute::RunInitCompute()
-{
-    cl_int ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+    ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         sizeof(GameState), gameState.get(), 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -306,4 +325,44 @@ void GameGPUCompute::WriteGameStateB()
     cl_int ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
         sizeof(GameStateB), gameStateB.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
+}
+
+std::string GameGPUCompute::buildPreProcessorString()
+{
+    std::string str;
+    for (auto pair : compileDefinitions)
+    {
+        str += std::string("-D ") + pair.first + std::string("=") + compileVariantString(pair.second);
+    }
+
+    return str;
+}
+
+std::string GameGPUCompute::compileVariantString(GPUCompileVariant variant)
+{
+
+    std::stringstream stream;
+
+    try
+    {
+        stream << std::get<std::string>(variant);
+        return stream.str();
+    }
+    catch(const std::exception& e) {};
+
+    try
+    {
+        stream << std::get<int>(variant);
+        return stream.str();
+    }
+    catch (const std::exception& e) {};
+
+    try
+    {
+        stream << std::get<float>(variant);
+        return stream.str();
+    }
+    catch (const std::exception& e) {};
+    
+
 }

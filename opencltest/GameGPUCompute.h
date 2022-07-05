@@ -10,12 +10,18 @@
 
 
 #include <memory>
+#include <variant>
+#include <string>
+#include <vector>
 
 #include "peep.h"
 #include "assert.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
 #define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
+
+typedef  std::variant<int, float, std::string> GPUCompileVariant;
+
 class GameGraphics;
 class GameGPUCompute
 {
@@ -24,6 +30,10 @@ public:
 
 	GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics);
 	~GameGPUCompute();
+
+
+
+	void AddCompileDefinition(std::string name, GPUCompileVariant val);
 
 	void RunInitCompute();
 
@@ -72,7 +82,14 @@ public:
 
 	std::shared_ptr<GameState> gameState;
 	std::shared_ptr<GameStateB> gameStateB;
+	GameGraphics* graphics = nullptr;
+
+	std::vector<std::pair<std::string, GPUCompileVariant>> compileDefinitions;
 
 	bool errorState = false;
+
+
+	std::string buildPreProcessorString();
+	std::string compileVariantString(GPUCompileVariant variant);
 };
 

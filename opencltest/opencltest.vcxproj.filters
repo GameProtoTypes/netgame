@@ -45,9 +45,6 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="glmHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\casht\repos\opencltest\opencltest\CMakeLists.txt" />

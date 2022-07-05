@@ -48,17 +48,14 @@ public:
 	SDL_Texture* loadTexture(std::string path);
 	
 
-    std::vector<GEShaderProgram*> shaderProgramList;
-    std::vector<GEShader*> shaderList;
-	GEShaderProgram* pPeepShadProgram;
-	GEShaderProgram* pBasicShadProgram;
-	
+    std::vector<std::shared_ptr<GEShaderProgram>> shaderProgramList;
+    std::vector<std::shared_ptr<GEShader>> shaderList;
+
+	std::shared_ptr<GEShaderProgram> pPeepShadProgram;
+	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
+	std::shared_ptr<GEShaderProgram> pTileShadProgram;
 	
 	uint32_t quadVAO, quadVBO;
-	uint32_t instanceVBO;        
-	
-	glm::vec2* worldPositions =  nullptr;
-    glm::vec3* colors = nullptr;
-
+	uint32_t peepInstanceVBO;        
 };
 

@@ -16,10 +16,6 @@ void PeepPrint(Peep* peep)
 }
 
 
-
-
-
-
 void RobotInteraction(Peep* peep, Peep* otherPeep)
 {
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
@@ -250,7 +246,7 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
                         if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
                             && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
                         {
-                            PrintQ16(p->stateRender.map_x_Q15_16);
+                            PrintQ16(p->Idx);
 
                             if (client->selectedPeepsLastIdx != OFFSET_NULL)
                             {
@@ -293,13 +289,7 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
     printf("Game Initializing...\n");
 
 
-
     fixedPointTests();
-
-
-
-
-
 
 
 
@@ -321,8 +311,8 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].Idx = p;
-        gameState->peeps[p].stateRender.map_x_Q15_16 = RandomRange(p,-1000, 1000) << 16;
-        gameState->peeps[p].stateRender.map_y_Q15_16 = RandomRange(p+1,-1000, 1000) << 16;
+        gameState->peeps[p].stateRender.map_x_Q15_16 = RandomRange(p,-1000 << 16, 1000 << 16) ;
+        gameState->peeps[p].stateRender.map_y_Q15_16 = RandomRange(p+1,-1000 << 16, 1000 << 16) ;
         gameState->peeps[p].stateRender.attackState = 0;
         gameState->peeps[p].stateRender.health = 10;
         gameState->peeps[p].stateRender.deathState = 0;
@@ -337,18 +327,14 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
         gameState->peeps[p].mapSector_pending = NULL;
         gameState->peeps[p].nextSectorPeep = NULL;
         gameState->peeps[p].prevSectorPeep = NULL;
-        gameState->peeps[p].stateSim.target_x_Q16 = RandomRange(p,-1000, 1000) << 16;
-        gameState->peeps[p].stateSim.target_y_Q16 = RandomRange(p+1,-1000, 1000) << 16;
+        gameState->peeps[p].stateSim.target_x_Q16 = RandomRange(p,-1000 << 16, 1000 << 16);
+        gameState->peeps[p].stateSim.target_y_Q16 = RandomRange(p+1,-1000 << 16, 1000 << 16);
 
 
-        if (gameState->peeps[p].stateRender.map_x_Q15_16 >> 16 < 0)
-        {
-            gameState->peeps[p].stateRender.faction = 0;
-        }
-        else
-        {
-            gameState->peeps[p].stateRender.faction = 1;
-        }
+
+        gameState->peeps[p].stateRender.faction = RandomRange(p + 3, 0, 4);
+        
+
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)
@@ -382,13 +368,25 @@ void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global
     float3 drawColor;
 
     float brightFactor = 0.6f;
-    if (peep->stateRender.faction == 1)
+    if (peep->stateRender.faction == 0)
     {
         drawColor.x = 0.0f;
         drawColor.y = 1.0f;
         drawColor.z = 1.0f;
     }
-    else
+    else if(peep->stateRender.faction == 1)
+    {
+        drawColor.x = 1.0f;
+        drawColor.y = 1.0f;
+        drawColor.z = 0.0f;
+    }
+    else if (peep->stateRender.faction == 2)
+    {
+        drawColor.x = 0.0f;
+        drawColor.y = 1.0f;
+        drawColor.z = 0.0f;
+    }
+    else if (peep->stateRender.faction == 3)
     {
         drawColor.x = 1.0f;
         drawColor.y = 0.0f;
