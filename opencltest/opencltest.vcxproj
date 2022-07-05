@@ -331,6 +331,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.cpp" />
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\vertPeep.shad">
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\vertShader.shad">
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\fragPeep.shad">
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\fragShader.shad">
+    </None>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clGame.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\ZERO_CHECK.vcxproj">

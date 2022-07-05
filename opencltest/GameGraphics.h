@@ -52,10 +52,15 @@ public:
     std::vector<std::shared_ptr<GEShader>> shaderList;
 
 	std::shared_ptr<GEShaderProgram> pPeepShadProgram;
+	int peepInstanceSIZE = 0;
+
+
+
 	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
 	std::shared_ptr<GEShaderProgram> pTileShadProgram;
 	
 	uint32_t quadVAO, quadVBO;
 	uint32_t peepInstanceVBO;        
+	uint32_t mapTileInstanceVBO;
 };
 

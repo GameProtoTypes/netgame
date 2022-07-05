@@ -23,12 +23,27 @@ set(Source_Files
     "GameGraphics.cpp"
     "GameGPUCompute.cpp"
     "GameNetworking.cpp"
+
+
+    "vertPeep.shad"
+    "vertShader.shad"
+
+    "fragPeep.shad"
+    "fragShader.shad"
 )
 source_group("Source Files" FILES ${Source_Files})
+
+set(OPENCL_Source_Files
+
+    "clGame.c"
+   
+)
+source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 
 set(ALL_FILES
     ${Header_Files}
     ${Source_Files}
+    ${OPENCL_Source_Files}
 )
 
 ################################################################################
@@ -49,6 +64,12 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
 )
+
+
+
+set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
+
+
 
 
 ################################################################################

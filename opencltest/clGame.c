@@ -29,6 +29,7 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
         peep->minDistPeep_Q16 = dist_Q16;
         peep->minDistPeep = otherPeep;
     }
+    
 }
 
 
@@ -415,12 +416,12 @@ void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global
 
 
 
-    peepVBOBuffer[peep->Idx * 5 + 0] = (float)((float)peep->stateRender.map_x_Q15_16 / (1 << 16));
-    peepVBOBuffer[peep->Idx * 5 + 1] = (float)((float)peep->stateRender.map_y_Q15_16 / (1 << 16));
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE/sizeof(float) + 0] = (float)((float)peep->stateRender.map_x_Q15_16 / (1 << 16));
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 1] = (float)((float)peep->stateRender.map_y_Q15_16 / (1 << 16));
 
-    peepVBOBuffer[peep->Idx * 5 + 2] = drawColor.x* brightFactor;
-    peepVBOBuffer[peep->Idx * 5 + 3] = drawColor.y * brightFactor;
-    peepVBOBuffer[peep->Idx * 5 + 4] = drawColor.z * brightFactor;
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 2] = drawColor.x* brightFactor;
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 3] = drawColor.y * brightFactor;
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 4] = drawColor.z * brightFactor;
 }
 
 __kernel void game_update(__global GameState* gameState, __global GameStateB* gameStateB,  __global float* peepVBOBuffer) {

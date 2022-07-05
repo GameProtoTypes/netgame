@@ -158,6 +158,7 @@ GameGraphics::GameGraphics()
     glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3)) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float quadVertices[] = {
@@ -180,14 +181,34 @@ GameGraphics::GameGraphics()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
     // also set instance data
+    peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3);//size for each peep
     glEnableVertexAttribArray(2);
     glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO); // this attribute comes from a different vertex buffer
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)0);//position
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) + sizeof(glm::vec3), (void*)sizeof(glm::vec2));//color
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
     glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+
+
+
+
+
+    //map
+
+    glGenBuffers(1, &mapTileInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mapTileInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3))* SQRT_MAPSIZE*SQRT_MAPSIZE, nullptr, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+
+
+
+
+
+
 
 
 

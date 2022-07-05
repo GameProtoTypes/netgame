@@ -65,7 +65,7 @@ int32_t main(int32_t argc, char* args[])
    
     GameNetworking gameNetworking(gameState, gameStateB, &gameCompute);
         
-    gameCompute.AddCompileDefinition("SOMEDEF", 123);
+    gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
 
     gameCompute.RunInitCompute();
     gameNetworking.Init();
@@ -421,8 +421,6 @@ int32_t main(int32_t argc, char* args[])
 
 
         //draw map
-        DOIT.
-
 
 
 

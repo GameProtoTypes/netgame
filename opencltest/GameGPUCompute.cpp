@@ -62,7 +62,7 @@ void GameGPUCompute::RunInitCompute()
     char* source_str;
     size_t source_size;
 
-    fp = fopen("vector_add_kernel.c", "r");
+    fp = fopen("clGame.c", "r");
     if (!fp) {
         fprintf(stderr, "Failed to load update_kernel.\n");
         exit(1);
