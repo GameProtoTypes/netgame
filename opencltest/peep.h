@@ -18,7 +18,7 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define SQRT_MAPSIZE (1024)
+#define SQRT_MAPTILESIZE (1024)
 #define MAPDEPTH (64)
 
 
@@ -116,7 +116,7 @@ enum MapTile {
 
 
 struct MapLevel {
-	cl_short tiles[SQRT_MAPSIZE][SQRT_MAPSIZE];
+	cl_short tiles[SQRT_MAPTILESIZE][SQRT_MAPTILESIZE];
 } typedef MapLevel;
 
 
@@ -207,10 +207,9 @@ struct SynchronizedClientState {
 } typedef SynchronizedClientState;
 
 struct GameState {
+
 	Peep peeps[MAX_PEEPS];
-
 	Map map;
-
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 

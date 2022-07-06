@@ -3,7 +3,7 @@
 
 #include "peep.h"
 #include "random.h"
-
+#include "perlincl.h"
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
@@ -372,11 +372,11 @@ __kernel void game_init_single(__global GameState* gameState,
     printf("Creating Map..\n");
     
     int i = 0;
-    for (int x = 0; x < SQRT_MAPSIZE; x++)
+    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
     {
-        for (int y = 0; y < SQRT_MAPSIZE; y++)
+        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
         {
-            mapTileVBO[y * SQRT_MAPSIZE + x % SQRT_MAPSIZE] = RandomRange(i, 0, 4);
+            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = RandomRange(i, 0,9);
             i++;
         }
     }

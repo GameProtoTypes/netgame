@@ -417,12 +417,19 @@ int32_t main(int32_t argc, char* args[])
         //draw map
         gameGraphics.pMapTileShadProgram->Use();
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
-        glm::ivec2 mapSize = { SQRT_MAPSIZE , SQRT_MAPSIZE };
+        glm::mat4 mapTransform(1.0f);
+        mapTransform = glm::scale(mapTransform, glm::vec3(5, 5, 1));
+        mapTransform = glm::translate(mapTransform, glm::vec3(-SQRT_MAPTILESIZE * 0.5f, -SQRT_MAPTILESIZE * 0.5f, 0));
+        
+        
+
+        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
+        glm::ivec2 mapSize = { SQRT_MAPTILESIZE , SQRT_MAPTILESIZE };
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
         glBindVertexArray(gameGraphics.mapTileVAO);
         glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTileVBO);
-        glDrawArrays(GL_POINTS, 0, SQRT_MAPSIZE*SQRT_MAPSIZE);
+        glDrawArrays(GL_POINTS, 0, SQRT_MAPTILESIZE*SQRT_MAPTILESIZE);
         glBindBuffer(GL_ARRAY_BUFFER,0);
         glBindVertexArray(0);
 
@@ -430,12 +437,12 @@ int32_t main(int32_t argc, char* args[])
 
 
         //draw all peeps
-        //gameGraphics.pPeepShadProgram->Use();
-        //gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+        gameGraphics.pPeepShadProgram->Use();
+        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
-        //glBindVertexArray(gameGraphics.peepVAO);
-        //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
-        //glBindVertexArray(0);
+        glBindVertexArray(gameGraphics.peepVAO);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
+        glBindVertexArray(0);
 
 
 

@@ -821,6 +821,7 @@
 
 	if (gameStateB->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
 	{
+		/*
 		while (CLIENT_snapshotStorageQueue.size() > 1)
 		{
 			CLIENT_snapshotStorageQueue.erase(CLIENT_snapshotStorageQueue.begin());
@@ -837,7 +838,7 @@
 			reinterpret_cast<void*>(gameStateB.get()), sizeof(GameStateB));
 
 		//CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
-
+		*/
 	}
 	if (serverRunning)
 	{

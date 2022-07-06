@@ -176,8 +176,8 @@ GameGraphics::GameGraphics()
 
 
     //map
-    std::shared_ptr<cl_uint> mapStartData(new cl_uint[SQRT_MAPSIZE * SQRT_MAPSIZE]);
-    for (int i = 0; i < SQRT_MAPSIZE * SQRT_MAPSIZE; i++)
+    std::shared_ptr<cl_uint> mapStartData(new cl_uint[SQRT_MAPTILESIZE * SQRT_MAPTILESIZE]);
+    for (int i = 0; i < SQRT_MAPTILESIZE * SQRT_MAPTILESIZE; i++)
     {
         mapStartData.get()[i] = 0;
     }
@@ -189,7 +189,7 @@ GameGraphics::GameGraphics()
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTileVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mapTileVBO);
-            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPSIZE*SQRT_MAPSIZE*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPTILESIZE*SQRT_MAPTILESIZE*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
             glEnableVertexAttribArray(0); 
 
             glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0); 
