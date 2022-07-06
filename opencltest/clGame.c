@@ -285,7 +285,9 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
 }
 
 
-__kernel void game_init_single(__global GameState* gameState, __global GameStateB* gameStateB)
+__kernel void game_init_single(__global GameState* gameState, 
+    __global GameStateB* gameStateB,
+    __global cl_uint* mapTileVBO)
 {
     printf("Game Initializing...\n");
 
@@ -333,7 +335,7 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
 
 
 
-        gameState->peeps[p].stateRender.faction = RandomRange(p + 3, 0, 4);
+        gameState->peeps[p].stateRender.faction = RandomRange(p + 3, 0, 2);
         
 
 
@@ -361,6 +363,26 @@ __kernel void game_init_single(__global GameState* gameState, __global GameState
     }
 
     printf("Peep Sector Assigment Finished\n");
+
+
+
+
+
+
+    printf("Creating Map..\n");
+    
+    int i = 0;
+    for (int x = 0; x < SQRT_MAPSIZE; x++)
+    {
+        for (int y = 0; y < SQRT_MAPSIZE; y++)
+        {
+            mapTileVBO[y * SQRT_MAPSIZE + x % SQRT_MAPSIZE] = RandomRange(i, 0, 4);
+            i++;
+        }
+    }
+
+
+
 }
 
 
@@ -424,7 +446,13 @@ void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global
     peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 4] = drawColor.z * brightFactor;
 }
 
-__kernel void game_update(__global GameState* gameState, __global GameStateB* gameStateB,  __global float* peepVBOBuffer) {
+__kernel void game_update(__global GameState* gameState,
+    __global GameStateB* gameStateB, 
+    __global float* peepVBOBuffer,
+    __global cl_uint* mapTileVBO
+    
+    )
+{
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
@@ -433,6 +461,8 @@ __kernel void game_update(__global GameState* gameState, __global GameStateB* ga
     Peep* p = &gameState->peeps[globalid];
     PeepUpdate(gameState, p);
     PeepDraw(gameState, gameStateB, p, peepVBOBuffer);
+
+
 }
 
 

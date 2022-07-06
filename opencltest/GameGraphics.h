@@ -18,6 +18,7 @@
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
+#define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
 
 //graphics resources/buffers access
 class GameGraphics
@@ -49,18 +50,23 @@ public:
 	
 
     std::vector<std::shared_ptr<GEShaderProgram>> shaderProgramList;
-    std::vector<std::shared_ptr<GEShader>> shaderList;
 
 	std::shared_ptr<GEShaderProgram> pPeepShadProgram;
-	int peepInstanceSIZE = 0;
+	std::shared_ptr<GEShaderProgram> pMapTileShadProgram;
 
 
 
 	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
 	std::shared_ptr<GEShaderProgram> pTileShadProgram;
 	
-	uint32_t quadVAO, quadVBO;
-	uint32_t peepInstanceVBO;        
-	uint32_t mapTileInstanceVBO;
+	uint32_t peepVAO, peepQuadVBO, peepInstanceVBO;     
+	int peepInstanceSIZE = 0;
+
+
+	uint32_t mapTileVAO, mapTileVBO;	
+	int mapTileInstanceSIZE = 0;
+	GLuint mapTileTexId = 0;
+
+
 };
 

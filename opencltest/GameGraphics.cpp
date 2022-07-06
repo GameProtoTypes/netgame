@@ -12,6 +12,13 @@
 
 #include "glfw3native.h"
 
+#include <SDL.h>
+#include "SDL_opengl.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -110,105 +117,139 @@ GameGraphics::GameGraphics()
     printf("GLSL Version : %s\n", glslVersion);
 
 
-
-    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertPeep.shad");
-    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragPeep.shad");
-
-
-    shaderList.push_back(pVertShad);
-    shaderList.push_back(pFragShad);
-
-    //create programs to use those shaders.
-    pPeepShadProgram = std::make_shared<GEShaderProgram>();
-    pPeepShadProgram->AttachShader(pVertShad);
-    pPeepShadProgram->AttachShader(pFragShad);
-
-    shaderProgramList.push_back(pPeepShadProgram);
+    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertShader.shad");
+    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragShader.shad");
+    std::shared_ptr<GEShader> pVertPeepShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertPeep.shad");
+    std::shared_ptr<GEShader> pFragPeepShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragPeep.shad");
+    std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertMapTile.shad");
+    std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragMapTile.shad");
+    std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "geomMapTile.shad");
 
 
-    pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "vertShader.shad");
-    pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "fragShader.shad");
-    shaderList.push_back(pVertShad);
-    shaderList.push_back(pFragShad);
 
     //create programs to use those shaders.
     pBasicShadProgram = std::make_shared<GEShaderProgram>();
     pBasicShadProgram->AttachShader(pVertShad);
     pBasicShadProgram->AttachShader(pFragShad);
-
     shaderProgramList.push_back(pBasicShadProgram);
 
 
-    glBindAttribLocation(pPeepShadProgram->ProgramID(), 0, "VertexPosition");
-    glBindAttribLocation(pPeepShadProgram->ProgramID(), 1, "VertexColor");
 
-    glBindAttribLocation(pBasicShadProgram->ProgramID(), 0, "VertexPosition");
-    glBindAttribLocation(pBasicShadProgram->ProgramID(), 1, "VertexColor");
+    pPeepShadProgram = std::make_shared<GEShaderProgram>();
+    pPeepShadProgram->AttachShader(pVertPeepShad);
+    pPeepShadProgram->AttachShader(pFragPeepShad);
+    shaderProgramList.push_back(pPeepShadProgram);
+
+
+    pMapTileShadProgram = std::make_shared<GEShaderProgram>();
+    pMapTileShadProgram->AttachShader(pVertMapTileShad);
+    pMapTileShadProgram->AttachShader(pGeomMapTileShad);
+    pMapTileShadProgram->AttachShader(pFragMapTileShad);
+    shaderProgramList.push_back(pMapTileShadProgram);
+
+    GL_HOST_ERROR_CHECK()
+
 
 
     pPeepShadProgram->Link();
     pBasicShadProgram->Link();
+    pMapTileShadProgram->Link();
+
+    GL_HOST_ERROR_CHECK()
 
 
-    // store instance data in an array buffer
-    // --------------------------------------
-    
-    glGenBuffers(1, &peepInstanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3)) * MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
     float quadVertices[] = {
         // positions    
         -1.0f,  1.0f,
-         1.0f, -1.0f,
         -1.0f, -1.0f,
+         1.0f, -1.0f,
+       
 
         -1.0f,  1.0f,
          1.0f, -1.0f,
          1.0f,  1.0f
     };
     
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    //Make VAO's
 
-    // also set instance data
-    peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3);//size for each peep
-    glEnableVertexAttribArray(2);
-    glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO); // this attribute comes from a different vertex buffer
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
-    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
-
-
-
+    GL_HOST_ERROR_CHECK()
 
 
     //map
+    std::shared_ptr<cl_uint> mapStartData(new cl_uint[SQRT_MAPSIZE * SQRT_MAPSIZE]);
+    for (int i = 0; i < SQRT_MAPSIZE * SQRT_MAPSIZE; i++)
+    {
+        mapStartData.get()[i] = 0;
+    }
+    glGenVertexArrays(1, &mapTileVAO);
+    glBindVertexArray(mapTileVAO);
 
-    glGenBuffers(1, &mapTileInstanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, mapTileInstanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2) + sizeof(glm::vec3))* SQRT_MAPSIZE*SQRT_MAPSIZE, nullptr, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL_HOST_ERROR_CHECK()
+
+        GL_HOST_ERROR_CHECK()
+        glGenBuffers(1, &mapTileVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTileVBO);
+            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPSIZE*SQRT_MAPSIZE*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+            glEnableVertexAttribArray(0); 
+
+            glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0); 
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+
+    GL_HOST_ERROR_CHECK()
+
+
+
+    //peeps
+    glGenVertexArrays(1, &peepVAO);
+    glBindVertexArray(peepVAO);
+
+        glGenBuffers(1, &peepQuadVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, peepQuadVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        // also set instance data
+        peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3);//size for each peep
+        glGenBuffers(1, &peepInstanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
+            glBufferData(GL_ARRAY_BUFFER, peepInstanceSIZE* MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
+            glEnableVertexAttribArray(2);
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
+            glEnableVertexAttribArray(3);
+            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
+        
+            glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
+            glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
 
 
 
+    GL_HOST_ERROR_CHECK()
+
+    //map textures
+    glGenTextures(1, &mapTileTexId);
+    glBindTexture(GL_TEXTURE_2D, mapTileTexId);
+
+    glm::ivec2 dims;
+    int chIFile;
+
+    stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, 3);
 
 
 
+    int Mode = GL_RGB;
+    glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
 

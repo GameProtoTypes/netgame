@@ -1,4 +1,4 @@
-project(opencltest)
+project(MinerTycoon)
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 ################################################################################
@@ -27,9 +27,13 @@ set(Source_Files
 
     "vertPeep.shad"
     "vertShader.shad"
+    "vertMapTile.shad"
+
+    "geomMapTile.shad"
 
     "fragPeep.shad"
     "fragShader.shad"
+    "fragMapTile.shad"
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -60,6 +64,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/../glew-2.1.0/include/GL;"
     "${CMAKE_CURRENT_SOURCE_DIR}/../GLFW;"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SDL2-2.0.22/include;"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../stb;"
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"

@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clGame.c">
+      <Filter>CL Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\casht\repos\opencltest\opencltest\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\vertPeep.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\vertShader.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\vertMapTile.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\geomMapTile.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\fragPeep.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\fragShader.shad">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\opencltest\opencltest\fragMapTile.shad">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CL Source Files">
+      <UniqueIdentifier>{A7FD844E-C74B-32F2-8050-2AE95A3F8853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{B4B18111-ED3F-3E7F-BE18-8FE76C1A8416}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{3A4D8877-7509-36C9-A3EB-C7D0B92B8C2E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

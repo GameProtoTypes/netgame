@@ -116,3 +116,15 @@ void GEShaderProgram::SetUniform_Vec2(std::string name, glm::vec2& val)
 	}
 
 }
+
+void GEShaderProgram::SetUniform_IVec2(std::string name, glm::ivec2& val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
+
+	if (location >= 0)
+	{
+		glUniform2i(location, val.x, val.y);
+
+	}
+}

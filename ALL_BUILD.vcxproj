@@ -173,6 +173,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\opencltest\MinerTycoon.vcxproj">
+      <Project>{687CA3C3-9565-3B8A-912D-F25C95F73946}</Project>
+      <Name>MinerTycoon</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\SLikeNet\SLikeNet.vcxproj">
       <Project>{D9FBD729-91FB-399B-8398-1B6264E4AA50}</Project>
       <Name>SLikeNet</Name>
@@ -180,10 +184,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\imgui.vcxproj">
       <Project>{B026A10B-95D7-3CE9-AF12-804942B93F78}</Project>
       <Name>imgui</Name>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\opencltest\opencltest.vcxproj">
-      <Project>{621515EE-9AFC-3EE1-972F-BC4DBDDDB118}</Project>
-      <Name>opencltest</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

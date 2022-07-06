@@ -183,6 +183,15 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 CMAKE_VERBOSE_MAKEFILE:BOOL=OFF
 
 //Value Computed by CMake
+MinerTycoon_BINARY_DIR:STATIC=C:/Users/casht/repos/opencltest/opencltest
+
+//Value Computed by CMake
+MinerTycoon_IS_TOP_LEVEL:STATIC=OFF
+
+//Value Computed by CMake
+MinerTycoon_SOURCE_DIR:STATIC=C:/Users/casht/repos/opencltest/opencltest
+
+//Value Computed by CMake
 game_BINARY_DIR:STATIC=C:/Users/casht/repos/opencltest
 
 //Value Computed by CMake

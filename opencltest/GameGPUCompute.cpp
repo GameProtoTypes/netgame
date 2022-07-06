@@ -121,6 +121,9 @@ void GameGPUCompute::RunInitCompute()
         graphics_peeps_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->peepInstanceVBO, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
+        graphics_mapTileVBO_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->mapTileVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
 
 
 
@@ -138,7 +141,7 @@ void GameGPUCompute::RunInitCompute()
 
 
 
-    if (ret == CL_BUILD_PROGRAM_FAILURE) {
+    if (ret != CL_SUCCESS) {
         // Determine the size of the log
         size_t log_size;
         clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
@@ -151,10 +154,12 @@ void GameGPUCompute::RunInitCompute()
 
         // Print the log
         printf("%s\n", log);
+
+        delete log;
     }
     CL_HOST_ERROR_CHECK(ret)
 
-        printf("programs built\n");
+    printf("programs built\n");
 
 
     cl_ulong localMemSize;
@@ -190,7 +195,9 @@ void GameGPUCompute::RunInitCompute()
         // Set the arguments of the kernels
         ret = clSetKernelArg(init_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
         ret = clSetKernelArg(init_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(init_kernel, 2, sizeof(cl_mem), (void*)&graphics_mapTileVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
+        
         ret = clSetKernelArg(preupdate_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
         ret = clSetKernelArg(preupdate_kernel_2, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
@@ -200,6 +207,7 @@ void GameGPUCompute::RunInitCompute()
         ret = clSetKernelArg(update_kernel, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
         ret = clSetKernelArg(update_kernel, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
         ret = clSetKernelArg(update_kernel, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(update_kernel, 3, sizeof(cl_mem), (void*)&graphics_mapTileVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
         //get stats
         cl_ulong usedLocalMemSize;
@@ -223,8 +231,14 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
 
 
-    ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
-        SingleKernelWorkItems, NULL, 0, NULL, &initEvent);
+    ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
+
+        ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
+            SingleKernelWorkItems, NULL, 0, NULL, &initEvent);
+        CL_HOST_ERROR_CHECK(ret)
+
+    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
 
     clWaitForEvents(1, &initEvent);
@@ -263,6 +277,8 @@ void GameGPUCompute::Stage1()
 
     ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
+    ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
 
         ret = clFinish(command_queue);
         CL_HOST_ERROR_CHECK(ret)
@@ -272,6 +288,8 @@ void GameGPUCompute::Stage1()
         CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
+    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);

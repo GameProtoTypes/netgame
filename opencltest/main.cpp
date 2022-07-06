@@ -413,23 +413,36 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        gameGraphics.pPeepShadProgram->Use();
-        
-        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
-
-
-
 
         //draw map
+        gameGraphics.pMapTileShadProgram->Use();
+        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
+        glm::ivec2 mapSize = { SQRT_MAPSIZE , SQRT_MAPSIZE };
+        gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
+        glBindVertexArray(gameGraphics.mapTileVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTileVBO);
+        glDrawArrays(GL_POINTS, 0, SQRT_MAPSIZE*SQRT_MAPSIZE);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
+        glBindVertexArray(0);
 
 
 
 
         //draw all peeps
-        glBindVertexArray(gameGraphics.quadVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
-        glBindVertexArray(0);
+        //gameGraphics.pPeepShadProgram->Use();
+        //gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
+        //glBindVertexArray(gameGraphics.peepVAO);
+        //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
+        //glBindVertexArray(0);
+
+
+
+
+
+
+
 
         //draw mouse
         {
@@ -468,6 +481,9 @@ int32_t main(int32_t argc, char* args[])
 
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
+
+            glDeleteVertexArrays(1, &mouseVAO);
+            glDeleteBuffers(1, &mouseVBO);
         }
 
         if(gameStateB->pauseState==0)
