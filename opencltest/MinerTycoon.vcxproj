@@ -318,13 +318,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\fixedpoint_opencl.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\perlincl.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\randomcl.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\main.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.cpp" />

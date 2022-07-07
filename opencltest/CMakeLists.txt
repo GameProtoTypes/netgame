@@ -6,13 +6,18 @@ set(CMAKE_CXX_STANDARD 20)
 ################################################################################
 set(Header_Files
     "peep.h"
+    "PeepFuncs.h"
     "GEShaderProgram.h"
     "GEShader.h"
     "GameGraphics.h"
+    "GameGPUCompute.h"
+    "GameNetworking.h" 
+    
+    "fixedpoint_opencl.h"
+    "perlincl.h"
+    "randomcl.h"
     "clLimits.h"
     "cl_type_glue.h"
-    "GameGPUCompute.h"
-    "GameNetworking.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 

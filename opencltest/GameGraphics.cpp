@@ -233,23 +233,24 @@ GameGraphics::GameGraphics()
 
 
     GL_HOST_ERROR_CHECK()
+    
+        
+        
+    glm::ivec2 dims;
+    int chIFile;
+    stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, 3);
 
     //map textures
     glGenTextures(1, &mapTileTexId);
     glBindTexture(GL_TEXTURE_2D, mapTileTexId);
 
-    glm::ivec2 dims;
-    int chIFile;
-
-    stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, 3);
-
-
+    
 
     int Mode = GL_RGB;
     glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 
 

@@ -2,7 +2,7 @@
 #include "fixedpoint_opencl.h"
 
 #include "peep.h"
-#include "random.h"
+#include "randomcl.h"
 #include "perlincl.h"
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
@@ -376,7 +376,26 @@ __kernel void game_init_single(__global GameState* gameState,
     {
         for (int y = 0; y < SQRT_MAPTILESIZE; y++)
         {
-            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = RandomRange(i, 0,9);
+
+
+           // cl_int z_Q16 = noise_2d_Q16(TO_Q16(x), TO_Q16(y),0);
+            cl_int z_Q16 = perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1)>>4, 4, 0);
+            
+            int tileIdx = 0;
+            if (z_Q16 * 100 < TO_Q16(20))
+                tileIdx = 0;
+            else if (z_Q16 * 100 < TO_Q16(40))
+                tileIdx = 1;
+            else if (z_Q16 * 100 < TO_Q16(60))
+                tileIdx = 2;
+            else if (z_Q16 * 100 < TO_Q16(80))
+                tileIdx = 3;
+            else
+                tileIdx = 4;
+
+            gameState->map.levels[0];
+
+            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
             i++;
         }
     }

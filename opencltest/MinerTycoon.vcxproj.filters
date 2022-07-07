@@ -27,6 +27,9 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36,16 +39,25 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\fixedpoint_opencl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\perlincl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\randomcl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\clLimits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -14,6 +14,8 @@ layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
 void main() {
+    if(gs_in[0].tileId != 255)
+    {
     uint tileId = gs_in[0].tileId & 255u;
     float tileX = float(tileId & 15u) / 16.0;
     float tileY = float((tileId >> 4u) & 15u) / 16.0;
@@ -38,4 +40,5 @@ void main() {
     EmitVertex();
 
     EndPrimitive();
+    }
 }  
