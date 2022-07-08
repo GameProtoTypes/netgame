@@ -93,7 +93,7 @@ public:
 	int peepInstanceSIZE = 0;
 
 
-	uint32_t mapTileVAO, mapTileVBO;	
+	uint32_t mapTileVAO, mapTileVBO, mapTileAttrVBO;	
 	int mapTileInstanceSIZE = 0;
 	GLuint mapTileTexId = 0;
 

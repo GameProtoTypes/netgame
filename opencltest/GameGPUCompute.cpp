@@ -124,6 +124,8 @@ void GameGPUCompute::RunInitCompute()
         graphics_mapTileVBO_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->mapTileVBO, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
+        graphics_mapTileAttrVBO_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->mapTileAttrVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
 
 
 
@@ -204,6 +206,7 @@ void GameGPUCompute::RunInitCompute()
             ret = clSetKernelArg(k, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, 3, sizeof(cl_mem), (void*)&graphics_mapTileVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 4, sizeof(cl_mem), (void*)&graphics_mapTileAttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
         }
         
 
@@ -235,6 +238,8 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
         ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
+        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
 
 
         ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
@@ -246,7 +251,8 @@ void GameGPUCompute::RunInitCompute()
         CL_HOST_ERROR_CHECK(ret)
             ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
         CL_HOST_ERROR_CHECK(ret)
-
+            ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
+        CL_HOST_ERROR_CHECK(ret)
     clWaitForEvents(1, &initEvent);
     ReadFullGameState();
 }
@@ -261,7 +267,8 @@ void GameGPUCompute::Stage1()
     CL_HOST_ERROR_CHECK(ret)
     ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
-
+        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
 
 
 
@@ -307,6 +314,8 @@ void GameGPUCompute::Stage1()
     ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
     ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
+    CL_HOST_ERROR_CHECK(ret)
+    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);

@@ -81,6 +81,10 @@ public:
 
 	cl_mem graphics_peeps_mem_obj;
 	cl_mem graphics_mapTileVBO_mem_obj;
+	cl_mem graphics_mapTileAttrVBO_mem_obj;
+
+
+
 
 	std::shared_ptr<GameState> gameState;
 	std::shared_ptr<GameStateB> gameStateB;

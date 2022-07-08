@@ -7,8 +7,8 @@
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
-#define ALL_CORE_PARAMS __global GameState* gameState, __global GameStateB* gameStateB, __global float* peepVBOBuffer, __global cl_uint* mapTileVBO
-#define ALL_CORE_PARAMS_PASS gameState, gameStateB, peepVBOBuffer, mapTileVBO
+#define ALL_CORE_PARAMS __global GameState* gameState, __global GameStateB* gameStateB, __global float* peepVBOBuffer, __global cl_uint* mapTileVBO, __global cl_uint* mapTileAttrVBO
+#define ALL_CORE_PARAMS_PASS gameState, gameStateB, peepVBOBuffer, mapTileVBO, mapTileAttrVBO
 
 
 void PeepPrint(Peep* peep)
@@ -211,32 +211,48 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 }
 
 
-void BuildMapTileView(ALL_CORE_PARAMS)
+void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
 {
-
-    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    MapTile tileIdx = gameState->map.levels[gameStateB->mapZView].tiles[x][y];
+    MapTile tileUpIdx;
+    if (gameStateB->mapZView < MAPDEPTH)
     {
-        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
-        {
-            MapTile tileIdx = gameState->map.levels[gameStateB->mapZView].tiles[x][y];
-
-            if (tileIdx == MapTile_NONE)
-            {
-                //look down...
-                MapTile tileDownIdx = tileIdx;
-                int z = gameStateB->mapZView;
-                while (tileDownIdx == MapTile_NONE)
-                {
-                    tileDownIdx = gameState->map.levels[z].tiles[x][y];
-                    z--;
-                }
-                tileIdx = tileDownIdx;
-            }
-
-
-            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
-        }
+        tileUpIdx = gameState->map.levels[gameStateB->mapZView + 1].tiles[x][y];
     }
+    else
+    {
+        tileUpIdx = MapTile_NONE;
+    }
+
+    mapTileAttrVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = 0;
+
+    if (tileIdx == MapTile_NONE)
+    {
+        //look down...
+        MapTile tileDownIdx = tileIdx;
+        int z = gameStateB->mapZView;
+        int vz = 0;
+        while (tileDownIdx == MapTile_NONE)
+        {
+            tileDownIdx = gameState->map.levels[z].tiles[x][y];
+            z--;
+            vz++;
+        }
+        tileIdx = tileDownIdx;
+        mapTileAttrVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] |= clamp(vz,0,15);
+    }
+            
+            
+
+    if (tileUpIdx != MapTile_NONE)
+    {
+        mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = MapTile_NONE;//view obstructed by tile above.
+    }
+    else
+    {
+        mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
+    }
+            
 }
 
 
@@ -369,7 +385,14 @@ void CreateMap(ALL_CORE_PARAMS)
             }
         }
     }
-    BuildMapTileView(ALL_CORE_PARAMS_PASS);
+
+    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    {
+        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
+        {
+            BuildMapTileView(ALL_CORE_PARAMS_PASS,x,y);
+        }
+    }
 }
 
 
@@ -531,16 +554,24 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
 
-    if (globalid == 0)//single stuff
+
+    //update map view
+    if (globalid >= WARPSIZE)
+        return;
+    if (gameStateB->mapZView != gameStateB->mapZView_1)
     {
-        
-        if (gameStateB->mapZView != gameStateB->mapZView_1)
+        const cl_uint chunkSize = (SQRT_MAPTILESIZE* SQRT_MAPTILESIZE) / WARPSIZE;
+        for (cl_ulong i = 0; i < (SQRT_MAPTILESIZE * SQRT_MAPTILESIZE) / WARPSIZE; i++)
         {
-            printf("Updating Map..");
-            BuildMapTileView(ALL_CORE_PARAMS_PASS);
-            gameStateB->mapZView_1 = gameStateB->mapZView;
+            cl_ulong xyIdx = i + globalid * chunkSize;
+            BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% SQRT_MAPTILESIZE, xyIdx/ SQRT_MAPTILESIZE);
+
         }
+
     }
+    barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+    gameStateB->mapZView_1 = gameStateB->mapZView;
+    
 }
 
 

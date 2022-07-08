@@ -437,9 +437,7 @@ int32_t main(int32_t argc, char* args[])
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
         glBindVertexArray(gameGraphics.mapTileVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTileVBO);
         glDrawArrays(GL_POINTS, 0, SQRT_MAPTILESIZE*SQRT_MAPTILESIZE);
-        glBindBuffer(GL_ARRAY_BUFFER,0);
         glBindVertexArray(0);
 
 

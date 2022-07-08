@@ -196,6 +196,16 @@ GameGraphics::GameGraphics()
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        glGenBuffers(1, &mapTileAttrVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTileAttrVBO);
+            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPTILESIZE * SQRT_MAPTILESIZE * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+            glEnableVertexAttribArray(1);
+
+            glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
     glBindVertexArray(0);
 
 
