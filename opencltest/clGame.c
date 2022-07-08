@@ -7,6 +7,8 @@
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
+#define ALL_CORE_PARAMS __global GameState* gameState, __global GameStateB* gameStateB, __global float* peepVBOBuffer, __global cl_uint* mapTileVBO
+#define ALL_CORE_PARAMS_PASS gameState, gameStateB, peepVBOBuffer, mapTileVBO
 
 
 void PeepPrint(Peep* peep)
@@ -88,7 +90,7 @@ void RobotUpdate(Peep* peep)
 }
 
 
-void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
+void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
 {
     cl_int x = ((peep->stateRender.map_x_Q15_16 >> 16) / (SECTOR_SIZE));
     cl_int y = ((peep->stateRender.map_y_Q15_16 >> 16) / (SECTOR_SIZE));
@@ -136,7 +138,7 @@ void AssignPeepToSector_Detach(GameState* gameState, Peep* peep)
         peep->mapSector_pending = newSector;
     }
 }
-void AssignPeepToSector_Insert(GameState* gameState, Peep* peep)
+void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 {
     //assign new sector
     if (peep->mapSector != peep->mapSector_pending)
@@ -167,7 +169,7 @@ void PeepPreUpdate(Peep* peep)
         peep->stateRender.deathState = 1;
 }
 
-void PeepUpdate(__global GameState* gameState, Peep* peep)
+void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 {
 
     peep->minDistPeep_Q16 = (1 << 30);
@@ -207,7 +209,38 @@ void PeepUpdate(__global GameState* gameState, Peep* peep)
  
 
 }
-__kernel void game_apply_actions(__global GameState* gameState, __global GameStateB* gameStateB)
+
+
+void BuildMapTileView(ALL_CORE_PARAMS)
+{
+
+    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    {
+        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
+        {
+            MapTile tileIdx = gameState->map.levels[gameStateB->mapZView].tiles[x][y];
+
+            if (tileIdx == MapTile_NONE)
+            {
+                //look down...
+                MapTile tileDownIdx = tileIdx;
+                int z = gameStateB->mapZView;
+                while (tileDownIdx == MapTile_NONE)
+                {
+                    tileDownIdx = gameState->map.levels[z].tiles[x][y];
+                    z--;
+                }
+                tileIdx = tileDownIdx;
+            }
+
+
+            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
+        }
+    }
+}
+
+
+__kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
     cl_uint curPeepIdx = gameState->clientStates[gameStateB->clientId].selectedPeepsLastIdx;
@@ -285,9 +318,63 @@ __kernel void game_apply_actions(__global GameState* gameState, __global GameSta
 }
 
 
-__kernel void game_init_single(__global GameState* gameState, 
-    __global GameStateB* gameStateB,
-    __global cl_uint* mapTileVBO)
+
+
+void CreateMap(ALL_CORE_PARAMS)
+{
+    printf("Creating Map..\n");
+
+    int i = 0;
+    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    {
+        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
+        {
+            cl_int perlin_z_Q16 = perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1) >> 6, 8, 0);
+
+            for (int z = 0; z < MAPDEPTH; z++)
+            {
+                int zPerc_Q16 = DIV_PAD_Q16(TO_Q16(z), TO_Q16(MAPDEPTH));
+               
+                int depthPerc_Q16 = TO_Q16(2) + perlin_z_Q16 - zPerc_Q16;
+                depthPerc_Q16 = DIV_PAD_Q16(depthPerc_Q16, TO_Q16(3));
+                //PrintQ16(depthPerc_Q16*100);
+                MapTile tileType = MapTile_NONE;
+                if (depthPerc_Q16 * 100 > TO_Q16(90))
+                {
+                    tileType = MapTile_DiamondOre;
+                }
+                else if (depthPerc_Q16 * 100 > TO_Q16(80))
+                {
+                    tileType = MapTile_CopperOre;
+                }
+                else if (depthPerc_Q16 * 100 > TO_Q16(75))
+                {
+                    tileType = MapTile_Rock;
+                }
+                else if (depthPerc_Q16 * 100 > TO_Q16(70))
+                {
+                    tileType = MapTile_Dirt;
+                }
+                else if (depthPerc_Q16 * 100 > TO_Q16(65))
+                {
+                    tileType = MapTile_DarkGrass;
+                }
+
+
+
+                gameState->map.levels[z].tiles[x][y] = tileType;
+
+
+                i++;
+            }
+        }
+    }
+    BuildMapTileView(ALL_CORE_PARAMS_PASS);
+}
+
+
+
+__kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
 
@@ -357,55 +444,19 @@ __kernel void game_init_single(__global GameState* gameState,
     {
         __global Peep* p = &gameState->peeps[pi];
 
-        AssignPeepToSector_Detach(gameState, p);
-        AssignPeepToSector_Insert(gameState, p);
+        AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
+        AssignPeepToSector_Insert(ALL_CORE_PARAMS_PASS, p);
 
     }
 
     printf("Peep Sector Assigment Finished\n");
 
 
-
-
-
-
-    printf("Creating Map..\n");
-    
-    int i = 0;
-    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
-    {
-        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
-        {
-
-
-           // cl_int z_Q16 = noise_2d_Q16(TO_Q16(x), TO_Q16(y),0);
-            cl_int z_Q16 = perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1)>>4, 4, 0);
-            
-            int tileIdx = 0;
-            if (z_Q16 * 100 < TO_Q16(20))
-                tileIdx = 0;
-            else if (z_Q16 * 100 < TO_Q16(40))
-                tileIdx = 1;
-            else if (z_Q16 * 100 < TO_Q16(60))
-                tileIdx = 2;
-            else if (z_Q16 * 100 < TO_Q16(80))
-                tileIdx = 3;
-            else
-                tileIdx = 4;
-
-            gameState->map.levels[0];
-
-            mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
-            i++;
-        }
-    }
-
-
-
+    CreateMap(ALL_CORE_PARAMS_PASS);
 }
 
 
-void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global float* peepVBOBuffer)
+void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
 {
     float3 drawColor;
 
@@ -465,12 +516,7 @@ void PeepDraw(GameState* gameState, GameStateB* gameStateB, Peep* peep, __global
     peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 4] = drawColor.z * brightFactor;
 }
 
-__kernel void game_update(__global GameState* gameState,
-    __global GameStateB* gameStateB, 
-    __global float* peepVBOBuffer,
-    __global cl_uint* mapTileVBO
-    
-    )
+__kernel void game_update(ALL_CORE_PARAMS)
 {
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
@@ -478,14 +524,29 @@ __kernel void game_update(__global GameState* gameState,
 
     
     Peep* p = &gameState->peeps[globalid];
-    PeepUpdate(gameState, p);
-    PeepDraw(gameState, gameStateB, p, peepVBOBuffer);
+    PeepUpdate(ALL_CORE_PARAMS_PASS,p);
+    PeepDraw(ALL_CORE_PARAMS_PASS,p);
 
 
+
+
+
+    if (globalid == 0)//single stuff
+    {
+        
+        if (gameStateB->mapZView != gameStateB->mapZView_1)
+        {
+            printf("Updating Map..");
+            BuildMapTileView(ALL_CORE_PARAMS_PASS);
+            gameStateB->mapZView_1 = gameStateB->mapZView;
+        }
+    }
 }
 
 
-__kernel void game_preupdate_1(__global const GameState* gameState) {
+__kernel void game_preupdate_1(ALL_CORE_PARAMS) {
+
+
     // Get the index of the current element to be processed
     
     int globalid = get_global_id(0);
@@ -513,7 +574,7 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
 
         while (*lock != reservation) { }
 
-        AssignPeepToSector_Detach(gameState, p);
+        AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
 
         atomic_dec(lock);
        
@@ -521,8 +582,9 @@ __kernel void game_preupdate_1(__global const GameState* gameState) {
 }
 
 
-__kernel void game_preupdate_2(__global  GameState* gameState) {
-   
+__kernel void game_preupdate_2(ALL_CORE_PARAMS) {
+
+
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     if (globalid >= WARPSIZE)
@@ -548,12 +610,10 @@ __kernel void game_preupdate_2(__global  GameState* gameState) {
 
         while (atomic_add(lock, 0) != reservation) {}
 
-            AssignPeepToSector_Insert(gameState, p);
+            AssignPeepToSector_Insert(ALL_CORE_PARAMS_PASS, p);
         
         atomic_dec(lock);
     }
-
-
 
 
 

@@ -54,6 +54,9 @@ void WaitMinTickTime(uint64_t timerStartMs, int32_t targetTimeMs)
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
 
+
+
+
 int32_t main(int32_t argc, char* args[]) 
 {
     GameGraphics gameGraphics;
@@ -88,7 +91,6 @@ int32_t main(int32_t argc, char* args[])
     uint64_t timerStartMs = SDL_GetTicks64();
 
 
-    std::shared_ptr<RenderClientState> client = std::make_shared<RenderClientState>();
 
 
     while (!quit)
@@ -122,10 +124,13 @@ int32_t main(int32_t argc, char* args[])
         nanoSeconds = time_end - time_start;
         ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
-        client->mousePrimaryPressed = 0;
-        client->mousePrimaryReleased = 0;
-        client->mouseSecondaryPressed = 0;
-        client->mouseSecondaryReleased = 0;
+
+        GameGraphics::RenderClientState* rclientst = &gameGraphics.renderClientState;
+
+        rclientst->mousePrimaryPressed = 0;
+        rclientst->mousePrimaryReleased = 0;
+        rclientst->mouseSecondaryPressed = 0;
+        rclientst->mouseSecondaryReleased = 0;
         //Handle events on queue
         while (SDL_PollEvent(&e) != 0)
         {
@@ -141,40 +146,40 @@ int32_t main(int32_t argc, char* args[])
                 if (e.wheel.y > 0) // scroll up
                 {
                     //if (gameState->viewScale >= 1 && gameState->viewScale < 15)
-                    client->mousescroll++;
+                    rclientst->mousescroll++;
                         
                 }
                 else if (e.wheel.y < 0) // scroll down
                 {
                     // if (gameState->viewScale > 1)
-                    client->mousescroll--;
+                    rclientst->mousescroll--;
                 }
             }
             else if (e.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
-                    client->mousePrimaryDown = 1;
-                    client->mousePrimaryPressed = 1;
+                    rclientst->mousePrimaryDown = 1;
+                    rclientst->mousePrimaryPressed = 1;
 
                 }
                 else
                 {
-                    client->mouseSecondaryDown = 1;
-                    client->mouseSecondaryPressed = 1;
+                    rclientst->mouseSecondaryDown = 1;
+                    rclientst->mouseSecondaryPressed = 1;
                 }
             }
             else if (e.type == SDL_MOUSEBUTTONUP)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
-                    client->mousePrimaryDown = 0;
-                    client->mousePrimaryReleased = 1;
+                    rclientst->mousePrimaryDown = 0;
+                    rclientst->mousePrimaryReleased = 1;
                 }
                 else
                 {
-                    client->mouseSecondaryDown = 0;
-                    client->mouseSecondaryReleased = 1;
+                    rclientst->mouseSecondaryDown = 0;
+                    rclientst->mouseSecondaryReleased = 1;
                 }
             }
             else if (SDL_WINDOWEVENT)
@@ -193,29 +198,29 @@ int32_t main(int32_t argc, char* args[])
             }
         }
         SDL_GetMouseState(&mousex, &mousey);
-        client->mousex = mousex;
-        client->mousey = mousey;
-        client->viewFrameDelta.x = 0;
-        client->viewFrameDelta.y = 0;
-        if (client->mouseSecondaryPressed)
+        rclientst->mousex = mousex;
+        rclientst->mousey = mousey;
+        rclientst->viewFrameDelta.x = 0;
+        rclientst->viewFrameDelta.y = 0;
+        if (rclientst->mouseSecondaryPressed)
         {
-            client->mouse_dragBeginx = mousex;
-            client->mouse_dragBeginy = mousey;
-            client->view_beginX = client->viewX;
-            client->view_beginY = client->viewY;
+            rclientst->mouse_dragBeginx = mousex;
+            rclientst->mouse_dragBeginy = mousey;
+            rclientst->view_beginX = rclientst->viewX;
+            rclientst->view_beginY = rclientst->viewY;
         }
-        if (client->mousePrimaryPressed)
+        if (rclientst->mousePrimaryPressed)
         {
-            client->mouse_dragBeginx = mousex;
-            client->mouse_dragBeginy = mousey;
+            rclientst->mouse_dragBeginx = mousex;
+            rclientst->mouse_dragBeginy = mousey;
         }
 
-        if (client->mouseSecondaryDown)
+        if (rclientst->mouseSecondaryDown)
         {
-            client->viewFrameDelta.x = (client->mousex - client->mouse_dragBeginx);
-            client->viewFrameDelta.y = (client->mousey - client->mouse_dragBeginy);
-            client->viewX = client->view_beginX + client->viewFrameDelta.x;
-            client->viewY = client->view_beginY + client->viewFrameDelta.y;
+            rclientst->viewFrameDelta.x = (rclientst->mousex - rclientst->mouse_dragBeginx);
+            rclientst->viewFrameDelta.y = (rclientst->mousey - rclientst->mouse_dragBeginy);
+            rclientst->viewX = rclientst->view_beginX + rclientst->viewFrameDelta.x;
+            rclientst->viewY = rclientst->view_beginY + rclientst->viewFrameDelta.y;
             
         }
         
@@ -224,22 +229,22 @@ int32_t main(int32_t argc, char* args[])
 
         //render
         static float viewScale = 0.002f;
-        viewScale = client->mousescroll* client->mousescroll*0.01f;
+        viewScale = rclientst->mousescroll* rclientst->mousescroll*0.01f;
         viewScale = glm::clamp(viewScale, 0.001f, 0.2f);
         //ImGui::SliderFloat("Zoom", &viewScale, 0.001f, 0.2f);
         glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
            
         
-        glm::vec3 position = glm::vec3((2.0f* client->viewX) / gameGraphics.SCREEN_WIDTH, ( - 2.0f * client->viewY) / gameGraphics.SCREEN_HEIGHT, 0.0f);
+        glm::vec3 position = glm::vec3((2.0f* rclientst->viewX) / gameGraphics.SCREEN_WIDTH, ( - 2.0f * rclientst->viewY) / gameGraphics.SCREEN_HEIGHT, 0.0f);
         glm::mat4 view = glm::mat4(1.0f);   
         const float a = 2000.0f;
 
-        client->worldCameraPos.x += ( 1000.0f * client->viewFrameDelta.x* scaleVec.x) / gameGraphics.SCREEN_WIDTH;
-        client->worldCameraPos.y += ( 1000.0f * client->viewFrameDelta.y * scaleVec.x) / gameGraphics.SCREEN_HEIGHT;
-        view = glm::ortho(client->worldCameraPos.x - scaleVec.x * a,
-            client->worldCameraPos.x + scaleVec.x * a,
-            client->worldCameraPos.y + scaleVec.y * a,
-            client->worldCameraPos.y - scaleVec.y * a);
+        rclientst->worldCameraPos.x += ( 1000.0f * rclientst->viewFrameDelta.x* scaleVec.x) / gameGraphics.SCREEN_WIDTH;
+        rclientst->worldCameraPos.y += ( 1000.0f * rclientst->viewFrameDelta.y * scaleVec.x) / gameGraphics.SCREEN_HEIGHT;
+        view = glm::ortho(rclientst->worldCameraPos.x - scaleVec.x * a,
+            rclientst->worldCameraPos.x + scaleVec.x * a,
+            rclientst->worldCameraPos.y + scaleVec.y * a,
+            rclientst->worldCameraPos.y - scaleVec.y * a);
         
 
 
@@ -252,14 +257,14 @@ int32_t main(int32_t argc, char* args[])
         glm::mat4 mouseWorldPos(1.0f);
         glm::mat4 mouseWorldPosEnd(1.0f);
         glm::vec4 mouseScreenCoords = glm::vec4(2.0f * (float(mousex) / gameGraphics.SCREEN_WIDTH) - 1.0, -2.0f * (float(mousey) / gameGraphics.SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
-        glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(client->mouse_dragBeginx) / gameGraphics.SCREEN_WIDTH) - 1.0, -2.0f * (float(client->mouse_dragBeginy) / gameGraphics.SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
+        glm::vec4 mouseBeginScreenCoords = glm::vec4(2.0f * (float(rclientst->mouse_dragBeginx) / gameGraphics.SCREEN_WIDTH) - 1.0, -2.0f * (float(rclientst->mouse_dragBeginy) / gameGraphics.SCREEN_HEIGHT) + 1.0, 0.0f, 1.0f);
         glm::vec4 worldMouseEnd = glm::inverse(view) * mouseScreenCoords;
         glm::vec4 worldMouseBegin = glm::inverse(view) * mouseBeginScreenCoords;
 
 
 
         std::vector<ActionWrap> clientActions;
-        if (client->mousePrimaryReleased)
+        if (rclientst->mousePrimaryReleased)
         {
             ActionWrap actionWrap;
             ActionWrapInit(&actionWrap);
@@ -283,7 +288,7 @@ int32_t main(int32_t argc, char* args[])
         }
 
             
-        if (client->mouseSecondaryReleased)
+        if (rclientst->mouseSecondaryReleased)
         {
 
             ActionWrap actionWrap;
@@ -293,13 +298,16 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.params_CommandToLocation_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16)) ;
             actionWrap.action.params_CommandToLocation_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
 
-
-
             clientActions.push_back(actionWrap);
 
             gameNetworking.actionStateDirty = true;
-
         }
+
+       
+
+
+
+
         GSCS(B)
         if (gameNetworking.fullyConnectedToHost)
         {
@@ -311,7 +319,8 @@ int32_t main(int32_t argc, char* args[])
             
        
                 
-
+        ImGui::SliderInt("ZLayer", &rclientst->viewZIdx, 0, MAPDEPTH-1);
+        gameStateB->mapZView = rclientst->viewZIdx;
 
 
 
@@ -483,7 +492,7 @@ int32_t main(int32_t argc, char* args[])
             glEnableVertexAttribArray(0);
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 
-            if (client->mousePrimaryDown)
+            if (rclientst->mousePrimaryDown)
                 glDrawArrays(GL_LINE_LOOP, 0, 4);
 
             glBindBuffer(GL_ARRAY_BUFFER, 0);

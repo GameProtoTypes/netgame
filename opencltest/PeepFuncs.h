@@ -12,6 +12,8 @@ void ClientActionInit(ClientAction* action)
 	action->action_CommandToLocation = 0;
 	action->params_CommandToLocation_X_Q16 = 0;
 	action->params_CommandToLocation_Y_Q16 = 0;
+
+	action->action_SetZView = 0;
 }
 
 

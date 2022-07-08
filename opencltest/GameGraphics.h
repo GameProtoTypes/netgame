@@ -33,6 +33,36 @@ public:
 	const int32_t SCREEN_WIDTH = 1024;
 	const int32_t SCREEN_HEIGHT = 768;
 
+	struct RenderClientState {
+		int32_t mousex = 0;
+		int32_t mousey = 0;
+		int32_t mouse_dragBeginx = 0;
+		int32_t mouse_dragBeginy = 0;
+		int32_t mousescroll = 0;
+		int32_t clicked = 0;
+
+		int32_t mousePrimaryDown = 0;
+		int32_t mousePrimaryPressed = 0;
+		int32_t mousePrimaryReleased = 0;
+
+		int32_t mouseSecondaryDown = 0;
+		int32_t mouseSecondaryPressed = 0;
+		int32_t mouseSecondaryReleased = 0;
+
+		float viewX = 0.0f;
+		float viewY = 0.0f;
+		float view_beginX = 0.0f;
+		float view_beginY = 0.0f;
+		float viewScale = 1.0f;
+
+		int viewZIdx =0 ;
+
+		glm::vec2 viewFrameDelta = glm::vec2();
+
+		glm::vec2 worldCameraPos = glm::vec2();
+	};
+	RenderClientState renderClientState;
+
 	void BeginDraw();
 
 	void Swap();

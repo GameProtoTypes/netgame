@@ -57,6 +57,7 @@ public:
 	cl_kernel action_kernel;
 	cl_kernel init_kernel;
 
+	std::vector<cl_kernel> kernels;
 
 	cl_event initEvent;
 	cl_event preUpdateEvent1;

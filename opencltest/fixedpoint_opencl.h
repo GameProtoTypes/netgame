@@ -142,6 +142,11 @@ void normalize_s2_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
 }
 
 
+
+
+
+
+
 void linear_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_int* out_Q16)
 {
     *out_Q16 = x1_Q16 + MUL_Q16((x2_Q16 - x1_Q16), perc_Q16);
@@ -221,13 +226,26 @@ void fixedPointTests()
 
     printf("FloatingNumber(Check): %f\n", floatingNumber);
 
-    //for (float i = 0; i < 1.0f; i+= 0.01f)
-    //{
-    //    cl_int interp_Q16 = 0;
+    for (float i = 0; i < 1.0f; i+= 0.01f)
+    {
+        cl_int interp_Q16 = 0;
 
-    //    //linear_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
+        //linear_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
 
-    //    cubic_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
-    //    printf("%d\n", WHOLE_Q16(interp_Q16));
-    //}
+       // cubic_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
+        
+        //cl_int sin_Q16 = sin_polynomial4_Q16(FloatToFixed(i, 16));
+        
+       // printf("%f\n", FixedToFloat(sin_Q16,16));
+
+
+
+
+
+    }
+
+    cl_long someNumber = TO_Q16(-12345);
+
+    printf("-12345: %f\n", FixedToFloat(someNumber, 16));
+
 }

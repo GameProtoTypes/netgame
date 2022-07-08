@@ -19,7 +19,7 @@
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
 #define SQRT_MAPTILESIZE (1024)
-#define MAPDEPTH (64)
+#define MAPDEPTH (32)
 
 
 #define WARPSIZE (32)
@@ -105,13 +105,23 @@ struct PeepRenderSupport {
 
 
 enum MapTileBitAttr {
-	MapTileBitAttr_MiningMarkBit = 0
+	MapTileBitAttr_MiningMarkBit = 0,
+	MapTileBitAttr_Visible = 1
+
 } typedef MapTileBitAttr;
 
 enum MapTile {
-	MapTile_NONE = 0,
+	MapTile_Dirt = 0,
+	MapTile_Sand,
+	MapTile_LightGrass,
+	MapTile_DarkGrass,
 	MapTile_Rock,
-	MapTile_Iron
+	MapTile_IronOre,
+	MapTile_CopperOre,
+	MapTile_DiamondOre,
+	MapTile_MossyRock,
+
+	MapTile_NONE = 255
 }typedef MapTile;
 
 
@@ -152,6 +162,9 @@ struct ClientAction {
 	cl_int action_CommandToLocation;
 	cl_int params_CommandToLocation_X_Q16;
 	cl_int params_CommandToLocation_Y_Q16;
+
+	cl_int action_SetZView;
+	cl_int params_ZViewIdx;
 } typedef ClientAction;
 
 struct ActionTracking {	
@@ -173,31 +186,7 @@ struct ActionWrap {
 
 } typedef ActionWrap;
 
-struct RenderClientState {
-	cl_int mousex;
-	cl_int mousey;
-	cl_int mouse_dragBeginx;
-	cl_int mouse_dragBeginy;
-	cl_int mousescroll;
-	cl_int clicked;
 
-	cl_int mousePrimaryDown;
-	cl_int mousePrimaryPressed;
-	cl_int mousePrimaryReleased;
-
-	cl_int mouseSecondaryDown;
-	cl_int mouseSecondaryPressed;
-	cl_int mouseSecondaryReleased;
-
-	cl_float viewX;
-	cl_float viewY;
-	cl_float view_beginX;
-	cl_float view_beginY;
-	cl_float viewScale;
-	cl_float2 viewFrameDelta;
-
-	cl_float2 worldCameraPos;
-};
 struct SynchronizedClientState {
 
 	cl_int connected;
@@ -221,10 +210,15 @@ struct GameStateB {
 	ActionWrap clientActions[32];
 	cl_int numActions;
 
-	cl_uint clientId;
 
 	cl_uint tickIdx;
 	int32_t pauseState;
 
-}typedef GameStateB;
 
+	//ClientSide only stuff that is processed in cl but not strictly gamestate
+	cl_uint clientId;
+	cl_int mapZView;
+	cl_int mapZView_1;
+
+
+}typedef GameStateB;
