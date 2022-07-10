@@ -44,12 +44,12 @@
 struct Cell;
 struct MapSector;
 
-
+#pragma pack(push, 4)
 struct PeepState_RenderLevel
 {
 	cl_int valid;
-	int32_t map_x_Q15_16;
-	int32_t map_y_Q15_16;
+	cl_int2 pos_Q16;
+
 
 	int32_t faction;
 
@@ -57,7 +57,7 @@ struct PeepState_RenderLevel
 	cl_int health;
 	cl_int deathState;
 }typedef PeepState_RenderLevel;
-
+#pragma pack(pop)
 
 struct PeepState_SimLevel
 {

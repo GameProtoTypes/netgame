@@ -23,8 +23,8 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
         return;
 
-    cl_int dist_Q16 = distance_s2_Q16(peep->stateRender.map_x_Q15_16, peep->stateRender.map_y_Q15_16,
-        otherPeep->stateRender.map_x_Q15_16, otherPeep->stateRender.map_y_Q15_16);
+    cl_int dist_Q16 = distance_s2_Q16(peep->stateRender.pos_Q16.x, peep->stateRender.pos_Q16.y,
+        otherPeep->stateRender.pos_Q16.x, otherPeep->stateRender.pos_Q16.y);
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -39,8 +39,8 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
 
 void RobotUpdate(Peep* peep)
 {
-    cl_int deltax_Q16 = peep->stateSim.target_x_Q16 - peep->stateRender.map_x_Q15_16;
-    cl_int deltay_Q16 = peep->stateSim.target_y_Q16 - peep->stateRender.map_y_Q15_16;
+    cl_int deltax_Q16 = peep->stateSim.target_x_Q16 - peep->stateRender.pos_Q16.x;
+    cl_int deltay_Q16 = peep->stateSim.target_y_Q16 - peep->stateRender.pos_Q16.y;
 
     cl_int len_Q16;
     normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
@@ -53,8 +53,8 @@ void RobotUpdate(Peep* peep)
     }
     if ((peep->minDistPeep_Q16 >> 16) < 5)
     {
-        deltax_Q16 = peep->minDistPeep->stateRender.map_x_Q15_16 - peep->stateRender.map_x_Q15_16;
-        deltay_Q16 = peep->minDistPeep->stateRender.map_y_Q15_16 - peep->stateRender.map_y_Q15_16;
+        deltax_Q16 = peep->minDistPeep->stateRender.pos_Q16.x - peep->stateRender.pos_Q16.x;
+        deltay_Q16 = peep->minDistPeep->stateRender.pos_Q16.y - peep->stateRender.pos_Q16.y;
         cl_int len_Q16;
         normalize_s2_Q16(&deltax_Q16, &deltay_Q16, &len_Q16);
         peep->stateSim.xv_Q15_16 = -deltax_Q16/8;
@@ -63,7 +63,7 @@ void RobotUpdate(Peep* peep)
         if (peep->minDistPeep->stateRender.faction != peep->stateRender.faction && (peep->minDistPeep->stateRender.deathState != 1))
         {
             peep->stateRender.attackState = 1;
-            peep->stateRender.health -= RandomRange(peep->minDistPeep->stateRender.map_x_Q15_16, 0, 5);
+            peep->stateRender.health -= RandomRange(peep->minDistPeep->stateRender.pos_Q16.x, 0, 5);
 
             if (peep->stateRender.health <= 0)
             {
@@ -92,8 +92,8 @@ void RobotUpdate(Peep* peep)
 
 void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
 {
-    cl_int x = ((peep->stateRender.map_x_Q15_16 >> 16) / (SECTOR_SIZE));
-    cl_int y = ((peep->stateRender.map_y_Q15_16 >> 16) / (SECTOR_SIZE));
+    cl_int x = ((peep->stateRender.pos_Q16.x >> 16) / (SECTOR_SIZE));
+    cl_int y = ((peep->stateRender.pos_Q16.y >> 16) / (SECTOR_SIZE));
 
     //clamp
     if (x < -SQRT_MAXSECTORS / 2)
@@ -159,8 +159,8 @@ void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 
 void PeepPreUpdate(Peep* peep)
 {
-    peep->stateRender.map_x_Q15_16 += peep->stateSim.xv_Q15_16;
-    peep->stateRender.map_y_Q15_16 += peep->stateSim.yv_Q15_16;
+    peep->stateRender.pos_Q16.x += peep->stateSim.xv_Q15_16;
+    peep->stateRender.pos_Q16.y += peep->stateSim.yv_Q15_16;
 
     peep->stateSim.netForcex_Q16 = 0;
     peep->stateSim.netForcey_Q16 = 0;
@@ -289,12 +289,12 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 Peep* p = &gameState->peeps[pi];
 
                 if (p->stateRender.faction == actionTracking->clientId)
-                    if ((p->stateRender.map_x_Q15_16 > clientAction->params_DoSelect_StartX_Q16)
-                        && (p->stateRender.map_x_Q15_16 < clientAction->params_DoSelect_EndX_Q16))
+                    if ((p->stateRender.pos_Q16.x > clientAction->params_DoSelect_StartX_Q16)
+                        && (p->stateRender.pos_Q16.x < clientAction->params_DoSelect_EndX_Q16))
                     {
 
-                        if ((p->stateRender.map_y_Q15_16 < clientAction->params_DoSelect_StartY_Q16)
-                            && (p->stateRender.map_y_Q15_16 > clientAction->params_DoSelect_EndY_Q16))
+                        if ((p->stateRender.pos_Q16.y < clientAction->params_DoSelect_StartY_Q16)
+                            && (p->stateRender.pos_Q16.y > clientAction->params_DoSelect_EndY_Q16))
                         {
                             PrintQ16(p->Idx);
 
@@ -424,8 +424,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].Idx = p;
-        gameState->peeps[p].stateRender.map_x_Q15_16 = RandomRange(p,-1000 << 16, 1000 << 16) ;
-        gameState->peeps[p].stateRender.map_y_Q15_16 = RandomRange(p+1,-1000 << 16, 1000 << 16) ;
+        gameState->peeps[p].stateRender.pos_Q16.x = RandomRange(p,-1000 << 16, 1000 << 16) ;
+        gameState->peeps[p].stateRender.pos_Q16.y = RandomRange(p+1,-1000 << 16, 1000 << 16) ;
         gameState->peeps[p].stateRender.attackState = 0;
         gameState->peeps[p].stateRender.health = 10;
         gameState->peeps[p].stateRender.deathState = 0;
@@ -531,8 +531,8 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
 
 
 
-    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE/sizeof(float) + 0] = (float)((float)peep->stateRender.map_x_Q15_16 / (1 << 16));
-    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 1] = (float)((float)peep->stateRender.map_y_Q15_16 / (1 << 16));
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE/sizeof(float) + 0] = (float)((float)peep->stateRender.pos_Q16.x / (1 << 16));
+    peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 1] = (float)((float)peep->stateRender.pos_Q16.y / (1 << 16));
 
     peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 2] = drawColor.x* brightFactor;
     peepVBOBuffer[peep->Idx * PEEP_VBO_INSTANCE_SIZE / sizeof(float) + 3] = drawColor.y * brightFactor;
