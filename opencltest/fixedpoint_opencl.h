@@ -2,14 +2,19 @@
 #include "cl_type_glue.h"
 
 
-#define TO_Q16(x) (x << 16)//convert int decimal to Q16
+#define TO_Q16(x) (x<<16)//convert int decimal to Q16
 #define MUL_Q16(x,y) (((x)*(y)) >> 16)//x*y where X is Q16 and Y is Q16 returns Q16. 
 #define DIV_Q16(x,y) (((x<<16)/(y)))//x/y where X is Q16 and Y is Q16 returns Q16.  warning: ensure X has enough bits
 #define WHOLE_Q16(x) (x >> 16) //whole part of a Q16 as an int.
 #define WHOLE_ONLY_Q16(x) ((x >> 16) << 16) //x with no fractional part
 
 #define MUL_PAD_Q16(x,y) ((((cl_long)(x))*((cl_long)(y))) >> 16)
-#define DIV_PAD_Q16(x,y) (((((cl_long)x)<<16)/(y)))
+#define DIV_PAD_Q16(x,y) ((((cl_long)x)<<16)/((cl_long)y))
+ 
+#define MUL_2D_COMP_Q16(a,b) ((cl_int2)( ((a.x)*(b.x)) >> 16 , ((a.y)*(b.y)) >> 16 ))
+#define MUL_PAD_2D_COMP_Q16(a,b) ((cl_int2)( (((cl_long)(a.x))*((cl_long)(b.x))) >> 16 , (((cl_long)(a.y))*((cl_long)(b.y))) >> 16 ))
+
+
 
 
 
@@ -37,52 +42,43 @@ cl_long FracMask(int Q)
 
 cl_long DoubleToFixed(double floatingNumber, int Q)
 {
-    double dummy;
-    double fraction = fract(floatingNumber, &dummy);
-    cl_long fracBits = 0;
-
-    for (int i = 0; i < Q; i++)
-    {
-        fraction *= 2;
-        if (fraction >= 1.0)
-        {
-            fracBits |= (1 << ((Q - 1) - i));
-            fraction -= (cl_long)fraction;
-        }
-    }
-    cl_long wholeBits = ((cl_long)floatingNumber) * (1<<Q);
-    return wholeBits | fracBits;
+    return (round(floatingNumber * (1 << Q)));
 }
 cl_long FloatToFixed(float floatingNumber, int Q)
 {
     return DoubleToFixed((double)floatingNumber, Q);
 }
 
+
+
 float FixedToFloat(cl_long fixedPoint, int Q)
 {
+    cl_ulong bits = 0;
+    bits |= fixedPoint;
+
     cl_ulong signBitMask = (1 << (sizeof(cl_long) * 8 - 1));
 
-    cl_ulong sign = fixedPoint & signBitMask;
-    fixedPoint = fixedPoint & (~signBitMask);
+    cl_ulong sign = bits & signBitMask;
 
     if (sign)
     {
-        fixedPoint = ~fixedPoint;
-        fixedPoint &= (~signBitMask);
-
-        fixedPoint += (1 << Q);
+        bits = ~bits;
+        bits &= (~signBitMask);
     }
 
-    float number = (float)((float)fixedPoint / (1 << Q));
+    double number = (double)((double)bits / (1 << Q));
 
     if (sign)
     {
         number *= -1;
     }
 
-    return number;
+    return (float)number;
 }
-
+float F2FQ16(cl_long fixedPoint)
+{
+    return FixedToFloat(fixedPoint, 16);
+}
 void PrintQ16(cl_long fixed_Q16)
 {
     printf("%f\n", FixedToFloat(fixed_Q16, 16));
@@ -141,7 +137,10 @@ void normalize_s2_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
     *y_Q16 = v.y;
 }
 
-
+void dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
+{
+    *out_Q16 = MUL_Q16(a_Q16.x, b_Q16.x) + MUL_Q16(a_Q16.y, b_Q16.y);
+}
 
 
 
@@ -211,7 +210,81 @@ cl_int perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth, 
 }
 
 
+void catmull_rom_uniform_2d_Q16(
+    cl_int2 p0_Q16, 
+    cl_int2 p1_Q16,
+    cl_int2 p2_Q16, 
+    cl_int2 p3_Q16,
+    cl_int t_Q16, //0-1 
+    cl_int2* out_point_Q16)
+{
+    cl_int t0_Q16 = 0;
+    cl_int t1_Q16 = distance_v2_Q16(p0_Q16, p1_Q16);
+    cl_int t2_Q16 = distance_v2_Q16(p1_Q16, p2_Q16);
+    cl_int t3_Q16 = distance_v2_Q16(p2_Q16, p3_Q16);
 
+
+    cl_int t1_m_t0_Q16 = t1_Q16 - t0_Q16;
+    cl_int t2_m_t1_Q16 = t2_Q16 - t1_Q16;
+    cl_int t3_m_t2_Q16 = t3_Q16 - t2_Q16;
+    cl_int t3_m_t1_Q16 = t3_Q16 - t1_Q16;
+
+
+    //scale t_Q32 to be in [t1,t2]
+    cl_int tscaled = MUL_PAD_Q16(t_Q16,(t2_Q16 - t1_Q16)) + t1_Q16;
+
+    cl_int2 A_1_Q16;
+    cl_int a1p0_Q16 = DIV_PAD_Q16((t1_Q16 - tscaled), (t1_m_t0_Q16));
+    cl_int a1p1_Q16 = DIV_PAD_Q16((tscaled - t0_Q16), (t1_m_t0_Q16));
+    A_1_Q16.x = MUL_PAD_Q16((a1p0_Q16),p0_Q16.x) + MUL_PAD_Q16((a1p1_Q16),p1_Q16.x);
+    A_1_Q16.y = MUL_PAD_Q16((a1p0_Q16),p0_Q16.y) + MUL_PAD_Q16((a1p1_Q16),p1_Q16.y);
+    
+
+    cl_int2 A_2_Q16;
+    cl_int a2p1_Q16 = DIV_PAD_Q16((t2_Q16 - tscaled), (t2_m_t1_Q16));
+    cl_long a2p2_Q16 = DIV_PAD_Q16((tscaled - t1_Q16), (t2_m_t1_Q16));
+    A_2_Q16.x = MUL_PAD_Q16((a2p1_Q16),p1_Q16.x) + MUL_PAD_Q16((a2p2_Q16),p2_Q16.x);
+    A_2_Q16.y = MUL_PAD_Q16((a2p1_Q16),p1_Q16.y) + MUL_PAD_Q16((a2p2_Q16),p2_Q16.y);
+
+
+    cl_int2 A_3_Q16;
+    cl_int a3p2_Q16 = DIV_PAD_Q16((t3_Q16 - tscaled), (t3_m_t2_Q16));
+    cl_int a3p3_Q16 = DIV_PAD_Q16((tscaled - t2_Q16), (t3_m_t2_Q16));
+    A_3_Q16.x = MUL_PAD_Q16((a3p2_Q16),p2_Q16.x) + MUL_PAD_Q16((a3p3_Q16),p3_Q16.x);
+    A_3_Q16.y = MUL_PAD_Q16((a3p2_Q16),p2_Q16.y) + MUL_PAD_Q16((a3p3_Q16),p3_Q16.y);
+
+
+    cl_int2 B_1_Q16;
+    cl_int b1a1 = DIV_PAD_Q16((t2_Q16 - tscaled), (t2_Q16 - t0_Q16));
+    cl_int b1a2 = DIV_PAD_Q16((tscaled - t0_Q16), (t2_Q16 - t0_Q16));
+    B_1_Q16.x = MUL_PAD_Q16(b1a1 ,A_1_Q16.x) + MUL_PAD_Q16(b1a2 , A_2_Q16.x);
+    B_1_Q16.y = MUL_PAD_Q16(b1a1 , A_1_Q16.y) + MUL_PAD_Q16(b1a2 , A_2_Q16.y);
+
+    cl_int2 B_2_Q16;
+    cl_int b2a2 = DIV_PAD_Q16((t3_Q16 - tscaled), (t3_m_t1_Q16));
+    cl_int b2a3 = DIV_PAD_Q16((tscaled - t1_Q16), (t3_m_t1_Q16));
+    B_2_Q16.x = MUL_PAD_Q16(b2a2 , A_2_Q16.x) + MUL_PAD_Q16(b2a3 , A_3_Q16.x);
+    B_2_Q16.y = MUL_PAD_Q16(b2a2 , A_2_Q16.y) + MUL_PAD_Q16(b2a3 , A_3_Q16.y);
+
+
+    cl_int2 C_Q16;
+    cl_int cb1 = DIV_PAD_Q16((t2_Q16 - tscaled), (t2_m_t1_Q16));
+    cl_int cb2 = DIV_PAD_Q16((tscaled - t1_Q16), (t2_m_t1_Q16));
+
+    C_Q16.x = MUL_PAD_Q16(cb1 , B_1_Q16.x) + MUL_PAD_Q16(cb2 , B_2_Q16.x);
+    C_Q16.y = MUL_PAD_Q16(cb1 , B_1_Q16.y) + MUL_PAD_Q16(cb2 , B_2_Q16.y);
+    *out_point_Q16 = C_Q16;
+
+
+
+    //DERIVATES http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
+
+
+
+
+
+
+}
 
 
 
@@ -230,22 +303,39 @@ void fixedPointTests()
     {
         cl_int interp_Q16 = 0;
 
-        //linear_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
-
-       // cubic_interp_1D_Q16(TO_Q16(100), TO_Q16(200), FloatToFixed(i, 16), &interp_Q16);
-        
-        //cl_int sin_Q16 = sin_polynomial4_Q16(FloatToFixed(i, 16));
-        
-       // printf("%f\n", FixedToFloat(sin_Q16,16));
-
-
-
-
 
     }
 
-    cl_long someNumber = TO_Q16(-12345);
+    printf("(Q2F)  1: %f\n", FixedToFloat(TO_Q16(1), 16));
+    printf("(Q2F) -1: %f\n", FixedToFloat(TO_Q16(-1), 16));
+    printf("(Q2F) -10: %f\n", FixedToFloat(TO_Q16(-10), 16));
+    printf("(D2Q) -1: %d\n", TO_Q16(-1));
 
-    printf("-12345: %f\n", FixedToFloat(someNumber, 16));
+    printf(" (-2.2) %#x\n", FloatToFixed(-2.2f, 16));
+    printf("-1.4: %f\n", FixedToFloat(FloatToFixed(-1.414185f, 16),16));
+    printf("1.7: %f\n", FixedToFloat(FloatToFixed(1.748077f, 16), 16));
+
+
+    printf("-0.5: %f\n", FixedToFloat(DIV_PAD_Q16(TO_Q16(-1), TO_Q16(2)), 16));
+    printf("-0.823529: %f\n", FixedToFloat(DIV_PAD_Q16(FloatToFixed(-1.4,16), FloatToFixed(1.7, 16)), 16));
+
+
+    cl_int2 p0 = (cl_int2)(TO_Q16(0), TO_Q16(0));
+    cl_int2 p1 = (cl_int2)(TO_Q16(1), TO_Q16(1));
+    cl_int2 p2 = (cl_int2)(TO_Q16(2), TO_Q16(-2));
+    cl_int2 p3 = (cl_int2)(TO_Q16(3), TO_Q16(4));
+
+    for (float i = 0; i < 1.0f; i += 0.01f)
+    {
+        cl_int t_Q16 = FloatToFixed(i,16);
+        cl_int2 point_Q16;
+        catmull_rom_uniform_2d_Q16(p0, p1, p2, p3, t_Q16, &point_Q16);
+
+        printf("%f,%f\n", FixedToFloat(point_Q16.x, 16), FixedToFloat(point_Q16.y, 16));
+    }
+
+
+
+
 
 }
