@@ -77,7 +77,7 @@ void GameGPUCompute::RunInitCompute()
     cl_uint ret_num_platforms;
 
 
-    cl_int ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
+    ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
     printf("num cl platforms: %d\n", ret_num_platforms);
 
 
@@ -127,6 +127,9 @@ void GameGPUCompute::RunInitCompute()
         graphics_mapTileAttrVBO_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->mapTileAttrVBO, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
+    graphicsObjects.push_back(graphics_peeps_mem_obj);
+    graphicsObjects.push_back(graphics_mapTileVBO_mem_obj);
+    graphicsObjects.push_back(graphics_mapTileAttrVBO_mem_obj);
 
 
         printf("Building CL Programs...\n");
@@ -234,25 +237,14 @@ void GameGPUCompute::RunInitCompute()
 
 
 
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-
+    AquireAllGraphicsObjects();
 
         ret = clEnqueueNDRangeKernel(command_queue, init_kernel, 1, NULL,
             SingleKernelWorkItems, NULL, 0, NULL, &initEvent);
         CL_HOST_ERROR_CHECK(ret)
-            
-            
-            ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
-        CL_HOST_ERROR_CHECK(ret)
-            ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
-        CL_HOST_ERROR_CHECK(ret)
-            ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
-        CL_HOST_ERROR_CHECK(ret)
+
+
+    ReleaseAllGraphicsObjects();
     clWaitForEvents(1, &initEvent);
     ReadFullGameState();
 }
@@ -263,16 +255,10 @@ void GameGPUCompute::Stage1()
         return;
 
 
-     cl_int ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
+    AquireAllGraphicsObjects();
+
+    ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
-    ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-
-
-
-
 
      ret = clEnqueueNDRangeKernel(command_queue, action_kernel, 1, NULL,
         SingleKernelWorkItems, NULL, 0, NULL, &actionEvent);
@@ -303,20 +289,11 @@ void GameGPUCompute::Stage1()
     CL_HOST_ERROR_CHECK(ret)
 
 
-
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
-
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
         WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_peeps_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
-    ret = clEnqueueReleaseGLObjects(command_queue, 1, &graphics_mapTileAttrVBO_mem_obj, 0, 0, 0);
-    CL_HOST_ERROR_CHECK(ret)
+    ReleaseAllGraphicsObjects();
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
@@ -338,7 +315,7 @@ void GameGPUCompute::Stage1()
 void GameGPUCompute::ReadFullGameState()
 {
     // Read the memory buffer C on the device to the local variable C
-    cl_int ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+     ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         sizeof(GameState), gameState.get(), 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -353,7 +330,7 @@ void GameGPUCompute::ReadFullGameState()
 
 void GameGPUCompute::WriteFullGameState()
 {
-    cl_int ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
+    ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         sizeof(GameState), gameState.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -366,7 +343,7 @@ void GameGPUCompute::WriteFullGameState()
 
 void GameGPUCompute::WriteGameStateB()
 {
-    cl_int ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+    ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
         sizeof(GameStateB), gameStateB.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 }
@@ -409,4 +386,26 @@ std::string GameGPUCompute::compileVariantString(GPUCompileVariant variant)
     catch (const std::exception& e) {};
     
 
+}
+
+void GameGPUCompute::AquireAllGraphicsObjects()
+{
+    for (auto obj : graphicsObjects)
+    {
+        ret = clEnqueueAcquireGLObjects(command_queue, 1, &obj, 0, 0, 0);
+        CL_HOST_ERROR_CHECK(ret)
+    }
+    //ret = clFinish(command_queue);
+    //CL_HOST_ERROR_CHECK(ret)
+}
+
+void GameGPUCompute::ReleaseAllGraphicsObjects()
+{
+    for (auto obj : graphicsObjects)
+    {
+        ret = clEnqueueReleaseGLObjects(command_queue, 1, &obj, 0, 0, 0);
+        CL_HOST_ERROR_CHECK(ret)
+    }
+    //ret = clFinish(command_queue);
+    //CL_HOST_ERROR_CHECK(ret)
 }

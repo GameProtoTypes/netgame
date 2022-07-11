@@ -18,7 +18,7 @@ void PeepPrint(Peep* peep)
 }
 
 
-void RobotInteraction(Peep* peep, Peep* otherPeep)
+void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
 {
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
         return;
@@ -34,10 +34,23 @@ void RobotInteraction(Peep* peep, Peep* otherPeep)
     
 }
 
+void WorldToMap(cl_int3 world_Q16, cl_int3* out_map_tilecoords_Q16)
+{
+    printf("SDKFJHSKDJFH");
+    cl_int3 tmp = DIV_v3_Q16(world_Q16, (cl_int3)(TO_Q16(MAP_TILE_SIZE)));
+    out_map_tilecoords_Q16->x = 3;
+    out_map_tilecoords_Q16->y = 4;
+    out_map_tilecoords_Q16->z =5;
+    
+}
+
+inline void MapToWorld(cl_int3 map_tilecoords_Q16, cl_int3* world_Q16)
+{
+    *world_Q16 = MUL_v3_Q16(map_tilecoords_Q16, (cl_int3)(TO_Q16(MAP_TILE_SIZE)));
+}
 
 
-
-void RobotUpdate(Peep* peep)
+void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 {
     cl_int deltax_Q16 = peep->stateSim.target_x_Q16 - peep->stateRender.pos_Q16.x;
     cl_int deltay_Q16 = peep->stateSim.target_y_Q16 - peep->stateRender.pos_Q16.y;
@@ -87,6 +100,21 @@ void RobotUpdate(Peep* peep)
             peep->stateSim.yv_Q15_16 = deltay_Q16;
         }
     }
+
+
+
+    //update maptile
+    //WorldToMap(peep->stateRender.pos_Q16, &peep->mapTileLoc_Q16);
+    
+    //MapTile foottile = gameState->map.levels[WHOLE_Q16(peep->mapTileLoc_Q16.z)-1].tiles[WHOLE_Q16(peep->mapTileLoc_Q16.x)][WHOLE_Q16(peep->mapTileLoc_Q16.y)];
+    //
+    //if (foottile == MapTile_NONE)
+    //{
+    //    //fall.
+    //    peep->mapTileLoc_Q16.z += TO_Q16(-2) >> 4;
+    //}
+
+
 }
 
 
@@ -195,7 +223,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             while (curPeep != NULL)
             {
                 if (curPeep != peep) {
-                    RobotInteraction(peep, curPeep);
+                    PeepToPeepInteraction(peep, curPeep);
                 }
 
                 curPeep = curPeep->prevSectorPeep;
@@ -205,7 +233,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
         }
     }
-    RobotUpdate(peep);
+    WalkAndFight(ALL_CORE_PARAMS_PASS, peep);
  
 
 }
@@ -224,7 +252,7 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
         tileUpIdx = MapTile_NONE;
     }
 
-    mapTileAttrVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = 0;
+    mapTileAttrVBO[y * MAPDIM + x % MAPDIM] = 0;
 
     if (tileIdx == MapTile_NONE)
     {
@@ -239,18 +267,18 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
             vz++;
         }
         tileIdx = tileDownIdx;
-        mapTileAttrVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] |= clamp(vz,0,15);
+        mapTileAttrVBO[y * MAPDIM + x % MAPDIM] |= clamp(vz,0,15);
     }
             
             
 
     if (tileUpIdx != MapTile_NONE)
     {
-        mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = MapTile_NONE;//view obstructed by tile above.
+        mapTileVBO[y * MAPDIM + x % MAPDIM] = MapTile_NONE;//view obstructed by foottile above.
     }
     else
     {
-        mapTileVBO[y * SQRT_MAPTILESIZE + x % SQRT_MAPTILESIZE] = tileIdx;
+        mapTileVBO[y * MAPDIM + x % MAPDIM] = tileIdx;
     }
             
 }
@@ -341,9 +369,9 @@ void CreateMap(ALL_CORE_PARAMS)
     printf("Creating Map..\n");
 
     int i = 0;
-    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    for (int x = 0; x < MAPDIM; x++)
     {
-        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
+        for (int y = 0; y < MAPDIM; y++)
         {
             cl_int perlin_z_Q16 = perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1) >> 6, 8, 0);
 
@@ -386,9 +414,9 @@ void CreateMap(ALL_CORE_PARAMS)
         }
     }
 
-    for (int x = 0; x < SQRT_MAPTILESIZE; x++)
+    for (int x = 0; x < MAPDIM; x++)
     {
-        for (int y = 0; y < SQRT_MAPTILESIZE; y++)
+        for (int y = 0; y < MAPDIM; y++)
         {
             BuildMapTileView(ALL_CORE_PARAMS_PASS,x,y);
         }
@@ -421,11 +449,17 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         }
     }
     printf("Sectors Initialized.\n");
+
+
+    CreateMap(ALL_CORE_PARAMS_PASS);
+
+
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].Idx = p;
         gameState->peeps[p].stateRender.pos_Q16.x = RandomRange(p,-1000 << 16, 1000 << 16) ;
         gameState->peeps[p].stateRender.pos_Q16.y = RandomRange(p+1,-1000 << 16, 1000 << 16) ;
+        gameState->peeps[p].stateRender.pos_Q16.z = 100;
         gameState->peeps[p].stateRender.attackState = 0;
         gameState->peeps[p].stateRender.health = 10;
         gameState->peeps[p].stateRender.deathState = 0;
@@ -475,7 +509,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Peep Sector Assigment Finished\n");
 
 
-    CreateMap(ALL_CORE_PARAMS_PASS);
+
 }
 
 
@@ -560,11 +594,11 @@ __kernel void game_update(ALL_CORE_PARAMS)
         return;
     if (gameStateB->mapZView != gameStateB->mapZView_1)
     {
-        const cl_uint chunkSize = (SQRT_MAPTILESIZE* SQRT_MAPTILESIZE) / WARPSIZE;
-        for (cl_ulong i = 0; i < (SQRT_MAPTILESIZE * SQRT_MAPTILESIZE) / WARPSIZE; i++)
+        const cl_uint chunkSize = (MAPDIM* MAPDIM) / WARPSIZE;
+        for (cl_ulong i = 0; i < (MAPDIM * MAPDIM) / WARPSIZE; i++)
         {
             cl_ulong xyIdx = i + globalid * chunkSize;
-            BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% SQRT_MAPTILESIZE, xyIdx/ SQRT_MAPTILESIZE);
+            BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% MAPDIM, xyIdx/ MAPDIM);
 
         }
 

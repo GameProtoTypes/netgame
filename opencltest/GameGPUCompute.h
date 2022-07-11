@@ -83,7 +83,7 @@ public:
 	cl_mem graphics_mapTileVBO_mem_obj;
 	cl_mem graphics_mapTileAttrVBO_mem_obj;
 
-
+	std::vector<cl_mem> graphicsObjects;
 
 
 	std::shared_ptr<GameState> gameState;
@@ -93,9 +93,13 @@ public:
 	std::vector<std::pair<std::string, GPUCompileVariant>> compileDefinitions;
 
 	bool errorState = false;
-
+	cl_int ret = 0;
 
 	std::string buildPreProcessorString();
 	std::string compileVariantString(GPUCompileVariant variant);
+
+
+	void AquireAllGraphicsObjects();
+	void ReleaseAllGraphicsObjects();
 };
 

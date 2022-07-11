@@ -419,25 +419,25 @@ int32_t main(int32_t argc, char* args[])
 
 
         ImGui::End();
-
-
+        glm::vec4 worldMouseCoords = glm::inverse(view) * mouseScreenCoords;
+        ImGui::Text("X,y: %f,%f", worldMouseCoords.x, worldMouseCoords.y);
 
 
         //draw map
         gameGraphics.pMapTileShadProgram->Use();
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
         glm::mat4 mapTransform(1.0f);
-        mapTransform = glm::scale(mapTransform, glm::vec3(5, 5, 1));
-        mapTransform = glm::translate(mapTransform, glm::vec3(-SQRT_MAPTILESIZE * 0.5f, -SQRT_MAPTILESIZE * 0.5f, 0));
+        mapTransform = glm::scale(mapTransform, glm::vec3(MAP_TILE_SIZE, MAP_TILE_SIZE, 1));
+        mapTransform = glm::translate(mapTransform, glm::vec3(-MAPDIM * 0.5f, -MAPDIM * 0.5f, 0));
         
         
 
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
-        glm::ivec2 mapSize = { SQRT_MAPTILESIZE , SQRT_MAPTILESIZE };
+        glm::ivec2 mapSize = { MAPDIM , MAPDIM };
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
         glBindVertexArray(gameGraphics.mapTileVAO);
-        glDrawArrays(GL_POINTS, 0, SQRT_MAPTILESIZE*SQRT_MAPTILESIZE);
+        glDrawArrays(GL_POINTS, 0, MAPDIM*MAPDIM);
         glBindVertexArray(0);
 
 

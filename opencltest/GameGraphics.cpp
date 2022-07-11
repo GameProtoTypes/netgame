@@ -176,8 +176,8 @@ GameGraphics::GameGraphics()
 
 
     //map
-    std::shared_ptr<cl_uint> mapStartData(new cl_uint[SQRT_MAPTILESIZE * SQRT_MAPTILESIZE]);
-    for (int i = 0; i < SQRT_MAPTILESIZE * SQRT_MAPTILESIZE; i++)
+    std::shared_ptr<cl_uint> mapStartData(new cl_uint[MAPDIM * MAPDIM]);
+    for (int i = 0; i < MAPDIM * MAPDIM; i++)
     {
         mapStartData.get()[i] = 0;
     }
@@ -189,7 +189,7 @@ GameGraphics::GameGraphics()
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTileVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mapTileVBO);
-            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPTILESIZE*SQRT_MAPTILESIZE*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, MAPDIM*MAPDIM*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
             glEnableVertexAttribArray(0); 
 
             glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0); 
@@ -198,7 +198,7 @@ GameGraphics::GameGraphics()
 
         glGenBuffers(1, &mapTileAttrVBO);
         glBindBuffer(GL_ARRAY_BUFFER, mapTileAttrVBO);
-            glBufferData(GL_ARRAY_BUFFER, SQRT_MAPTILESIZE * SQRT_MAPTILESIZE * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
             glEnableVertexAttribArray(1);
 
             glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);

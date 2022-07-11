@@ -18,8 +18,9 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define SQRT_MAPTILESIZE (1024)
+#define MAPDIM (1024)
 #define MAPDEPTH (32)
+#define MAP_TILE_SIZE (5)
 
 
 #define WARPSIZE (32)
@@ -48,7 +49,7 @@ struct MapSector;
 struct PeepState_RenderLevel
 {
 	cl_int valid;
-	cl_int2 pos_Q16;
+	cl_int3 pos_Q16;
 
 
 	int32_t faction;
@@ -69,9 +70,11 @@ struct PeepState_SimLevel
 
 	cl_long netForcex_Q16;
 	cl_long netForcey_Q16;
+
+	
 }typedef PeepState_SimLevel;
 
-
+#pragma pack(push, 4)
 struct Peep {
 	cl_uint Idx;
 
@@ -81,6 +84,7 @@ struct Peep {
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;
 
+	cl_int3 mapTileLoc_Q16;
 	
 	struct MapSector* mapSector_pending;
 	struct MapSector* mapSector;
@@ -94,6 +98,7 @@ struct Peep {
 
 
 } typedef Peep;
+#pragma pack(pop)
 
 struct PeepRenderSupport {
 	cl_int render_selectedByClient;
@@ -126,7 +131,7 @@ enum MapTile {
 
 
 struct MapLevel {
-	cl_short tiles[SQRT_MAPTILESIZE][SQRT_MAPTILESIZE];
+	cl_short tiles[MAPDIM][MAPDIM];
 } typedef MapLevel;
 
 

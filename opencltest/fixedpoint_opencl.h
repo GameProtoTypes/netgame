@@ -2,17 +2,21 @@
 #include "cl_type_glue.h"
 
 
-#define TO_Q16(x) (x<<16)//convert int decimal to Q16
+#define TO_Q16(x) ((x)<<16)//convert int decimal to Q16
 #define MUL_Q16(x,y) (((x)*(y)) >> 16)//x*y where X is Q16 and Y is Q16 returns Q16. 
 #define DIV_Q16(x,y) (((x<<16)/(y)))//x/y where X is Q16 and Y is Q16 returns Q16.  warning: ensure X has enough bits
 #define WHOLE_Q16(x) (x >> 16) //whole part of a Q16 as an int.
 #define WHOLE_ONLY_Q16(x) ((x >> 16) << 16) //x with no fractional part
 
 #define MUL_PAD_Q16(x,y) ((((cl_long)(x))*((cl_long)(y))) >> 16)
+#define MUL_PAD_V2_Q16(x,y) ((((cl_long2)(x))*((cl_long2)(y))) >> 16)
+
+
 #define DIV_PAD_Q16(x,y) ((((cl_long)x)<<16)/((cl_long)y))
- 
+
 #define MUL_2D_COMP_Q16(a,b) ((cl_int2)( ((a.x)*(b.x)) >> 16 , ((a.y)*(b.y)) >> 16 ))
 #define MUL_PAD_2D_COMP_Q16(a,b) ((cl_int2)( (((cl_long)(a.x))*((cl_long)(b.x))) >> 16 , (((cl_long)(a.y))*((cl_long)(b.y))) >> 16 ))
+
 
 
 
@@ -83,6 +87,48 @@ void PrintQ16(cl_long fixed_Q16)
 {
     printf("%f\n", FixedToFloat(fixed_Q16, 16));
 }
+
+//Component Wise Division and Multiplication
+cl_int2 DIV_v2_Q16(cl_int2 a_Q16, cl_int2 b_Q16)
+{
+    cl_int2 result;
+    result.x = DIV_PAD_Q16(a_Q16.x, b_Q16.x);
+    result.y = DIV_PAD_Q16(a_Q16.y, b_Q16.y);
+
+
+    return result;
+}
+cl_int3 DIV_v3_Q16(cl_int3 a_Q16, cl_int3 b_Q16)
+{
+    cl_int3 result;
+    result.x = DIV_PAD_Q16(a_Q16.x, b_Q16.x);
+    result.y = DIV_PAD_Q16(a_Q16.y, b_Q16.y);
+    result.z = DIV_PAD_Q16(a_Q16.z, b_Q16.z);
+
+    return result;
+}
+cl_int2 MUL_v2_Q16(cl_int2 a_Q16, cl_int2 b_Q16)
+{
+    cl_int2 result;
+    result.x = MUL_PAD_Q16(a_Q16.x, b_Q16.x);
+    result.y = MUL_PAD_Q16(a_Q16.y, b_Q16.y);
+
+
+    return result;
+}
+cl_int3 MUL_v3_Q16(cl_int3 a_Q16, cl_int3 b_Q16)
+{
+    cl_int3 result;
+    result.x = MUL_PAD_Q16(a_Q16.x, b_Q16.x);
+    result.y = MUL_PAD_Q16(a_Q16.y, b_Q16.y);
+    result.z = MUL_PAD_Q16(a_Q16.z, b_Q16.z);
+
+    return result;
+}
+
+
+
+
 
 
 // sqrt_i64 computes the squrare root of a 64bit integer and returns
@@ -216,7 +262,8 @@ void catmull_rom_uniform_2d_Q16(
     cl_int2 p2_Q16, 
     cl_int2 p3_Q16,
     cl_int t_Q16, //0-1 
-    cl_int2* out_point_Q16)
+    cl_int2* out_point_Q16,
+    cl_int2* out_tangent_vec_Q16)
 {
     cl_int t0_Q16 = 0;
     cl_int t1_Q16 = distance_v2_Q16(p0_Q16, p1_Q16);
@@ -228,7 +275,7 @@ void catmull_rom_uniform_2d_Q16(
     cl_int t2_m_t1_Q16 = t2_Q16 - t1_Q16;
     cl_int t3_m_t2_Q16 = t3_Q16 - t2_Q16;
     cl_int t3_m_t1_Q16 = t3_Q16 - t1_Q16;
-
+    
 
     //scale t_Q32 to be in [t1,t2]
     cl_int tscaled = MUL_PAD_Q16(t_Q16,(t2_Q16 - t1_Q16)) + t1_Q16;
@@ -277,13 +324,64 @@ void catmull_rom_uniform_2d_Q16(
 
 
 
-    //DERIVATES http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
+    //DERIVATE http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
+
+    cl_int t2_m_t0_Q16 = t2_Q16 - t0_Q16;
+
+    cl_int2 A1_Prime_Q16;
+    cl_int s = DIV_PAD_Q16(TO_Q16(1), (t1_m_t0_Q16));
+    A1_Prime_Q16.x = MUL_PAD_Q16(s, (p1_Q16 - p0_Q16).x);
+    A1_Prime_Q16.y = MUL_PAD_Q16(s, (p1_Q16 - p0_Q16).y);
+
+    cl_int2 A2_Prime_Q16;
+    s = DIV_PAD_Q16(TO_Q16(1), (t2_m_t1_Q16));
+    A2_Prime_Q16.x = MUL_PAD_Q16(s, (p2_Q16 - p1_Q16).x);
+    A2_Prime_Q16.y = MUL_PAD_Q16(s, (p2_Q16 - p1_Q16).y);
+
+    cl_int2 A3_Prime_Q16;
+    s = DIV_PAD_Q16(TO_Q16(1), (t3_m_t2_Q16));
+    A3_Prime_Q16.x = MUL_PAD_Q16(s, (p3_Q16 - p2_Q16).x);
+    A3_Prime_Q16.y = MUL_PAD_Q16(s, (p3_Q16 - p2_Q16).y);
+
+    cl_int2 B1_Prime_Q16;
+    cl_int s1 = DIV_PAD_Q16(TO_Q16(1), (t2_m_t0_Q16));
+    cl_int s2 = DIV_PAD_Q16((t2_Q16 - tscaled), (t2_m_t0_Q16));
+    cl_int s3 = DIV_PAD_Q16((tscaled - t3_Q16), (t2_m_t0_Q16));
+
+    B1_Prime_Q16.x = MUL_PAD_Q16(s1, (A2_Prime_Q16 - A1_Prime_Q16).x) 
+        + MUL_PAD_Q16(s2,(A1_Prime_Q16.x))
+        + MUL_PAD_Q16(s3,A2_Prime_Q16.x);
+    B1_Prime_Q16.y = MUL_PAD_Q16(s1, (A2_Prime_Q16 - A1_Prime_Q16).y)
+        + MUL_PAD_Q16(s2, (A1_Prime_Q16.y))
+        + MUL_PAD_Q16(s3, A2_Prime_Q16.y);
 
 
+    cl_int2 B2_Prime_Q16;
+    s1 = DIV_PAD_Q16((1), (t3_m_t1_Q16));
+    s2 = DIV_PAD_Q16((t3_Q16 - tscaled), (t3_m_t1_Q16));
+    s3 = DIV_PAD_Q16((tscaled - t1_Q16), (t3_m_t1_Q16));
+
+    B2_Prime_Q16.x = MUL_PAD_Q16(s1, (A3_Prime_Q16 - A2_Prime_Q16).x)
+        + MUL_PAD_Q16(s2, (A2_Prime_Q16.x))
+        + MUL_PAD_Q16(s3, A3_Prime_Q16.x);
+    B2_Prime_Q16.y = MUL_PAD_Q16(s1, (A3_Prime_Q16 - A2_Prime_Q16).y)
+        + MUL_PAD_Q16(s2, (A2_Prime_Q16.y))
+        + MUL_PAD_Q16(s3, A3_Prime_Q16.y);
 
 
+    cl_int2 C_Prime_Q16;
+    s1 = DIV_PAD_Q16((1), (t2_m_t1_Q16));
+    s2 = DIV_PAD_Q16((t2_Q16 - tscaled), (t2_m_t1_Q16));
+    s3 = DIV_PAD_Q16((tscaled - t1_Q16), (t2_m_t1_Q16));
 
+    C_Prime_Q16.x = MUL_PAD_Q16(s1, (B2_Prime_Q16 - B1_Prime_Q16).x)
+        + MUL_PAD_Q16(s2, (B1_Prime_Q16.x))
+        + MUL_PAD_Q16(s3, B2_Prime_Q16.x);
+    C_Prime_Q16.y = MUL_PAD_Q16(s1, (B2_Prime_Q16 - B1_Prime_Q16).y)
+        + MUL_PAD_Q16(s2, (B1_Prime_Q16.y))
+        + MUL_PAD_Q16(s3, B2_Prime_Q16.y);
 
+    *out_tangent_vec_Q16 = C_Prime_Q16;
 }
 
 
@@ -329,13 +427,14 @@ void fixedPointTests()
     {
         cl_int t_Q16 = FloatToFixed(i,16);
         cl_int2 point_Q16;
-        catmull_rom_uniform_2d_Q16(p0, p1, p2, p3, t_Q16, &point_Q16);
+        cl_int2 tangent_Q16;
+        catmull_rom_uniform_2d_Q16(p0, p1, p2, p3, t_Q16, &point_Q16, &tangent_Q16);
 
-        printf("%f,%f\n", FixedToFloat(point_Q16.x, 16), FixedToFloat(point_Q16.y, 16));
+       // printf("%f,%f\n", FixedToFloat(tangent_Q16.x, 16), FixedToFloat(tangent_Q16.y, 16));
     }
 
-
-
+    cl_int3 test = (cl_int3)(42);
+    printf("%d,%d,%d\n", test);
 
 
 }
