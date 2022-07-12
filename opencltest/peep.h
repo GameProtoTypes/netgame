@@ -15,6 +15,7 @@
 
 #endif
 
+#include "cpugpuvectortypes.h"
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
@@ -49,7 +50,7 @@ struct MapSector;
 struct PeepState_RenderLevel
 {
 	cl_int valid;
-	cl_int3 pos_Q16;
+	ge_int3 pos_Q16;
 
 
 	int32_t faction;
@@ -84,7 +85,7 @@ struct Peep {
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;
 
-	cl_int3 mapTileLoc_Q16;
+	ge_int3 mapTileLoc_Q16;
 	
 	struct MapSector* mapSector_pending;
 	struct MapSector* mapSector;

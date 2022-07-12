@@ -12,6 +12,8 @@ set(Header_Files
     "GameGraphics.h"
     "GameGPUCompute.h"
     "GameNetworking.h" 
+
+    "cpugpuvectortypes.h"
     
     "fixedpoint_opencl.h"
     "perlincl.h"

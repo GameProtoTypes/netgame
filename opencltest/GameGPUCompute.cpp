@@ -279,19 +279,14 @@ void GameGPUCompute::Stage1()
     CL_HOST_ERROR_CHECK(ret)
 
 
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
-
-    clWaitForEvents(1, &preUpdateEvent2);
-    cl_uint waitListCnt = 1;
-
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
-
 
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
-        WorkItems, NULL, waitListCnt, &preUpdateEvent2, &updateEvent);
+        WorkItems, NULL, 1, &preUpdateEvent2, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
+    
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+    
 
     ReleaseAllGraphicsObjects();
 

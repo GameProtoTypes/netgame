@@ -1,5 +1,13 @@
 #pragma once
 #include "cl_type_glue.h"
+#include "cpugpuvectortypes.h"
+
+
+
+
+
+
+
 
 
 #define TO_Q16(x) ((x)<<16)//convert int decimal to Q16
@@ -89,36 +97,34 @@ void PrintQ16(cl_long fixed_Q16)
 }
 
 //Component Wise Division and Multiplication
-cl_int2 DIV_v2_Q16(cl_int2 a_Q16, cl_int2 b_Q16)
+ge_int2 DIV_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 {
-    cl_int2 result;
+    ge_int2 result;
     result.x = DIV_PAD_Q16(a_Q16.x, b_Q16.x);
     result.y = DIV_PAD_Q16(a_Q16.y, b_Q16.y);
 
-
     return result;
 }
-cl_int3 DIV_v3_Q16(cl_int3 a_Q16, cl_int3 b_Q16)
+ge_int3 DIV_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
 {
-    cl_int3 result;
+    ge_int3 result;
     result.x = DIV_PAD_Q16(a_Q16.x, b_Q16.x);
     result.y = DIV_PAD_Q16(a_Q16.y, b_Q16.y);
     result.z = DIV_PAD_Q16(a_Q16.z, b_Q16.z);
 
     return result;
 }
-cl_int2 MUL_v2_Q16(cl_int2 a_Q16, cl_int2 b_Q16)
+ge_int2 MUL_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 {
-    cl_int2 result;
+    ge_int2 result;
     result.x = MUL_PAD_Q16(a_Q16.x, b_Q16.x);
     result.y = MUL_PAD_Q16(a_Q16.y, b_Q16.y);
 
-
     return result;
 }
-cl_int3 MUL_v3_Q16(cl_int3 a_Q16, cl_int3 b_Q16)
+ge_int3 MUL_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
 {
-    cl_int3 result;
+    ge_int3 result;
     result.x = MUL_PAD_Q16(a_Q16.x, b_Q16.x);
     result.y = MUL_PAD_Q16(a_Q16.y, b_Q16.y);
     result.z = MUL_PAD_Q16(a_Q16.z, b_Q16.z);

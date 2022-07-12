@@ -324,6 +324,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGPUCompute.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cpugpuvectortypes.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\fixedpoint_opencl.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\perlincl.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\randomcl.h" />

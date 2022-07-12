@@ -34,19 +34,17 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
     
 }
 
-void WorldToMap(cl_int3 world_Q16, cl_int3* out_map_tilecoords_Q16)
+void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
 {
-    printf("SDKFJHSKDJFH");
-    cl_int3 tmp = DIV_v3_Q16(world_Q16, (cl_int3)(TO_Q16(MAP_TILE_SIZE)));
-    out_map_tilecoords_Q16->x = 3;
-    out_map_tilecoords_Q16->y = 4;
-    out_map_tilecoords_Q16->z =5;
+    ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
+    *out_map_tilecoords_Q16 = DIV_v3_Q16(world_Q16, b);
     
 }
 
-inline void MapToWorld(cl_int3 map_tilecoords_Q16, cl_int3* world_Q16)
+void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
 {
-    *world_Q16 = MUL_v3_Q16(map_tilecoords_Q16, (cl_int3)(TO_Q16(MAP_TILE_SIZE)));
+    ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
+    *world_Q16 = MUL_v3_Q16(map_tilecoords_Q16, b);
 }
 
 
@@ -104,8 +102,8 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
 
     //update maptile
-    //WorldToMap(peep->stateRender.pos_Q16, &peep->mapTileLoc_Q16);
-    
+
+
     //MapTile foottile = gameState->map.levels[WHOLE_Q16(peep->mapTileLoc_Q16.z)-1].tiles[WHOLE_Q16(peep->mapTileLoc_Q16.x)][WHOLE_Q16(peep->mapTileLoc_Q16.y)];
     //
     //if (foottile == MapTile_NONE)
@@ -233,8 +231,16 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
         }
     }
+   
+    
+    WorldToMap(peep->stateRender.pos_Q16, &peep->mapTileLoc_Q16);
+    //global ge_int3* t = (global ge_int3*)(&peep->stateRender.pos_Q16);
+    //printf("%d,%d,%d", t->x, t->y, t->z);
+
+
     WalkAndFight(ALL_CORE_PARAMS_PASS, peep);
- 
+
+
 
 }
 

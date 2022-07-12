@@ -45,6 +45,9 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameNetworking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cpugpuvectortypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\fixedpoint_opencl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
