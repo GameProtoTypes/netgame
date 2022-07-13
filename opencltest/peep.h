@@ -50,7 +50,6 @@ struct MapSector;
 struct PeepState_RenderLevel
 {
 	cl_int valid;
-	ge_int3 pos_Q16;
 
 
 	int32_t faction;
@@ -61,26 +60,40 @@ struct PeepState_RenderLevel
 }typedef PeepState_RenderLevel;
 #pragma pack(pop)
 
-struct PeepState_SimLevel
-{
-	int32_t xv_Q15_16;
-	int32_t yv_Q15_16;
 
+struct BasePhysics
+{	
+	ge_int3 pos_Q16;
+	ge_int3 v_Q16;
+	ge_int3 netForce_Q16;
+
+	int mass_Q16;
+}typedef BasePhysics;
+struct PhysicsCircleShape
+{
+	int radius_Q16;
+}typedef PhysicsCircleShape;
+struct DrivePhysics
+{
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
+}typedef DrivePhysics;
 
-	cl_long netForcex_Q16;
-	cl_long netForcey_Q16;
+struct PeepPhysics
+{
+	struct BasePhysics base;
+	struct PhysicsCircleShape shape;
+	struct DrivePhysics drive;
+}typedef PeepPhysics;
 
-	
-}typedef PeepState_SimLevel;
 
 #pragma pack(push, 4)
 struct Peep {
 	cl_uint Idx;
 
 	struct PeepState_RenderLevel stateRender;
-	struct PeepState_SimLevel stateSim;
+	struct PeepPhysics physics;
+	
 
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;
@@ -221,10 +234,12 @@ struct GameStateB {
 	int32_t pauseState;
 
 
-	//ClientSide only stuff that is processed in cl but not strictly gamestate
+	//ClientSide only stuff that is processed in cl but not strictly gamestate and driven by host.
 	cl_uint clientId;
 	cl_int mapZView;
 	cl_int mapZView_1;
 
+
+	cl_int dummyVars[32];
 
 }typedef GameStateB;

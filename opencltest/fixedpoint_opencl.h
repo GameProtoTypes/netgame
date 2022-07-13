@@ -5,9 +5,9 @@
 
 
 
-
-
-
+#define GE_TO_CL_INT2(ge)((cl_int2)(ge.x,ge.y))
+#define GE_TO_CL_INT3(ge)((cl_int3)(ge.x,ge.y,ge.z))
+#define GE_TO_CL_INT4(ge)((cl_int4)(ge.x,ge.y,ge.z,ge.w))
 
 
 #define TO_Q16(x) ((x)<<16)//convert int decimal to Q16
@@ -95,6 +95,10 @@ void PrintQ16(cl_long fixed_Q16)
 {
     printf("%f\n", FixedToFloat(fixed_Q16, 16));
 }
+void Print_GE_INT3_Q16(ge_int3 fixed_Q16)
+{
+    printf("{%f,%f,%f}\n", FixedToFloat(fixed_Q16.x, 16), FixedToFloat(fixed_Q16.y, 16), FixedToFloat(fixed_Q16.z, 16));
+}
 
 //Component Wise Division and Multiplication
 ge_int2 DIV_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
@@ -154,7 +158,7 @@ cl_long sqrt_i64(cl_long v) {
     }
     return q;
 }
-cl_int length_v2_Q16(int2 v_Q16)
+cl_int cl_length_v2_Q16(int2 v_Q16)
 {
     long2 v_1 = (long2)(v_Q16.x,v_Q16.y);
     long2 inner_Q32 = v_1 * v_1;
@@ -163,33 +167,63 @@ cl_int length_v2_Q16(int2 v_Q16)
     cl_long len_Q16 = sqrt_i64(innerSum_Q32);
     return (cl_int)len_Q16;
 }
-cl_int distance_v2_Q16(int2 v1_Q16, int2 v2_Q16)
+
+cl_int cl_length_v3_Q16(int3 v_Q16)
 {
-    return length_v2_Q16(v2_Q16 - v1_Q16);
+    long3 v_1 = (long3)(v_Q16.x, v_Q16.y, v_Q16.z);
+    long3 inner_Q32 = v_1 * v_1;
+
+    cl_long innerSum_Q32 = inner_Q32.x + inner_Q32.y + inner_Q32.z;
+    cl_long len_Q16 = sqrt_i64(innerSum_Q32);
+    return (cl_int)len_Q16;
+}
+cl_int ge_length_v3_Q16(ge_int3 v_Q16)
+{
+    long3 v_1 = (long3)(v_Q16.x, v_Q16.y, v_Q16.z);
+    long3 inner_Q32 = v_1 * v_1;
+
+    cl_long innerSum_Q32 = inner_Q32.x + inner_Q32.y + inner_Q32.z;
+    cl_long len_Q16 = sqrt_i64(innerSum_Q32);
+    return (cl_int)len_Q16;
+}
+cl_int cl_distance_v2_Q16(int2 v1_Q16, int2 v2_Q16)
+{
+    return cl_length_v2_Q16(v2_Q16 - v1_Q16);
 }
 
-cl_int distance_s2_Q16(cl_int x1_Q16, cl_int y1_Q16, cl_int x2_Q16, cl_int y2_Q16)
+cl_int cl_distance_s2_Q16(cl_int x1_Q16, cl_int y1_Q16, cl_int x2_Q16, cl_int y2_Q16)
 {
-    return distance_v2_Q16((int2)(x1_Q16, y1_Q16), (int2)(x2_Q16, y2_Q16));
+    return cl_distance_v2_Q16((int2)(x1_Q16, y1_Q16), (int2)(x2_Q16, y2_Q16));
 }
 
-void normalize_v2_Q16(int2* v_Q16, cl_int* len_Q16)
+void cl_normalize_v2_Q16(int2* v_Q16, cl_int* len_Q16)
 {
-    *len_Q16 = length_v2_Q16(*v_Q16);
+    *len_Q16 = cl_length_v2_Q16(*v_Q16);
     long2 v = (((long2)((*v_Q16).x, (*v_Q16).y)) << 16) / (*len_Q16);
     *v_Q16 = (int2)(v.x, v.y);
 }
+void cl_normalize_v3_Q16(int3* v_Q16, cl_int* len_Q16)
+{
+    *len_Q16 = cl_length_v3_Q16(*v_Q16);
+    long3 v = (((long3)((*v_Q16).x, (*v_Q16).y, (*v_Q16).z)) << 16) / (*len_Q16);
+    *v_Q16 = (int3)(v.x, v.y, v.z);
+}
+void ge_normalize_v3_Q16(ge_int3* v_Q16, cl_int* len_Q16)
+{
+    *len_Q16 = ge_length_v3_Q16(*v_Q16);
+    long3 v = (((long3)((*v_Q16).x, (*v_Q16).y, (*v_Q16).z)) << 16) / (*len_Q16);
+    *v_Q16 = (ge_int3){ v.x, v.y, v.z };
+}
 
-
-void normalize_s2_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
+void cl_normalize_s2_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
 {
     int2 v = (int2)(*x_Q16, *y_Q16);
-    normalize_v2_Q16(&v, len_Q16);
+    cl_normalize_v2_Q16(&v, len_Q16);
     *x_Q16 = v.x;
     *y_Q16 = v.y;
 }
 
-void dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
+void cl_dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
 {
     *out_Q16 = MUL_Q16(a_Q16.x, b_Q16.x) + MUL_Q16(a_Q16.y, b_Q16.y);
 }
@@ -198,26 +232,26 @@ void dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
 
 
 
-void linear_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_int* out_Q16)
+void cl_linear_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_int* out_Q16)
 {
     *out_Q16 = x1_Q16 + MUL_Q16((x2_Q16 - x1_Q16), perc_Q16);
 }
-void cubic_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_int* out_Q16)
+void cl_cubic_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_int* out_Q16)
 {
     cl_long p = (cl_long)perc_Q16;
     cl_long perc_cubic_Q16 = MUL_Q16(MUL_Q16(p, p), (TO_Q16(3) - MUL_Q16(TO_Q16(2), p)));
-    linear_interp_1D_Q16(x1_Q16, x2_Q16, (cl_int)perc_cubic_Q16, out_Q16);
+    cl_linear_interp_1D_Q16(x1_Q16, x2_Q16, (cl_int)perc_cubic_Q16, out_Q16);
 }
 
 
 
-cl_int noise_256(cl_int x, cl_int y, cl_int seed)
+cl_int cl_noise_256(cl_int x, cl_int y, cl_int seed)
 {
     int tmp = perlin_hash_numbers[(y + seed) % 256];
     return perlin_hash_numbers[(tmp + x) % 256];
 }
 
-cl_int noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
+cl_int cl_noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
 {
     cl_int x_int = WHOLE_Q16(x_Q16);
     cl_int y_int = WHOLE_Q16(y_Q16);
@@ -227,20 +261,20 @@ cl_int noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
     
     
     
-    cl_int s = noise_256(x_int, y_int, seed);
-    cl_int t = noise_256(x_int + 1, y_int, seed);
-    cl_int u = noise_256(x_int, y_int + 1, seed);
-    cl_int v = noise_256(x_int + 1, y_int + 1, seed);
+    cl_int s = cl_noise_256(x_int, y_int, seed);
+    cl_int t = cl_noise_256(x_int + 1, y_int, seed);
+    cl_int u = cl_noise_256(x_int, y_int + 1, seed);
+    cl_int v = cl_noise_256(x_int + 1, y_int + 1, seed);
     cl_int low_Q16;
     cl_int high_Q16;
-    cubic_interp_1D_Q16(TO_Q16(s), TO_Q16(t), x_frac_Q16, &low_Q16);
-    cubic_interp_1D_Q16(TO_Q16(u), TO_Q16(v), x_frac_Q16, &high_Q16);
+    cl_cubic_interp_1D_Q16(TO_Q16(s), TO_Q16(t), x_frac_Q16, &low_Q16);
+    cl_cubic_interp_1D_Q16(TO_Q16(u), TO_Q16(v), x_frac_Q16, &high_Q16);
     cl_int result_Q16;
-    cubic_interp_1D_Q16(low_Q16, high_Q16, y_frac_Q16, &result_Q16);
+    cl_cubic_interp_1D_Q16(low_Q16, high_Q16, y_frac_Q16, &result_Q16);
     return result_Q16;
 }
 
-cl_int perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth,  cl_int seed)
+cl_int cl_perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth,  cl_int seed)
 {
     cl_long xa_Q16 = MUL_PAD_Q16(x_Q16, freq_Q16);
     cl_long ya_Q16 = MUL_PAD_Q16(y_Q16, freq_Q16);
@@ -252,7 +286,7 @@ cl_int perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth, 
     for (i = 0; i < depth; i++)
     {
         div_Q16 += MUL_PAD_Q16(TO_Q16(256) , amp_Q16);
-        fin_Q16 += MUL_PAD_Q16(noise_2d_Q16(xa_Q16, ya_Q16, seed) , amp_Q16);
+        fin_Q16 += MUL_PAD_Q16(cl_noise_2d_Q16(xa_Q16, ya_Q16, seed) , amp_Q16);
         amp_Q16 = DIV_PAD_Q16(amp_Q16, TO_Q16(2));
         xa_Q16 = MUL_PAD_Q16(xa_Q16, TO_Q16(2));
         ya_Q16 = MUL_PAD_Q16(ya_Q16, TO_Q16(2));
@@ -262,7 +296,7 @@ cl_int perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth, 
 }
 
 
-void catmull_rom_uniform_2d_Q16(
+void cl_catmull_rom_uniform_2d_Q16(
     cl_int2 p0_Q16, 
     cl_int2 p1_Q16,
     cl_int2 p2_Q16, 
@@ -272,9 +306,9 @@ void catmull_rom_uniform_2d_Q16(
     cl_int2* out_tangent_vec_Q16)
 {
     cl_int t0_Q16 = 0;
-    cl_int t1_Q16 = distance_v2_Q16(p0_Q16, p1_Q16);
-    cl_int t2_Q16 = distance_v2_Q16(p1_Q16, p2_Q16);
-    cl_int t3_Q16 = distance_v2_Q16(p2_Q16, p3_Q16);
+    cl_int t1_Q16 = cl_distance_v2_Q16(p0_Q16, p1_Q16);
+    cl_int t2_Q16 = cl_distance_v2_Q16(p1_Q16, p2_Q16);
+    cl_int t3_Q16 = cl_distance_v2_Q16(p2_Q16, p3_Q16);
 
 
     cl_int t1_m_t0_Q16 = t1_Q16 - t0_Q16;
@@ -423,6 +457,11 @@ void fixedPointTests()
     printf("-0.5: %f\n", FixedToFloat(DIV_PAD_Q16(TO_Q16(-1), TO_Q16(2)), 16));
     printf("-0.823529: %f\n", FixedToFloat(DIV_PAD_Q16(FloatToFixed(-1.4,16), FloatToFixed(1.7, 16)), 16));
 
+    printf("sqrt(0) = 0: %d\n", sqrt_i64(0));
+
+    int a = 10;
+    int b = 0;
+    printf("10/0: %d\n", a / b);
 
     cl_int2 p0 = (cl_int2)(TO_Q16(0), TO_Q16(0));
     cl_int2 p1 = (cl_int2)(TO_Q16(1), TO_Q16(1));
@@ -434,7 +473,7 @@ void fixedPointTests()
         cl_int t_Q16 = FloatToFixed(i,16);
         cl_int2 point_Q16;
         cl_int2 tangent_Q16;
-        catmull_rom_uniform_2d_Q16(p0, p1, p2, p3, t_Q16, &point_Q16, &tangent_Q16);
+        cl_catmull_rom_uniform_2d_Q16(p0, p1, p2, p3, t_Q16, &point_Q16, &tangent_Q16);
 
        // printf("%f,%f\n", FixedToFloat(tangent_Q16.x, 16), FixedToFloat(tangent_Q16.y, 16));
     }
