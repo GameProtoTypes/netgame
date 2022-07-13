@@ -225,7 +225,7 @@ void cl_normalize_s2_Q16(cl_int* x_Q16, cl_int* y_Q16, cl_int* len_Q16)
 
 void cl_dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
 {
-    *out_Q16 = MUL_Q16(a_Q16.x, b_Q16.x) + MUL_Q16(a_Q16.y, b_Q16.y);
+    *out_Q16 = MUL_PAD_Q16(a_Q16.x, b_Q16.x) + MUL_PAD_Q16(a_Q16.y, b_Q16.y);
 }
 
 

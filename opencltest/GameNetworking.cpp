@@ -461,9 +461,8 @@
 
 	 tickPIDError = distToCompare - safetyOffset;
 
-	 //integralAccumulatorTickPID += 0.02 * error;
 
-	 float pFactor = 8.0f;
+	 float pFactor = 2.0f;
 
 	 if (clients.size() > 1 && fullyConnectedToHost)
 	 {
@@ -475,8 +474,8 @@
 		 else
 		 {
 
-			 //slow down for fastest if server, slow down for slowest if client.
-			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError)+integralAccumulatorTickPID;
+			 //slow down for fastest if server-hybrid, slow down for slowest if client.
+			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
 		 }
 
 
@@ -498,13 +497,16 @@
 			 targetTickTimeMs = MAXTICKTIMEMS;
 
 	 }
+	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client
+	 {
+		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
+	 }
 	 else
 	 {
 		 targetTickTimeMs = MINTICKTIMEMS;
 	 }
 
-	 if (!fullyConnectedToHost)
-		 targetTickTimeMs = 0;
+
 
  }
  void GameNetworking::UpdateHandleMessages()
@@ -576,7 +578,9 @@
 
 
 				 AddClientInternal(clientGUID, systemGUID);
-				 connectedToHost = true;//for hybrid
+				 
+				 if(clientGUID == this->clientGUID)
+					connectedToHost = true;//for hybrid
 
 				 clients.back().downloadingState = 1;
 
