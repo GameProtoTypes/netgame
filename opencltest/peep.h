@@ -77,6 +77,8 @@ struct DrivePhysics
 {
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
+
+	int drivingToTarget;
 }typedef DrivePhysics;
 
 struct PeepPhysics
@@ -86,6 +88,10 @@ struct PeepPhysics
 	struct DrivePhysics drive;
 }typedef PeepPhysics;
 
+struct PeepCommunication {
+	int orders_channel;
+	int message_TargetReached;
+}typedef PeepCommunication;
 
 #pragma pack(push, 4)
 struct Peep {
@@ -93,7 +99,7 @@ struct Peep {
 
 	struct PeepState_RenderLevel stateRender;
 	struct PeepPhysics physics;
-	
+	struct PeepCommunication comms;
 
 	cl_int minDistPeep_Q16;
 	struct Peep* minDistPeep;

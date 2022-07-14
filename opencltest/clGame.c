@@ -32,6 +32,17 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
         peep->minDistPeep = otherPeep;
     }
     
+
+    //spread messages
+    if (dist_Q16 < TO_Q16(6) && (peep->comms.orders_channel == otherPeep->comms.orders_channel))
+    {
+        if (otherPeep->comms.message_TargetReached)
+        {
+            peep->comms.message_TargetReached = otherPeep->comms.message_TargetReached;
+        }
+    }
+
+
 }
 
 void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
@@ -80,14 +91,16 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         ge_int3 penetrationForce_Q16;
         
 
-        penetrationForce_Q16.x = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.x) << 1;
-        penetrationForce_Q16.y = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.y) << 1;
-        penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) << 1;
+        penetrationForce_Q16.x = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.x) >> 4;
+        penetrationForce_Q16.y = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.y) >> 4;
+        penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) >> 4;
 
       
         peep->physics.base.netForce_Q16 = GE_INT3_ADD(peep->physics.base.netForce_Q16, penetrationForce_Q16);
  
-        peep->physics.base.v_Q16 = (ge_int3){0,0,0};
+        //peep->physics.base.v_Q16 = (ge_int3){0,0,0};//todo - do dot product and trim nessecary velocity only.
+
+        
 
     }
     else
@@ -109,13 +122,32 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     int len;
     ge_normalize_v3_Q16(&d, &len);
 
+    if (WHOLE_Q16(len) < 2)
+    {
+        if (peep->physics.drive.drivingToTarget)
+        {
+            peep->physics.drive.drivingToTarget = 0;
+            peep->comms.message_TargetReached = 255;//send the message
+        }
+    }
+
+
     targetVelocity.x = d.x << 1 ;
     targetVelocity.y = d.y << 1;
 
     ge_int3 vel_error = { targetVelocity.x - peep->physics.base.v_Q16.x, targetVelocity.y - peep->physics.base.v_Q16.y, 0 };
+    if (peep->physics.drive.drivingToTarget)
+    {
+        peep->physics.base.netForce_Q16.x = peep->physics.base.netForce_Q16.x + vel_error.x >> 2;
+        peep->physics.base.netForce_Q16.y = peep->physics.base.netForce_Q16.y + vel_error.y >> 2;
+    }
 
-    peep->physics.base.netForce_Q16.x = peep->physics.base.netForce_Q16.x + vel_error.x >> 4;
-    peep->physics.base.netForce_Q16.y = peep->physics.base.netForce_Q16.y + vel_error.y >> 4;
+
+    //drag term
+    peep->physics.base.netForce_Q16.x = peep->physics.base.netForce_Q16.x - peep->physics.base.v_Q16.x >> 1;
+    peep->physics.base.netForce_Q16.y = peep->physics.base.netForce_Q16.y - peep->physics.base.v_Q16.y >> 1;
+
+
 
 
 }
@@ -127,6 +159,9 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
     PeepRadiusPhysics(ALL_CORE_PARAMS_PASS, peep);
     PeepDrivePhysics(ALL_CORE_PARAMS_PASS, peep);
+
+
+
 
 
     //update maptile
@@ -228,6 +263,14 @@ void PeepPreUpdate(Peep* peep)
 
     if (peep->stateRender.health <= 0)
         peep->stateRender.deathState = 1;
+
+
+    //peep comms
+    if (peep->comms.message_TargetReached)
+    {
+        peep->physics.drive.drivingToTarget = 0;
+        peep->comms.message_TargetReached--;//message fade
+    }
 }
 
 void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
@@ -388,6 +431,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 Peep* curPeep = &gameState->peeps[curPeepIdx];
                 curPeep->physics.drive.target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
                 curPeep->physics.drive.target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+                curPeep->physics.drive.drivingToTarget = 1;
+
+                //restrict comms to new channel
+                curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
+                curPeep->comms.message_TargetReached = 0;
 
                 curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
@@ -495,8 +543,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].Idx = p;
-        gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-2000 << 16, 2000 << 16) ;
-        gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-2000 << 16, 2000 << 16) ;
+        gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-500 << 16, 500 << 16) ;
+        gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-500 << 16, 500 << 16) ;
         gameState->peeps[p].physics.base.pos_Q16.z = 100;
         gameState->peeps[p].physics.base.mass_Q16 = TO_Q16(1);
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(5);
@@ -515,7 +563,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].prevSectorPeep = NULL;
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
-
+        gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
 
         gameState->peeps[p].stateRender.faction = RandomRange(p + 3, 0, 2);
