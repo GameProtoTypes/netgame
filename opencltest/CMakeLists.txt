@@ -1,6 +1,31 @@
 project(MinerTycoon)
 cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
+
+
+
+##################################################################
+#LLVM
+##################################################################
+#find_package(LLVM REQUIRED CONFIG)
+
+#message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+#message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+
+#separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+#add_definitions(${LLVM_DEFINITIONS_LIST})
+
+# Find the libraries that correspond to the LLVM components
+#llvm_map_components_to_libnames(llvm_libs support core irreader clang)
+
+
+
+
+
+
+
+
 ################################################################################
 # Source groups
 ################################################################################
@@ -75,10 +100,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
+   
+
 )
 
-
-
+    
 set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
 
 
@@ -87,6 +113,14 @@ set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBui
 ################################################################################
 # Dependencies
 ################################################################################
+
+
+
+#separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+#add_definitions(${LLVM_DEFINITIONS_LIST})
+
+
+
 
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "OpenCL;"
@@ -99,7 +133,9 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "SLikeNet"
 )
 
+
 target_link_libraries(${PROJECT_NAME} PRIVATE "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
+
 
 
 target_link_directories(${PROJECT_NAME} PRIVATE

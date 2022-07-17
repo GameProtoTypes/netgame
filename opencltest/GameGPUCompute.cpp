@@ -14,6 +14,9 @@
 #include "GameGraphics.h"
 
 
+
+
+
 GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics)
 {
 

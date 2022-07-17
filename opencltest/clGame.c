@@ -97,16 +97,17 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 
       
         peep->physics.base.netForce_Q16 = GE_INT3_ADD(peep->physics.base.netForce_Q16, penetrationForce_Q16);
- 
-        //peep->physics.base.v_Q16 = (ge_int3){0,0,0};//todo - do dot product and trim nessecary velocity only.
-
-        
-
     }
-    else
-    {
-    //    peep->physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
-    }
+
+    //force from adjacent 2 height walls
+    //MapTile b1;
+    //PeepGetMapTile(ALL_CORE_PARAMS, Peep * peep, (ge_int3) { -1, -1, 0 }, & b1);
+    //MapTile b2;
+    //PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, (ge_int3) { -1, -1, 1 }, & b1);
+
+
+
+
 
 }
 void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)

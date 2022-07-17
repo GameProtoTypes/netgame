@@ -19,7 +19,7 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (1024)
+#define MAPDIM (16)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
@@ -68,6 +68,9 @@ struct BasePhysics
 	ge_int3 netForce_Q16;
 
 	int mass_Q16;
+
+
+	//ge_int3 pos_override_Q16;
 }typedef BasePhysics;
 struct PhysicsCircleShape
 {
