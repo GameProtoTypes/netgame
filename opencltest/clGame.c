@@ -98,7 +98,8 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) >> 4;
 
       
-        peep->physics.base.netForce_Q16 = GE_INT3_ADD(peep->physics.base.netForce_Q16, penetrationForce_Q16);
+        
+        peep->physics.base.collisionNetForce_Q16 = GE_INT3_ADD(peep->physics.base.collisionNetForce_Q16, penetrationForce_Q16);
     }
 
     //force from adjacent 2 height walls
@@ -140,16 +141,44 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     ge_int3 vel_error = { targetVelocity.x - peep->physics.base.v_Q16.x, targetVelocity.y - peep->physics.base.v_Q16.y, 0 };
     if (peep->physics.drive.drivingToTarget)
     {
-        peep->physics.base.netForce_Q16.x = peep->physics.base.netForce_Q16.x + vel_error.x >> 2;
-        peep->physics.base.netForce_Q16.y = peep->physics.base.netForce_Q16.y + vel_error.y >> 2;
+        //add force prop to vel error that is not in direction of penetration forces.
+
+        ge_int2 driveForce;
+        driveForce.x = vel_error.x >> 2;
+        driveForce.y = vel_error.y >> 2;
+
+        ge_int2 driveForceProjected = driveForce;
+
+
+        //project onto orthogonal to collision net force
+        cl_int2 cnf = GE_TO_CL_INT2(peep->physics.base.collisionNetForce_Q16);
+        cl_int len;
+
+        cl_int2 cnf90;
+        cnf90.x = cnf.y;
+        cnf90.y = -cnf.x;
+
+        cl_int scalar;
+        cl_project_2D_Q16(&driveForceProjected, &cnf90, &scalar);
+
+        if (IS_ZERO_V2(peep->physics.base.collisionNetForce_Q16))
+        {
+           driveForceProjected = driveForce;
+        }
+
+        peep->physics.base.netForce_Q16.x += driveForceProjected.x;
+        peep->physics.base.netForce_Q16.y += driveForceProjected.y;
     }
 
 
     //drag term
-    peep->physics.base.netForce_Q16.x = peep->physics.base.netForce_Q16.x - peep->physics.base.v_Q16.x >> 1;
-    peep->physics.base.netForce_Q16.y = peep->physics.base.netForce_Q16.y - peep->physics.base.v_Q16.y >> 1;
+    peep->physics.base.netForce_Q16.x += -(peep->physics.base.v_Q16.x >> 1);
+    peep->physics.base.netForce_Q16.y += -(peep->physics.base.v_Q16.y >> 1);
 
-
+    
+    //form final net-force
+    peep->physics.base.netForce_Q16.x += peep->physics.base.collisionNetForce_Q16.x;
+    peep->physics.base.netForce_Q16.y += peep->physics.base.collisionNetForce_Q16.y;
 
 
 }
@@ -255,6 +284,8 @@ void PeepPreUpdate1(Peep* peep)
     peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
 
+    peep->physics.base.collisionNetForce_Q16 = (ge_int3){ 0,0,0 };
+    peep->physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
 }
 
 void PeepPreUpdate2(Peep* peep)
@@ -684,25 +715,24 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
     //update map view
-    if (globalid >= WARPSIZE)
-        return;
-
     if (gameStateB->mapZView != gameStateB->mapZView_1)
     {
-        const cl_uint chunkSize = (MAPDIM* MAPDIM) / WARPSIZE;
-        for (cl_ulong i = 0; i < (MAPDIM * MAPDIM) / WARPSIZE; i++)
+        const cl_uint chunkSize = (MAPDIM* MAPDIM) / GAME_UPDATE_WORKITEMS;
+        for (cl_ulong i = 0; i < (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS; i++)
         {
             cl_ulong xyIdx = i + globalid * chunkSize;
             BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% MAPDIM, xyIdx/ MAPDIM);
 
         }
-
     }
-    barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
-    gameStateB->mapZView_1 = gameStateB->mapZView;
-    
+
 }
 
+
+__kernel void game_post_update_single(ALL_CORE_PARAMS)
+{
+    gameStateB->mapZView_1 = gameStateB->mapZView;
+}
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 

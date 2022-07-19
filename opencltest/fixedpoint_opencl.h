@@ -26,7 +26,7 @@
 #define MUL_PAD_2D_COMP_Q16(a,b) ((cl_int2)( (((cl_long)(a.x))*((cl_long)(b.x))) >> 16 , (((cl_long)(a.y))*((cl_long)(b.y))) >> 16 ))
 
 
-
+#define IS_ZERO_V2(a) ((a.x==0) && (a.y==0))
 
 
 
@@ -229,7 +229,7 @@ void cl_dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
 }
 
 
-//project a onto b direction, also return the scalar
+//project a onto b direction, also return the scalar.  b is also normalized.
 void cl_project_2D_Q16(cl_int2* a_Q16, cl_int2* b_Q16, cl_int* out_scalar)
 {
     cl_int len;
@@ -492,6 +492,20 @@ void fixedPointTests()
 
     cl_int3 test = (cl_int3)(42);
     printf("%d,%d,%d\n", test);
+
+    cl_int2 v = (cl_int2)(TO_Q16(1), TO_Q16(1));
+    cl_int len;
+    cl_normalize_v2_Q16(&v, &len);
+    printf("x: %f, y: %f, len: %f\n", FixedToFloat(v.x,16), FixedToFloat(v.y, 16), FixedToFloat(len, 16));
+
+
+    v = (cl_int2)(TO_Q16(1), TO_Q16(1));
+    cl_int2 proj = (cl_int2)(TO_Q16(0), TO_Q16(0));
+    cl_int scalar;
+    cl_project_2D_Q16(&v, &proj, &scalar);
+    printf("[1,1] projected onto [0,0]: x: %f, y: %f, scalar: %f\n", FixedToFloat(v.x, 16), FixedToFloat(v.y, 16), FixedToFloat(scalar, 16));
+
+
 
 
 }

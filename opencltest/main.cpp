@@ -250,7 +250,6 @@ int32_t main(int32_t argc, char* args[])
 
         //glm::mat4 translationMat = glm::translate(glm::mat4(1.0f), position/scaleVec);
         //glm::mat4 scaleMat = glm::scale(glm::mat4(1.0f), scaleVec);
-
         //view = scaleMat*translationMat;
 
         

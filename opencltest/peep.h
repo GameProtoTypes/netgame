@@ -17,15 +17,15 @@
 
 #include "cpugpuvectortypes.h"
 
-#define MAX_PEEPS (1024*8)
+#define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (16)
+#define MAPDIM (256)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
 
 #define WARPSIZE (32)
-#define TOTALWORKITEMS MAX_PEEPS
+#define GAME_UPDATE_WORKITEMS MAX_PEEPS
 
 #define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (32)
@@ -66,6 +66,7 @@ struct BasePhysics
 	ge_int3 pos_Q16;
 	ge_int3 v_Q16;
 	ge_int3 netForce_Q16;
+	ge_int3 collisionNetForce_Q16;
 
 	int mass_Q16;
 

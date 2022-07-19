@@ -54,6 +54,7 @@ public:
 	cl_kernel preupdate_kernel;
 	cl_kernel preupdate_kernel_2;
 	cl_kernel update_kernel;
+	cl_kernel post_update_single_kernel;
 	cl_kernel action_kernel;
 	cl_kernel init_kernel;
 
@@ -63,6 +64,7 @@ public:
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updateEvent;    
+	cl_event postupdateEvent;
 	cl_event actionEvent;
 	cl_event readEvent;
 	cl_event writeEvent;    
@@ -73,7 +75,7 @@ public:
     size_t SingleKernelWorkItemsPerWorkGroup[1] = { 1 };
 
 
-    size_t WorkItems[1] = { TOTALWORKITEMS };
+    size_t WorkItems[1] = { GAME_UPDATE_WORKITEMS };
 
 
 	cl_mem gamestate_mem_obj;

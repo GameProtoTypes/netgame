@@ -36,6 +36,7 @@ GameGPUCompute::~GameGPUCompute()
     cl_int ret = clFlush(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clFinish(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(update_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(post_update_single_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(init_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
@@ -193,17 +194,21 @@ void GameGPUCompute::RunInitCompute()
 
 
     // Create the OpenCL update_kernel
-    preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
+        preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
         preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
         update_kernel = clCreateKernel(program, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
         action_kernel = clCreateKernel(program, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
-        
+        post_update_single_kernel = clCreateKernel(program, "game_post_update_single", &ret); CL_HOST_ERROR_CHECK(ret)
+
+
+
         kernels.push_back(preupdate_kernel);
         kernels.push_back(preupdate_kernel_2);
         kernels.push_back(update_kernel);
         kernels.push_back(action_kernel);
         kernels.push_back(init_kernel);
+        kernels.push_back(post_update_single_kernel);
 
         // Set the arguments of the kernels
         for (cl_kernel k : kernels)
@@ -287,6 +292,12 @@ void GameGPUCompute::Stage1()
         WorkItems, NULL, 1, &preUpdateEvent2, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
     
+
+    ret = clEnqueueNDRangeKernel(command_queue, post_update_single_kernel, 1, NULL,
+        SingleKernelWorkItems, NULL, 1, &updateEvent, &postupdateEvent);
+    CL_HOST_ERROR_CHECK(ret)
+
+
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
     
