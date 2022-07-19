@@ -17,7 +17,7 @@
 
 #include "cpugpuvectortypes.h"
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*8)
 #define MAX_TRACKNODES (1024*8)
 #define MAPDIM (16)
 #define MAPDEPTH (32)
@@ -94,6 +94,7 @@ struct PeepPhysics
 struct PeepCommunication {
 	int orders_channel;
 	int message_TargetReached;
+	int message_TargetReached_pending;
 }typedef PeepCommunication;
 
 #pragma pack(push, 4)

@@ -157,8 +157,10 @@
 				 std::cout << ClientConsolePrint() << "Using Snapshot Idx: " << snapShotIdx << std::endl;
 
 				 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), sizeof(GameState));
-				 memcpy(gameStateB.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateB.get(), sizeof(GameState));
+				 memcpy(gameStateB.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateB.get(), sizeof(GameStateB));//not needed?
 
+
+				 gameCompute->WriteFullGameState();
 
 				 for (int i = 0; i < actionSack.size(); i++)
 				 {
@@ -175,7 +177,7 @@
 			 else
 			 {
 				 std::cout << ClientConsolePrint() << "All is lost!  Disconnecting..." << std::endl;
-				 CLIENT_Disconnect();
+				 CLIENT_HardDisconnect();
 				 return;
 			 }
 		 }
@@ -376,9 +378,15 @@
 	}
 	
 }
- void GameNetworking::CLIENT_Disconnect()
+ void GameNetworking::CLIENT_HardDisconnect()
  {
-	 std::cout << "[CLIENT] Disconnecting..." << std::endl;
+	 std::cout << "[CLIENT] Hard Disconnecting..." << std::endl;
+	 ClientDisconnectRoutines();
+
+ }
+
+ void GameNetworking::ClientDisconnectRoutines()
+ {
 	 if (serverRunning)
 	 {
 		 //"fake" disconnect to self
@@ -389,7 +397,7 @@
 	 else
 	 {
 		 peerInterface->CloseConnection(hostPeer, true);
-		 peerInterface->Shutdown(1000);
+
 
 		 clients.clear();
 	 }
@@ -397,8 +405,22 @@
 	 clientId = -1;
 	 connectedToHost = false;
 	 fullyConnectedToHost = false;
-
  }
+ void GameNetworking::CLIENT_SoftDisconnect()
+ {
+	 std::cout << ClientConsolePrint() << " Soft Disconnecting. Sending MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY." << std::endl;
+
+
+	 //send disconnect notify first to host then disconnect will happen on host notify
+	 SLNet::BitStream bs;
+	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY));
+	 bs.Write(static_cast<uint32_t>(clientGUID));
+
+	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
+ }
+
+
  void GameNetworking::SendMessage(char* message)
  {
 	 SLNet::BitStream bs;
@@ -462,20 +484,22 @@
 	 tickPIDError = distToCompare - safetyOffset;
 
 
-	 float pFactor = 2.0f;
-
+	 float pFactor = 4.0f;
+	 
 	 if (clients.size() > 1 && fullyConnectedToHost)
 	 {
 
 		 if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
 		 {
 			 targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
+
 		 }
 		 else
 		 {
 
 			 //slow down for fastest if server-hybrid, slow down for slowest if client.
 			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
+
 		 }
 
 
@@ -483,29 +507,40 @@
 		 // clamp to min
 		 if (thisClient->hostTickOffset < -safetyOffset * 10)
 		 {
-			 if (targetTickTimeMs <= 0)//alllow fastest speed up from very delayed clients.
+			 if (targetTickTimeMs <= 0)//allow fastest speed up from very delayed clients.
+			 {
 				 targetTickTimeMs = 0;
+
+			 }
 		 }
 		 else
 		 {
 			 if (targetTickTimeMs <= MINTICKTIMEMS)
+			 {
 				 targetTickTimeMs = MINTICKTIMEMS;
+
+			 }
 		 }
 
 
 		 if (targetTickTimeMs >= MAXTICKTIMEMS)
+		 {
 			 targetTickTimeMs = MAXTICKTIMEMS;
+
+		 }
 
 	 }
 	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client
 	 {
 		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
+
 	 }
 	 else
 	 {
 		 targetTickTimeMs = MINTICKTIMEMS;
-	 }
 
+	 }
+	 
 
 
  }
@@ -644,6 +679,17 @@
 					 gameStateB->clientId = clientId;
 					 std::cout << "[CLIENT] GSCS: " << recievedCS << std::endl;
 
+					 //also add as a snapshot
+					 snapshotWrap wrap;
+					 wrap.gameState = std::make_shared<GameState>();
+					 wrap.gameStateB = std::make_shared<GameStateB>();
+
+					 CLIENT_snapshotStorageQueue.push_back(wrap);
+					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get(), gameState.get(), sizeof(GameState));
+					 memcpy(CLIENT_snapshotStorageQueue.back().gameStateB.get(), gameStateB.get(), sizeof(GameStateB));
+
+
+
 
 					 CLIENT_nextTransferOffset = 0;
 					 gameStateTransferPercent = 0.0f;
@@ -732,7 +778,28 @@
 					 CLIENT_actionList.push_back(actionWrap);
 				 }
 			 }
-		
+			 else if (msgtype == MESSAGE_ENUM_HOST_DISCONNECTED_NOTIFY)
+			 {
+				 uint32_t clientGUID;
+				 bts.Read(clientGUID);
+
+				 if (clientGUID == this->clientGUID)
+				 {
+					 std::cout << ClientConsolePrint() << " Recieved MESSAGE_ENUM_HOST_DISCONNECTED_NOTIFY for Self. Disconnected From Host." << std::endl;
+
+					 //no longer connected.  clean up nessecary stuff.	 
+					 ClientDisconnectRoutines();
+				 }
+			 }
+			 else if (msgtype == MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY)
+			 {
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
+
+				std::cout << HostConsolePrint() << " Received MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY for client " << clientGUID << std::endl;
+
+				HOST_HandleDisconnectByCLientGUID(clientGUID);
+			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC)
 			 {
 				 int32_t cliId;
@@ -881,6 +948,20 @@
 
  void GameNetworking::HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID)
 {
+	std::cout << "[HOST] Broadcasting Client " << clientGUID << "Disconnect Notification Before Removal : " << std::endl;
+	clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+
+	SLNet::BitStream bs;
+	bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+	bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_DISCONNECTED_NOTIFY));
+	bs.Write(static_cast<uint32_t>(clientGUID));
+	
+	for (auto meta : clients)
+	{
+		this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, meta.rakGuid, false);
+	}
+
+
 	std::cout << "[HOST] Removing Client Entry clientGUID: " << clientGUID << std::endl;
 	int removeIdx = -1;
 	for (int i = 0; i < clients.size(); i++)
@@ -898,6 +979,10 @@
 	}
 	else
 		assert(0);
+
+
+
+
 }
 
  void GameNetworking::HOST_HandleDisconnectByID(int32_t clientID)
@@ -914,8 +999,6 @@
 	}
 	if (removeIdx >= 0)
 		clients.erase(std::next(clients.begin(), removeIdx));
-	else
-		assert(0);
 }
 
 void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)

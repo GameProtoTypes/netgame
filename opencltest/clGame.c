@@ -34,11 +34,13 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
     
 
     //spread messages
-    if (dist_Q16 < TO_Q16(6) && (peep->comms.orders_channel == otherPeep->comms.orders_channel))
+    if ((dist_Q16 < TO_Q16(6)) 
+        &&
+        (peep->comms.orders_channel == otherPeep->comms.orders_channel))
     {
         if (otherPeep->comms.message_TargetReached)
         {
-            peep->comms.message_TargetReached = otherPeep->comms.message_TargetReached;
+            peep->comms.message_TargetReached_pending = otherPeep->comms.message_TargetReached;
         }
     }
 
@@ -127,13 +129,12 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     {
         if (peep->physics.drive.drivingToTarget)
         {
-            peep->physics.drive.drivingToTarget = 0;
-            peep->comms.message_TargetReached = 255;//send the message
+            peep->comms.message_TargetReached_pending = 255;//send the message
         }
     }
 
 
-    targetVelocity.x = d.x << 1 ;
+    targetVelocity.x = d.x << 1;
     targetVelocity.y = d.y << 1;
 
     ge_int3 vel_error = { targetVelocity.x - peep->physics.base.v_Q16.x, targetVelocity.y - peep->physics.base.v_Q16.y, 0 };
@@ -214,6 +215,7 @@ void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
             }
 
 
+
             if (peep->mapSector->lastPeep == peep) {
                 peep->mapSector->lastPeep = peep->prevSectorPeep;
                 if (peep->mapSector->lastPeep != NULL)
@@ -246,16 +248,17 @@ void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
         peep->mapSector->lastPeep = peep;
     }
 }
-
-
-
-void PeepPreUpdate(Peep* peep)
+void PeepPreUpdate1(Peep* peep)
 {
 
-    //Euler Integrate
-    peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x , peep->physics.base.mass_Q16);
-    peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y , peep->physics.base.mass_Q16);
-    peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z , peep->physics.base.mass_Q16);
+    peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
+    peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
+    peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
+
+}
+
+void PeepPreUpdate2(Peep* peep)
+{
 
     peep->physics.base.pos_Q16.x += peep->physics.base.v_Q16.x;
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
@@ -267,11 +270,14 @@ void PeepPreUpdate(Peep* peep)
 
 
     //peep comms
-    if (peep->comms.message_TargetReached)
+    if (peep->comms.message_TargetReached_pending)
     {
         peep->physics.drive.drivingToTarget = 0;
+        peep->comms.message_TargetReached = peep->comms.message_TargetReached_pending;
         peep->comms.message_TargetReached--;//message fade
     }
+
+
 }
 
 void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
@@ -370,6 +376,8 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
+    //printf("applyactions\n");
+
     cl_uint curPeepIdx = gameState->clientStates[gameStateB->clientId].selectedPeepsLastIdx;
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
@@ -437,6 +445,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 //restrict comms to new channel
                 curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
                 curPeep->comms.message_TargetReached = 0;
+                curPeep->comms.message_TargetReached_pending = 0;
 
                 curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
@@ -699,19 +708,30 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 
     // Get the index of the current element to be processed
-    
     int globalid = get_global_id(0);
+    
+    
     if (globalid >= WARPSIZE)
         return;
    
+
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
     for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
 
-        //Peep* p = &gameState->peeps[pi + globalid*chunkSize];
         Peep* p;
         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-        PeepPreUpdate(p);
+        CL_CHECK_NULL(p)
+        PeepPreUpdate1(p);
+    }
+    barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    {
+
+        Peep* p;
+        CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
+        CL_CHECK_NULL(p)
+        PeepPreUpdate2(p);
 
         global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
         CL_CHECK_NULL(mapSector)
@@ -735,9 +755,12 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
-
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
+
+   // if (globalid == 0)
+    //    printf("game_preupdate_1\n");
+
     if (globalid >= WARPSIZE)
         return;
 
@@ -772,3 +795,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
 
 }
+
+
+
+

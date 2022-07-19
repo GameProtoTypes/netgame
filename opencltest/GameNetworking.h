@@ -68,6 +68,8 @@ public:
 		MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC,
 		MESSAGE_ENUM_HOST_ROUTINE_TICKSYNC,
 
+		MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY,
+		MESSAGE_ENUM_HOST_DISCONNECTED_NOTIFY,
 
 
 		MESSAGE_ENUM_CLIENT_ACTIONUPDATE,
@@ -124,7 +126,8 @@ public:
 
 	void ConnectToHost(SLNet::SystemAddress hostAddress);
 
-	void CLIENT_Disconnect();
+	void CLIENT_HardDisconnect();
+	void CLIENT_SoftDisconnect();
 
 	void Update();
 	void UpdateThrottling();
@@ -181,6 +184,9 @@ public:
 		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameStateB->tickIdx);
 		return buff;
 	}
+
+	void ClientDisconnectRoutines();
+
 
 	SLNet::RakNetGUID hostPeer;
 

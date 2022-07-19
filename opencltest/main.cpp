@@ -383,9 +383,13 @@ int32_t main(int32_t argc, char* args[])
         }
         if (gameNetworking.connectedToHost)
         {
-            if (ImGui::Button("CLIENT_Disconnect"))
+            if (ImGui::Button("CLIENT_HardDisconnect"))
             {
-                gameNetworking.CLIENT_Disconnect();
+                gameNetworking.CLIENT_HardDisconnect();
+            }
+            if (ImGui::Button("CLIENT_SoftDisconnect"))
+            {
+                gameNetworking.CLIENT_SoftDisconnect();
             }
         }
 
@@ -407,6 +411,11 @@ int32_t main(int32_t argc, char* args[])
             ImGui::ProgressBar(gameNetworking.gameStateTransferPercent);
         }
 
+        if (ImGui::Button("Print CHECKSUM"))
+        {
+            gameCompute.ReadFullGameState();
+            std::cout << "GAMESTATE CHKSUM: " << gameNetworking.CheckSumGameState(gameState.get()) << std::endl;
+        }
 
 
         for (auto client : gameNetworking.clients)

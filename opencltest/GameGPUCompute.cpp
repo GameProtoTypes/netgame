@@ -335,6 +335,10 @@ void GameGPUCompute::WriteFullGameState()
     WriteGameStateB();
 
 
+
+
+
+
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 }
