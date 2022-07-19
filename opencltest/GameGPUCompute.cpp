@@ -292,6 +292,8 @@ void GameGPUCompute::Stage1()
         WorkItems, NULL, 1, &preUpdateEvent2, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
     
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueNDRangeKernel(command_queue, post_update_single_kernel, 1, NULL,
         SingleKernelWorkItems, NULL, 1, &updateEvent, &postupdateEvent);

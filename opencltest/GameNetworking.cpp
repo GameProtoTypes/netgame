@@ -456,7 +456,7 @@
 	 //get stats on client swarm and slow down 
 	 int32_t maxOffset = -9999;
 	 int32_t minOffset = 9999;
-	 int32_t safetyOffset = 5;
+	 int32_t safetyOffset = 100;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {
@@ -484,23 +484,23 @@
 	 tickPIDError = distToCompare - safetyOffset;
 
 
-	 float pFactor = 4.0f;
+	 float pFactor = 1.0f;
 	 
 	 if (clients.size() > 1 && fullyConnectedToHost)
 	 {
 
-		 if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
-		 {
-			 targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
+		 //if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
+		 //{
+			// targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
 
-		 }
-		 else
-		 {
+		 //}
+		 //else
+		 //{
 
 			 //slow down for fastest if server-hybrid, slow down for slowest if client.
 			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
 
-		 }
+		// }
 
 
 
@@ -523,11 +523,11 @@
 		 }
 
 
-		 if (targetTickTimeMs >= MAXTICKTIMEMS)
-		 {
-			 targetTickTimeMs = MAXTICKTIMEMS;
+		 //if (targetTickTimeMs >= MAXTICKTIMEMS)
+		// {
+		//	 targetTickTimeMs = MAXTICKTIMEMS;
 
-		 }
+		 //}
 
 	 }
 	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client

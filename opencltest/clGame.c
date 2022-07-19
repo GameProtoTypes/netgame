@@ -29,7 +29,7 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
         peep->minDistPeep_Q16 = dist_Q16;
-        peep->minDistPeep = otherPeep;
+        peep->minDistPeepIdx = otherPeep->Idx;
     }
     
 
@@ -78,11 +78,14 @@ void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_ma
 void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 {
 
-    //calculate force based on penetration distance with minDistPeep.
-    if (peep->minDistPeep != NULL && ((peep->minDistPeep_Q16) < peep->physics.shape.radius_Q16))
+    //calculate force based on penetration distance with minDistPeepIdx.
+    if (peep->minDistPeepIdx != OFFSET_NULL && ((peep->minDistPeep_Q16) < peep->physics.shape.radius_Q16))
     {
-        ge_int3 d_Q16 = GE_INT3_ADD(peep->minDistPeep->physics.base.pos_Q16, GE_INT3_NEG(peep->physics.base.pos_Q16));
-        cl_int combined_r_Q16 = peep->physics.shape.radius_Q16 + peep->minDistPeep->physics.shape.radius_Q16;
+        Peep* minDistPeep;
+
+        OFFSET_TO_PTR(gameState->peeps, peep->minDistPeepIdx, minDistPeep);
+        ge_int3 d_Q16 = GE_INT3_ADD(minDistPeep->physics.base.pos_Q16, GE_INT3_NEG(peep->physics.base.pos_Q16));
+        cl_int combined_r_Q16 = peep->physics.shape.radius_Q16 + minDistPeep->physics.shape.radius_Q16;
         cl_int len_Q16;
 
 
@@ -93,13 +96,26 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         ge_int3 penetrationForce_Q16;
         
 
+
         penetrationForce_Q16.x = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.x) >> 4;
         penetrationForce_Q16.y = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.y) >> 4;
         penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) >> 4;
 
       
-        
-        peep->physics.base.collisionNetForce_Q16 = GE_INT3_ADD(peep->physics.base.collisionNetForce_Q16, penetrationForce_Q16);
+        if (penV_Q16.x < peep->physics.base.penetration_BoundsMin_Q16.x)
+            peep->physics.base.penetration_BoundsMin_Q16.x = penV_Q16.x;
+
+        if (penV_Q16.y < peep->physics.base.penetration_BoundsMin_Q16.y)
+            peep->physics.base.penetration_BoundsMin_Q16.y = penV_Q16.y;
+
+        if (penV_Q16.x > peep->physics.base.penetration_BoundsMax_Q16.x)
+            peep->physics.base.penetration_BoundsMax_Q16.x = penV_Q16.x;
+
+        if (penV_Q16.y > peep->physics.base.penetration_BoundsMax_Q16.y)
+            peep->physics.base.penetration_BoundsMax_Q16.y = penV_Q16.y;
+
+
+        peep->physics.base.collisionNetForce_Q16 = penetrationForce_Q16;
     }
 
     //force from adjacent 2 height walls
@@ -147,24 +163,40 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         driveForce.x = vel_error.x >> 2;
         driveForce.y = vel_error.y >> 2;
 
-        ge_int2 driveForceProjected = driveForce;
+        cl_int2 driveForceProjected = GE_TO_CL_INT2(driveForce);
 
 
         //project onto orthogonal to collision net force
-        cl_int2 cnf = GE_TO_CL_INT2(peep->physics.base.collisionNetForce_Q16);
-        cl_int len;
+        //cl_int2 cnf = GE_TO_CL_INT2(peep->physics.base.collisionNetForce_Q16);
+        //cl_int len = cl_length_v2_Q16(cnf);
 
-        cl_int2 cnf90;
-        cnf90.x = cnf.y;
-        cnf90.y = -cnf.x;
+        //cl_int2 cnf90;
+        //cnf90.x = cnf.y;
+        //cnf90.y = -cnf.x;
 
-        cl_int scalar;
-        cl_project_2D_Q16(&driveForceProjected, &cnf90, &scalar);
+        //cl_int scalar;
+        //cl_project_2D_Q16(&driveForceProjected, &cnf90, &scalar);
+
+       
+
+       // cl_int2 boundsSize;
+       // boundsSize.x = peep->physics.base.penetration_BoundsMax_Q16.x - peep->physics.base.penetration_BoundsMin_Q16.x;
+      //  boundsSize.y = peep->physics.base.penetration_BoundsMax_Q16.y - peep->physics.base.penetration_BoundsMin_Q16.y;
+
+
 
         if (IS_ZERO_V2(peep->physics.base.collisionNetForce_Q16))
         {
-           driveForceProjected = driveForce;
+            driveForceProjected.x = driveForce.x;
+            driveForceProjected.y = driveForce.y;
         }
+        else
+        {
+            driveForceProjected.x = 0;
+            driveForceProjected.y = 0;
+        }
+
+        
 
         peep->physics.base.netForce_Q16.x += driveForceProjected.x;
         peep->physics.base.netForce_Q16.y += driveForceProjected.y;
@@ -214,6 +246,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
 void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
 {
+
     cl_int x = ((peep->physics.base.pos_Q16.x >> 16) / (SECTOR_SIZE));
     cl_int y = ((peep->physics.base.pos_Q16.y >> 16) / (SECTOR_SIZE));
 
@@ -227,39 +260,49 @@ void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
     if (y >= SQRT_MAXSECTORS / 2)
         y = SQRT_MAXSECTORS / 2 - 1;
 
-    MapSector* newSector = &gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2];
+
+    MapSector* newSector = &(gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2]);
     CL_CHECK_NULL(newSector)
+
+
     if ((peep->mapSector != newSector))
     {
+
         if (peep->mapSector != NULL)
         {
             //remove peep from old sector
-            if ((peep->prevSectorPeep != NULL))
+            if ((peep->prevSectorPeepIdx != OFFSET_NULL))
             {
-                peep->prevSectorPeep->nextSectorPeep = peep->nextSectorPeep;
+                gameState->peeps[peep->prevSectorPeepIdx].nextSectorPeepIdx = peep->nextSectorPeepIdx;
             }
-            if ((peep->nextSectorPeep != NULL))
+            if ((peep->nextSectorPeepIdx != OFFSET_NULL))
             {
-                peep->nextSectorPeep->prevSectorPeep = peep->prevSectorPeep;
+                gameState->peeps[peep->nextSectorPeepIdx].prevSectorPeepIdx = peep->prevSectorPeepIdx;
             }
 
 
+            if (peep->mapSector->lastPeepIdx == peep->Idx) {
 
-            if (peep->mapSector->lastPeep == peep) {
-                peep->mapSector->lastPeep = peep->prevSectorPeep;
-                if (peep->mapSector->lastPeep != NULL)
-                    peep->mapSector->lastPeep->nextSectorPeep = NULL;
+                if (peep->prevSectorPeepIdx != OFFSET_NULL)
+                    peep->mapSector->lastPeepIdx = gameState->peeps[peep->prevSectorPeepIdx].Idx;
+                else
+                    peep->mapSector->lastPeepIdx = OFFSET_NULL;
+                
+                if (peep->mapSector->lastPeepIdx != OFFSET_NULL)
+                    gameState->peeps[peep->mapSector->lastPeepIdx].nextSectorPeepIdx = OFFSET_NULL;
             }
 
             //completely detach
-            peep->nextSectorPeep = NULL;
-            peep->prevSectorPeep = NULL;
+            peep->nextSectorPeepIdx = OFFSET_NULL;
+            peep->prevSectorPeepIdx = OFFSET_NULL;
 
         }
 
         //assign new sector for next stage
         peep->mapSector_pending = newSector;
     }
+
+
 }
 void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 {
@@ -269,27 +312,34 @@ void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
         peep->mapSector = peep->mapSector_pending;
 
         //put peep in the sector.  extend list
-        if (peep->mapSector->lastPeep != NULL)
+        if (peep->mapSector->lastPeepIdx != OFFSET_NULL)
         {
-            peep->mapSector->lastPeep->nextSectorPeep = peep;
-            peep->prevSectorPeep = peep->mapSector->lastPeep;
+            gameState->peeps[peep->mapSector->lastPeepIdx].nextSectorPeepIdx = peep->Idx;
+            peep->prevSectorPeepIdx = gameState->peeps[peep->mapSector->lastPeepIdx].Idx;
         }
-        peep->mapSector->lastPeep = peep;
+        peep->mapSector->lastPeepIdx = peep->Idx;
     }
 }
 void PeepPreUpdate1(Peep* peep)
 {
-
     peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
 
     peep->physics.base.collisionNetForce_Q16 = (ge_int3){ 0,0,0 };
+    peep->physics.base.penetration_BoundsMax_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0) };
+    peep->physics.base.penetration_BoundsMin_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0)};
+
+
+
     peep->physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
 }
 
 void PeepPreUpdate2(Peep* peep)
 {
+
+
+
 
     peep->physics.base.pos_Q16.x += peep->physics.base.v_Q16.x;
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
@@ -315,7 +365,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 {
 
     peep->minDistPeep_Q16 = (1 << 30);
-    peep->minDistPeep = NULL;
+    peep->minDistPeepIdx = OFFSET_NULL;
 
 
     //traverse sector
@@ -332,7 +382,11 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
             MapSector* sector = &gameState->sectors[sectorx][sectory];
             
-            Peep* curPeep = sector->lastPeep;
+
+            Peep* curPeep;
+            OFFSET_TO_PTR(gameState->peeps, sector->lastPeepIdx, curPeep);
+            
+
             Peep* firstPeep = curPeep;
             while (curPeep != NULL)
             {
@@ -340,7 +394,10 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
                     PeepToPeepInteraction(peep, curPeep);
                 }
 
-                curPeep = curPeep->prevSectorPeep;
+                
+                OFFSET_TO_PTR(gameState->peeps, curPeep->prevSectorPeepIdx, curPeep);
+
+
                 if (curPeep == firstPeep)
                     break;
             }
@@ -571,7 +628,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         {
             gameState->sectors[secx][secy].xidx = secx;
             gameState->sectors[secx][secy].yidx = secy;
-            gameState->sectors[secx][secy].lastPeep = NULL;
+            gameState->sectors[secx][secy].lastPeepIdx = OFFSET_NULL;
             gameState->sectors[secx][secy].lock = 0;
         }
     }
@@ -596,12 +653,12 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){0,0,0};
         gameState->peeps[p].physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
 
-        gameState->peeps[p].minDistPeep = NULL;
+        gameState->peeps[p].minDistPeepIdx = OFFSET_NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
         gameState->peeps[p].mapSector = NULL;
         gameState->peeps[p].mapSector_pending = NULL;
-        gameState->peeps[p].nextSectorPeep = NULL;
-        gameState->peeps[p].prevSectorPeep = NULL;
+        gameState->peeps[p].nextSectorPeepIdx = OFFSET_NULL;
+        gameState->peeps[p].prevSectorPeepIdx = OFFSET_NULL;
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
@@ -707,7 +764,8 @@ __kernel void game_update(ALL_CORE_PARAMS)
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
 
-    
+
+
     Peep* p = &gameState->peeps[globalid];
     PeepUpdate(ALL_CORE_PARAMS_PASS,p);
     PeepDraw(ALL_CORE_PARAMS_PASS,p);
@@ -739,8 +797,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
-    
-    
+
     if (globalid >= WARPSIZE)
         return;
    
@@ -755,23 +812,36 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         PeepPreUpdate1(p);
     }
     barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+    
+
+
     for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {
 
         Peep* p;
         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
         CL_CHECK_NULL(p)
+
+
+
         PeepPreUpdate2(p);
+
+
 
         global volatile MapSector* mapSector = (global volatile MapSector *)p->mapSector;
         CL_CHECK_NULL(mapSector)
         global volatile cl_uint* lock = (global volatile cl_uint*)&mapSector->lock;
         CL_CHECK_NULL(lock)
 
+
+
         cl_uint reservation;
 
         reservation = atomic_add(lock, 1)+1;
         barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+
+
+
 
         while (*lock != reservation) { }
 
@@ -780,6 +850,8 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         atomic_dec(lock);
        
     }
+
+
 }
 
 
@@ -788,13 +860,12 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
 
-   // if (globalid == 0)
-    //    printf("game_preupdate_1\n");
+
 
     if (globalid >= WARPSIZE)
         return;
 
-   // printf("Preupdate2");
+
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
     for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
     {

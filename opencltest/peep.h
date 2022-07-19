@@ -17,7 +17,7 @@
 
 #include "cpugpuvectortypes.h"
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*1)
 #define MAX_TRACKNODES (1024*8)
 #define MAPDIM (256)
 #define MAPDEPTH (32)
@@ -35,11 +35,11 @@
 
 
 #define OFFSET_NULL (0xFFFFFFFF)
-#define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } ARRAY[INDEX] = VALUE; }
-#define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} POINTER = &ARRAY[INDEX];}
+#define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } else ARRAY[INDEX] = VALUE; }
+#define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
 #define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
 
-
+#define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL) POINTER = NULL; else POINTER = &(ARRAY[OFFSET]);} 
 
 
 
@@ -67,6 +67,9 @@ struct BasePhysics
 	ge_int3 v_Q16;
 	ge_int3 netForce_Q16;
 	ge_int3 collisionNetForce_Q16;
+	ge_int2 penetration_BoundsMin_Q16;
+	ge_int2 penetration_BoundsMax_Q16;
+
 
 	int mass_Q16;
 
@@ -107,15 +110,15 @@ struct Peep {
 	struct PeepCommunication comms;
 
 	cl_int minDistPeep_Q16;
-	struct Peep* minDistPeep;
+	cl_uint minDistPeepIdx;
 
 	ge_int3 mapTileLoc_Q16;
 	
 	struct MapSector* mapSector_pending;
 	struct MapSector* mapSector;
 
-	struct Peep* nextSectorPeep;
-	struct Peep* prevSectorPeep;
+	cl_uint nextSectorPeepIdx;
+	cl_uint prevSectorPeepIdx;
 
 	//selection by clients
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
@@ -171,7 +174,7 @@ struct Map {
 
 
 struct MapSector {
-	Peep* lastPeep;
+	cl_uint lastPeepIdx;
 	int32_t xidx;
 	int32_t yidx;
 	cl_uint lock;
