@@ -35,13 +35,15 @@
 
 
 #define OFFSET_NULL (0xFFFFFFFF)
+#define OFFSET_NULL_2D (0xFFFFFFFF , 0xFFFFFFFF)
 #define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } else ARRAY[INDEX] = VALUE; }
 #define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
 #define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
 
-#define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL) POINTER = NULL; else POINTER = &(ARRAY[OFFSET]);} 
+#define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL){  POINTER = NULL;} else POINTER = &(ARRAY[OFFSET]);} 
+#define OFFSET_TO_PTR_2D(ARRAY2D, OFFSET2D, POINTER) { if((OFFSET2D.x == OFFSET_NULL) || (OFFSET2D.y == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY2D[OFFSET2D.x][OFFSET2D.y]); } 
 
-
+#define GE_OFFSET_NULL_2D (ge_uint2){0xFFFFFFFF , 0xFFFFFFFF}
 
 struct Cell;
 struct MapSector;
@@ -114,8 +116,8 @@ struct Peep {
 
 	ge_int3 mapTileLoc_Q16;
 	
-	struct MapSector* mapSector_pending;
-	struct MapSector* mapSector;
+	ge_uint2 mapSector_pendingIdx;
+	ge_uint2 mapSectorIdx;
 
 	cl_uint nextSectorPeepIdx;
 	cl_uint prevSectorPeepIdx;
@@ -175,8 +177,7 @@ struct Map {
 
 struct MapSector {
 	cl_uint lastPeepIdx;
-	int32_t xidx;
-	int32_t yidx;
+	ge_uint2 idx;
 	cl_uint lock;
 } typedef MapSector;
 

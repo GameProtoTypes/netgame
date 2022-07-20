@@ -13,6 +13,12 @@ struct ge_int3
 	int z;
 }typedef ge_int3;
 
+struct ge_uint2
+{
+	unsigned int x;
+	unsigned int y;
+}typedef ge_uint2;
+
 struct ge_int4
 {
 	int x;
@@ -33,3 +39,8 @@ struct ge_int4
 
 #define GE_INT3_LFTSHIFT(a,s) ((ge_int3){a.x<<s,a.y<<s,a.z<<s})
 #define GE_INT4_LFTSHIFT(a,s) ((ge_int4){a.x<<s,a.y<<s,a.z<<s,a.w<<s})
+
+
+#define GE_VECTOR2_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y))
+
+

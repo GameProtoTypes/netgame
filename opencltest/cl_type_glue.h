@@ -25,6 +25,11 @@ typedef int2 cl_int2;
 typedef int3 cl_int3;
 typedef int4 cl_int4;
 
+typedef uint2 cl_uint2;
+typedef uint3 cl_uint3;
+typedef uint4 cl_uint4;
+
+
 typedef long2 cl_long2;
 typedef long3 cl_long3;
 typedef long4 cl_long4;
@@ -46,7 +51,7 @@ typedef ulong uint64_t;
 
 
 
-
+#define CL_VECTOR2_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y))
 
 
 
