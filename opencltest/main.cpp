@@ -47,13 +47,12 @@
 
 int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
-void WaitMinTickTime(uint64_t timerStartMs, int32_t targetTimeMs)
+void WaitMinTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTimeMS)
 {
-    int64_t frameTimeMS = SDL_GetTicks64() - timerStartMs;
-    int32_t sleepTime = glm::clamp(int32_t(targetTimeMs - frameTimeMS), 0, targetTimeMs);
+    *frameTimeMS = SDL_GetTicks64() - timerStartMs;
+    int32_t sleepTime = glm::clamp(int32_t(targetTimeMs - *frameTimeMS), 0, targetTimeMs);
     std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 }
-
 
 
 
@@ -400,7 +399,7 @@ int32_t main(int32_t argc, char* args[])
             sprintf(buffer, "HELLOOOO %d", gameStateB->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
-        ImGui::Text("TargetTickTime: %d, PID Error %f", gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
+        ImGui::Text("FrameTime: %d, TargetTickTime: %d, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
                 
         if (gameNetworking.gameStateTransferPercent > 0.0f)
         {
@@ -528,7 +527,7 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameGraphics.Swap();
-        WaitMinTickTime(timerStartMs, gameNetworking.targetTickTimeMs);
+        WaitMinTickTime(timerStartMs, gameNetworking.targetTickTimeMs, &gameNetworking.lastFrameTimeMs);
 
         if (gameCompute.errorState)
             quit = true;

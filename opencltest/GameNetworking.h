@@ -31,6 +31,7 @@
 
 
 #define MINTICKTIMEMS (16)
+#define GOODTICKTIMEMS (MINTICKTIMEMS*2)
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
@@ -223,6 +224,8 @@ public:
 	int32_t targetTickTimeMs = MINTICKTIMEMS;
 	float integralAccumulatorTickPID = 0.0f;
 	float tickPIDError = 0.0f;
+
+	int64_t lastFrameTimeMs = MINTICKTIMEMS;
 
 	uint32_t clientGUID;
 };

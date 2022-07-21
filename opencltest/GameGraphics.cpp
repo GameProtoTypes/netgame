@@ -58,6 +58,12 @@ GameGraphics::GameGraphics()
         {
             printf("Warning: Linear texture filtering not enabled!");
         }
+        if (!SDL_SetHint(SDL_HINT_FORCE_RAISEWINDOW, "1"))
+        {
+            printf("Warning: SDL_HINT_FORCE_RAISEWINDOW not enabled!");
+        }
+
+
 
         //Create window
         gWindow = SDL_CreateWindow("Mine Tycoon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);

@@ -74,7 +74,10 @@ void GameGPUCompute::RunInitCompute()
     source_str = (char*)malloc(GAMECOMPUTE_MAX_SOURCE_SIZE);
     source_size = fread(source_str, 1, GAMECOMPUTE_MAX_SOURCE_SIZE, fp);
     fclose(fp);
-    printf("update_kernel loading done\n");
+
+
+
+    printf("source loading done\n");
     // Get platform and device information
     cl_device_id device_id = NULL;
     cl_uint ret_num_devices;

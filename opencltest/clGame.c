@@ -157,25 +157,6 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         cl_int2 driveForceProjected = GE_TO_CL_INT2(driveForce);
 
 
-        //project onto orthogonal to collision net force
-        //cl_int2 cnf = GE_TO_CL_INT2(peep->physics.base.collisionNetForce_Q16);
-        //cl_int len = cl_length_v2_Q16(cnf);
-
-        //cl_int2 cnf90;
-        //cnf90.x = cnf.y;
-        //cnf90.y = -cnf.x;
-
-        //cl_int scalar;
-        //cl_project_2D_Q16(&driveForceProjected, &cnf90, &scalar);
-
-       
-
-       // cl_int2 boundsSize;
-       // boundsSize.x = peep->physics.base.penetration_BoundsMax_Q16.x - peep->physics.base.penetration_BoundsMin_Q16.x;
-      //  boundsSize.y = peep->physics.base.penetration_BoundsMax_Q16.y - peep->physics.base.penetration_BoundsMin_Q16.y;
-
-
-
         if (IS_ZERO_V2(peep->physics.base.collisionNetForce_Q16))
         {
             driveForceProjected.x = driveForce.x;

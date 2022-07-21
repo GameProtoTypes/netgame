@@ -445,30 +445,37 @@
  {
 	 clientMeta* thisClient = GetClientMetaDataFromCliGUID(clientGUID);
 	 clientMeta serverDummyClientThing;
-	 if (thisClient == nullptr)
+	 if (thisClient == nullptr)//case for uncconected to server
 	 {
-		 //std::cout << "USING DUMMY CLIENT FOR THROTTLE" << std::endl;
-		 thisClient = &serverDummyClientThing;
-		 thisClient->hostTickOffset = 0;
-		 thisClient->avgHostPing = 0;
+		 targetTickTimeMs = MINTICKTIMEMS;
+		 return;
+	 }
+	 if (clients.size() == 1 && fullyConnectedToHost)//case for client/server hybrid with no extra clients.
+	 {
+		 targetTickTimeMs = MINTICKTIMEMS;
+		 return;
 	 }
 
 	 //get stats on client swarm and slow down 
 	 int32_t maxOffset = -9999;
 	 int32_t minOffset = 9999;
-	 int32_t safetyOffset = 100;
+	 int32_t safetyOffset = 5;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {
 		 clientMeta* client = &clients[i];
 		 if (client == thisClient)
-			 continue;
+		 {
+			 continue;//dont compare to self.
+		 }
 
 		 if (client->hostTickOffset > maxOffset)
 			 maxOffset = client->hostTickOffset;
 		 if (client->hostTickOffset < minOffset)
 			 minOffset = client->hostTickOffset;
 	 }
+	 
+
 
 
 	 safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
@@ -481,58 +488,45 @@
 	 else
 		 distToCompare = distToMin;
 
-	 tickPIDError = distToCompare - safetyOffset;
+	 tickPIDError = distToCompare;
 
-
-	 float pFactor = 1.0f;
+	 
+	 float pFactor = 4.0f;
 	 
 	 if (clients.size() > 1 && fullyConnectedToHost)
 	 {
 
-		 //if (!serverRunning && thisClient->hostTickOffset > -safetyOffset)
-		 //{
-			// targetTickTimeMs = MINTICKTIMEMS * (thisClient->hostTickOffset - (-safetyOffset));
 
-		 //}
-		 //else
-		 //{
+	     //slow down for fastest if server-hybrid, slow down for slowest if client.
 
-			 //slow down for fastest if server-hybrid, slow down for slowest if client.
-			 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
-
-		// }
-
-
-
-		 // clamp to min
-		 if (thisClient->hostTickOffset < -safetyOffset * 10)
+		 if (serverRunning)
 		 {
-			 if (targetTickTimeMs <= 0)//allow fastest speed up from very delayed clients.
-			 {
-				 targetTickTimeMs = 0;
-
-			 }
+			 tickPIDError -= safetyOffset;
 		 }
 		 else
 		 {
-			 if (targetTickTimeMs <= MINTICKTIMEMS)
-			 {
-				 targetTickTimeMs = MINTICKTIMEMS;
-
-			 }
+			 tickPIDError += safetyOffset;
 		 }
 
+		targetTickTimeMs = GOODTICKTIMEMS + pFactor * (tickPIDError);//A
 
-		 //if (targetTickTimeMs >= MAXTICKTIMEMS)
-		// {
-		//	 targetTickTimeMs = MAXTICKTIMEMS;
 
-		 //}
 
+
+
+		if (targetTickTimeMs >= MAXTICKTIMEMS)
+		{
+			targetTickTimeMs = MAXTICKTIMEMS;
+		}
+		else if (targetTickTimeMs <= 0)//allow fastest speed up from very delayed clients.
+		{
+ 			targetTickTimeMs = 0;
+
+		}
 	 }
 	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client
 	 {
-		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//A
+		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//used?
 
 	 }
 	 else
