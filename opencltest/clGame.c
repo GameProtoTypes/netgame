@@ -49,26 +49,47 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
 void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
 {
     ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
-    *out_map_tilecoords_Q16 = DIV_v3_Q16(world_Q16, b);
+    ge_int3 map_coords_Q16 = DIV_v3_Q16(world_Q16, b);
+    map_coords_Q16.x += TO_Q16(MAPDIM) >> 1;//MAPDIM*0.5f
+    map_coords_Q16.y += TO_Q16(MAPDIM) >> 1;//MAPDIM*0.5f.
+
+    *out_map_tilecoords_Q16 = map_coords_Q16;
 }
 
 void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
 {
     ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
+
+    map_tilecoords_Q16.x -= TO_Q16(MAPDIM) >> 1;//MAPDIM*0.5f
+    map_tilecoords_Q16.y -= TO_Q16(MAPDIM) >> 1;//MAPDIM*0.5f
+
     *world_Q16 = MUL_v3_Q16(map_tilecoords_Q16, b);
 }
 
 
 void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_map_tile)
 {
-    int z = WHOLE_Q16(peep->mapTileLoc_Q16.z) + offset.z;
-    int x = WHOLE_Q16(peep->mapTileLoc_Q16.x) + offset.x;
-    int y = WHOLE_Q16(peep->mapTileLoc_Q16.y) + offset.y;
+    int z = WHOLE_Q16(peep->posMap_Q16.z) + offset.z;
+    int x = WHOLE_Q16(peep->posMap_Q16.x) + offset.x;
+    int y = WHOLE_Q16(peep->posMap_Q16.y) + offset.y;
 
-    z = clamp(z, 0, MAPDEPTH);
-    x = clamp(x, 0, MAPDIM);
-    y = clamp(y, 0, MAPDIM);
-
+    
+    if (z < 0 || z >= MAPDEPTH)
+    {
+        *out_map_tile = MapTile_NONE;
+        return;
+    }
+    if (x < 0 || x >= MAPDIM)
+    {
+        *out_map_tile = MapTile_NONE;
+        return;
+    }
+    if (y < 0 || y >= MAPDIM)
+    {
+        *out_map_tile = MapTile_NONE;
+        return;
+    }
+    
 
     *out_map_tile = gameState->map.levels[z].tiles[x][y];
 }
@@ -115,22 +136,80 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         peep->physics.base.collisionNetForce_Q16 = penetrationForce_Q16;
     }
 
+
+
+
+
      //maptile collisions
-     MapTile tiles[4];
-     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, &tiles[0]);
-     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, &tiles[1]);
-     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, &tiles[2]);
-     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, &tiles[3]);
+    if (1) {
+        MapTile tiles[6];
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, &tiles[0]);
 
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, &tiles[1]);
 
-     for (int i = 0; i < 4; i++)
-     {
-         //circle-box collision with incorrect corner forces.
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, &tiles[2]);
 
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, &tiles[3]);
 
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, &tiles[4]);
 
-     }
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, &tiles[5]);
 
+        for (int i = 0; i < 6; i++)
+        {
+            //circle-circle collision with incorrect corner forces.
+            MapTile tile = tiles[i];
+            if (tile != MapTile_NONE)
+            {
+                cl_int dist;
+                ge_int3 loc = peep->posMap_Q16;
+                if (i == 0)
+                    loc.x += 1;
+                else if (i == 1)
+                    loc.x -= 1;
+                else if (i == 2)
+                    loc.y -= 1;
+                else if (i == 3)
+                    loc.y += 1;
+                else if (i == 4)
+                    loc.z += 1;
+                else if (i == 5)
+                    loc.z -= 1;
+
+                ge_int3 tileWorldLoc;
+                MapToWorld(loc, &tileWorldLoc);
+
+                cl_int2 deltaN = (cl_int2)(tileWorldLoc.x, tileWorldLoc.y) - (cl_int2)(peep->physics.base.pos_Q16.x, peep->physics.base.pos_Q16.y);
+
+                cl_normalize_v2_Q16(&deltaN, &dist);
+
+                if (WHOLE_Q16(dist) < 5)
+                {
+                    peep->physics.base.collisionNetForce_Q16.x += deltaN.x >> 2;
+                    peep->physics.base.collisionNetForce_Q16.y += deltaN.y >> 2;
+                }
+
+            }
+        }
+
+        if (peep->Idx == 0)
+            printf("%d\n", tiles[0]);
+
+        if (tiles[5] == MapTile_NONE)
+        {
+           // if (peep->Idx == 0)
+          //      printf("falling. %f\n", FixedToFloat(peep->physics.base.pos_Q16.z, 16));
+            //add "fall/gravity" force
+             peep->physics.base.collisionNetForce_Q16.z = TO_Q16(-1) >> 4;
+        }
+        else
+        {
+
+        }
+        if (peep->Idx == 0)
+            Print_GE_INT3_Q16(peep->posMap_Q16);
+        
+    }
 
 
 
@@ -198,6 +277,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     //form final net-force
     peep->physics.base.netForce_Q16.x += peep->physics.base.collisionNetForce_Q16.x;
     peep->physics.base.netForce_Q16.y += peep->physics.base.collisionNetForce_Q16.y;
+    peep->physics.base.netForce_Q16.z += peep->physics.base.collisionNetForce_Q16.z;
 
 
 }
@@ -224,7 +304,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
     //if (foottile == MapTile_NONE)
     //{
     //    //fall.
-    //    peep->mapTileLoc_Q16.z += TO_Q16(-2) >> 4;
+    //    peep->posMap_Q16.z += TO_Q16(-2) >> 4;
     //}
 
 
@@ -315,15 +395,16 @@ void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 }
 void PeepPreUpdate1(Peep* peep)
 {
+
     peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
 
+
+    //clear forces
     peep->physics.base.collisionNetForce_Q16 = (ge_int3){ 0,0,0 };
     peep->physics.base.penetration_BoundsMax_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0) };
     peep->physics.base.penetration_BoundsMin_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0)};
-
-
 
     peep->physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
 }
@@ -398,7 +479,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
     }
    
     
-    WorldToMap(peep->physics.base.pos_Q16, &peep->mapTileLoc_Q16);
+    WorldToMap(peep->physics.base.pos_Q16, &peep->posMap_Q16);
 
 
     WalkAndFight(ALL_CORE_PARAMS_PASS, peep);
@@ -634,7 +715,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].Idx = p;
         gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-500 << 16, 500 << 16) ;
         gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-500 << 16, 500 << 16) ;
-        gameState->peeps[p].physics.base.pos_Q16.z = 100;
+        gameState->peeps[p].physics.base.pos_Q16.z = TO_Q16(100);
         gameState->peeps[p].physics.base.mass_Q16 = TO_Q16(1);
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(5);
         gameState->peeps[p].stateRender.attackState = 0;
@@ -798,29 +879,26 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
    
 
     const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
-
+        
         Peep* p;
         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
         CL_CHECK_NULL(p)
         PeepPreUpdate1(p);
     }
+
     barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
     
 
 
-    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
-
         Peep* p;
         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
         CL_CHECK_NULL(p)
 
-
-
         PeepPreUpdate2(p);
-
 
 
         global volatile MapSector* mapSector;
@@ -841,9 +919,9 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
         AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
 
-        atomic_dec(lock);
-       
+        atomic_dec(lock); 
     }
+
 
 }
 
