@@ -141,6 +141,9 @@ ge_int3 MUL_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
 
 
 
+
+
+
 // sqrt_i64 computes the squrare root of a 64bit integer and returns
 // a 64bit integer value. It requires that v is positive.
 cl_long sqrt_i64(cl_long v) {
@@ -376,7 +379,7 @@ void cl_catmull_rom_uniform_2d_Q16(
 
 
 
-    //DERIVATE http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
+    //DERIVATIVES http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
 
     cl_int t2_m_t0_Q16 = t2_Q16 - t0_Q16;
 

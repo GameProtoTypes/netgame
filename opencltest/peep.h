@@ -17,7 +17,7 @@
 
 #include "cpugpuvectortypes.h"
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*64)
 #define MAX_TRACKNODES (1024*8)
 #define MAPDIM (256)
 #define MAPDEPTH (32)
@@ -28,7 +28,7 @@
 #define GAME_UPDATE_WORKITEMS MAX_PEEPS
 
 #define SQRT_MAXSECTORS (128)
-#define SECTOR_SIZE (32)
+#define SECTOR_SIZE (8)
 
 #define MAX_CLIENTS (1024)
 

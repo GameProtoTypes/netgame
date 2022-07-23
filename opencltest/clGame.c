@@ -7,14 +7,13 @@
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
-#define ALL_CORE_PARAMS __global GameState* gameState, __global GameStateB* gameStateB, __global float* peepVBOBuffer, __global cl_uint* mapTileVBO, __global cl_uint* mapTileAttrVBO
-#define ALL_CORE_PARAMS_PASS gameState, gameStateB, peepVBOBuffer, mapTileVBO, mapTileAttrVBO
+#define ALL_CORE_PARAMS  __global GameState* gameState, __global GameStateB* gameStateB, __global float* peepVBOBuffer, __global cl_uint* mapTileVBO, __global cl_uint* mapTileAttrVBO
+#define ALL_CORE_PARAMS_PASS  gameState, gameStateB, peepVBOBuffer, mapTileVBO, mapTileAttrVBO
 
 
 void PeepPrint(Peep* peep)
 {
     PrintQ16(peep->physics.drive.target_x_Q16);
-
 }
 
 
@@ -51,7 +50,6 @@ void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
 {
     ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
     *out_map_tilecoords_Q16 = DIV_v3_Q16(world_Q16, b);
-    
 }
 
 void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
@@ -117,6 +115,23 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         peep->physics.base.collisionNetForce_Q16 = penetrationForce_Q16;
     }
 
+     //maptile collisions
+     MapTile tiles[4];
+     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, &tiles[0]);
+     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, &tiles[1]);
+     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, &tiles[2]);
+     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, &tiles[3]);
+
+
+     for (int i = 0; i < 4; i++)
+     {
+         //circle-box collision with incorrect corner forces.
+
+
+
+     }
+
+
 
 
 }
@@ -142,8 +157,8 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     }
 
 
-    targetVelocity.x = d.x << 1;
-    targetVelocity.y = d.y << 1;
+    targetVelocity.x = d.x << 0;
+    targetVelocity.y = d.y << 0;
 
     ge_int3 vel_error = { targetVelocity.x - peep->physics.base.v_Q16.x, targetVelocity.y - peep->physics.base.v_Q16.y, 0 };
     if (peep->physics.drive.drivingToTarget)
@@ -315,9 +330,6 @@ void PeepPreUpdate1(Peep* peep)
 
 void PeepPreUpdate2(Peep* peep)
 {
-
-
-
 
     peep->physics.base.pos_Q16.x += peep->physics.base.v_Q16.x;
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
@@ -642,10 +654,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
-
-        gameState->peeps[p].stateRender.faction = RandomRange(p + 3, 0, 2);
-        
-
+        if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
+            gameState->peeps[p].stateRender.faction = 0;
+        else
+            gameState->peeps[p].stateRender.faction = 1;
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)
@@ -754,7 +766,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
     //update map view
     if (gameStateB->mapZView != gameStateB->mapZView_1)
     {
-        const cl_uint chunkSize = (MAPDIM* MAPDIM) / GAME_UPDATE_WORKITEMS;
+        const cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
         for (cl_ulong i = 0; i < (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS; i++)
         {
             cl_ulong xyIdx = i + globalid * chunkSize;
@@ -766,9 +778,13 @@ __kernel void game_update(ALL_CORE_PARAMS)
 }
 
 
-__kernel void game_post_update_single(ALL_CORE_PARAMS)
+__kernel void game_post_update_single( ALL_CORE_PARAMS)
 {
+
     gameStateB->mapZView_1 = gameStateB->mapZView;
+
+
+
 }
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {

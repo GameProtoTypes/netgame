@@ -115,6 +115,8 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
 
         // Create memory buffers on the device
+
+
         gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -279,14 +281,14 @@ void GameGPUCompute::Stage1()
     CL_HOST_ERROR_CHECK(ret)
 
      ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
-        WorkItems, NULL, 1, &actionEvent, &preUpdateEvent1);
+         WorkItems1Warp, NULL, 1, &actionEvent, &preUpdateEvent1);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
-        WorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
+        WorkItems1Warp, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
     CL_HOST_ERROR_CHECK(ret)
 
 

@@ -76,6 +76,7 @@ public:
 
 
     size_t WorkItems[1] = { GAME_UPDATE_WORKITEMS };
+	size_t WorkItems1Warp[1] = { WARPSIZE };
 
 
 	cl_mem gamestate_mem_obj;
