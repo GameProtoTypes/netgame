@@ -103,6 +103,31 @@ void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_ma
    
 }
 
+void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr)
+{
+    if (W > 0 && lr == -1)//left outside
+    {
+        *out_pen_Q16 = -(radius_Q16 - W);
+        *out_pen_Q16 = clamp(*out_pen_Q16, -(radius_Q16), 0);
+    }
+    else if (W < 0 && lr == 1)//right outside
+    {
+        *out_pen_Q16 = (radius_Q16 + W);
+        *out_pen_Q16 = clamp(*out_pen_Q16, 0, radius_Q16);
+    }
+    else if (W > 0 && lr == 1)//right inside
+    {
+        *out_pen_Q16 = (W + radius_Q16);
+        *out_pen_Q16 = clamp(*out_pen_Q16, 0, W + radius_Q16);
+    }
+    else if (W < 0 && lr == -1)//left inside
+    {
+        *out_pen_Q16 = (W - radius_Q16);
+        *out_pen_Q16 = clamp(*out_pen_Q16, W - radius_Q16, 0);
+    }
+}
+
+
 void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 {
     //calculate force based on penetration distance with minDistPeepIdx.
@@ -196,6 +221,7 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
             if (tile != MapTile_NONE)
             {
                 cl_int3 tileMin_Q16;
+                cl_int3 tileMid_Q16;
                 cl_int3 tileMax_Q16;
 
                 tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
@@ -206,45 +232,76 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
                 tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
                 tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
+                tileMid_Q16.x = (tileMax_Q16.x + tileMin_Q16.x) >> 1;
+                tileMid_Q16.y = (tileMax_Q16.y + tileMin_Q16.y) >> 1;
+                tileMid_Q16.z = (tileMax_Q16.z + tileMin_Q16.z) >> 1;
+
+
+
                 //X
                 cl_int a = tileMin_Q16.x - peep->physics.base.pos_Q16.x;
                 cl_int b = tileMax_Q16.x - peep->physics.base.pos_Q16.x;
-                cl_int W = min(abs(a), abs(b));
-                cl_int penetrationMagX = peep->physics.shape.radius_Q16 - W; 
-                penetrationMagX = clamp(penetrationMagX, 0, peep->physics.shape.radius_Q16);
-                cl_int penForceX = MUL_PAD_Q16(penetrationMagX, -SIGN_MAG_Q15_16(tileMin_Q16.x - peep->physics.base.pos_Q16.x));
+                cl_int W;
+
+                int lr;
+
+                if (abs(a) < abs(b)) { W = a; lr = -1; }
+                else { W = b;  lr = 1; }
+                
+                cl_int penetrationX = 0;
+                RegionCollision(&penetrationX, peep->physics.shape.radius_Q16, W, lr);
+
 
 
                 //Y
                 a = tileMin_Q16.y - peep->physics.base.pos_Q16.y;
                 b = tileMax_Q16.y - peep->physics.base.pos_Q16.y;
-                W = min(abs(a), abs(b));
-                cl_int penetrationMagY = peep->physics.shape.radius_Q16 - W;
-                penetrationMagY = clamp(penetrationMagY, 0, peep->physics.shape.radius_Q16);
-                cl_int penForceY = MUL_PAD_Q16(penetrationMagY, -SIGN_MAG_Q15_16(tileMin_Q16.y - peep->physics.base.pos_Q16.y));
+
+
+                if (abs(a) < abs(b)) { W = a; lr = -1; }
+                else { W = b;  lr = 1; }
+
+                cl_int penetrationY = 0;
+                RegionCollision(&penetrationY, peep->physics.shape.radius_Q16, W, lr);
+
 
 
                 //Z
                 a = tileMin_Q16.z - peep->physics.base.pos_Q16.z;
                 b = tileMax_Q16.z - peep->physics.base.pos_Q16.z;
-                W = min(abs(a), abs(b));
-                cl_int penetrationMagZ = peep->physics.shape.radius_Q16 - W;
-                penetrationMagZ = clamp(penetrationMagZ, 0, peep->physics.shape.radius_Q16);
-                cl_int penForceZ = MUL_PAD_Q16(penetrationMagZ, -SIGN_MAG_Q15_16(tileMin_Q16.z - peep->physics.base.pos_Q16.z));
+                
+                if (abs(a) < abs(b)) { W = a; lr = -1; }
+                else{ W = b;  lr = 1; }
+               
+                cl_int penetrationZ = 0;
+                RegionCollision(&penetrationZ, peep->physics.shape.radius_Q16, W, lr);
 
-                if (peep->Idx == 0 && i == 5)
-                {
-                    printf("peep Map Pos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->posMap_Q16.x), FIXED2FLTQ16(peep->posMap_Q16.y), FIXED2FLTQ16(peep->posMap_Q16.z));
-                    printf("peepPos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->physics.base.pos_Q16.x), FIXED2FLTQ16(peep->physics.base.pos_Q16.y), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
-                    printf("tileMin_Q16.z, tileMax_Q16.z (%d): %f, %f\n", i, FIXED2FLTQ16(tileMin_Q16.z), FIXED2FLTQ16(tileMax_Q16.z));
-                    printf("a,b,w (%d): %f, %f, %f\n", i, FIXED2FLTQ16(a), FIXED2FLTQ16(b), FIXED2FLTQ16(W));
-                    printf("penetrationMag(%d): %f, %f, %f\n", i, FIXED2FLTQ16(penetrationMagX), FIXED2FLTQ16(penetrationMagY), FIXED2FLTQ16(penetrationMagZ));
-                    printf("PenForce(%d): %f, %f, %f\n",i, FIXED2FLTQ16(penForceX), FIXED2FLTQ16(penForceY), FIXED2FLTQ16(penForceZ));
+
+                //if (peep->Idx == 0 && i == 5)
+                //{
+                //    printf("peep Map Pos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->posMap_Q16.x), FIXED2FLTQ16(peep->posMap_Q16.y), FIXED2FLTQ16(peep->posMap_Q16.z));
+                //    printf("peepPos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->physics.base.pos_Q16.x), FIXED2FLTQ16(peep->physics.base.pos_Q16.y), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
+                //    printf("tileMin_Q16.z, tileMax_Q16.z (%d): %f, %f\n", i, FIXED2FLTQ16(tileMin_Q16.z), FIXED2FLTQ16(tileMax_Q16.z));
+                //    printf("a,b,w (%d): %f, %f, %f\n", i, FIXED2FLTQ16(a), FIXED2FLTQ16(b), FIXED2FLTQ16(W));
+                //    printf("penetrationZ(%d): %f\n", i, FIXED2FLTQ16(penetrationZ));
+                //   
+                //}
+
+                if (penetrationZ != 0) {
+                    peep->physics.base.pos_Q16.z += penetrationZ;
+                    peep->physics.base.v_Q16.z = 0;
                 }
-
-                peep->physics.base.collisionNetForce_Q16.x += penForceX;
-                peep->physics.base.collisionNetForce_Q16.y += penForceY ;
-                peep->physics.base.collisionNetForce_Q16.z += penForceZ >> 1;
+                if (penetrationX != 0) {
+                    peep->physics.base.pos_Q16.x += penetrationX;
+                    peep->physics.base.v_Q16.x = 0;
+                }
+               /* if (penetrationY != 0) {
+                    peep->physics.base.pos_Q16.y += penetrationY;
+                    peep->physics.base.v_Q16.y = 0;
+                }*/
+                //peep->physics.base.collisionNetForce_Q16.x += penForceX;
+                //peep->physics.base.collisionNetForce_Q16.y += penForceY ;
+                //peep->physics.base.collisionNetForce_Q16.z += penForceZ >> 4;
 
             }
         }
