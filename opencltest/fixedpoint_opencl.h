@@ -28,7 +28,10 @@
 
 #define IS_ZERO_V2(a) ((a.x==0) && (a.y==0))
 
-
+//positive numbers returns TO_Q16(1) 
+//negative numbers returns TO_Q16(-1)
+//0 returns TO_Q16(1) 
+#define SIGN_MAG_Q15_16(x) ((((((x) >> 31) & 0x00000001)*-2)+1) << 16)
 
 static int perlin_hash_numbers[] = { 208,34,231,213,32,248,233,56,161,78,24,140,71,48,140,254,245,255,247,247,40,
                      185,248,251,245,28,124,204,204,76,36,1,107,28,234,163,202,224,245,128,167,204,
@@ -87,7 +90,7 @@ float FixedToFloat(cl_long fixedPoint, int Q)
 
     return (float)number;
 }
-float F2FQ16(cl_long fixedPoint)
+float FIXED2FLTQ16(cl_long fixedPoint)
 {
     return FixedToFloat(fixedPoint, 16);
 }
@@ -509,6 +512,7 @@ void fixedPointTests()
     printf("[1,1] projected onto [0,0]: x: %f, y: %f, scalar: %f\n", FixedToFloat(v.x, 16), FixedToFloat(v.y, 16), FixedToFloat(scalar, 16));
 
 
-
-
+    printf("Sign of -10: %f\n", FixedToFloat(SIGN_MAG_Q15_16(TO_Q16(-10)), 16));
+    printf("Sign of 10: %f\n", FixedToFloat(SIGN_MAG_Q15_16(TO_Q16(10)), 16));
+    printf("Sign of 0: %f\n", FixedToFloat(SIGN_MAG_Q15_16(TO_Q16(0)), 16));
 }
