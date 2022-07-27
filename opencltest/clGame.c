@@ -22,8 +22,8 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
         return;
 
-    cl_int dist_Q16 = cl_distance_s2_Q16(peep->physics.base.pos_Q16.x, peep->physics.base.pos_Q16.y,
-        otherPeep->physics.base.pos_Q16.x, otherPeep->physics.base.pos_Q16.y);
+
+    cl_int dist_Q16 = ge_length_v3_Q16(GE_INT3_ADD(peep->physics.base.pos_Q16, -otherPeep->physics.base.pos_Q16));
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -131,7 +131,7 @@ void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr
 void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 {
     //calculate force based on penetration distance with minDistPeepIdx.
-    if (peep->minDistPeepIdx != OFFSET_NULL && ((peep->minDistPeep_Q16) < peep->physics.shape.radius_Q16))
+    if (peep->minDistPeepIdx != OFFSET_NULL && ((peep->minDistPeep_Q16) < peep->physics.shape.radius_Q16*2))
     {
         Peep* minDistPeep;
 
@@ -144,7 +144,7 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         ge_int3 penV_Q16 = d_Q16;
         ge_normalize_v3_Q16(&penV_Q16, &len_Q16);
 
-        cl_int penetrationDist_Q16 = (len_Q16 - combined_r_Q16);
+        cl_int penetrationDist_Q16 = (len_Q16 - (combined_r_Q16));
         ge_int3 penetrationForce_Q16;
         
 
@@ -154,17 +154,18 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) >> 4;
 
       
-        if (penV_Q16.x < peep->physics.base.penetration_BoundsMin_Q16.x)
-            peep->physics.base.penetration_BoundsMin_Q16.x = penV_Q16.x;
+        //if (penV_Q16.x < peep->physics.base.penetration_BoundsMin_Q16.x)
+        //    peep->physics.base.penetration_BoundsMin_Q16.x = penV_Q16.x;
 
-        if (penV_Q16.y < peep->physics.base.penetration_BoundsMin_Q16.y)
-            peep->physics.base.penetration_BoundsMin_Q16.y = penV_Q16.y;
+        //if (penV_Q16.y < peep->physics.base.penetration_BoundsMin_Q16.y)
+        //    peep->physics.base.penetration_BoundsMin_Q16.y = penV_Q16.y;
 
-        if (penV_Q16.x > peep->physics.base.penetration_BoundsMax_Q16.x)
-            peep->physics.base.penetration_BoundsMax_Q16.x = penV_Q16.x;
+        //if (penV_Q16.x > peep->physics.base.penetration_BoundsMax_Q16.x)
+        //    peep->physics.base.penetration_BoundsMax_Q16.x = penV_Q16.x;
 
-        if (penV_Q16.y > peep->physics.base.penetration_BoundsMax_Q16.y)
-            peep->physics.base.penetration_BoundsMax_Q16.y = penV_Q16.y;
+        //if (penV_Q16.y > peep->physics.base.penetration_BoundsMax_Q16.y)
+        //    peep->physics.base.penetration_BoundsMax_Q16.y = penV_Q16.y;
+
 
 
         peep->physics.base.collisionNetForce_Q16 = penetrationForce_Q16;
@@ -179,33 +180,33 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         MapTile tiles[22];
         ge_int3 tileCenters_Q16[22];
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, &tiles[0], &tileCenters_Q16[0]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, &tiles[1], &tileCenters_Q16[1]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, &tiles[2], &tileCenters_Q16[2]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 0, 0 }, &tiles[1], &tileCenters_Q16[1]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0,-1, 0 }, &tiles[2], &tileCenters_Q16[2]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, &tiles[3], &tileCenters_Q16[3]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, &tiles[4], &tileCenters_Q16[4]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, &tiles[5], &tileCenters_Q16[5]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0,-1 }, &tiles[5], &tileCenters_Q16[5]);
 
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & tiles[6], &tileCenters_Q16[6]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & tiles[7], &tileCenters_Q16[7]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & tiles[8], &tileCenters_Q16[8]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & tiles[9], &tileCenters_Q16[9]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & tiles[10], &tileCenters_Q16[10]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & tiles[11], &tileCenters_Q16[11]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & tiles[12], &tileCenters_Q16[12]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & tiles[13], &tileCenters_Q16[13]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 0, -1 }, & tiles[9], &tileCenters_Q16[9]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0,-1, -1 }, & tiles[10], &tileCenters_Q16[10]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1,-1, -1 }, & tiles[11], &tileCenters_Q16[11]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1,-1, -1 }, & tiles[12], &tileCenters_Q16[12]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 1, -1 }, & tiles[13], &tileCenters_Q16[13]);
 
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & tiles[14], & tileCenters_Q16[14]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & tiles[15], & tileCenters_Q16[15]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & tiles[16], & tileCenters_Q16[16]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & tiles[17], & tileCenters_Q16[17]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & tiles[18], & tileCenters_Q16[18]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & tiles[19], & tileCenters_Q16[19]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & tiles[20], & tileCenters_Q16[20]);
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 0, 1 }, & tiles[17], & tileCenters_Q16[17]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0,-1, 1 }, & tiles[18], & tileCenters_Q16[18]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1,-1, 1 }, & tiles[19], & tileCenters_Q16[19]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1,-1, 1 }, & tiles[20], & tileCenters_Q16[20]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]);
 
         if (peep->Idx == 0)
         {
-            printf("Tiles--------------------------------\n");
+           // printf("Tiles--------------------------------\n");
             for (int i = 0; i < 22; i++)
             {
               //  printf("tile: %d is %d\n", i, (int)tiles[i]);
@@ -221,7 +222,6 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
             if (tile != MapTile_NONE)
             {
                 cl_int3 tileMin_Q16;
-                cl_int3 tileMid_Q16;
                 cl_int3 tileMax_Q16;
 
                 tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
@@ -232,82 +232,68 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
                 tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
                 tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
-                tileMid_Q16.x = (tileMax_Q16.x + tileMin_Q16.x) >> 1;
-                tileMid_Q16.y = (tileMax_Q16.y + tileMin_Q16.y) >> 1;
-                tileMid_Q16.z = (tileMax_Q16.z + tileMin_Q16.z) >> 1;
+
+
+                ge_int3 nearestPoint;
+                nearestPoint.x = clamp(peep->physics.base.pos_Q16.x, tileMin_Q16.x, tileMax_Q16.x);
+                nearestPoint.y = clamp(peep->physics.base.pos_Q16.y, tileMin_Q16.y, tileMax_Q16.y);
+                nearestPoint.z = clamp(peep->physics.base.pos_Q16.z, tileMin_Q16.z, tileMax_Q16.z);
+
+                ge_int3 V;
+                V.x = peep->physics.base.pos_Q16.x - nearestPoint.x;
+                V.y = peep->physics.base.pos_Q16.y - nearestPoint.y;
+                V.z = peep->physics.base.pos_Q16.z - nearestPoint.z;
+
+                ge_int3 Vn = V;
+                cl_int mag;
+                ge_normalize_v3_Q16(&Vn, &mag);
+
+
+                if (mag < peep->physics.shape.radius_Q16)
+                {
+                    //collision
+                    //if (peep->Idx == 0 )
+                    //{
+                    //    printf("%f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.z), FIXED2FLTQ16(peep->physics.base.pos_Q16.z), FIXED2FLTQ16(V.z), FIXED2FLTQ16(Vn.z));
+                    //    
+                    //}
 
 
 
-                //X
-                cl_int a = tileMin_Q16.x - peep->physics.base.pos_Q16.x;
-                cl_int b = tileMax_Q16.x - peep->physics.base.pos_Q16.x;
-                cl_int W;
+                    //resolve position direct
+                    peep->physics.base.pos_Q16.x = nearestPoint.x + MUL_PAD_Q16( Vn.x , (peep->physics.shape.radius_Q16 ) );
+                    peep->physics.base.pos_Q16.y = nearestPoint.y + MUL_PAD_Q16( Vn.y , (peep->physics.shape.radius_Q16) );
+                    peep->physics.base.pos_Q16.z = nearestPoint.z + MUL_PAD_Q16( Vn.z , (peep->physics.shape.radius_Q16 ) );
 
-                int lr;
-
-                if (abs(a) < abs(b)) { W = a; lr = -1; }
-                else { W = b;  lr = 1; }
-                
-                cl_int penetrationX = 0;
-                RegionCollision(&penetrationX, peep->physics.shape.radius_Q16, W, lr);
-
-
-
-                //Y
-                a = tileMin_Q16.y - peep->physics.base.pos_Q16.y;
-                b = tileMax_Q16.y - peep->physics.base.pos_Q16.y;
-
-
-                if (abs(a) < abs(b)) { W = a; lr = -1; }
-                else { W = b;  lr = 1; }
-
-                cl_int penetrationY = 0;
-                RegionCollision(&penetrationY, peep->physics.shape.radius_Q16, W, lr);
+                    //squash velocity vector onto the plane of Vn
+                    
+                    //V' = V - N(N.V)
+                    cl_int dotProduct_Q16;
+                    //ge_dot_product_3D_Q16(peep->physics.base.v_Q16, Vn, &dotProduct_Q16);
+                    peep->physics.base.v_Q16.x -= MUL_PAD_Q16(Vn.x, dotProduct_Q16);
+                    peep->physics.base.v_Q16.y -= MUL_PAD_Q16(Vn.y, dotProduct_Q16);
+                    peep->physics.base.v_Q16.z -= MUL_PAD_Q16(Vn.z, dotProduct_Q16);
 
 
 
-                //Z
-                a = tileMin_Q16.z - peep->physics.base.pos_Q16.z;
-                b = tileMax_Q16.z - peep->physics.base.pos_Q16.z;
-                
-                if (abs(a) < abs(b)) { W = a; lr = -1; }
-                else{ W = b;  lr = 1; }
-               
-                cl_int penetrationZ = 0;
-                RegionCollision(&penetrationZ, peep->physics.shape.radius_Q16, W, lr);
+
+                    //if (peep->Idx == 0 && i == 5)
+                    //{
+                    //    printf("%f, %f \n", FIXED2FLTQ16(nearestPoint.z + MUL_PAD_Q16(Vn.z, (peep->physics.shape.radius_Q16))), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
+                    //}
+
+                    /*peep->physics.base.collisionNetForce_Q16.x += V.x >> 2;
+                    peep->physics.base.collisionNetForce_Q16.y += V.y >> 2;
+                    peep->physics.base.collisionNetForce_Q16.z += V.z >> 2;*/
 
 
-                //if (peep->Idx == 0 && i == 5)
-                //{
-                //    printf("peep Map Pos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->posMap_Q16.x), FIXED2FLTQ16(peep->posMap_Q16.y), FIXED2FLTQ16(peep->posMap_Q16.z));
-                //    printf("peepPos (%d): %f, %f, %f\n", i, FIXED2FLTQ16(peep->physics.base.pos_Q16.x), FIXED2FLTQ16(peep->physics.base.pos_Q16.y), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
-                //    printf("tileMin_Q16.z, tileMax_Q16.z (%d): %f, %f\n", i, FIXED2FLTQ16(tileMin_Q16.z), FIXED2FLTQ16(tileMax_Q16.z));
-                //    printf("a,b,w (%d): %f, %f, %f\n", i, FIXED2FLTQ16(a), FIXED2FLTQ16(b), FIXED2FLTQ16(W));
-                //    printf("penetrationZ(%d): %f\n", i, FIXED2FLTQ16(penetrationZ));
-                //   
-                //}
-
-                if (penetrationZ != 0) {
-                    peep->physics.base.pos_Q16.z += penetrationZ;
-                    peep->physics.base.v_Q16.z = 0;
                 }
-                if (penetrationX != 0) {
-                    peep->physics.base.pos_Q16.x += penetrationX;
-                    peep->physics.base.v_Q16.x = 0;
-                }
-               /* if (penetrationY != 0) {
-                    peep->physics.base.pos_Q16.y += penetrationY;
-                    peep->physics.base.v_Q16.y = 0;
-                }*/
-                //peep->physics.base.collisionNetForce_Q16.x += penForceX;
-                //peep->physics.base.collisionNetForce_Q16.y += penForceY ;
-                //peep->physics.base.collisionNetForce_Q16.z += penForceZ >> 4;
 
             }
         }
 
         //gravity
-        peep->physics.base.netForce_Q16.z += TO_Q16(-1) >> 5;
+        peep->physics.base.netForce_Q16.z += TO_Q16(-1) >> 7;
         
         if (peep->Idx == 0)
         {
@@ -606,7 +592,7 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
         tileUpIdx = MapTile_NONE;
     }
 
-    mapTileAttrVBO[y * MAPDIM + x % MAPDIM] = 0;
+    mapTileAttrVBO[y * MAPDIM + x] = 0;
 
     if (tileIdx == MapTile_NONE)
     {
@@ -621,22 +607,54 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
             vz++;
         }
         tileIdx = tileDownIdx;
-        mapTileAttrVBO[y * MAPDIM + x % MAPDIM] |= clamp(vz,0,15);
+        mapTileAttrVBO[ y * MAPDIM + x ] |= clamp(vz,0,15);
     }
             
             
 
     if (tileUpIdx != MapTile_NONE)
     {
-        mapTileVBO[y * MAPDIM + x % MAPDIM] = MapTile_NONE;//view obstructed by foottile above.
+        mapTileVBO[y * MAPDIM + x ] = MapTile_NONE;//view obstructed by foottile above.
     }
     else
     {
-        mapTileVBO[y * MAPDIM + x % MAPDIM] = tileIdx;
+        mapTileVBO[y * MAPDIM + x] = tileIdx;
     }
             
 }
 
+void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
+{
+    Print_GE_INT3_Q16(p->physics.base.pos_Q16);
+    Peep* peep = p;
+    MapTile tiles[22];
+    ge_int3 tileCenters_Q16[22];
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & tiles[0], & tileCenters_Q16[0]); printf("{ 1, 0, 0 }: %d\n", tiles[0]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & tiles[1], & tileCenters_Q16[1]); printf("{ -1, 0, 0 }: %d\n", tiles[1]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & tiles[2], & tileCenters_Q16[2]); printf("{ 0, -1, 0 }: %d\n", tiles[2]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & tiles[3], & tileCenters_Q16[3]); printf("{ 0, 1, 0 }: %d\n", tiles[3]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & tiles[4], & tileCenters_Q16[4]); printf("{ 0, 0, 1 }: %d\n", tiles[4]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & tiles[5], & tileCenters_Q16[5]); printf("{ 0, 0, -1 }: %d\n", tiles[5]);
+
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & tiles[6], & tileCenters_Q16[6]); printf("{ 1, 0, -1 }: %d\n", tiles[6]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & tiles[7], & tileCenters_Q16[7]); printf("{ 0, 1, -1 }: %d\n", tiles[7]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & tiles[8], & tileCenters_Q16[8]); printf("{ 1, 1, -1 }: %d\n", tiles[8]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & tiles[9], & tileCenters_Q16[9]); printf("{ -1, 0, -1 }: %d\n", tiles[9]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & tiles[10], & tileCenters_Q16[10]); printf("{ 0, -1, -1 }: %d\n", tiles[10]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & tiles[11], & tileCenters_Q16[11]); printf("{ -1, -1, -1 }: %d\n", tiles[11]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & tiles[12], & tileCenters_Q16[12]); printf("{ 1, -1, -1 }: %d\n", tiles[12]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & tiles[13], & tileCenters_Q16[13]); printf("{ -1, 1, -1 }: %d\n", tiles[13]);
+
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & tiles[14], & tileCenters_Q16[14]); printf("{ 1, 0, 1 }: %d\n", tiles[14]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & tiles[15], & tileCenters_Q16[15]); printf("{ 0, 1, 1 }: %d\n", tiles[15]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & tiles[16], & tileCenters_Q16[16]); printf("{ 1, 1, 1 }: %d\n", tiles[16]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & tiles[17], & tileCenters_Q16[17]); printf("{ -1, 0, 1 }: %d\n", tiles[17]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & tiles[18], & tileCenters_Q16[18]); printf("{ 0, -1, 1 }: %d\n", tiles[18]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & tiles[19], & tileCenters_Q16[19]); printf("{ -1, -1, 1 }: %d\n", tiles[19]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & tiles[20], & tileCenters_Q16[20]); printf("{ 1, -1, 1 }: %d\n", tiles[20]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", tiles[21]);
+
+}
 
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
@@ -692,6 +710,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                 p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
                             }
                             client->selectedPeepsLastIdx = pi;
+
+                            PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
                         }
                     }
             }
@@ -733,36 +753,47 @@ void CreateMap(ALL_CORE_PARAMS)
     {
         for (int y = 0; y < MAPDIM; y++)
         {
-            cl_int perlin_z_Q16 = cl_perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1) >> 6, 8, 0);
+            cl_int perlin_z_Q16 = cl_perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1) >> 6, 8, 0) ;
 
+           
             for (int z = 0; z < MAPDEPTH; z++)
             {
                 int zPerc_Q16 = DIV_PAD_Q16(TO_Q16(z), TO_Q16(MAPDEPTH));
                
-                int depthPerc_Q16 = TO_Q16(2) + perlin_z_Q16 - zPerc_Q16;
-                depthPerc_Q16 = DIV_PAD_Q16(depthPerc_Q16, TO_Q16(3));
-                //PrintQ16(depthPerc_Q16*100);
                 MapTile tileType = MapTile_NONE;
-                if (depthPerc_Q16 * 100 > TO_Q16(90))
-                {
-                    tileType = MapTile_DiamondOre;
-                }
-                else if (depthPerc_Q16 * 100 > TO_Q16(80))
-                {
-                    tileType = MapTile_CopperOre;
-                }
-                else if (depthPerc_Q16 * 100 > TO_Q16(75))
+                if (zPerc_Q16 < perlin_z_Q16)
                 {
                     tileType = MapTile_Rock;
                 }
-                else if (depthPerc_Q16 * 100 > TO_Q16(70))
+                else
                 {
-                    tileType = MapTile_Dirt;
+                    tileType = MapTile_NONE;
                 }
-                else if (depthPerc_Q16 * 100 > TO_Q16(65))
-                {
-                    tileType = MapTile_DarkGrass;
-                }
+
+                //int depthPerc_Q16 = TO_Q16(2) + perlin_z_Q16 - zPerc_Q16;
+                //depthPerc_Q16 = DIV_PAD_Q16(depthPerc_Q16, TO_Q16(3));
+                ////PrintQ16(depthPerc_Q16*100);
+
+                //if (depthPerc_Q16 * 100 > TO_Q16(90))
+                //{
+                //    tileType = MapTile_DiamondOre;
+                //}
+                //else if (depthPerc_Q16 * 100 > TO_Q16(80))
+                //{
+                //    tileType = MapTile_CopperOre;
+                //}
+                //else if (depthPerc_Q16 * 100 > TO_Q16(75))
+                //{
+                //    tileType = MapTile_Rock;
+                //}
+                //else if (depthPerc_Q16 * 100 > TO_Q16(70))
+                //{
+                //    tileType = MapTile_Dirt;
+                //}
+                //else if (depthPerc_Q16 * 100 > TO_Q16(65))
+                //{
+                //    tileType = MapTile_DarkGrass;
+                //}
 
 
 
@@ -789,6 +820,13 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
 
+    //size checks
+    if ((MAPDIM * MAPDIM) % GAME_UPDATE_WORKITEMS)
+    {
+        printf("BAD MAP DIM,  (MAPDIM * MAPDIM) MUST BE MULT OF GAME_UPDATE_WORKITEMS\n");
+    }
+
+
 
     fixedPointTests();
 
@@ -813,13 +851,13 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     CreateMap(ALL_CORE_PARAMS_PASS);
 
-
+    const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].Idx = p;
-        gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-500 << 16, 500 << 16) ;
-        gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-500 << 16, 500 << 16) ;
-        gameState->peeps[p].physics.base.pos_Q16.z = TO_Q16(100);
+        gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-spread << 16, spread << 16) ;
+        gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-spread << 16, spread << 16) ;
+        gameState->peeps[p].physics.base.pos_Q16.z = TO_Q16(200);
         gameState->peeps[p].physics.base.mass_Q16 = TO_Q16(1);
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(1);
         gameState->peeps[p].stateRender.attackState = 0;
@@ -839,10 +877,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
-        if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
+        //if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
             gameState->peeps[p].stateRender.faction = 0;
-        else
-            gameState->peeps[p].stateRender.faction = 1;
+       // else
+     //       gameState->peeps[p].stateRender.faction = 1;
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)
@@ -951,11 +989,21 @@ __kernel void game_update(ALL_CORE_PARAMS)
     //update map view
     if (gameStateB->mapZView != gameStateB->mapZView_1)
     {
-        const cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
-        for (cl_ulong i = 0; i < (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS; i++)
+        cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
+        if (chunkSize == 0)
+            chunkSize = 1;
+
+        
+        
+
+
+
+        for (cl_ulong i = 0; i < chunkSize; i++)
         {
             cl_ulong xyIdx = i + globalid * chunkSize;
-            BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% MAPDIM, xyIdx/ MAPDIM);
+            
+            if(xyIdx < (MAPDIM* MAPDIM))
+                BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx% MAPDIM, xyIdx/ MAPDIM);
 
         }
     }

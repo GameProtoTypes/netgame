@@ -234,6 +234,10 @@ void cl_dot_product_2D_Q16(cl_int2 a_Q16, cl_int2 b_Q16, cl_int* out_Q16)
     *out_Q16 = MUL_PAD_Q16(a_Q16.x, b_Q16.x) + MUL_PAD_Q16(a_Q16.y, b_Q16.y);
 }
 
+void ge_dot_product_3D_Q16(ge_int3 a_Q16, ge_int3 b_Q16, cl_int* out_Q16)
+{
+    *out_Q16 = MUL_PAD_Q16(a_Q16.x, b_Q16.x) + MUL_PAD_Q16(a_Q16.y, b_Q16.y) + MUL_PAD_Q16(a_Q16.z, b_Q16.z);
+}
 
 //project a onto b direction, also return the scalar.  b is also normalized.
 void cl_project_2D_Q16(cl_int2* a_Q16, cl_int2* b_Q16, cl_int* out_scalar)
