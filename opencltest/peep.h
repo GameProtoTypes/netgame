@@ -20,7 +20,7 @@
 #define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
 
 
-#define MAX_PEEPS (GAME_UPDATE_WORKITEMS)
+#define MAX_PEEPS (1024*8)
 #define MAX_TRACKNODES (1024*8)
 #define MAPDIM (256)
 #define MAPDEPTH (32)
@@ -71,10 +71,10 @@ struct BasePhysics
 	ge_int3 v_Q16;
 	ge_int3 netForce_Q16;
 	ge_int3 collisionNetForce_Q16;
-	ge_int2 penetration_BoundsMin_Q16;
-	ge_int2 penetration_BoundsMax_Q16;
 
 
+	ge_int3 pos_post_Q16;
+	ge_int3 vel_post_Q16;
 
 	int mass_Q16;
 

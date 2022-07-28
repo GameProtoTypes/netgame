@@ -177,8 +177,8 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 
      //maptile collisions
     if (1) {
-        MapTile tiles[22];
-        ge_int3 tileCenters_Q16[22];
+        MapTile tiles[26];
+        ge_int3 tileCenters_Q16[26];
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, &tiles[0], &tileCenters_Q16[0]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 0, 0 }, &tiles[1], &tileCenters_Q16[1]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0,-1, 0 }, &tiles[2], &tileCenters_Q16[2]);
@@ -204,6 +204,12 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1,-1, 1 }, & tiles[20], & tileCenters_Q16[20]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) {-1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]);
 
+
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 0 }, & tiles[22], & tileCenters_Q16[23]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 0 }, & tiles[23], & tileCenters_Q16[24]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 0 }, & tiles[24], & tileCenters_Q16[25]);
+        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 0 }, & tiles[25], & tileCenters_Q16[26]);
+
         if (peep->Idx == 0)
         {
            // printf("Tiles--------------------------------\n");
@@ -215,7 +221,7 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
             }
         }
 
-        for (int i = 0; i < 22; i++)
+        for (int i = 0; i < 26; i++)
         {
             //circle-circle collision with incorrect corner forces.
             MapTile tile = tiles[i];
@@ -239,65 +245,76 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
                 nearestPoint.y = clamp(peep->physics.base.pos_Q16.y, tileMin_Q16.y, tileMax_Q16.y);
                 nearestPoint.z = clamp(peep->physics.base.pos_Q16.z, tileMin_Q16.z, tileMax_Q16.z);
 
-                ge_int3 V;
-                V.x = peep->physics.base.pos_Q16.x - nearestPoint.x;
-                V.y = peep->physics.base.pos_Q16.y - nearestPoint.y;
-                V.z = peep->physics.base.pos_Q16.z - nearestPoint.z;
+                ge_int3 A;
+                A.x = peep->physics.base.pos_Q16.x - nearestPoint.x;
+                A.y = peep->physics.base.pos_Q16.y - nearestPoint.y;
+                A.z = peep->physics.base.pos_Q16.z - nearestPoint.z;
 
-                ge_int3 Vn = V;
+                ge_int3 An = A;
                 cl_int mag;
-                ge_normalize_v3_Q16(&Vn, &mag);
+                ge_normalize_v3_Q16(&An, &mag);
 
 
                 if (mag < peep->physics.shape.radius_Q16)
                 {
                     //collision
-                    //if (peep->Idx == 0 )
-                    //{
-                    //    printf("%f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.z), FIXED2FLTQ16(peep->physics.base.pos_Q16.z), FIXED2FLTQ16(V.z), FIXED2FLTQ16(Vn.z));
-                    //    
-                    //}
+                    if (peep->Idx == 0 )
+                    {
+                     
+                     //   printf("x: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.x), FIXED2FLTQ16(peep->physics.base.pos_Q16.x), FIXED2FLTQ16(A.x), FIXED2FLTQ16(An.x));
+                    //    printf("y: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.y), FIXED2FLTQ16(peep->physics.base.pos_Q16.y), FIXED2FLTQ16(A.y), FIXED2FLTQ16(An.y));
+                   //     printf("z: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.z), FIXED2FLTQ16(peep->physics.base.pos_Q16.z), FIXED2FLTQ16(A.z), FIXED2FLTQ16(An.z));
+                      
+                       
+                    }
 
 
 
-                    //resolve position direct
-                    peep->physics.base.pos_Q16.x = nearestPoint.x + MUL_PAD_Q16( Vn.x , (peep->physics.shape.radius_Q16 ) );
-                    peep->physics.base.pos_Q16.y = nearestPoint.y + MUL_PAD_Q16( Vn.y , (peep->physics.shape.radius_Q16) );
-                    peep->physics.base.pos_Q16.z = nearestPoint.z + MUL_PAD_Q16( Vn.z , (peep->physics.shape.radius_Q16 ) );
+                    if (peep->Idx == 0 && i == 5)
+                    {
+                    //    printf("%f, %f \n", FIXED2FLTQ16(nearestPoint.z + MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16))), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
+                    }
 
-                    //squash velocity vector onto the plane of Vn
-                    
-                    //V' = V - N(N.V)
-                    cl_int dotProduct_Q16;
-                    //ge_dot_product_3D_Q16(peep->physics.base.v_Q16, Vn, &dotProduct_Q16);
-                    peep->physics.base.v_Q16.x -= MUL_PAD_Q16(Vn.x, dotProduct_Q16);
-                    peep->physics.base.v_Q16.y -= MUL_PAD_Q16(Vn.y, dotProduct_Q16);
-                    peep->physics.base.v_Q16.z -= MUL_PAD_Q16(Vn.z, dotProduct_Q16);
+                    cl_int dot;
+                    ge_dot_product_3D_Q16(peep->physics.base.v_Q16, A, &dot);
+                    ge_int3 B;//velocity to cancel
+                    B.x = MUL_PAD_Q16(An.x, dot);
+                    B.y = MUL_PAD_Q16(An.y, dot);
+                    B.z = MUL_PAD_Q16(An.z, dot);
 
+                    //Print_GE_INT3_Q16(B);
+                   // peep->physics.base.collisionNetForce_Q16.x += -B.x ;//*mass
+                   // peep->physics.base.collisionNetForce_Q16.y += -B.y ;//*mass
+                   // peep->physics.base.collisionNetForce_Q16.z += -B.z ;//*mass
 
+                    peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16 - mag));
+                    peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, (peep->physics.shape.radius_Q16 - mag));
+                    peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(An.x, (peep->physics.shape.radius_Q16 - mag));
 
-
-                    //if (peep->Idx == 0 && i == 5)
-                    //{
-                    //    printf("%f, %f \n", FIXED2FLTQ16(nearestPoint.z + MUL_PAD_Q16(Vn.z, (peep->physics.shape.radius_Q16))), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
-                    //}
-
-                    /*peep->physics.base.collisionNetForce_Q16.x += V.x >> 2;
-                    peep->physics.base.collisionNetForce_Q16.y += V.y >> 2;
-                    peep->physics.base.collisionNetForce_Q16.z += V.z >> 2;*/
-
-
+                    peep->physics.base.vel_post_Q16.z += -B.z;
+                    peep->physics.base.vel_post_Q16.y += -B.y;
+                    peep->physics.base.vel_post_Q16.x += -B.x;
+                    //printf("%d, %d\n", tiles[i], i);
                 }
 
             }
         }
 
         //gravity
-        peep->physics.base.netForce_Q16.z += TO_Q16(-1) >> 7;
+        if (tiles[5] == MapTile_NONE)
+        {
+            //peep->physics.base.netForce_Q16.z += TO_Q16(-1) >> 5;
+            peep->physics.base.vel_post_Q16.z += ((TO_Q16(-1) >> 3) - peep->physics.base.v_Q16.z) >> 3;
+        }
+       // else
+        {
+
+        }
+
         
         if (peep->Idx == 0)
         {
-       //     Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
+           // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
         }
     }
 
@@ -486,15 +503,22 @@ void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 void PeepPreUpdate1(Peep* peep)
 {
 
+
+
     peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
     peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
 
+    peep->physics.base.v_Q16.z += peep->physics.base.vel_post_Q16.z;
+    peep->physics.base.v_Q16.y += peep->physics.base.vel_post_Q16.y;
+    peep->physics.base.v_Q16.x += peep->physics.base.vel_post_Q16.x;
+
+    peep->physics.base.vel_post_Q16.z = 0;
+    peep->physics.base.vel_post_Q16.y = 0;
+    peep->physics.base.vel_post_Q16.x = 0;
 
     //clear forces
     peep->physics.base.collisionNetForce_Q16 = (ge_int3){ 0,0,0 };
-    peep->physics.base.penetration_BoundsMax_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0) };
-    peep->physics.base.penetration_BoundsMin_Q16 = (ge_int2){ TO_Q16(0),TO_Q16(0)};
 
     peep->physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
 }
@@ -506,6 +530,13 @@ void PeepPreUpdate2(Peep* peep)
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
     peep->physics.base.pos_Q16.z += peep->physics.base.v_Q16.z;
 
+    peep->physics.base.pos_Q16.z += peep->physics.base.pos_post_Q16.z;
+    peep->physics.base.pos_Q16.y += peep->physics.base.pos_post_Q16.y;
+    peep->physics.base.pos_Q16.x += peep->physics.base.pos_post_Q16.x;
+
+    peep->physics.base.pos_post_Q16.z = 0;
+    peep->physics.base.pos_post_Q16.y = 0;
+    peep->physics.base.pos_post_Q16.x = 0;
 
     if (peep->stateRender.health <= 0)
         peep->stateRender.deathState = 1;
@@ -820,11 +851,6 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
 
-    //size checks
-    if ((MAPDIM * MAPDIM) % GAME_UPDATE_WORKITEMS)
-    {
-        printf("BAD MAP DIM,  (MAPDIM * MAPDIM) MUST BE MULT OF GAME_UPDATE_WORKITEMS\n");
-    }
 
 
 
@@ -866,6 +892,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
         gameState->peeps[p].physics.base.netForce_Q16 = (ge_int3){ 0,0,0 };
+
+
 
         gameState->peeps[p].minDistPeepIdx = OFFSET_NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
@@ -979,11 +1007,11 @@ __kernel void game_update(ALL_CORE_PARAMS)
     int localid = get_local_id(0);
 
 
-
-    Peep* p = &gameState->peeps[globalid];
-    PeepUpdate(ALL_CORE_PARAMS_PASS,p);
-    PeepDraw(ALL_CORE_PARAMS_PASS,p);
-
+    if (globalid < MAX_PEEPS) {
+        Peep* p = &gameState->peeps[globalid];
+        PeepUpdate(ALL_CORE_PARAMS_PASS, p);
+        PeepDraw(ALL_CORE_PARAMS_PASS, p);
+    }
 
 
     //update map view
@@ -1030,14 +1058,17 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         return;
    
 
-    const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
+    cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
+    if (chunkSize == 0)
+        chunkSize = 1;
     for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
-        
-        Peep* p;
-        CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-        CL_CHECK_NULL(p)
-        PeepPreUpdate1(p);
+        if (pi + globalid * chunkSize < MAX_PEEPS) {
+            Peep* p;
+            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
+                CL_CHECK_NULL(p)
+                PeepPreUpdate1(p);
+        }
     }
 
     barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
@@ -1046,32 +1077,36 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
     for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
-        Peep* p;
-        CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-        CL_CHECK_NULL(p)
+        if (pi + globalid * chunkSize < MAX_PEEPS)
+        {
+            Peep* p;
+            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
+                CL_CHECK_NULL(p)
 
-        PeepPreUpdate2(p);
-
-
-        global volatile MapSector* mapSector;
-        OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorIdx, mapSector);
-        CL_CHECK_NULL(mapSector)
-
-        global volatile cl_uint* lock = (global volatile cl_uint*)&mapSector->lock;
-        CL_CHECK_NULL(lock)
+                PeepPreUpdate2(p);
 
 
 
-        cl_uint reservation;
+            global volatile MapSector* mapSector;
+            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorIdx, mapSector);
+            CL_CHECK_NULL(mapSector)
 
-        reservation = atomic_add(lock, 1)+1;
-        barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+                global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
+            CL_CHECK_NULL(lock)
 
-        while (*lock != reservation) { }
 
-        AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
 
-        atomic_dec(lock); 
+                cl_uint reservation;
+
+            reservation = atomic_add(lock, 1) + 1;
+            barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
+
+            while (*lock != reservation) {}
+
+            AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
+
+            atomic_dec(lock);
+        }
     }
 
 
@@ -1090,31 +1125,38 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
         return;
 
 
-    const cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    for (cl_ulong pi = 0; pi < MAX_PEEPS / WARPSIZE; pi++)
+    cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
+    if (chunkSize == 0)
+        chunkSize = 1;
+
+    for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
-        Peep* p = &gameState->peeps[pi + globalid * chunkSize];
+        if (pi + globalid * chunkSize < MAX_PEEPS)
+        {
 
-        global volatile MapSector* mapSector;
-        OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingIdx, mapSector);
-        
+            Peep* p = &gameState->peeps[pi + globalid * chunkSize];
 
-        CL_CHECK_NULL(mapSector)
-        if (mapSector == NULL)
-            continue;
-        global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
-        CL_CHECK_NULL(lock)
+            global volatile MapSector* mapSector;
+            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingIdx, mapSector);
 
 
-        int reservation = atomic_add(lock, 1) + 1;
-        
-        barrier(CLK_GLOBAL_MEM_FENCE);
+            CL_CHECK_NULL(mapSector)
+                if (mapSector == NULL)
+                    continue;
+            global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
+            CL_CHECK_NULL(lock)
 
-        while (atomic_add(lock, 0) != reservation) {}
+
+                int reservation = atomic_add(lock, 1) + 1;
+
+            barrier(CLK_GLOBAL_MEM_FENCE);
+
+            while (atomic_add(lock, 0) != reservation) {}
 
             AssignPeepToSector_Insert(ALL_CORE_PARAMS_PASS, p);
-        
-        atomic_dec(lock);
+
+            atomic_dec(lock);
+        }
     }
 
 
