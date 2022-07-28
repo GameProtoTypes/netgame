@@ -40,6 +40,7 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
         if (otherPeep->comms.message_TargetReached)
         {
             peep->comms.message_TargetReached_pending = otherPeep->comms.message_TargetReached;
+
         }
     }
 
@@ -148,31 +149,12 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         ge_int3 penetrationForce_Q16;
         
 
-
-        penetrationForce_Q16.x = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.x) >> 4;
-        penetrationForce_Q16.y = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.y) >> 4;
-        penetrationForce_Q16.z = MUL_PAD_Q16(penetrationDist_Q16, penV_Q16.z) >> 4;
-
-      
-        //if (penV_Q16.x < peep->physics.base.penetration_BoundsMin_Q16.x)
-        //    peep->physics.base.penetration_BoundsMin_Q16.x = penV_Q16.x;
-
-        //if (penV_Q16.y < peep->physics.base.penetration_BoundsMin_Q16.y)
-        //    peep->physics.base.penetration_BoundsMin_Q16.y = penV_Q16.y;
-
-        //if (penV_Q16.x > peep->physics.base.penetration_BoundsMax_Q16.x)
-        //    peep->physics.base.penetration_BoundsMax_Q16.x = penV_Q16.x;
-
-        //if (penV_Q16.y > peep->physics.base.penetration_BoundsMax_Q16.y)
-        //    peep->physics.base.penetration_BoundsMax_Q16.y = penV_Q16.y;
-
-
-
-        peep->physics.base.collisionNetForce_Q16 = penetrationForce_Q16;
+        //pos_post_Q16
+        peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 1);
+        peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 1);
+        peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(penV_Q16.z, penetrationDist_Q16 >> 1);
+        
     }
-
-
-
 
 
      //maptile collisions
@@ -210,16 +192,7 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 0 }, & tiles[24], & tileCenters_Q16[25]);
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 0 }, & tiles[25], & tileCenters_Q16[26]);
 
-        if (peep->Idx == 0)
-        {
-           // printf("Tiles--------------------------------\n");
-            for (int i = 0; i < 22; i++)
-            {
-              //  printf("tile: %d is %d\n", i, (int)tiles[i]);
-             //   printf("tile center: %d: ", i);
-              //  Print_GE_INT3_Q16(tileCenters_Q16[i]);
-            }
-        }
+
 
         for (int i = 0; i < 26; i++)
         {
@@ -257,23 +230,6 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
 
                 if (mag < peep->physics.shape.radius_Q16)
                 {
-                    //collision
-                    if (peep->Idx == 0 )
-                    {
-                     
-                     //   printf("x: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.x), FIXED2FLTQ16(peep->physics.base.pos_Q16.x), FIXED2FLTQ16(A.x), FIXED2FLTQ16(An.x));
-                    //    printf("y: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.y), FIXED2FLTQ16(peep->physics.base.pos_Q16.y), FIXED2FLTQ16(A.y), FIXED2FLTQ16(An.y));
-                   //     printf("z: %f, %f, %f, %f \n", FIXED2FLTQ16(tileMax_Q16.z), FIXED2FLTQ16(peep->physics.base.pos_Q16.z), FIXED2FLTQ16(A.z), FIXED2FLTQ16(An.z));
-                      
-                       
-                    }
-
-
-
-                    if (peep->Idx == 0 && i == 5)
-                    {
-                    //    printf("%f, %f \n", FIXED2FLTQ16(nearestPoint.z + MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16))), FIXED2FLTQ16(peep->physics.base.pos_Q16.z));
-                    }
 
                     cl_int dot;
                     ge_dot_product_3D_Q16(peep->physics.base.v_Q16, A, &dot);
@@ -282,10 +238,6 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
                     B.y = MUL_PAD_Q16(An.y, dot);
                     B.z = MUL_PAD_Q16(An.z, dot);
 
-                    //Print_GE_INT3_Q16(B);
-                   // peep->physics.base.collisionNetForce_Q16.x += -B.x ;//*mass
-                   // peep->physics.base.collisionNetForce_Q16.y += -B.y ;//*mass
-                   // peep->physics.base.collisionNetForce_Q16.z += -B.z ;//*mass
 
                     peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16 - mag));
                     peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, (peep->physics.shape.radius_Q16 - mag));
@@ -294,28 +246,14 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
                     peep->physics.base.vel_post_Q16.z += -B.z;
                     peep->physics.base.vel_post_Q16.y += -B.y;
                     peep->physics.base.vel_post_Q16.x += -B.x;
-                    //printf("%d, %d\n", tiles[i], i);
                 }
 
             }
         }
 
-        //gravity
-        if (tiles[5] == MapTile_NONE)
-        {
-            //peep->physics.base.netForce_Q16.z += TO_Q16(-1) >> 5;
-            peep->physics.base.vel_post_Q16.z += ((TO_Q16(-1) >> 3) - peep->physics.base.v_Q16.z) >> 3;
-        }
-       // else
-        {
+        //'game gravity'
+         peep->physics.base.vel_post_Q16.z += (TO_Q16(-1) >> 3);
 
-        }
-
-        
-        if (peep->Idx == 0)
-        {
-           // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
-        }
     }
 
 
@@ -334,57 +272,32 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     int len;
     ge_normalize_v3_Q16(&d, &len);
 
+    if (len < TO_Q16(1))
+    {
+        d.x = MUL_PAD_Q16(d.x, len);
+        d.y = MUL_PAD_Q16(d.y, len);
+        d.z = MUL_PAD_Q16(d.z, len);
+    }
+
     if (WHOLE_Q16(len) < 2)
     {
         if (peep->physics.drive.drivingToTarget)
         {
             peep->comms.message_TargetReached_pending = 255;//send the message
+            
         }
     }
 
-
-    targetVelocity.x = d.x << 0;
-    targetVelocity.y = d.y << 0;
-
-    ge_int3 vel_error = { targetVelocity.x - peep->physics.base.v_Q16.x, targetVelocity.y - peep->physics.base.v_Q16.y, 0 };
     if (peep->physics.drive.drivingToTarget)
     {
-        //add force prop to vel error that is not in direction of penetration forces.
-
-        ge_int2 driveForce;
-        driveForce.x = vel_error.x >> 2;
-        driveForce.y = vel_error.y >> 2;
-
-        cl_int2 driveForceProjected = GE_TO_CL_INT2(driveForce);
+        targetVelocity.x = d.x >> 2;
+        targetVelocity.y = d.y >> 2;
 
 
-        if (IS_ZERO_V2(peep->physics.base.collisionNetForce_Q16))
-        {
-            driveForceProjected.x = driveForce.x;
-            driveForceProjected.y = driveForce.y;
-        }
-        else
-        {
-            driveForceProjected.x = 0;
-            driveForceProjected.y = 0;
-        }
-
-        
-
-        peep->physics.base.netForce_Q16.x += driveForceProjected.x;
-        peep->physics.base.netForce_Q16.y += driveForceProjected.y;
+        peep->physics.base.v_Q16.x += targetVelocity.x;
+        peep->physics.base.v_Q16.y += targetVelocity.y;
     }
 
-
-    //drag term
-    peep->physics.base.netForce_Q16.x += -(peep->physics.base.v_Q16.x >> 1);
-    peep->physics.base.netForce_Q16.y += -(peep->physics.base.v_Q16.y >> 1);
-
-    
-    //form final net-force
-    peep->physics.base.netForce_Q16.x += peep->physics.base.collisionNetForce_Q16.x;
-    peep->physics.base.netForce_Q16.y += peep->physics.base.collisionNetForce_Q16.y;
-    peep->physics.base.netForce_Q16.z += peep->physics.base.collisionNetForce_Q16.z;
 
 
 }
@@ -396,24 +309,6 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
     PeepRadiusPhysics(ALL_CORE_PARAMS_PASS, peep);
     PeepDrivePhysics(ALL_CORE_PARAMS_PASS, peep);
-
-
-
-
-
-    //update maptile
-    //MapTile curTile;
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3){ 0, 0, 0 }, &curTile);
-
-    //MapTile foottile;
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3){ 0, 0, -1 }, &foottile);
-
-    //if (foottile == MapTile_NONE)
-    //{
-    //    //fall.
-    //    peep->posMap_Q16.z += TO_Q16(-2) >> 4;
-    //}
-
 
 }
 
@@ -505,9 +400,9 @@ void PeepPreUpdate1(Peep* peep)
 
 
 
-    peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
-    peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
-    peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
+    //peep->physics.base.v_Q16.x += DIV_PAD_Q16(peep->physics.base.netForce_Q16.x, peep->physics.base.mass_Q16);
+    //peep->physics.base.v_Q16.y += DIV_PAD_Q16(peep->physics.base.netForce_Q16.y, peep->physics.base.mass_Q16);
+    //peep->physics.base.v_Q16.z += DIV_PAD_Q16(peep->physics.base.netForce_Q16.z, peep->physics.base.mass_Q16);
 
     peep->physics.base.v_Q16.z += peep->physics.base.vel_post_Q16.z;
     peep->physics.base.v_Q16.y += peep->physics.base.vel_post_Q16.y;
@@ -516,6 +411,8 @@ void PeepPreUpdate1(Peep* peep)
     peep->physics.base.vel_post_Q16.z = 0;
     peep->physics.base.vel_post_Q16.y = 0;
     peep->physics.base.vel_post_Q16.x = 0;
+
+
 
     //clear forces
     peep->physics.base.collisionNetForce_Q16 = (ge_int3){ 0,0,0 };
@@ -537,6 +434,10 @@ void PeepPreUpdate2(Peep* peep)
     peep->physics.base.pos_post_Q16.z = 0;
     peep->physics.base.pos_post_Q16.y = 0;
     peep->physics.base.pos_post_Q16.x = 0;
+
+    peep->physics.base.v_Q16.x = 0;
+    peep->physics.base.v_Q16.y = 0;
+    peep->physics.base.v_Q16.z = 0;
 
     if (peep->stateRender.health <= 0)
         peep->stateRender.deathState = 1;
