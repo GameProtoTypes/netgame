@@ -96,8 +96,8 @@ void GameGPUCompute::RunInitCompute()
         ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
 
-        // Create an OpenCL context
-        std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext);
+    // Create an OpenCL context
+    std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
     cl_context_properties props[] =
     {
         CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),

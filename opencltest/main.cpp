@@ -451,6 +451,10 @@ int32_t main(int32_t argc, char* args[])
 
 
         //draw all peeps
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         gameGraphics.pPeepShadProgram->Use();
         gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 

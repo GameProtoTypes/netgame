@@ -66,7 +66,7 @@ GameGraphics::GameGraphics()
 
 
         //Create window
-        gWindow = SDL_CreateWindow("Mine Tycoon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+        gWindow = SDL_CreateWindow("Dwarf Carts", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (gWindow == NULL)
         {
             printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
@@ -175,6 +175,22 @@ GameGraphics::GameGraphics()
          1.0f, -1.0f,
          1.0f,  1.0f
     };
+
+    float quadUVs[] = {
+        // positions    
+        0.0f,  1/16.0f,
+        0.0f, 0.0f,
+        1 / 16.0f, 0.0f,
+
+        0.0f,  1 / 16.0f,
+        1 / 16.0f,  0.0f,
+        1 / 16.0f,  1 / 16.0f
+    };
+    for (int i = 0; i < 6; i++)
+    {
+        quadUVs[i * 2 + 0] += 0.0f;
+        quadUVs[i * 2 + 1] += 2 / 16.0f;
+    }
     
     //Make VAO's
 
@@ -230,18 +246,35 @@ GameGraphics::GameGraphics()
             glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+
+        glGenBuffers(1, &peepQuadUVVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, peepQuadUVVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadUVs), quadUVs, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        
+
+
+
         // also set instance data
-        peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3);//size for each peep
+        peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
         glGenBuffers(1, &peepInstanceVBO);
         glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
             glBufferData(GL_ARRAY_BUFFER, peepInstanceSIZE* MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
             glEnableVertexAttribArray(3);
-            glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
+            glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
+            glEnableVertexAttribArray(4);
+            glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
+            glEnableVertexAttribArray(5);
+            glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
+
         
-            glVertexAttribDivisor(2, 1); // tell OpenGL this is an instanced vertex attribute.
             glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+            glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
+            glVertexAttribDivisor(5, 1); // tell OpenGL this is an instanced vertex attribute.
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -254,7 +287,11 @@ GameGraphics::GameGraphics()
         
     glm::ivec2 dims;
     int chIFile;
-    stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, 3);
+    int desiredCh = 4;
+    stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, desiredCh);
+
+    if (chIFile != desiredCh)
+        assert(0);
 
     //map textures
     glGenTextures(1, &mapTileTexId);
@@ -262,7 +299,7 @@ GameGraphics::GameGraphics()
 
     
 
-    int Mode = GL_RGB;
+    int Mode = GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

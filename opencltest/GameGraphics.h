@@ -89,7 +89,7 @@ public:
 	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
 	std::shared_ptr<GEShaderProgram> pTileShadProgram;
 	
-	uint32_t peepVAO, peepQuadVBO, peepInstanceVBO;     
+	uint32_t peepVAO, peepQuadVBO, peepQuadUVVBO, peepInstanceVBO;
 	int peepInstanceSIZE = 0;
 
 

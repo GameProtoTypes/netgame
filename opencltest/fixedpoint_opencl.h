@@ -139,6 +139,7 @@ ge_int2 MUL_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 ge_int3 MUL_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
 {
     ge_int3 result;
+
     result.x = MUL_PAD_Q16(a_Q16.x, b_Q16.x);
     result.y = MUL_PAD_Q16(a_Q16.y, b_Q16.y);
     result.z = MUL_PAD_Q16(a_Q16.z, b_Q16.z);

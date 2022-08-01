@@ -69,17 +69,12 @@ struct BasePhysics
 {	
 	ge_int3 pos_Q16;
 	ge_int3 v_Q16;
-	ge_int3 netForce_Q16;
-	ge_int3 collisionNetForce_Q16;
-
 
 	ge_int3 pos_post_Q16;
-	ge_int3 vel_post_Q16;
+	ge_int3 vel_add_Q16;
 
-	int mass_Q16;
+	float CS_angle_rad;
 
-
-	//ge_int3 pos_override_Q16;
 }typedef BasePhysics;
 struct PhysicsCircleShape
 {
@@ -118,6 +113,7 @@ struct Peep {
 	cl_uint minDistPeepIdx;
 
 	ge_int3 posMap_Q16;
+	ge_int3 lastGoodPosMap_Q16;
 	
 	ge_uint2 mapSector_pendingIdx;
 	ge_uint2 mapSectorIdx;
@@ -128,6 +124,7 @@ struct Peep {
 	//selection by clients
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
 	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
+
 
 
 } typedef Peep;
