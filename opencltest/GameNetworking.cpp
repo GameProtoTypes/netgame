@@ -447,12 +447,12 @@
 	 clientMeta serverDummyClientThing;
 	 if (thisClient == nullptr)//case for uncconected to server
 	 {
-		 targetTickTimeMs = MINTICKTIMEMS;
+		 targetTickTimeMs = GOODTICKTIMEMS;
 		 return;
 	 }
 	 if (clients.size() == 1 && fullyConnectedToHost)//case for client/server hybrid with no extra clients.
 	 {
-		 targetTickTimeMs = MINTICKTIMEMS;
+		 targetTickTimeMs = GOODTICKTIMEMS;
 		 return;
 	 }
 

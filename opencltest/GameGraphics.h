@@ -61,6 +61,10 @@ public:
 		glm::vec2 viewFrameDelta = glm::vec2();
 
 		glm::vec2 worldCameraPos = glm::vec2();
+
+		bool waitingMapAction = false;
+		bool waitingDelete = false;
+
 	};
 	RenderClientState renderClientState;
 

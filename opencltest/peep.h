@@ -225,6 +225,10 @@ struct ClientAction {
 	cl_int params_CommandToLocation_X_Q16;
 	cl_int params_CommandToLocation_Y_Q16;
 
+	cl_int action_CommandTileDelete;
+	cl_int params_CommandTileDelete_X_Q16;
+	cl_int params_CommandTileDelete_Y_Q16;
+
 	cl_int action_SetZView;
 	cl_int params_ZViewIdx;
 } typedef ClientAction;

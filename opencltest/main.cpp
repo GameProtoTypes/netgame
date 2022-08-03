@@ -47,7 +47,7 @@
 
 int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
-void WaitMinTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTimeMS)
+void WaitTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTimeMS)
 {
     *frameTimeMS = SDL_GetTicks64() - timerStartMs;
     int32_t sleepTime = glm::clamp(int32_t(targetTimeMs - *frameTimeMS), 0, targetTimeMs);
@@ -274,25 +274,52 @@ int32_t main(int32_t argc, char* args[])
         std::vector<ActionWrap> clientActions;
         if (rclientst->mousePrimaryReleased)
         {
-            ActionWrap actionWrap;
-            ActionWrapInit(&actionWrap);
-            actionWrap.tracking.clientId = gameNetworking.clientId;
-            float endx   = glm::max(worldMouseBegin.x, worldMouseEnd.x);
-            float endy   = glm::min(worldMouseBegin.y, worldMouseEnd.y);
-            float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
-            float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
-
-            actionWrap.action.action_DoSelect = 1;
-            actionWrap.action.params_DoSelect_StartX_Q16 = cl_int(startx * (1 << 16));
-            actionWrap.action.params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
-            actionWrap.action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
-            actionWrap.action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
-            actionWrap.action.params_DoSelect_ZMapView = gameStateB->mapZView;
-
+            if (!rclientst->waitingMapAction)
+            {
                 
-            clientActions.push_back(actionWrap);
+                ActionWrap actionWrap;
+                ActionWrapInit(&actionWrap);
+                actionWrap.tracking.clientId = gameNetworking.clientId;
+                float endx = glm::max(worldMouseBegin.x, worldMouseEnd.x);
+                float endy = glm::min(worldMouseBegin.y, worldMouseEnd.y);
+                float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
+                float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
 
-            gameNetworking.actionStateDirty = true;
+                actionWrap.action.action_DoSelect = 1;
+                actionWrap.action.params_DoSelect_StartX_Q16 = cl_int(startx * (1 << 16));
+                actionWrap.action.params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
+                actionWrap.action.params_DoSelect_EndX_Q16 = cl_int(endx * (1 << 16));
+                actionWrap.action.params_DoSelect_EndY_Q16 = cl_int(endy * (1 << 16));
+                actionWrap.action.params_DoSelect_ZMapView = gameStateB->mapZView;
+
+
+                clientActions.push_back(actionWrap);
+
+                gameNetworking.actionStateDirty = true;
+            }
+            else
+            {
+               
+                if (rclientst->waitingDelete)
+                {
+                    ActionWrap actionWrap;
+                    ActionWrapInit(&actionWrap);
+                    actionWrap.tracking.clientId = gameNetworking.clientId;
+
+                    actionWrap.action.action_CommandTileDelete = 1;
+                    actionWrap.action.params_CommandTileDelete_X_Q16 = cl_int(worldMouseEnd.x * (1 << 16));
+                    actionWrap.action.params_CommandTileDelete_Y_Q16 = cl_int(worldMouseEnd.y * (1 << 16));
+                    
+                    //rclientst->waitingDelete = false;
+                    clientActions.push_back(actionWrap);
+
+                    gameNetworking.actionStateDirty = true;
+                    
+                }
+
+                //rclientst->waitingMapAction = false;
+
+            }
         }
 
             
@@ -335,6 +362,18 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Begin("Commands");
         ImGui::Button("Mine");
         ImGui::Button("Move");
+        if (ImGui::Button("Delete"))
+        {
+
+            rclientst->waitingMapAction = true;
+            rclientst->waitingDelete = !rclientst->waitingDelete;
+            if (!rclientst->waitingDelete)
+            {
+                rclientst->waitingMapAction = false;
+            }
+
+
+        }
         ImGui::End();
 
 
@@ -527,7 +566,7 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameGraphics.Swap();
-        WaitMinTickTime(timerStartMs, gameNetworking.targetTickTimeMs, &gameNetworking.lastFrameTimeMs);
+        WaitTickTime(timerStartMs, gameNetworking.targetTickTimeMs, &gameNetworking.lastFrameTimeMs);
 
         if (gameCompute.errorState)
             quit = true;

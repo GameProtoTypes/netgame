@@ -221,7 +221,7 @@ public:
 	uint32_t lastFreezeTick = 0;
 	int32_t snapshotFreq = 200;
 
-	int32_t targetTickTimeMs = MINTICKTIMEMS;
+	int32_t targetTickTimeMs = GOODTICKTIMEMS;
 	float integralAccumulatorTickPID = 0.0f;
 	float tickPIDError = 0.0f;
 

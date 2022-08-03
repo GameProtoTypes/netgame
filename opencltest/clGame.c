@@ -503,19 +503,37 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     offset.z = 0;
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole);
 
-    do
+    while (ctile == MapTile_NONE && tileMapCoordWhole.z < MAPDEPTH)
     {
-        offset.z++;
-        PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole);
+        tileMapCoordWhole.z++;
+        ctile = gameState->map.levels[tileMapCoordWhole.z].tiles[tileMapCoordWhole.x][tileMapCoordWhole.y];
+    }
+    //printf("%d\n", tileMapCoordWhole.z);
 
-    } while (ctile == MapTile_NONE && tileMapCoordWhole.z < MAPDEPTH);
-
-    if (tileMapCoordWhole.z >= MAPDEPTH - 1 && maptilecoords.z <= mapZViewLevel + 1)
+    if (tileMapCoordWhole.z == MAPDEPTH)
     {
+        //hit the sky
+
+        if (maptilecoords.z <= mapZViewLevel+1)
+            return 1;
+        else
+            return 0;
         return 1;
     }
     else
     {
+        //pocket case
+
+        if (tileMapCoordWhole.z >= mapZViewLevel+2)
+        {
+            printf("a");
+            if (maptilecoords.z <= mapZViewLevel+1)
+            {
+                printf("b");
+                return 1;
+            }
+        }
+
         return 0;
     }
     
@@ -723,7 +741,7 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
 {
     MapTile tileIdx = gameState->map.levels[gameStateB->mapZView].tiles[x][y];
     MapTile tileUpIdx;
-    if (gameStateB->mapZView < MAPDEPTH)
+    if (gameStateB->mapZView < MAPDEPTH-1)
     {
         tileUpIdx = gameState->map.levels[gameStateB->mapZView + 1].tiles[x][y];
     }
@@ -796,6 +814,52 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
     //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", tiles[21]);
 
 }
+
+
+
+void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world, ge_int3* mapcoord, int* occluded)
+{
+    ge_int3 wrld;
+    wrld.x = world.x;
+    wrld.y = world.y;
+    WorldToMap(wrld, &(*mapcoord));
+    (*mapcoord).x = WHOLE_Q16((*mapcoord).x);
+    (*mapcoord).y = WHOLE_Q16((*mapcoord).y);
+
+
+
+    for (int z = gameStateB->mapZView+1; z >= 0; z--)
+    {
+
+        MapTile tile = gameState->map.levels[z].tiles[(*mapcoord).x][(*mapcoord).y];
+
+        if (tile != MapTile_NONE)
+        {
+            (*mapcoord).z = z;
+            if (z == gameStateB->mapZView)
+            {
+                *occluded = 1;
+              //  printf("1");
+            }
+            else if (z == gameStateB->mapZView + 1)
+            {
+               // printf("4");
+                *occluded = 1;
+            }
+            else
+            {
+                *occluded = 0;
+                //(*mapcoord).z--;
+               // printf("2");
+            }
+            return;
+        }
+    }
+
+   // printf("3");
+    *occluded = 1;
+}
+
 
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
@@ -880,9 +944,32 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
+        }
+        else if (clientAction->action_CommandTileDelete)
+        {
+            printf("Got the command\n");
 
+            ge_int2 world2DMouse;
+            world2DMouse.x = clientAction->params_CommandTileDelete_X_Q16;
+            world2DMouse.y = clientAction->params_CommandTileDelete_Y_Q16;
+
+            ge_int3 mapCoord;
+            int occluded;
+            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded);
+
+            gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
+
+            BuildMapTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+
+            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x+1, mapCoord.y);
+            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x-1, mapCoord.y);
+            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y+1);
+            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y-1);
 
         }
+
+
     }
 
     gameStateB->numActions = 0;
