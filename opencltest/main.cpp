@@ -277,7 +277,7 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.params_DoSelect_StartY_Q16 = cl_int(starty * (1 << 16));
             actionWrap.action.params_DoSelect_EndX_Q16   = cl_int(endx   * (1 << 16));
             actionWrap.action.params_DoSelect_EndY_Q16   = cl_int(endy   * (1 << 16));
-
+            actionWrap.action.params_DoSelect_ZMapView = gameStateB->mapZView;
 
                 
             clientActions.push_back(actionWrap);
@@ -314,36 +314,22 @@ int32_t main(int32_t argc, char* args[])
         gameNetworking.Update();
 
         GSCS(C)
-            
-       
-                
-        ImGui::SliderInt("ZLayer", &rclientst->viewZIdx, 0, MAPDEPTH-1);
-        gameStateB->mapZView = rclientst->viewZIdx;
 
 
 
-
-
-        ImGui::Begin("Company");
-        ImGui::Button("Assets");
-        ImGui::Button("Profit/Loss");
+        ImGui::Begin("View");
+            ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, MAPDEPTH-1);
+            gameStateB->mapZView = rclientst->viewZIdx;
         ImGui::End();
 
-        ImGui::Begin("Build");
-        ImGui::Button("Tracks");
-        ImGui::Button("Machines");
-        ImGui::Button("Bulldoze");
-
+        ImGui::Begin("Commands");
+        ImGui::Button("Mine");
+        ImGui::Button("Move");
         ImGui::End();
 
-        ImGui::Begin("Routines");
 
-        ImGui::End();
 
-        ImGui::Begin("Miner Bots");
-        ImGui::Button("New Miner");
-        ImGui::Button("Destroy Miner");
-        ImGui::End();
+
 
         if (gameStateB->pauseState == 0)
         {
@@ -443,10 +429,12 @@ int32_t main(int32_t argc, char* args[])
         glm::ivec2 mapSize = { MAPDIM , MAPDIM };
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
-        glBindVertexArray(gameGraphics.mapTileVAO);
+        glBindVertexArray(gameGraphics.mapTile1VAO);
         glDrawArrays(GL_POINTS, 0, MAPDIM*MAPDIM);
         glBindVertexArray(0);
-
+        glBindVertexArray(gameGraphics.mapTile2VAO);
+        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
+        glBindVertexArray(0);
 
 
 

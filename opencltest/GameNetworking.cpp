@@ -459,7 +459,7 @@
 	 //get stats on client swarm and slow down 
 	 int32_t maxOffset = -9999;
 	 int32_t minOffset = 9999;
-	 int32_t safetyOffset = 5;
+	 int32_t safetyOffset = 10;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {

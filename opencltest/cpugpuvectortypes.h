@@ -42,5 +42,6 @@ struct ge_int4
 
 
 #define GE_VECTOR2_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y))
+#define GE_VECTOR3_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y) && (a.z == b.z))
 
 

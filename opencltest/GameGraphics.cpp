@@ -203,34 +203,56 @@ GameGraphics::GameGraphics()
     {
         mapStartData.get()[i] = 0;
     }
-    glGenVertexArrays(1, &mapTileVAO);
-    glBindVertexArray(mapTileVAO);
+    //primary map
+    glGenVertexArrays(1, &mapTile1VAO);
+    glBindVertexArray(mapTile1VAO);
 
     GL_HOST_ERROR_CHECK()
 
         GL_HOST_ERROR_CHECK()
-        glGenBuffers(1, &mapTileVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, mapTileVBO);
+        glGenBuffers(1, &mapTile1VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTile1VBO);
             glBufferData(GL_ARRAY_BUFFER, MAPDIM*MAPDIM*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
             glEnableVertexAttribArray(0); 
 
             glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0); 
-
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glGenBuffers(1, &mapTileAttrVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, mapTileAttrVBO);
-            glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+        glGenBuffers(1, &mapTile1AttrVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTile1AttrVBO);
+            glBufferData(GL_ARRAY_BUFFER, MAPDIM*MAPDIM*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
             glEnableVertexAttribArray(1);
 
             glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
     glBindVertexArray(0);
+    GL_HOST_ERROR_CHECK()
+    
+    //overlay map
+    glGenVertexArrays(1, &mapTile2VAO);
+    glBindVertexArray(mapTile2VAO);
 
+    GL_HOST_ERROR_CHECK()
 
+        GL_HOST_ERROR_CHECK()
+        glGenBuffers(1, &mapTile2VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mapTile2VBO);
+    glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &mapTile2AttrVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mapTile2AttrVBO);
+    glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
     GL_HOST_ERROR_CHECK()
 
 

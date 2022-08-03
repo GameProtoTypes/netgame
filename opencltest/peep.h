@@ -22,7 +22,7 @@
 
 #define MAX_PEEPS (1024*8)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (256)
+#define MAPDIM (512)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
@@ -47,18 +47,28 @@
 
 #define GE_OFFSET_NULL_2D (ge_uint2){0xFFFFFFFF , 0xFFFFFFFF}
 
+#define BITSET(BITBANK, BITFLAG) {BITBANK |= (1 << BITFLAG);}
+#define BITCLEAR(BITBANK, BITFLAG) {BITBANK &= ~(1 << BITFLAG);}
+#define BITGET(BITBANK, BITFLAG) (BITBANK & (1 << BITFLAG))
+
 struct Cell;
 struct MapSector;
+
+
+enum PeepState_BitFlags
+{
+	PeepState_BitFlags_valid = 0,
+	PeepState_BitFlags_deathState,
+	PeepState_BitFlags_visible
+};
 
 #pragma pack(push, 4)
 struct PeepState_RenderLevel
 {
-	cl_int valid;
-
+	cl_uint bitflags0;
 
 	int32_t faction;
 
-	cl_int attackState;
 	cl_int health;
 	cl_int deathState;
 }typedef PeepState_RenderLevel;
@@ -155,6 +165,23 @@ enum MapTile {
 	MapTile_CopperOre,
 	MapTile_DiamondOre,
 	MapTile_MossyRock,
+	MapTile_Shadow_0,
+	MapTile_Shadow_1,
+	MapTile_Shadow_2,
+	MapTile_Shadow_3,
+	MapTile_Shadow_4,
+	MapTile_Shadow_5 = 25,
+	MapTile_Shadow_6,
+	MapTile_Shadow_7,
+	MapTile_Shadow_8,
+	MapTile_Shadow_9,
+	MapTile_Shadow_10 = 41,
+	MapTile_Shadow_11,
+	MapTile_Shadow_12,
+	MapTile_Shadow_13,
+	MapTile_Shadow_14,
+	MapTile_Shadow_15,
+	MapTile_Shadow_16,
 
 	MapTile_NONE = 255
 }typedef MapTile;
@@ -192,6 +219,7 @@ struct ClientAction {
 	cl_int params_DoSelect_StartY_Q16;
 	cl_int params_DoSelect_EndX_Q16;
 	cl_int params_DoSelect_EndY_Q16;
+	cl_int params_DoSelect_ZMapView;
 
 	cl_int action_CommandToLocation;
 	cl_int params_CommandToLocation_X_Q16;

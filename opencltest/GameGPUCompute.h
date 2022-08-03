@@ -83,8 +83,11 @@ public:
 	cl_mem gamestateB_mem_obj;
 
 	cl_mem graphics_peeps_mem_obj;
-	cl_mem graphics_mapTileVBO_mem_obj;
-	cl_mem graphics_mapTileAttrVBO_mem_obj;
+	cl_mem graphics_mapTile1VBO_mem_obj;
+	cl_mem graphics_mapTile1AttrVBO_mem_obj;
+
+	cl_mem graphics_mapTile2VBO_mem_obj;
+	cl_mem graphics_mapTile2AttrVBO_mem_obj;
 
 	std::vector<cl_mem> graphicsObjects;
 

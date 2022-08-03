@@ -110,6 +110,10 @@ void Print_GE_INT2(ge_int2 v)
 {
     printf("{%d,%d}\n", v.x,v.y);
 }
+void Print_GE_INT3(ge_int3 v)
+{
+    printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+}
 //Component Wise Division and Multiplication
 ge_int2 DIV_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 {
