@@ -144,13 +144,13 @@ int32_t main(int32_t argc, char* args[])
             {
                 if (e.wheel.y > 0) // scroll up
                 {
-                    //if (gameState->viewScale >= 1 && gameState->viewScale < 15)
+                    rclientst->mousescroll_1 = rclientst->mousescroll;
                     rclientst->mousescroll++;
                         
                 }
                 else if (e.wheel.y < 0) // scroll down
                 {
-                    // if (gameState->viewScale > 1)
+                    rclientst->mousescroll_1 = rclientst->mousescroll;
                     rclientst->mousescroll--;
                 }
             }
@@ -228,10 +228,20 @@ int32_t main(int32_t argc, char* args[])
 
         //render
         static float viewScale = 0.002f;
-        viewScale = rclientst->mousescroll* rclientst->mousescroll*0.01f;
-        viewScale = glm::clamp(viewScale, 0.001f, 0.2f);
+        
+        if (rclientst->mousescroll != rclientst->mousescroll_1)
+        {
+            viewScale -= (rclientst->mousescroll - rclientst->mousescroll_1) * 0.02f;
+            viewScale = glm::clamp(viewScale, 0.01f, 0.2f);
+            rclientst->mousescroll_1 = rclientst->mousescroll;
+        }
+
+
+        gameGraphics.viewScaleInterp += (viewScale - gameGraphics.viewScaleInterp) * 0.05f;
         //ImGui::SliderFloat("Zoom", &viewScale, 0.001f, 0.2f);
-        glm::vec3 scaleVec = glm::vec3(viewScale, viewScale , 1.0f);
+        const float aspectCorrection = float(gameGraphics.SCREEN_HEIGHT) / gameGraphics.SCREEN_WIDTH;
+        glm::vec3 scaleVec = glm::vec3(gameGraphics.viewScaleInterp, gameGraphics.viewScaleInterp*0.8f, 1.0f);
+        
            
         
         glm::vec3 position = glm::vec3((2.0f* rclientst->viewX) / gameGraphics.SCREEN_WIDTH, ( - 2.0f * rclientst->viewY) / gameGraphics.SCREEN_HEIGHT, 0.0f);
@@ -423,8 +433,6 @@ int32_t main(int32_t argc, char* args[])
         mapTransform = glm::scale(mapTransform, glm::vec3(MAP_TILE_SIZE, MAP_TILE_SIZE, 1));
         mapTransform = glm::translate(mapTransform, glm::vec3(-MAPDIM * 0.5f, -MAPDIM * 0.5f, 0));
         
-        
-
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
         glm::ivec2 mapSize = { MAPDIM , MAPDIM };
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
@@ -432,14 +440,10 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(gameGraphics.mapTile1VAO);
         glDrawArrays(GL_POINTS, 0, MAPDIM*MAPDIM);
         glBindVertexArray(0);
-        glBindVertexArray(gameGraphics.mapTile2VAO);
-        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
-        glBindVertexArray(0);
 
 
 
         //draw all peeps
-
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -451,7 +455,11 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(0);
 
 
-
+        //draw map shadows
+        gameGraphics.pMapTileShadProgram->Use();
+        glBindVertexArray(gameGraphics.mapTile2VAO);
+        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
+        glBindVertexArray(0);
 
 
 

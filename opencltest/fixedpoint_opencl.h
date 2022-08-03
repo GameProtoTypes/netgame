@@ -279,7 +279,7 @@ void cl_cubic_interp_1D_Q16(cl_long x1_Q16, cl_long x2_Q16, cl_int perc_Q16, cl_
 
 
 
-cl_int cl_noise_256(cl_int x, cl_int y, cl_int seed)
+cl_int cl_noise_2d_256(cl_int x, cl_int y, cl_int seed)
 {
     int tmp = perlin_hash_numbers[(y + seed) % 256];
     return perlin_hash_numbers[(tmp + x) % 256];
@@ -295,10 +295,10 @@ cl_int cl_noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
     
     
     
-    cl_int s = cl_noise_256(x_int, y_int, seed);
-    cl_int t = cl_noise_256(x_int + 1, y_int, seed);
-    cl_int u = cl_noise_256(x_int, y_int + 1, seed);
-    cl_int v = cl_noise_256(x_int + 1, y_int + 1, seed);
+    cl_int s = cl_noise_2d_256(x_int, y_int, seed);
+    cl_int t = cl_noise_2d_256(x_int + 1, y_int, seed);
+    cl_int u = cl_noise_2d_256(x_int, y_int + 1, seed);
+    cl_int v = cl_noise_2d_256(x_int + 1, y_int + 1, seed);
     cl_int low_Q16;
     cl_int high_Q16;
     cl_cubic_interp_1D_Q16(TO_Q16(s), TO_Q16(t), x_frac_Q16, &low_Q16);
@@ -307,6 +307,8 @@ cl_int cl_noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
     cl_cubic_interp_1D_Q16(low_Q16, high_Q16, y_frac_Q16, &result_Q16);
     return result_Q16;
 }
+
+
 
 cl_int cl_perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth,  cl_int seed)
 {
@@ -324,6 +326,29 @@ cl_int cl_perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int dept
         amp_Q16 = DIV_PAD_Q16(amp_Q16, TO_Q16(2));
         xa_Q16 = MUL_PAD_Q16(xa_Q16, TO_Q16(2));
         ya_Q16 = MUL_PAD_Q16(ya_Q16, TO_Q16(2));
+    }
+
+    return DIV_PAD_Q16(fin_Q16, div_Q16);
+}
+
+cl_int cl_perlin_3d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int z_Q16, cl_int freq_Q16, cl_int depth, cl_int seed)
+{
+    cl_long xa_Q16 = MUL_PAD_Q16(x_Q16, freq_Q16);
+    cl_long ya_Q16 = MUL_PAD_Q16(y_Q16, freq_Q16);
+    cl_long za_Q16 = MUL_PAD_Q16(z_Q16, freq_Q16);
+    cl_long amp_Q16 = TO_Q16(1);
+    cl_long fin_Q16 = 0;
+    cl_long div_Q16 = 0;
+
+    int i;
+    for (i = 0; i < depth; i++)
+    {
+        div_Q16 += MUL_PAD_Q16(TO_Q16(256), amp_Q16);
+        fin_Q16 += MUL_PAD_Q16(cl_noise_3d_Q16(xa_Q16, ya_Q16, za_Q16, seed), amp_Q16);
+        amp_Q16 = DIV_PAD_Q16(amp_Q16, TO_Q16(2));
+        xa_Q16 = MUL_PAD_Q16(xa_Q16, TO_Q16(2));
+        ya_Q16 = MUL_PAD_Q16(ya_Q16, TO_Q16(2));
+        za_Q16 = MUL_PAD_Q16(za_Q16, TO_Q16(2));
     }
 
     return DIV_PAD_Q16(fin_Q16, div_Q16);

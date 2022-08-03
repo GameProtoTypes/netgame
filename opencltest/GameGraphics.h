@@ -39,6 +39,7 @@ public:
 		int32_t mouse_dragBeginx = 0;
 		int32_t mouse_dragBeginy = 0;
 		int32_t mousescroll = 0;
+		int32_t mousescroll_1 = 0;
 		int32_t clicked = 0;
 
 		int32_t mousePrimaryDown = 0;
@@ -98,6 +99,7 @@ public:
 	int mapTileInstanceSIZE = 0;
 	GLuint mapTileTexId = 0;
 
+	float viewScaleInterp = 0.0f;
 
 };
 

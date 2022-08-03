@@ -623,18 +623,8 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
         peep->lastGoodPosMap_Q16 = peep->posMap_Q16;
     }
-
-
-
-  
-
-
-
     
     WalkAndFight(ALL_CORE_PARAMS_PASS, peep);
-
-
-
 
 }
 
@@ -659,7 +649,9 @@ void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
             return;
 
 
-
+        // b | c | d
+        // e |cen| f
+        // g | h | i
         MapTile b = gameState->map.levels[z].tiles[x-1][y-1];
         MapTile c = gameState->map.levels[z].tiles[x][y-1];
         MapTile d = gameState->map.levels[z].tiles[x+1][y-1];
@@ -914,11 +906,22 @@ void CreateMap(ALL_CORE_PARAMS)
             for (int z = 0; z < MAPDEPTH; z++)
             {
                 int zPerc_Q16 = DIV_PAD_Q16(TO_Q16(z), TO_Q16(MAPDEPTH));
-               
+                int depthFromSurface = perlin_z_Q16 - zPerc_Q16;
                 MapTile tileType = MapTile_NONE;
                 if (zPerc_Q16 < perlin_z_Q16)
                 {
-                    tileType = MapTile_Rock;
+                    //if(zPerc_Q16* TO_Q16(100) > 90)
+                    //    tileType = MapTile_DarkGrass;
+                    //else if (zPerc_Q16 * TO_Q16(100) >50)
+                    //    tileType = MapTile_Dirt;
+                    //else if (zPerc_Q16 * TO_Q16(100) >= 20)
+
+                        tileType = MapTile_Rock;
+
+                        if (RandomRange(x * y * z, 0, 20) == 1)
+                        {
+                            tileType = MapTile_IronOre;
+                        }
                 }
                 else
                 {
