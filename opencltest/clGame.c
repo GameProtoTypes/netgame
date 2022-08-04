@@ -30,7 +30,54 @@ void PeepPrint(Peep* peep)
 }
 
 
-void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
+void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
+{
+
+    //calculate force based on penetration distance with otherPeep.
+    ge_int3 d_Q16 = GE_INT3_ADD(otherPeep->physics.base.pos_Q16, GE_INT3_NEG(peep->physics.base.pos_Q16));
+    cl_int combined_r_Q16 = peep->physics.shape.radius_Q16 + otherPeep->physics.shape.radius_Q16;
+    cl_int len_Q16;
+
+
+    ge_int3 penV_Q16 = d_Q16;
+    ge_normalize_v3_Q16(&penV_Q16, &len_Q16);
+
+    if (len_Q16 > peep->physics.shape.radius_Q16 * 2)
+        return;
+
+    cl_int penetrationDist_Q16 = (len_Q16 - (combined_r_Q16));
+    ge_int3 penetrationForce_Q16;
+
+
+    //pos_post_Q16
+    peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 1);
+    peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 1);
+    //peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(penV_Q16.z, penetrationDist_Q16 >> 1);//dont encourage peeps standing on each other
+
+
+    //V' = V - penV*(V.penV)
+    //DeltaV = -penV*(V.penV)
+
+    cl_int dot;
+    ge_dot_product_3D_Q16(peep->physics.base.v_Q16, penV_Q16, &dot);
+    if (dot > 0) {
+        peep->physics.base.vel_add_Q16.x += -MUL_PAD_Q16(penV_Q16.x, dot);
+        peep->physics.base.vel_add_Q16.y += -MUL_PAD_Q16(penV_Q16.y, dot);
+        peep->physics.base.vel_add_Q16.z += -MUL_PAD_Q16(penV_Q16.z, dot);
+    }
+
+    //spread messages
+    if ((peep->comms.orders_channel == otherPeep->comms.orders_channel))
+    {
+        if (otherPeep->comms.message_TargetReached)
+        {
+            peep->comms.message_TargetReached_pending = otherPeep->comms.message_TargetReached;
+        }
+    }
+
+}
+
+void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 {
     if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
         return;
@@ -45,6 +92,7 @@ void PeepToPeepInteraction(Peep* peep, Peep* otherPeep)
     }
     
 
+    PeepRadiusPhysics(ALL_CORE_PARAMS_PASS, peep, otherPeep);
 
 
 
@@ -247,59 +295,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
     peep->physics.base.v_Q16.z += (TO_Q16(-1) >> 3);
 }
 
-void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep)
-{
 
-    //calculate force based on penetration distance with minDistPeepIdx.
-    if (peep->minDistPeepIdx != OFFSET_NULL && ((peep->minDistPeep_Q16) < peep->physics.shape.radius_Q16 * 2))
-    {
-        Peep* minDistPeep;
-
-        OFFSET_TO_PTR(gameState->peeps, peep->minDistPeepIdx, minDistPeep);
-        ge_int3 d_Q16 = GE_INT3_ADD(minDistPeep->physics.base.pos_Q16, GE_INT3_NEG(peep->physics.base.pos_Q16));
-        cl_int combined_r_Q16 = peep->physics.shape.radius_Q16 + minDistPeep->physics.shape.radius_Q16;
-        cl_int len_Q16;
-
-
-        ge_int3 penV_Q16 = d_Q16;
-        ge_normalize_v3_Q16(&penV_Q16, &len_Q16);
-
-        cl_int penetrationDist_Q16 = (len_Q16 - (combined_r_Q16));
-        ge_int3 penetrationForce_Q16;
-
-
-        //pos_post_Q16
-        peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 1);
-        peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 1);
-        //peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(penV_Q16.z, penetrationDist_Q16 >> 1);//dont encourage peeps standing on each other
-
-
-        //V' = V - penV*(V.penV)
-        //DeltaV = -penV*(V.penV)
-
-        cl_int dot;
-        ge_dot_product_3D_Q16(peep->physics.base.v_Q16, penV_Q16, &dot);
-        if (dot > 0) {
-            peep->physics.base.vel_add_Q16.x += -MUL_PAD_Q16(penV_Q16.x, dot);
-            peep->physics.base.vel_add_Q16.y += -MUL_PAD_Q16(penV_Q16.y, dot);
-            peep->physics.base.vel_add_Q16.z += -MUL_PAD_Q16(penV_Q16.z, dot);
-        }
-
-        //spread messages
-        if ((peep->comms.orders_channel == minDistPeep->comms.orders_channel))
-        {
-            if (minDistPeep->comms.message_TargetReached)
-            {
-                peep->comms.message_TargetReached_pending = minDistPeep->comms.message_TargetReached;
-            }
-        }
-
-    }
-
-
-    PeepMapTileCollisions(ALL_CORE_PARAMS_PASS, peep);
-
-}
 void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
 {
 
@@ -351,9 +347,9 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
     PeepDrivePhysics(ALL_CORE_PARAMS_PASS, peep);
 
-    PeepRadiusPhysics(ALL_CORE_PARAMS_PASS, peep);
 
 
+    PeepMapTileCollisions(ALL_CORE_PARAMS_PASS, peep);
 
 
 
@@ -522,14 +518,11 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     }
     else
     {
-        //pocket case
-
+        //'pocket' case
         if (tileMapCoordWhole.z >= mapZViewLevel+2)
         {
-            printf("a");
             if (maptilecoords.z <= mapZViewLevel+1)
             {
-                printf("b");
                 return 1;
             }
         }
@@ -572,7 +565,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             while (curPeep != NULL)
             {
                 if (curPeep != peep) {
-                    PeepToPeepInteraction(peep, curPeep);
+                    PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, curPeep);
                 }
 
                 
@@ -839,18 +832,14 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world, ge_int3* mapcoor
             if (z == gameStateB->mapZView)
             {
                 *occluded = 1;
-              //  printf("1");
             }
             else if (z == gameStateB->mapZView + 1)
             {
-               // printf("4");
                 *occluded = 1;
             }
             else
             {
                 *occluded = 0;
-                //(*mapcoord).z--;
-               // printf("2");
             }
             return;
         }
@@ -956,16 +945,18 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             ge_int3 mapCoord;
             int occluded;
             GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded);
+            if (mapCoord.z > 0) 
+            {
+                gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
 
-            gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
+                BuildMapTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
 
-            BuildMapTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x+1, mapCoord.y);
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x-1, mapCoord.y);
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y+1);
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y-1);
+                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+            }
 
         }
 

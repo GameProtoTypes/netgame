@@ -237,7 +237,7 @@ int32_t main(int32_t argc, char* args[])
         }
 
 
-        gameGraphics.viewScaleInterp += (viewScale - gameGraphics.viewScaleInterp) * 0.05f;
+        gameGraphics.viewScaleInterp += (viewScale - gameGraphics.viewScaleInterp) * 0.2f;
         //ImGui::SliderFloat("Zoom", &viewScale, 0.001f, 0.2f);
         const float aspectCorrection = float(gameGraphics.SCREEN_HEIGHT) / gameGraphics.SCREEN_WIDTH;
         glm::vec3 scaleVec = glm::vec3(gameGraphics.viewScaleInterp, gameGraphics.viewScaleInterp*0.8f, 1.0f);
