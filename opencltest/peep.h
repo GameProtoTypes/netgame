@@ -22,7 +22,7 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (1024)
+#define MAPDIM (256)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
@@ -63,7 +63,7 @@ enum PeepState_BitFlags
 };
 
 #pragma pack(push, 4)
-struct PeepState_RenderLevel
+struct PeepState_Basic
 {
 	cl_uint bitflags0;
 
@@ -71,7 +71,7 @@ struct PeepState_RenderLevel
 
 	cl_int health;
 	cl_int deathState;
-}typedef PeepState_RenderLevel;
+}typedef PeepState_Basic;
 #pragma pack(pop)
 
 
@@ -115,7 +115,7 @@ struct PeepCommunication {
 struct Peep {
 	cl_uint Idx;
 
-	struct PeepState_RenderLevel stateRender;
+	struct PeepState_Basic stateBasic;
 	struct PeepPhysics physics;
 	struct PeepCommunication comms;
 
@@ -208,12 +208,45 @@ struct MapSector {
 	cl_uint lock;
 } typedef MapSector;
 
+enum ClientActionCode {
+	ClientActionCode_DoSelect,
+	ClientActionCode_CommandToLocation,
+	ClientActionCode_CommandTileDelete,
+	ClientActionCode_SetZView,
+	ClientActionCode_NONE = 255
+} typedef ClientActionCode;
+
+enum ClientActionCode_DoSelect_IntParams {
+	CAC_DoSelect_Param_StartX_Q16,
+	CAC_DoSelect_Param_StartY_Q16,
+	CAC_DoSelect_Param_EndX_Q16,
+	CAC_DoSelect_Param_EndY_Q16,
+	CAC_DoSelect_Param_ZMapView,
+	CAC_MAX//Move to other enums as appropriate
+};
+
+enum ClientActionCode_CommandToLocation_IntParams {
+	CAC_CommandToLocation_Param_X_Q16,
+	CAC_CommandToLocation_Param_Y_Q16
+};
+
+enum ClientActionCode_CommandTileDelete_IntParams {
+	CAC_CommandTileDelete_Param_X_Q16,
+	CAC_CommandTileDelete_Param_Y_Q16
+};
+enum ClientActionCode_SetZView_IntParams {
+	CAC_CommandTileDelete_Param_ZViewIdx
+};
+
 struct ClientAction {
 
 	//cl_uint submittedTickIdx;//the client tickidx when the action was created
 	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
 
 
+	ClientActionCode actionCode;
+	int intParameters[CAC_MAX];//MAX of ClientActionCode_******_IntParams enums
+	
 	cl_int action_DoSelect;
 	cl_int params_DoSelect_StartX_Q16;
 	cl_int params_DoSelect_StartY_Q16;

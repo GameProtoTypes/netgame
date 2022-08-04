@@ -30,7 +30,7 @@ void PeepPrint(Peep* peep)
 }
 
 
-void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
+void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 {
 
     //calculate force based on penetration distance with otherPeep.
@@ -79,7 +79,7 @@ void PeepRadiusPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 
 void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 {
-    if (peep->stateRender.deathState || otherPeep->stateRender.deathState)
+    if (peep->stateBasic.deathState || otherPeep->stateBasic.deathState)
         return;
 
 
@@ -92,7 +92,7 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     }
     
 
-    PeepRadiusPhysics(ALL_CORE_PARAMS_PASS, peep, otherPeep);
+    PeepPeepPhysics(ALL_CORE_PARAMS_PASS, peep, otherPeep);
 
 
 
@@ -330,8 +330,8 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         targetVelocity.y = d.y >> 2;
 
 
-        peep->physics.base.v_Q16.x += targetVelocity.x;
-        peep->physics.base.v_Q16.y += targetVelocity.y;
+        peep->physics.base.vel_add_Q16.x += targetVelocity.x;
+        peep->physics.base.vel_add_Q16.y += targetVelocity.y;
 
 
         peep->physics.base.CS_angle_rad = atan2(((float)(d.x))/(1<<16), ((float)(d.y)) / (1 << 16));
@@ -469,8 +469,8 @@ void PeepPreUpdate2(Peep* peep)
     peep->physics.base.v_Q16.y = 0;
     peep->physics.base.v_Q16.z = 0;
 
-    if (peep->stateRender.health <= 0)
-        peep->stateRender.deathState = 1;
+    if (peep->stateBasic.health <= 0)
+        peep->stateBasic.deathState = 1;
 
 
     //peep comms
@@ -600,11 +600,11 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
         if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, gameStateB->mapZView))
         {
             
-            BITSET(peep->stateRender.bitflags0, PeepState_BitFlags_visible);
+            BITSET(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
         }
         else
         {
-            BITCLEAR(peep->stateRender.bitflags0, PeepState_BitFlags_visible);
+            BITCLEAR(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
         }
     }
 
@@ -876,23 +876,23 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         cl_uchar cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
-        if (clientAction->action_DoSelect)
+        if (clientAction->actionCode == ClientActionCode_DoSelect)
         {
             client->selectedPeepsLastIdx = OFFSET_NULL;
             for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
             {
                 Peep* p = &gameState->peeps[pi];
 
-                if (p->stateRender.faction == actionTracking->clientId)
-                    if ((p->physics.base.pos_Q16.x > clientAction->params_DoSelect_StartX_Q16)
-                        && (p->physics.base.pos_Q16.x < clientAction->params_DoSelect_EndX_Q16))
+                if (p->stateBasic.faction == actionTracking->clientId)
+                    if ((p->physics.base.pos_Q16.x > clientAction->intParameters[CAC_DoSelect_Param_StartX_Q16])
+                        && (p->physics.base.pos_Q16.x < clientAction->intParameters[CAC_DoSelect_Param_EndX_Q16]))
                     {
 
-                        if ((p->physics.base.pos_Q16.y < clientAction->params_DoSelect_StartY_Q16)
-                            && (p->physics.base.pos_Q16.y > clientAction->params_DoSelect_EndY_Q16))
+                        if ((p->physics.base.pos_Q16.y < clientAction->intParameters[CAC_DoSelect_Param_StartY_Q16])
+                            && (p->physics.base.pos_Q16.y > clientAction->intParameters[CAC_DoSelect_Param_EndY_Q16]))
                         {
                             
-                            if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, clientAction->params_DoSelect_ZMapView))
+                            if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, clientAction->intParameters[CAC_DoSelect_Param_ZMapView]))
                             {
 
                                 if (client->selectedPeepsLastIdx != OFFSET_NULL)
@@ -916,14 +916,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     }
             }
         }
-        else if (clientAction->action_CommandToLocation)
+        else if (clientAction->actionCode == ClientActionCode_CommandToLocation)
         {
             cl_uint curPeepIdx = client->selectedPeepsLastIdx;
             while (curPeepIdx != OFFSET_NULL)
             {
                 Peep* curPeep = &gameState->peeps[curPeepIdx];
-                curPeep->physics.drive.target_x_Q16 = clientAction->params_CommandToLocation_X_Q16;
-                curPeep->physics.drive.target_y_Q16 = clientAction->params_CommandToLocation_Y_Q16;
+                curPeep->physics.drive.target_x_Q16 = clientAction->intParameters[CAC_CommandToLocation_Param_X_Q16];
+                curPeep->physics.drive.target_y_Q16 = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 curPeep->physics.drive.drivingToTarget = 1;
 
                 //restrict comms to new channel
@@ -934,13 +934,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
         }
-        else if (clientAction->action_CommandTileDelete)
+        else if (clientAction->actionCode == ClientActionCode_CommandTileDelete)
         {
             printf("Got the command\n");
 
             ge_int2 world2DMouse;
-            world2DMouse.x = clientAction->params_CommandTileDelete_X_Q16;
-            world2DMouse.y = clientAction->params_CommandTileDelete_Y_Q16;
+            world2DMouse.x = clientAction->intParameters[CAC_CommandTileDelete_Param_X_Q16];
+            world2DMouse.y = clientAction->intParameters[CAC_CommandTileDelete_Param_Y_Q16];
 
             ge_int3 mapCoord;
             int occluded;
@@ -1108,10 +1108,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-spread << 16, spread << 16) ;
         gameState->peeps[p].physics.base.pos_Q16.z = TO_Q16(200);
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(1);
-        BITCLEAR(gameState->peeps[p].stateRender.bitflags0, PeepState_BitFlags_deathState);
-        BITSET(gameState->peeps[p].stateRender.bitflags0, PeepState_BitFlags_valid);
-        BITSET(gameState->peeps[p].stateRender.bitflags0, PeepState_BitFlags_visible);
-        gameState->peeps[p].stateRender.health = 10;
+        BITCLEAR(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_deathState);
+        BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_valid);
+        BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_visible);
+        gameState->peeps[p].stateBasic.health = 10;
 
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
@@ -1129,9 +1129,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
        // if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
-            gameState->peeps[p].stateRender.faction = 0;
+            gameState->peeps[p].stateBasic.faction = 0;
        // else
-       //     gameState->peeps[p].stateRender.faction = 1;
+       //     gameState->peeps[p].stateBasic.faction = 1;
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)
@@ -1170,25 +1170,25 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
     float drawPosY = (float)((float)peep->physics.base.pos_Q16.y / (1 << 16));
 
     float brightFactor = 0.6f;
-    if (peep->stateRender.faction == 0)
+    if (peep->stateBasic.faction == 0)
     {
         drawColor.x = 0.0f;
         drawColor.y = 1.0f;
         drawColor.z = 1.0f;
     }
-    else if(peep->stateRender.faction == 1)
+    else if(peep->stateBasic.faction == 1)
     {
         drawColor.x = 1.0f;
         drawColor.y = 1.0f;
         drawColor.z = 0.0f;
     }
-    else if (peep->stateRender.faction == 2)
+    else if (peep->stateBasic.faction == 2)
     {
         drawColor.x = 0.0f;
         drawColor.y = 1.0f;
         drawColor.z = 0.0f;
     }
-    else if (peep->stateRender.faction == 3)
+    else if (peep->stateBasic.faction == 3)
     {
         drawColor.x = 1.0f;
         drawColor.y = 0.0f;
@@ -1200,14 +1200,14 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         brightFactor = 1.0f;
         gameState->clientStates[gameStateB->clientId].peepRenderSupport[peep->Idx].render_selectedByClient = 0;
     }
-    if ( BITGET(peep->stateRender.bitflags0, PeepState_BitFlags_deathState) )
+    if ( BITGET(peep->stateBasic.bitflags0, PeepState_BitFlags_deathState) )
     {
         brightFactor = 0.6f;
         drawColor.x = 0.5f;
         drawColor.y = 0.5f;
         drawColor.z = 0.5f;
     }
-    if (!BITGET(peep->stateRender.bitflags0, PeepState_BitFlags_visible))
+    if (!BITGET(peep->stateBasic.bitflags0, PeepState_BitFlags_visible))
     {
         drawPosX = 99999;
         drawPosY = 99999;
