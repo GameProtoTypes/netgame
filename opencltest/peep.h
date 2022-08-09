@@ -170,6 +170,7 @@ enum MapTile {
 	MapTile_Shadow_2,
 	MapTile_Shadow_3,
 	MapTile_Shadow_4,
+	MapTile_Lava     = 16,
 	MapTile_Shadow_5 = 25,
 	MapTile_Shadow_6,
 	MapTile_Shadow_7,
@@ -200,13 +201,30 @@ struct Map {
 } typedef Map;
 
 
-
-
 struct MapSector {
 	cl_uint lastPeepIdx;
 	ge_uint2 idx;
 	cl_uint lock;
 } typedef MapSector;
+
+
+struct AStarNode {
+	ge_int3 tileIdx;
+	int f_Q16;
+	int h_Q16;
+	int g_Q16;
+	struct AStarNode* parent;
+	cl_uchar inList;
+} typedef AStarNode;
+
+#define AStarSetSize (512)
+struct AStarSearch {
+	AStarNode openList[AStarSetSize];
+	cl_int openListSize;
+	AStarNode closedList[AStarSetSize];
+	cl_int closedListSize;
+} typedef AStarSearch;
+
 
 enum ClientActionCode {
 	ClientActionCode_DoSelect,
@@ -222,7 +240,7 @@ enum ClientActionCode_DoSelect_IntParams {
 	CAC_DoSelect_Param_EndX_Q16,
 	CAC_DoSelect_Param_EndY_Q16,
 	CAC_DoSelect_Param_ZMapView,
-	CAC_MAX//Move to other enums as appropriate
+	CAC_MAX//Move to largest enum as appropriate
 };
 
 enum ClientActionCode_CommandToLocation_IntParams {
@@ -247,23 +265,6 @@ struct ClientAction {
 	ClientActionCode actionCode;
 	int intParameters[CAC_MAX];//MAX of ClientActionCode_******_IntParams enums
 	
-	cl_int action_DoSelect;
-	cl_int params_DoSelect_StartX_Q16;
-	cl_int params_DoSelect_StartY_Q16;
-	cl_int params_DoSelect_EndX_Q16;
-	cl_int params_DoSelect_EndY_Q16;
-	cl_int params_DoSelect_ZMapView;
-
-	cl_int action_CommandToLocation;
-	cl_int params_CommandToLocation_X_Q16;
-	cl_int params_CommandToLocation_Y_Q16;
-
-	cl_int action_CommandTileDelete;
-	cl_int params_CommandTileDelete_X_Q16;
-	cl_int params_CommandTileDelete_Y_Q16;
-
-	cl_int action_SetZView;
-	cl_int params_ZViewIdx;
 } typedef ClientAction;
 
 struct ActionTracking {	
@@ -294,6 +295,11 @@ struct SynchronizedClientState {
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 } typedef SynchronizedClientState;
 
+
+struct StaticData {
+	ge_int3 directionalOffsets[26];
+};
+
 struct GameState {
 
 	Peep peeps[MAX_PEEPS];
@@ -303,7 +309,7 @@ struct GameState {
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
-}typedef GameState;
+} typedef GameState;
 
 struct GameStateB {
 	ActionWrap clientActions[32];

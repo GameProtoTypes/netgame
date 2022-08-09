@@ -23,6 +23,190 @@ mapTile1AttrVBO, \
 mapTile2VBO, \
 mapTile2AttrVBO
 
+MapTile GetMapTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
+{
+    return gameState->map.levels[(mapcoord).z].tiles[(mapcoord).x][(mapcoord).y];
+}
+
+cl_uchar MapTileTraversible(ALL_CORE_PARAMS, MapTile tile)
+{
+    if (tile != MapTile_NONE)
+    {
+        return 1;
+    }
+    return 0;
+}
+cl_uchar MapTileCoordTraversible(ALL_CORE_PARAMS, ge_int3 mapcoord)
+{
+    if (GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord) != MapTile_NONE)
+    {
+        return 1;
+    }
+    return 0;
+}
+void AStarNodeInstantiate(AStarNode* node)
+{
+    node->f_Q16 = TO_Q16(9999);
+    node->g_Q16 = TO_Q16(9999);
+    node->h_Q16 = TO_Q16(9999);
+    node->inList = 0;
+    node->parent = NULL;
+    node->tileIdx.x = -1;
+    node->tileIdx.y = -1;
+    node->tileIdx.z = -1;
+}
+
+void AStarSearchInstantiate(AStarSearch* search)
+{
+    for (int i = 0; i < AStarSetSize; i++)
+    {
+        AStarNodeInstantiate(&search->closedList[i]);
+        AStarNodeInstantiate(&search->openList[i]);
+    }
+    search->openListSize = 0;
+    search->closedListSize = 0;
+}
+
+void AStarAddToOpen(AStarSearch* search, AStarNode* node)
+{
+    search->openList[search->openListSize-1] = *node;
+    search->openList[search->openListSize-1].inList = 1;
+    search->openListSize++;
+}
+
+void AStarAddToClosed(AStarSearch* search, AStarNode* node)
+{
+    search->closedList[search->closedListSize - 1] = *node;
+    search->closedList[search->closedListSize - 1].inList = 1;
+    search->closedListSize++;
+}
+cl_uchar MapTileValid(ge_int3 mapcoord)
+{
+    if (mapcoord.x >= 0 && mapcoord.y >= 0 && mapcoord.z >= 0 && mapcoord.x < MAPDIM && mapcoord.y < MAPDIM && mapcoord.z < MAPDEPTH)
+    {
+        return 1;
+    }
+    return 0;
+}
+cl_uchar AStarNodeValid(AStarNode* node)
+{
+    return MapTileValid(node->tileIdx);
+}
+cl_uchar AStarNodeTraversible(ALL_CORE_PARAMS, AStarNode* node)
+{
+    MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, node->tileIdx);
+
+    return MapTileTraversible(ALL_CORE_PARAMS_PASS, tile);
+}
+
+void MakeCardinalDirectionOffsets(ge_int3* offsets)
+{
+    offsets[0] = (ge_int3){ 1, 0, 0 };
+    offsets[1] = (ge_int3){ -1, 0, 0 };
+    offsets[2] = (ge_int3){ 0, -1, 0 };
+    offsets[3] = (ge_int3){ 0, 1, 0 };
+    offsets[4] = (ge_int3){ 0, 0, 1 };
+    offsets[5] = (ge_int3){ 0, 0, -1 };
+
+    offsets[6] = (ge_int3){ 1, 0, -1 };
+    offsets[7] = (ge_int3){ 0, 1, -1 };
+    offsets[8] = (ge_int3){ 1, 1, -1 };
+    offsets[9] = (ge_int3){ -1, 0, -1 };
+    offsets[10] = (ge_int3){ 0, -1, -1 };
+    offsets[11] = (ge_int3){ -1, -1, -1 };
+    offsets[12] = (ge_int3){ 1, -1, -1 };
+    offsets[13] = (ge_int3){ -1, 1, -1 };
+
+    offsets[14] = (ge_int3){ 1, 0, 1 };
+    offsets[15] = (ge_int3){ 0, 1, 1 };
+    offsets[16] = (ge_int3){ 1, 1, 1 };
+    offsets[17] = (ge_int3){ -1, 0, 1 };
+    offsets[18] = (ge_int3){ 0, -1, 1 };
+    offsets[19] = (ge_int3){ -1, -1, 1 };
+    offsets[20] = (ge_int3){ 1, -1, 1 };
+    offsets[21] = (ge_int3){ -1, 1, 1 };
+
+    offsets[22] = (ge_int3){ 1, 1, 0 };
+    offsets[23] = (ge_int3){ -1, 1, 0 };
+    offsets[24] = (ge_int3){ 1, -1, 0 };
+    offsets[25] = (ge_int3){ -1, -1, 0 };
+}
+
+cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile)
+{
+    if (!MapTileValid(startTile))
+    {
+        return 0;
+    }
+    if (!MapTileValid(destTile))
+    {
+        return 0;
+    }
+    if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, startTile))
+    {
+        return 0;
+    }
+    if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, destTile))
+    {
+        return 0;
+    }
+
+
+    AStarSearchInstantiate(search);
+
+    //add start to openList
+    search->openList[0].tileIdx = startTile;
+    search->openList[0].f_Q16 = TO_Q16(0);
+    search->openList[0].g_Q16 = TO_Q16(0);
+    search->openList[0].h_Q16 = TO_Q16(0);
+    search->openList[0].parent = &search->openList[0];
+    search->openListSize++;
+
+    cl_uchar foundDest = 0;
+
+    while (search->openListSize > 0)
+    {
+        //remove last from openList
+        AStarNode* p = &search->openList[search->openListSize - 1];
+
+        AStarAddToClosed(search, p);
+        search->openListSize--;
+        p->inList = 0;
+
+        ge_int3 tileCoord = p->tileIdx;
+
+
+        //26 successors
+        cl_int gNew_Q16, fNew_Q16, hNew_Q16;
+
+        ge_int3 offsets[26];
+        MakeCardinalDirectionOffsets(&offsets[0]);
+
+        for (int i = 0; i < 26; i++)
+        {
+            ge_int3 prospectiveTileCoord;
+            prospectiveTileCoord.x = tileCoord.x + offsets[i].x;
+            prospectiveTileCoord.y = tileCoord.y + offsets[i].y;
+            prospectiveTileCoord.z = tileCoord.z + offsets[i].z;
+
+            if (MapTileValid(prospectiveTileCoord))
+            {
+                if (GE_VECTOR3_EQUAL(prospectiveTileCoord, destTile))
+                {
+                    printf("found destination");
+                    foundDest = 1;
+                    return foundDest;
+                }
+            }
+        }
+
+
+
+    }
+    return foundDest;
+}
+
+
 
 void PeepPrint(Peep* peep)
 {
@@ -50,8 +234,12 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 
 
     //pos_post_Q16
-    peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 1);
-    peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 1);
+    peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 2);
+    peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 2);
+
+    //otherPeep->physics.base.pos_post_Q16.x -= MUL_PAD_Q16(penV_Q16.x, penetrationDist_Q16 >> 1);
+    //otherPeep->physics.base.pos_post_Q16.y -= MUL_PAD_Q16(penV_Q16.y, penetrationDist_Q16 >> 1);
+
     //peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(penV_Q16.z, penetrationDist_Q16 >> 1);//dont encourage peeps standing on each other
 
 
@@ -63,7 +251,10 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     if (dot > 0) {
         peep->physics.base.vel_add_Q16.x += -MUL_PAD_Q16(penV_Q16.x, dot);
         peep->physics.base.vel_add_Q16.y += -MUL_PAD_Q16(penV_Q16.y, dot);
-        peep->physics.base.vel_add_Q16.z += -MUL_PAD_Q16(penV_Q16.z, dot);
+        //peep->physics.base.vel_add_Q16.z += -MUL_PAD_Q16(penV_Q16.z, dot);//dont encourage peeps standing on each other
+
+        //otherPeep->physics.base.vel_add_Q16.x -= -MUL_PAD_Q16(penV_Q16.x, dot);
+        //otherPeep->physics.base.vel_add_Q16.y -= -MUL_PAD_Q16(penV_Q16.y, dot);
     }
 
     //spread messages
@@ -809,7 +1000,6 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
 }
 
 
-
 void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world, ge_int3* mapcoord, int* occluded)
 {
     ge_int3 wrld;
@@ -988,18 +1178,26 @@ void CreateMap(ALL_CORE_PARAMS)
                 MapTile tileType = MapTile_NONE;
                 if (zPerc_Q16 < perlin_z_Q16)
                 {
-                    //if(zPerc_Q16* TO_Q16(100) > 90)
-                    //    tileType = MapTile_DarkGrass;
-                    //else if (zPerc_Q16 * TO_Q16(100) >50)
-                    //    tileType = MapTile_Dirt;
-                    //else if (zPerc_Q16 * TO_Q16(100) >= 20)
+                    tileType = MapTile_Rock;
 
-                        tileType = MapTile_Rock;
+                    if (RandomRange(x * y * z, 0, 20) == 1)
+                    {
+                        tileType = MapTile_IronOre;
+                    }
+                    else if (RandomRange(x * y * z+1, 0, 20) == 1)
+                    {
+                        tileType = MapTile_CopperOre;
+                    }
+                    else if (RandomRange(x * y * z+2, 0, 100) == 1)
+                    {
+                        tileType = MapTile_DiamondOre;
+                    }
 
-                        if (RandomRange(x * y * z, 0, 20) == 1)
-                        {
-                            tileType = MapTile_IronOre;
-                        }
+
+                    if (z == 0)
+                    {
+                        tileType = MapTile_Lava;
+                    }
                 }
                 else
                 {
