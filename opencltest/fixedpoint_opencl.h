@@ -10,6 +10,7 @@
 #define GE_TO_CL_INT4(ge)((cl_int4)(ge.x,ge.y,ge.z,ge.w))
 
 
+
 #define TO_Q16(x) ((x)<<16)//convert int decimal to Q16
 #define MUL_Q16(x,y) (((x)*(y)) >> 16)//x*y where X is Q16 and Y is Q16 returns Q16. 
 #define DIV_Q16(x,y) (((x<<16)/(y)))//x/y where X is Q16 and Y is Q16 returns Q16.  warning: ensure X has enough bits
@@ -27,6 +28,10 @@
 
 
 #define IS_ZERO_V2(a) ((a.x==0) && (a.y==0))
+
+#define GE_INT3_TO_Q16(ge)((ge_int3){TO_Q16(ge.x),TO_Q16(ge.y),TO_Q16(ge.z)})
+
+
 
 //positive numbers returns TO_Q16(1) 
 //negative numbers returns TO_Q16(-1)
