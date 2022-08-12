@@ -46,8 +46,8 @@ cl_uchar MapTileCoordTraversible(ALL_CORE_PARAMS, ge_int3 mapcoord)
 }
 void AStarNodeInstantiate(AStarNode* node)
 {
-    node->g_Q16 = TO_Q16(9999);
-    node->h_Q16 = TO_Q16(9999);
+    node->g_Q16 = TO_Q16(0);
+    node->h_Q16 = TO_Q16(0);
     node->listIdx = 0;
     node->parent = NULL;
     node->tileIdx.x = -1;
@@ -62,11 +62,13 @@ void AStarSearchInstantiate(AStarSearch* search)
 {
     for (int x = 0; x < MAPDIM; x++)
     {
-        for (int y = 0; y < MAPDIM; y ++)
+        for (int y = 0; y < MAPDIM; y++)
         {
-            for (int z = 0; z < MAPDIM; z++)
+            for (int z = 0; z < MAPDEPTH; z++)
             {
-                AStarNodeInstantiate(&search->details[x][y][z]);
+                AStarNode* node = &search->details[x][y][z];
+                AStarNodeInstantiate(node);
+                node->tileIdx = (ge_int3){x,y,z};
             }
         }  
     }
@@ -156,6 +158,7 @@ void AStarAddToClosed( AStarSearch* search, AStarNode* node)
 }
 cl_uchar AStarNodeInClosed(AStarSearch* search, AStarNode* node)
 {
+    Print_GE_INT3(node->tileIdx);
     return search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
@@ -267,10 +270,13 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
     while (search->openListSize > 0)
     {
+        printf("loopping1\n");
+
         //find node in open with lowest f cost
         AStarNode* curNode = search->openListLast;
         int lowestF = TO_Q16(9999);
         AStarNode* current = NULL;
+
         while (curNode != NULL) {
 
             if ((curNode->g_Q16 + curNode->h_Q16) < lowestF)
@@ -281,36 +287,49 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
             curNode = curNode->listPrev;
         }
-
+       
+        printf("loopping2\n" );
         //remove current from openList
         AStarRemoveFromOpen(search, current);
         AStarAddToClosed(search, current);
-
+        printf("loopping3\n");
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
             AStarPrintPathTo(search, destTile);
             return 1;//found dest
         }
 
-
+        printf("loopping4\n");
         //5 neighbors
         ge_int3 tileCoord = current->tileIdx;
+
         cl_int gNew_Q16, fNew_Q16, hNew_Q16;
 
         for (int i = 0; i < 5; i++)
-        {
+        { 
             ge_int3 prospectiveTileCoord;
             prospectiveTileCoord.x = tileCoord.x + offsets[i].x;
             prospectiveTileCoord.y = tileCoord.y + offsets[i].y;
             prospectiveTileCoord.z = tileCoord.z + offsets[i].z;
-
-            AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
-
-            if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord) || AStarNodeInClosed(search, prospectiveNode))
+            
+            if (!MapTileValid(prospectiveTileCoord))
             {
                 continue;
             }
             
+            AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
+            printf("loopping5 %d\n", (int)prospectiveNode);
+            
+            
+            printf("loopping5_1 %d\n", (int)MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord));
+            
+            printf("loopping5_2 %d\n", (int)AStarNodeInClosed(search, prospectiveNode));
+            if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord) || AStarNodeInClosed(search, prospectiveNode))
+            {
+                printf("loopping5_a\n");
+                continue;
+            }
+            printf("loopping6\n");
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
 
             if (totalMoveCost < prospectiveNode->g_Q16 || !AStarNodeInOpen(search, prospectiveNode))
@@ -318,10 +337,12 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
                 prospectiveNode->parent = current;
-
+                printf("loopping7\n");
                 if (!AStarNodeInOpen(search, prospectiveNode))
                 {
+                    printf("loopping8\n");
                     AStarAddToOpen(search, prospectiveNode);
+                    printf("loopping9\n");
                 }
 
             }
@@ -1426,6 +1447,16 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
     CreateMap(ALL_CORE_PARAMS_PASS);
+
+
+
+    //test AStar
+    AStarSearchInstantiate(&gameState->mapSearcher);
+    ge_int3 start = (ge_int3){0,0,0};
+    ge_int3 end = (ge_int3){ 10,10,10 };
+    AStarSearchRoutine(ALL_CORE_PARAMS_PASS , &gameState->mapSearcher, start, end);
+
+
 
     const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)

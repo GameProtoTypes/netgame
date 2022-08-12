@@ -314,6 +314,7 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
+	AStarSearch mapSearcher;
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
