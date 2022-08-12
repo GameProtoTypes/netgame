@@ -210,19 +210,27 @@ struct MapSector {
 
 struct AStarNode {
 	ge_int3 tileIdx;
-	int f_Q16;
 	int h_Q16;
 	int g_Q16;
 	struct AStarNode* parent;
-	cl_uchar inList;
+	cl_uchar listIdx;//0-openList, 1-closedList
+	struct AStarNode* listNext;
+	struct AStarNode* listPrev;
 } typedef AStarNode;
 
 #define AStarSetSize (512)
 struct AStarSearch {
-	AStarNode openList[AStarSetSize];
+	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
+	
+
 	cl_int openListSize;
-	AStarNode closedList[AStarSetSize];
+	AStarNode* openListLast;
+
 	cl_int closedListSize;
+	AStarNode* closedListLast;
+
+	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
+	
 } typedef AStarSearch;
 
 

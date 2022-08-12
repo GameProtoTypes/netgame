@@ -204,6 +204,7 @@ cl_int ge_length_v3_Q16(ge_int3 v_Q16)
     cl_long len_Q16 = sqrt_i64(innerSum_Q32);
     return (cl_int)len_Q16;
 }
+
 cl_int cl_distance_v2_Q16(int2 v1_Q16, int2 v2_Q16)
 {
     return cl_length_v2_Q16(v2_Q16 - v1_Q16);

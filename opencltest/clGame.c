@@ -46,40 +46,38 @@ cl_uchar MapTileCoordTraversible(ALL_CORE_PARAMS, ge_int3 mapcoord)
 }
 void AStarNodeInstantiate(AStarNode* node)
 {
-    node->f_Q16 = TO_Q16(9999);
     node->g_Q16 = TO_Q16(9999);
     node->h_Q16 = TO_Q16(9999);
-    node->inList = 0;
+    node->listIdx = 0;
     node->parent = NULL;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
     node->tileIdx.z = -1;
+
+    node->listNext = NULL;
+    node->listPrev = NULL;
 }
 
 void AStarSearchInstantiate(AStarSearch* search)
 {
-    for (int i = 0; i < AStarSetSize; i++)
+    for (int x = 0; x < MAPDIM; x++)
     {
-        AStarNodeInstantiate(&search->closedList[i]);
-        AStarNodeInstantiate(&search->openList[i]);
+        for (int y = 0; y < MAPDIM; y ++)
+        {
+            for (int z = 0; z < MAPDIM; z++)
+            {
+                AStarNodeInstantiate(&search->details[x][y][z]);
+            }
+        }  
     }
+
     search->openListSize = 0;
+    search->openListLast = NULL;
+
     search->closedListSize = 0;
+    search->closedListLast = NULL;
 }
 
-void AStarAddToOpen(AStarSearch* search, AStarNode* node)
-{
-    search->openList[search->openListSize-1] = *node;
-    search->openList[search->openListSize-1].inList = 1;
-    search->openListSize++;
-}
-
-void AStarAddToClosed(AStarSearch* search, AStarNode* node)
-{
-    search->closedList[search->closedListSize - 1] = *node;
-    search->closedList[search->closedListSize - 1].inList = 1;
-    search->closedListSize++;
-}
 cl_uchar MapTileValid(ge_int3 mapcoord)
 {
     if (mapcoord.x >= 0 && mapcoord.y >= 0 && mapcoord.z >= 0 && mapcoord.x < MAPDIM && mapcoord.y < MAPDIM && mapcoord.z < MAPDEPTH)
@@ -131,6 +129,109 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
     offsets[24] = (ge_int3){ 1, -1, 0 };
     offsets[25] = (ge_int3){ -1, -1, 0 };
 }
+void AStarAddToOpen( AStarSearch* search, AStarNode* node)
+{
+    if (search->openListLast != NULL)
+    {
+        search->openListLast->listNext = node;
+    }
+    node->listPrev = search->openListLast;
+    search->openListLast = node;
+    node->listIdx = 0;
+    
+    search->openListSize++;
+}
+void AStarAddToClosed( AStarSearch* search, AStarNode* node)
+{
+    if (search->closedListLast != NULL)
+    {
+        search->closedListLast->listNext = node;
+    }
+    node->listPrev = search->closedListLast;
+    search->closedListLast = node;
+    node->listIdx = 1;
+
+    search->closedListSize++;
+    search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
+}
+cl_uchar AStarNodeInClosed(AStarSearch* search, AStarNode* node)
+{
+    return search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
+}
+
+cl_uchar AStarNodeInOpen(AStarSearch* search, AStarNode* node)
+{
+    AStarNode* curNode = search->openListLast;
+    while (curNode != NULL)
+    {
+        if (curNode == node)
+            return 1;
+
+        curNode = curNode->listPrev;
+    }
+    return 0;
+}
+
+void AStarRemoveFromOpen(AStarSearch* search, AStarNode* node)
+{
+    if (node->listIdx != 0)
+        return;
+
+    if (node->listPrev != NULL)
+    {
+        node->listPrev->listNext = node->listNext;
+    }
+    if (node->listNext)
+    {
+        node->listNext->listPrev = node->listPrev;
+    }
+
+    if (search->openListLast == node)
+        search->openListLast = node->listPrev;
+}
+void AStarRemoveFromClosed(AStarSearch* search, AStarNode* node)
+{
+    if (node->listIdx != 1)
+        return;
+
+    if (node->listPrev != NULL)
+    {
+        node->listPrev->listNext = node->listNext;
+    }
+    if (node->listNext)
+    {
+        node->listNext->listPrev = node->listPrev;
+    }
+
+    if (search->closedListLast == node)
+        search->closedListLast = node->listPrev;
+
+    search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
+}
+
+cl_int AStarNodeDistanceHuristic(AStarSearch* search, AStarNode* nodeA, AStarNode* nodeB)
+{
+    return ge_length_v3_Q16(GE_INT3_ADD(nodeA->tileIdx, GE_INT3_NEG(nodeB->tileIdx)));
+}
+
+void AStarPrintNodeStats(AStarNode* node)
+{
+    printf("Node: Loc: ");
+    Print_GE_INT3(node->tileIdx);
+    printf(" H: %d, G: %d\n", node->h_Q16, node->g_Q16);
+}
+
+void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
+{
+    AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
+
+    while (curNode != NULL)
+    {
+        AStarPrintNodeStats(curNode);
+        curNode = curNode->parent;
+    }
+
+}
 
 cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile)
 {
@@ -151,53 +252,81 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         return 0;
     }
 
+    ge_int3 offsets[26];
+    MakeCardinalDirectionOffsets(&offsets[0]);
 
     AStarSearchInstantiate(search);
 
+    AStarNode* targetNode = &search->details[destTile.x][destTile.y][destTile.z];
+
     //add start to openList
-    search->openList[0].tileIdx = startTile;
-    search->openList[0].f_Q16 = TO_Q16(0);
-    search->openList[0].g_Q16 = TO_Q16(0);
-    search->openList[0].h_Q16 = TO_Q16(0);
-    search->openList[0].parent = &search->openList[0];
-    search->openListSize++;
+    AStarAddToOpen(search, &search->details[startTile.x][startTile.y][startTile.z]);
+
 
     cl_uchar foundDest = 0;
 
     while (search->openListSize > 0)
     {
-        //remove last from openList
-        AStarNode* p = &search->openList[search->openListSize - 1];
+        //find node in open with lowest f cost
+        AStarNode* curNode = search->openListLast;
+        int lowestF = TO_Q16(9999);
+        AStarNode* current = NULL;
+        while (curNode != NULL) {
 
-        AStarAddToClosed(search, p);
-        search->openListSize--;
-        p->inList = 0;
+            if ((curNode->g_Q16 + curNode->h_Q16) < lowestF)
+            {
+                lowestF = (curNode->g_Q16 + curNode->h_Q16);
+                current = curNode;
+            }
 
-        ge_int3 tileCoord = p->tileIdx;
+            curNode = curNode->listPrev;
+        }
+
+        //remove current from openList
+        AStarRemoveFromOpen(search, current);
+        AStarAddToClosed(search, current);
+
+        if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
+        {
+            AStarPrintPathTo(search, destTile);
+            return 1;//found dest
+        }
 
 
-        //26 successors
+        //5 neighbors
+        ge_int3 tileCoord = current->tileIdx;
         cl_int gNew_Q16, fNew_Q16, hNew_Q16;
 
-        ge_int3 offsets[26];
-        MakeCardinalDirectionOffsets(&offsets[0]);
-
-        for (int i = 0; i < 26; i++)
+        for (int i = 0; i < 5; i++)
         {
             ge_int3 prospectiveTileCoord;
             prospectiveTileCoord.x = tileCoord.x + offsets[i].x;
             prospectiveTileCoord.y = tileCoord.y + offsets[i].y;
             prospectiveTileCoord.z = tileCoord.z + offsets[i].z;
 
-            if (MapTileValid(prospectiveTileCoord))
+            AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
+
+            if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord) || AStarNodeInClosed(search, prospectiveNode))
             {
-                if (GE_VECTOR3_EQUAL(prospectiveTileCoord, destTile))
-                {
-                    printf("found destination");
-                    foundDest = 1;
-                    return foundDest;
-                }
+                continue;
             }
+            
+            int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
+
+            if (totalMoveCost < prospectiveNode->g_Q16 || !AStarNodeInOpen(search, prospectiveNode))
+            {
+                prospectiveNode->g_Q16 = totalMoveCost;
+                prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
+                prospectiveNode->parent = current;
+
+                if (!AStarNodeInOpen(search, prospectiveNode))
+                {
+                    AStarAddToOpen(search, prospectiveNode);
+                }
+
+            }
+
+
         }
 
 
