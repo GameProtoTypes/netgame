@@ -86,6 +86,8 @@ int32_t main(int32_t argc, char* args[])
     gameStateB->tickIdx = 0;
 
     std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
+    std::cout << "Map Size (bytes): " << sizeof(Map) << std::endl;
+    std::cout << "AStarSearch Size (bytes): " << sizeof(AStarSearch) << std::endl;
 
     uint64_t timerStartMs = SDL_GetTicks64();
 

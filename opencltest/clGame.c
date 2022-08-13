@@ -259,10 +259,12 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
     AStarSearchInstantiate(search);
 
+    AStarNode* startNode = &search->details[startTile.x][startTile.y][startTile.z];
     AStarNode* targetNode = &search->details[destTile.x][destTile.y][destTile.z];
 
     //add start to openList
-    AStarAddToOpen(search, &search->details[startTile.x][startTile.y][startTile.z]);
+    startNode->h_Q16 = AStarNodeDistanceHuristic(search, startNode, targetNode);
+    AStarAddToOpen(search, startNode);
 
 
     cl_uchar foundDest = 0;
@@ -313,9 +315,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             }
             
             AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
-
-            
-            
 
             if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord) || AStarNodeInClosed(search, prospectiveNode))
             {
@@ -1408,7 +1407,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         ge_int3 b = (ge_int3){ TO_Q16(i*2), TO_Q16(i), TO_Q16(i) };
 
         ge_int3 c = MUL_v3_Q16(a, b);
-        s += c.x + c.y +c.z;
+        s += c.x + c.y + c.z;
     }
 
 
@@ -1441,10 +1440,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
     //test AStar
-    AStarSearchInstantiate(&gameState->mapSearcher);
+    AStarSearchInstantiate(&gameState->mapSearchers[0]);
     ge_int3 start = (ge_int3){0,0,MAPDEPTH-2};
-    ge_int3 end = (ge_int3){ MAPDIM-1,MAPDIM-1,MAPDEPTH - 2 };
-    AStarSearchRoutine(ALL_CORE_PARAMS_PASS , &gameState->mapSearcher, start, end);
+    ge_int3 end = (ge_int3){ MAPDIM/2-1,MAPDIM/2-1,MAPDEPTH - 2 };
+    AStarSearchRoutine(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], start, end);
 
 
 

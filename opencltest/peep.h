@@ -111,6 +111,7 @@ struct PeepCommunication {
 	int message_TargetReached_pending;
 }typedef PeepCommunication;
 
+
 #pragma pack(push, 4)
 struct Peep {
 	cl_uint Idx;
@@ -134,7 +135,6 @@ struct Peep {
 	//selection by clients
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
 	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
-
 
 
 } typedef Peep;
@@ -233,6 +233,10 @@ struct AStarSearch {
 	
 } typedef AStarSearch;
 
+struct AStarPathSteps
+{
+	cl_uchar steps[(MAPDIM*MAPDIM*MAPDEPTH)/10];
+};
 
 enum ClientActionCode {
 	ClientActionCode_DoSelect,
@@ -314,7 +318,7 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch mapSearcher;
+	AStarSearch mapSearchers[8];
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
