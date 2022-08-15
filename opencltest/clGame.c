@@ -7,15 +7,17 @@
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
-#define ALL_CORE_PARAMS  __global GameState* gameState,\
- __global GameStateB* gameStateB, \
+#define ALL_CORE_PARAMS  __global StaticData* staticData, \
+__global GameState* gameState,\
+__global GameStateB* gameStateB, \
 __global float* peepVBOBuffer, \
 __global cl_uint* mapTile1VBO, \
 __global cl_uint* mapTile1AttrVBO, \
 __global cl_uint* mapTile2VBO, \
 __global cl_uint* mapTile2AttrVBO
 
-#define ALL_CORE_PARAMS_PASS  gameState, \
+#define ALL_CORE_PARAMS_PASS  staticData, \
+gameState, \
 gameStateB, \
 peepVBOBuffer, \
 mapTile1VBO, \
@@ -88,11 +90,33 @@ cl_uchar AStarNodeValid(AStarNode* node)
 {
     return MapTileValid(node->tileIdx);
 }
-cl_uchar AStarNodeTraversible(ALL_CORE_PARAMS, AStarNode* node)
+cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {
     MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, node->tileIdx);
+    if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tile))
+        return 0;
 
-    return MapTileTraversible(ALL_CORE_PARAMS_PASS, tile);
+
+    
+    MapTile tileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(node->tileIdx, staticData->directionalOffsets[5]));
+    if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tileDown))
+    {
+        return 1;
+    }
+    else
+    {
+        //check if its an edge off of a cliff.
+
+        MapTile prevNodeTileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
+        if(prevNode->tileIdx.z == node->tileIdx.z && !MapTileTraversible(ALL_CORE_PARAMS_PASS, prevNodeTileDown))
+            return 1;
+
+    }
+
+
+
+
+    return 0;
 }
 
 void MakeCardinalDirectionOffsets(ge_int3* offsets)
@@ -266,8 +290,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         return 0;
     }
 
-    ge_int3 offsets[26];
-    MakeCardinalDirectionOffsets(&offsets[0]);
 
     AStarSearchInstantiate(search);
 
@@ -301,9 +323,9 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         for (int i = 0; i < 5; i++)
         { 
             ge_int3 prospectiveTileCoord;
-            prospectiveTileCoord.x = tileCoord.x + offsets[i].x;
-            prospectiveTileCoord.y = tileCoord.y + offsets[i].y;
-            prospectiveTileCoord.z = tileCoord.z + offsets[i].z;
+            prospectiveTileCoord.x = tileCoord.x + staticData->directionalOffsets[i].x;
+            prospectiveTileCoord.y = tileCoord.y + staticData->directionalOffsets[i].y;
+            prospectiveTileCoord.z = tileCoord.z + staticData->directionalOffsets[i].z;
             
             if (!MapTileValid(prospectiveTileCoord))
             {
@@ -312,14 +334,14 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             
             AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
 
-            if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, prospectiveTileCoord) || AStarNodeInClosed(search, prospectiveNode))
+            if (!AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS, current, prospectiveNode) || AStarNodeInClosed(search, prospectiveNode))
             {
                 continue;
             }
 
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
 
-            if (totalMoveCost < prospectiveNode->g_Q16 || !AStarNodeInOpen(search, prospectiveNode))
+            if ((totalMoveCost < prospectiveNode->g_Q16) || !AStarNodeInOpen(search, prospectiveNode))
             {
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
@@ -1135,30 +1157,28 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
 }
 
 
-void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world, ge_int3* mapcoord, int* occluded)
+void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* mapcoord_whole, int* occluded, int zViewRestrictLevel)
 {
-    ge_int3 wrld;
-    wrld.x = world.x;
-    wrld.y = world.y;
-    WorldToMap(wrld, &(*mapcoord));
-    (*mapcoord).x = WHOLE_Q16((*mapcoord).x);
-    (*mapcoord).y = WHOLE_Q16((*mapcoord).y);
+    ge_int3 wrld_Q16;
+    wrld_Q16.x = world_Q16.x;
+    wrld_Q16.y = world_Q16.y;
+    WorldToMap(wrld_Q16, &(*mapcoord_whole));
+    (*mapcoord_whole).x = WHOLE_Q16((*mapcoord_whole).x);
+    (*mapcoord_whole).y = WHOLE_Q16((*mapcoord_whole).y);
 
-
-
-    for (int z = gameStateB->mapZView+1; z >= 0; z--)
+    for (int z = zViewRestrictLevel; z >= 0; z--)
     {
-
-        MapTile tile = gameState->map.levels[z].tiles[(*mapcoord).x][(*mapcoord).y];
+        
+        MapTile tile = gameState->map.levels[z].tiles[(*mapcoord_whole).x][(*mapcoord_whole).y];
 
         if (tile != MapTile_NONE)
         {
-            (*mapcoord).z = z;
-            if (z == gameStateB->mapZView)
+            (*mapcoord_whole).z = z;
+            if (z == gameStateB->mapZView-1)
             {
                 *occluded = 1;
             }
-            else if (z == gameStateB->mapZView + 1)
+            else if (z == gameStateB->mapZView)
             {
                 *occluded = 1;
             }
@@ -1251,6 +1271,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 curPeep->physics.drive.target_y_Q16 = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 curPeep->physics.drive.drivingToTarget = 1;
 
+                
+                //Do an AStarSearch
+                AStarSearchInstantiate(&gameState->mapSearchers[0]);
+                ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
+                ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
+                AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+
+
                 //restrict comms to new channel
                 curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
                 curPeep->comms.message_TargetReached = 0;
@@ -1269,7 +1297,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             ge_int3 mapCoord;
             int occluded;
-            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded);
+            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateB->mapZView-1);
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
@@ -1392,6 +1420,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
 
+
+    printf("Initializing StaticData Buffer..\n");
+    MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
 
     printf("Speed Tests:\n");
 

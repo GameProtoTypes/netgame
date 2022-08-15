@@ -305,7 +305,7 @@ struct SynchronizedClientState {
 
 struct StaticData {
 	ge_int3 directionalOffsets[26];
-};
+}typedef StaticData;
 
 struct GameState {
 

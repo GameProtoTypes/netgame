@@ -43,6 +43,7 @@ GameGPUCompute::~GameGPUCompute()
     ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
 
     ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseMemObject(staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
@@ -115,7 +116,8 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
 
         // Create memory buffers on the device
-
+        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
 
         gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
@@ -228,13 +230,14 @@ void GameGPUCompute::RunInitCompute()
         // Set the arguments of the kernels
         for (cl_kernel k : kernels)
         {
-            ret = clSetKernelArg(k, 0, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 1, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 2, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 3, sizeof(cl_mem), (void*)&graphics_mapTile1VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 4, sizeof(cl_mem), (void*)&graphics_mapTile1AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 5, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 6, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 0, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 1, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 2, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 3, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 4, sizeof(cl_mem), (void*)&graphics_mapTile1VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 5, sizeof(cl_mem), (void*)&graphics_mapTile1AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 6, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, 7, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
         }
         
 

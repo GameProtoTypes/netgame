@@ -15,7 +15,7 @@
 #define MUL_Q16(x,y) (((x)*(y)) >> 16)//x*y where X is Q16 and Y is Q16 returns Q16. 
 #define DIV_Q16(x,y) (((x<<16)/(y)))//x/y where X is Q16 and Y is Q16 returns Q16.  warning: ensure X has enough bits
 #define WHOLE_Q16(x) (x >> 16) //whole part of a Q16 as an int.
-#define WHOLE_ONLY_Q16(x) ((x >> 16) << 16) //x with no fractional part
+#define WHOLE_ONLY_Q16(x) ((x >> 16) << 16) //x with 0 fractional part
 
 #define MUL_PAD_Q16(x,y) ((((cl_long)(x))*((cl_long)(y))) >> 16)
 #define MUL_PAD_V2_Q16(x,y) ((((cl_long2)(x))*((cl_long2)(y))) >> 16)
@@ -30,6 +30,8 @@
 #define IS_ZERO_V2(a) ((a.x==0) && (a.y==0))
 
 #define GE_INT3_TO_Q16(ge)((ge_int3){TO_Q16(ge.x),TO_Q16(ge.y),TO_Q16(ge.z)})
+
+#define GE_INT3_WHOLE_Q16(ge)((ge_int3){WHOLE_Q16(ge.x),WHOLE_Q16(ge.y),WHOLE_Q16(ge.z)})
 
 
 
