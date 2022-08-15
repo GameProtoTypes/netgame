@@ -53,5 +53,5 @@ typedef ulong uint64_t;
 
 #define CL_VECTOR2_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y))
 
-
+#define CL_INTMAX (0x7FFFFFFF)
 

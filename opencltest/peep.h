@@ -213,23 +213,18 @@ struct AStarNode {
 	int h_Q16;
 	int g_Q16;
 	struct AStarNode* parent;
-	cl_uchar listIdx;//0-openList, 1-closedList
-	struct AStarNode* listNext;
-	struct AStarNode* listPrev;
 } typedef AStarNode;
 
 #define AStarSetSize (512)
 struct AStarSearch {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
+	AStarNode* openHeap[MAPDIM * MAPDIM * MAPDEPTH];
+	cl_int openHeapSize;
 
-	cl_int openListSize;
-	AStarNode* openListLast;
-
-	cl_int closedListSize;
-	AStarNode* closedListLast;
 
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
+	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
 	
 } typedef AStarSearch;
 

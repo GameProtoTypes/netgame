@@ -48,14 +48,11 @@ void AStarNodeInstantiate(AStarNode* node)
 {
     node->g_Q16 = TO_Q16(0);
     node->h_Q16 = TO_Q16(0);
-    node->listIdx = 0;
     node->parent = NULL;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
     node->tileIdx.z = -1;
 
-    node->listNext = NULL;
-    node->listPrev = NULL;
 }
 
 void AStarSearchInstantiate(AStarSearch* search)
@@ -73,11 +70,10 @@ void AStarSearchInstantiate(AStarSearch* search)
         }  
     }
 
-    search->openListSize = 0;
-    search->openListLast = NULL;
 
-    search->closedListSize = 0;
-    search->closedListLast = NULL;
+
+
+    search->openHeapSize = 0;
 }
 
 cl_uchar MapTileValid(ge_int3 mapcoord)
@@ -131,29 +127,48 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
     offsets[24] = (ge_int3){ 1, -1, 0 };
     offsets[25] = (ge_int3){ -1, -1, 0 };
 }
-void AStarAddToOpen( AStarSearch* search, AStarNode* node)
+
+void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
 {
-    if (search->openListLast != NULL)
+    cl_int largerChild;
+    AStarNode* top = search->openHeap[index];
+    while (index < search->openHeapSize / 2)
     {
-        search->openListLast->listNext = node;
+        int leftChild = 2 * index + 1;
+        int rightChild = leftChild + 1;
+
+        if (rightChild < search->openHeapSize && AStarOpenHeapKey(search, search->openHeap[leftChild]) > AStarOpenHeapKey(search, search->openHeap[rightChild]))
+            largerChild = rightChild;
+        else
+            largerChild = leftChild;
+
+        if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, search->openHeap[largerChild]))
+            break;
+
+        search->openHeap[index] = search->openHeap[largerChild];
+        index = largerChild;
+
     }
-    node->listPrev = search->openListLast;
-    search->openListLast = node;
-    node->listIdx = 0;
-    
-    search->openListSize++;
+    search->openHeap[index] = top;
+}
+
+AStarNode* AStarOpenHeapRemove(AStarSearch* search)
+{
+    AStarNode* root = search->openHeap[0];
+    search->openHeap[0] = search->openHeap[search->openHeapSize-1];
+    search->openHeapSize--;
+    AStarOpenHeapTrickleDown(search, 0);
+
+    return root;
+}
+AStarNode* AStarRemoveFromOpen(AStarSearch* search)
+{
+    AStarNode* node = AStarOpenHeapRemove(search);
+    search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
+    return node;
 }
 void AStarAddToClosed( AStarSearch* search, AStarNode* node)
 {
-    if (search->closedListLast != NULL)
-    {
-        search->closedListLast->listNext = node;
-    }
-    node->listPrev = search->closedListLast;
-    search->closedListLast = node;
-    node->listIdx = 1;
-
-    search->closedListSize++;
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
 cl_uchar AStarNodeInClosed(AStarSearch* search, AStarNode* node)
@@ -163,51 +178,48 @@ cl_uchar AStarNodeInClosed(AStarSearch* search, AStarNode* node)
 
 cl_uchar AStarNodeInOpen(AStarSearch* search, AStarNode* node)
 {
-    AStarNode* curNode = search->openListLast;
-    while (curNode != NULL)
-    {
-        if (curNode == node)
-            return 1;
-
-        curNode = curNode->listPrev;
-    }
-    return 0;
+    return search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
-void AStarRemoveFromOpen(AStarSearch* search, AStarNode* node)
+int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
 {
-    if (node->listIdx != 0)
-        return;
-
-    if (node->listPrev != NULL)
-    {
-        node->listPrev->listNext = node->listNext;
-    }
-    if (node->listNext)
-    {
-        node->listNext->listPrev = node->listPrev;
-    }
-
-    if (search->openListLast == node)
-        search->openListLast = node->listPrev;
+    //f
+    return node->g_Q16 + node->h_Q16;
 }
+
+void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
+{
+    cl_int parent = (index - 1) / 2;
+    AStarNode* bottom = search->openHeap[index];
+
+    while (index > 0 && AStarOpenHeapKey(search, search->openHeap[parent]) > AStarOpenHeapKey(search, bottom))
+    {
+        search->openHeap[index] = search->openHeap[parent];
+        index = parent;
+        parent = (parent - 1) / 2;
+    }
+    search->openHeap[index] = bottom;
+}
+
+
+void AStarOpenHeapInsert(AStarSearch* search, AStarNode* node)
+{
+    search->openHeap[search->openHeapSize] = node;
+    AStarOpenHeapTrickleUp(search, search->openHeapSize);
+    search->openHeapSize++;
+}
+void AStarAddToOpen(AStarSearch* search, AStarNode* node)
+{
+
+    AStarOpenHeapInsert(search, node);
+    search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
+
+}
+
+
+
 void AStarRemoveFromClosed(AStarSearch* search, AStarNode* node)
 {
-    if (node->listIdx != 1)
-        return;
-
-    if (node->listPrev != NULL)
-    {
-        node->listPrev->listNext = node->listNext;
-    }
-    if (node->listNext)
-    {
-        node->listNext->listPrev = node->listPrev;
-    }
-
-    if (search->closedListLast == node)
-        search->closedListLast = node->listPrev;
-
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
 }
 
@@ -235,7 +247,7 @@ void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
 
 }
 
-cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile)
+cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile, int maxIterations)
 {
     if (!MapTileValid(startTile))
     {
@@ -268,29 +280,13 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
 
     cl_uchar foundDest = 0;
-
-    while (search->openListSize > 0)
+    int iterationCount = maxIterations;
+    while (search->openHeapSize > 0 && iterationCount)
     {
-
+        
         //find node in open with lowest f cost
-        AStarNode* curNode = search->openListLast;
-        int lowestF = TO_Q16(9999);
-        AStarNode* current = NULL;
-
-        while (curNode != NULL) {
-
-            if ((curNode->g_Q16 + curNode->h_Q16) < lowestF)
-            {
-                lowestF = (curNode->g_Q16 + curNode->h_Q16);
-                current = curNode;
-            }
-
-            curNode = curNode->listPrev;
-        }
-       
-
-        //remove current from openList
-        AStarRemoveFromOpen(search, current);
+        AStarNode* current = AStarRemoveFromOpen(search);
+        
         AStarAddToClosed(search, current);
 
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
@@ -339,7 +335,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
         }
 
-
+        iterationCount++;
 
     }
     return foundDest;
@@ -1438,14 +1434,33 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     CreateMap(ALL_CORE_PARAMS_PASS);
 
 
+    printf("AStarTests:\n");
+    //printf("AStarTests1:\n");
+    //AStarSearchInstantiate(&gameState->mapSearchers[0]);
+    ////test AStarHeap
+    //for (int x = 0; x < MAPDIM; x++)
+    //{
+    //    for (int y = 0; y < MAPDIM; y++)
+    //    {
+    //        AStarNode* node = &gameState->mapSearchers[0].details[x][y][0];
+    //        node->h_Q16 = x * y;
+    //        node->g_Q16 = x * y;
+    //        AStarOpenHeapInsert(&gameState->mapSearchers[0], node);
+    //    }
+    //}
 
+    //do
+    //{
+    //    AStarNode* node = AStarOpenHeapRemove(&gameState->mapSearchers[0]);
+    //    AStarPrintNodeStats(node);
+    //} while (gameState->mapSearchers[0].openHeapSize);
+
+    printf("AStarTests2:\n");
     //test AStar
     AStarSearchInstantiate(&gameState->mapSearchers[0]);
     ge_int3 start = (ge_int3){0,0,MAPDEPTH-2};
-    ge_int3 end = (ge_int3){ MAPDIM/2-1,MAPDIM/2-1,MAPDEPTH - 2 };
-    AStarSearchRoutine(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], start, end);
-
-
+    ge_int3 end = (ge_int3){MAPDIM-1,MAPDIM - 1,1 };
+    AStarSearchRoutine(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
     const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
