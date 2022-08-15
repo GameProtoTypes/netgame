@@ -32,7 +32,7 @@ MapTile GetMapTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 
 cl_uchar MapTileTraversible(ALL_CORE_PARAMS, MapTile tile)
 {
-    if (tile != MapTile_NONE)
+    if (tile == MapTile_NONE)
     {
         return 1;
     }
@@ -40,11 +40,7 @@ cl_uchar MapTileTraversible(ALL_CORE_PARAMS, MapTile tile)
 }
 cl_uchar MapTileCoordTraversible(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    if (GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord) == MapTile_NONE)
-    {
-        return 1;
-    }
-    return 0;
+    return MapTileTraversible(ALL_CORE_PARAMS_PASS, GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord));
 }
 void AStarNodeInstantiate(AStarNode* node)
 {
@@ -91,12 +87,12 @@ cl_uchar AStarNodeValid(AStarNode* node)
     return MapTileValid(node->tileIdx);
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
-{
+{   return 1;
     MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, node->tileIdx);
     if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tile))
         return 0;
 
-
+ 
     
     MapTile tileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(node->tileIdx, staticData->directionalOffsets[5]));
     if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tileDown))
@@ -106,7 +102,6 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* 
     else
     {
         //check if its an edge off of a cliff.
-
         MapTile prevNodeTileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
         if(prevNode->tileIdx.z == node->tileIdx.z && !MapTileTraversible(ALL_CORE_PARAMS_PASS, prevNodeTileDown))
             return 1;
@@ -1157,6 +1152,8 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
 }
 
 
+
+
 void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* mapcoord_whole, int* occluded, int zViewRestrictLevel)
 {
     ge_int3 wrld_Q16;
@@ -1272,11 +1269,29 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 curPeep->physics.drive.drivingToTarget = 1;
 
                 
+
                 //Do an AStarSearch
+                ge_int3 mapcoord;
+                ge_int2 world2D;
+                world2D.x = curPeep->physics.drive.target_x_Q16;
+                world2D.y = curPeep->physics.drive.target_y_Q16;
+                int occluded;
+
+                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateB->mapZView - 1);
                 AStarSearchInstantiate(&gameState->mapSearchers[0]);
                 ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
-                ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
+                mapcoord.z++;
+                ge_int3 end = mapcoord;
+                Print_GE_INT3(start);
+                Print_GE_INT3(end);
                 AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+
+                AStarPrintPathTo(&gameState->mapSearchers[0], end);
+
+
+
+
+
 
 
                 //restrict comms to new channel
