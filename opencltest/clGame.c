@@ -261,15 +261,11 @@ void AStarPrintNodeStats(AStarNode* node)
 void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
 {
     AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
-    int limit = 1000;
-    while (curNode != NULL && limit)
+    while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
         curNode = curNode->parent;
-        limit--;
     }
-    if (limit == 0)
-        printf("limit reached!");
 }
 
 cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile, int maxIterations)
@@ -338,7 +334,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
             if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0))
             {
-                printf("A");
                 continue;
             }
 
@@ -352,12 +347,9 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                 prospectiveNode->parent = current;
 
 
-                printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
+               // printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
                 AStarAddToOpen(search, prospectiveNode);
-
             }
-
-
         }
 
         iterationCount--;
@@ -1287,7 +1279,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 world2D.y = curPeep->physics.drive.target_y_Q16;
                 int occluded;
 
-                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateB->mapZView - 1);
+                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateB->mapZView);
                 AStarSearchInstantiate(&gameState->mapSearchers[0]);
                 ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
                 mapcoord.z++;
