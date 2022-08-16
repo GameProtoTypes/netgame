@@ -64,6 +64,9 @@ void AStarSearchInstantiate(AStarSearch* search)
                 AStarNode* node = &search->details[x][y][z];
                 AStarNodeInstantiate(node);
                 node->tileIdx = (ge_int3){x,y,z};
+
+                search->closedMap[x][y][z] = 0;
+                search->openMap[x][x][x] = 0;
             }
         }  
     }
@@ -74,7 +77,7 @@ void AStarSearchInstantiate(AStarSearch* search)
     search->openHeapSize = 0;
 }
 
-cl_uchar MapTileValid(ge_int3 mapcoord)
+cl_uchar MapTileCoordValid(ge_int3 mapcoord)
 {
     if (mapcoord.x >= 0 && mapcoord.y >= 0 && mapcoord.z >= 0 && mapcoord.x < MAPDIM && mapcoord.y < MAPDIM && mapcoord.z < MAPDEPTH)
     {
@@ -84,29 +87,30 @@ cl_uchar MapTileValid(ge_int3 mapcoord)
 }
 cl_uchar AStarNodeValid(AStarNode* node)
 {
-    return MapTileValid(node->tileIdx);
+    return MapTileCoordValid(node->tileIdx);
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
-{   return 1;
+{  
+
     MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, node->tileIdx);
-    if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tile))
+    if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tile)==0)
         return 0;
 
  
     
     MapTile tileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(node->tileIdx, staticData->directionalOffsets[5]));
-    if (!MapTileTraversible(ALL_CORE_PARAMS_PASS, tileDown))
+    if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tileDown)==0)
     {
         return 1;
     }
-    else
-    {
-        //check if its an edge off of a cliff.
-        MapTile prevNodeTileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
-        if(prevNode->tileIdx.z == node->tileIdx.z && !MapTileTraversible(ALL_CORE_PARAMS_PASS, prevNodeTileDown))
-            return 1;
+    //else
+    //{
+    //    //check if its an edge off of a cliff.
+    //    MapTile prevNodeTileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
+    //    if(prevNode->tileIdx.z == node->tileIdx.z && !MapTileTraversible(ALL_CORE_PARAMS_PASS, prevNodeTileDown))
+    //        return 1;
 
-    }
+    //}
 
 
 
@@ -244,7 +248,7 @@ void AStarRemoveFromClosed(AStarSearch* search, AStarNode* node)
 
 cl_int AStarNodeDistanceHuristic(AStarSearch* search, AStarNode* nodeA, AStarNode* nodeB)
 {
-    return ge_length_v3_Q16(GE_INT3_TO_Q16(GE_INT3_ADD(nodeA->tileIdx, GE_INT3_NEG(nodeB->tileIdx))));
+    return TO_Q16(abs(nodeA->tileIdx.x - nodeB->tileIdx.x) + abs(nodeA->tileIdx.y - nodeB->tileIdx.y) + abs(nodeA->tileIdx.z - nodeB->tileIdx.z));
 }
 
 void AStarPrintNodeStats(AStarNode* node)
@@ -257,36 +261,37 @@ void AStarPrintNodeStats(AStarNode* node)
 void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
 {
     AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
-
-    while (curNode != NULL)
+    int limit = 1000;
+    while (curNode != NULL && limit)
     {
         AStarPrintNodeStats(curNode);
         curNode = curNode->parent;
+        limit--;
     }
-
+    if (limit == 0)
+        printf("limit reached!");
 }
 
 cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile, int maxIterations)
 {
-    if (!MapTileValid(startTile))
+    if (MapTileCoordValid(startTile) == 0)
     {
         return 0;
     }
-    if (!MapTileValid(destTile))
+    if (MapTileCoordValid(destTile) == 0)
     {
         return 0;
     }
-    if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, startTile))
+    if (MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, startTile) == 0)
     {
         return 0;
     }
-    if (!MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, destTile))
+    if (MapTileCoordTraversible(ALL_CORE_PARAMS_PASS, destTile)==0)
     {
         return 0;
     }
 
 
-    AStarSearchInstantiate(search);
 
     AStarNode* startNode = &search->details[startTile.x][startTile.y][startTile.z];
     AStarNode* targetNode = &search->details[destTile.x][destTile.y][destTile.z];
@@ -298,63 +303,68 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
     cl_uchar foundDest = 0;
     int iterationCount = maxIterations;
-    while (search->openHeapSize > 0 && iterationCount)
+    while (search->openHeapSize > 0 && iterationCount > 0)
     {
         
         //find node in open with lowest f cost
         AStarNode* current = AStarRemoveFromOpen(search);
         
-        AStarAddToClosed(search, current);
+        
 
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
-            AStarPrintPathTo(search, destTile);
+            printf("Goal Found\n");
+            startNode->parent = NULL;
             return 1;//found dest
         }
+        
+        //AStarAddToClosed(search, current);
 
 
         //5 neighbors
-        ge_int3 tileCoord = current->tileIdx;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i <= 5; i++)
         { 
             ge_int3 prospectiveTileCoord;
-            prospectiveTileCoord.x = tileCoord.x + staticData->directionalOffsets[i].x;
-            prospectiveTileCoord.y = tileCoord.y + staticData->directionalOffsets[i].y;
-            prospectiveTileCoord.z = tileCoord.z + staticData->directionalOffsets[i].z;
-            
-            if (!MapTileValid(prospectiveTileCoord))
+            prospectiveTileCoord.x = current->tileIdx.x + staticData->directionalOffsets[i].x;
+            prospectiveTileCoord.y = current->tileIdx.y + staticData->directionalOffsets[i].y;
+            prospectiveTileCoord.z = current->tileIdx.z + staticData->directionalOffsets[i].z;
+ 
+            if (MapTileCoordValid(prospectiveTileCoord)==0)
             {
                 continue;
             }
             
             AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
 
-            if (!AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS, current, prospectiveNode) || AStarNodeInClosed(search, prospectiveNode))
+            if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0))
             {
+                printf("A");
                 continue;
             }
 
+
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
 
-            if ((totalMoveCost < prospectiveNode->g_Q16) || !AStarNodeInOpen(search, prospectiveNode))
+            if ((totalMoveCost < prospectiveNode->g_Q16) || prospectiveNode->g_Q16 == 0)
             {
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
                 prospectiveNode->parent = current;
 
-                if (!AStarNodeInOpen(search, prospectiveNode))
-                {
-                    AStarAddToOpen(search, prospectiveNode);
-                }
+
+                printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
+                AStarAddToOpen(search, prospectiveNode);
 
             }
 
 
         }
 
-        iterationCount++;
-
+        iterationCount--;
     }
+
+    
+    printf("FAIL %d\n", search->openHeapSize);
     return foundDest;
 }
 
@@ -1514,7 +1524,22 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].Idx = p;
         gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p,-spread << 16, spread << 16) ;
         gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p+1,-spread << 16, spread << 16) ;
-        gameState->peeps[p].physics.base.pos_Q16.z = TO_Q16(200);
+
+
+        ge_int3 mapcoord;
+        ge_int2 world2D;
+        world2D.x = gameState->peeps[p].physics.base.pos_Q16.x;
+        world2D.y = gameState->peeps[p].physics.base.pos_Q16.y;
+        int occluded;
+
+        GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, MAPDEPTH-1);
+        printf("%d\n", mapcoord.z);
+        mapcoord.z+=2;
+        mapcoord = GE_INT3_TO_Q16(mapcoord);
+
+        ge_int3 worldCoord;
+        MapToWorld(mapcoord, &worldCoord);
+        gameState->peeps[p].physics.base.pos_Q16.z = worldCoord.z;
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(1);
         BITCLEAR(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_deathState);
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_valid);

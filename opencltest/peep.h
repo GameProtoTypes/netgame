@@ -22,7 +22,7 @@
 
 #define MAX_PEEPS (1024*1)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (256)
+#define MAPDIM (64)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
