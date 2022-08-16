@@ -1305,9 +1305,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             {
                 Peep* curPeep = &gameState->peeps[curPeepIdx];
 
-
-                
-
                 //Do an AStarSearch
                 ge_int3 mapcoord;
                 ge_int2 world2D;
@@ -1322,27 +1319,26 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 ge_int3 end = mapcoord;
                 Print_GE_INT3(start);
                 Print_GE_INT3(end);
-                AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+                cl_uchar pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+                if (pathFindSuccess != 0)
+                {
+                    //AStarPrintPathTo(&gameState->mapSearchers[0], end);
+                    AStarFormPathSteps(&gameState->mapSearchers[0], &gameState->pathSteps[0]);
 
-                AStarPrintPathTo(&gameState->mapSearchers[0], end);
-                AStarFormPathSteps(&gameState->mapSearchers[0], &gameState->pathSteps[0]);
 
+                    curPeep->physics.drive.pathIdx = 0;
+                    curPeep->physics.drive.nextPathCoordIdx = gameState->pathSteps[0].size - 1;
+                    ge_int3 worldloc;
+                    MapToWorld(gameState->pathSteps[0].mapCoords_Q16[curPeep->physics.drive.nextPathCoordIdx], &worldloc);
+                    curPeep->physics.drive.target_x_Q16 = worldloc.x;
+                    curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                    curPeep->physics.drive.drivingToTarget = 1;
 
-                curPeep->physics.drive.pathIdx = 0;
-                curPeep->physics.drive.nextPathCoordIdx = gameState->pathSteps[0].size - 1;
-                ge_int3 worldloc;
-                MapToWorld(gameState->pathSteps[0].mapCoords_Q16[curPeep->physics.drive.nextPathCoordIdx], &worldloc);
-                curPeep->physics.drive.target_x_Q16 = worldloc.x;
-                curPeep->physics.drive.target_y_Q16 = worldloc.y;
-                curPeep->physics.drive.drivingToTarget = 1;
-
-                
-
-                //restrict comms to new channel
-                curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
-                curPeep->comms.message_TargetReached = 0;
-                curPeep->comms.message_TargetReached_pending = 0;
-
+                    //restrict comms to new channel
+                    curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
+                    curPeep->comms.message_TargetReached = 0;
+                    curPeep->comms.message_TargetReached_pending = 0;
+                }
                 curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
             }
         }
