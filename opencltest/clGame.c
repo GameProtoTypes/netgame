@@ -1300,14 +1300,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
         else if (clientAction->actionCode == ClientActionCode_CommandToLocation)
         {
+            
             cl_uint curPeepIdx = client->selectedPeepsLastIdx;
-            while (curPeepIdx != OFFSET_NULL)
+            ge_int3 mapcoord;
+            ge_int2 world2D;
+            cl_uchar pathFindSuccess;
+            if (curPeepIdx != OFFSET_NULL)
             {
-                Peep* curPeep = &gameState->peeps[curPeepIdx];
-
                 //Do an AStarSearch
-                ge_int3 mapcoord;
-                ge_int2 world2D;
+                Peep* curPeep = &gameState->peeps[curPeepIdx];
                 world2D.x = clientAction->intParameters[CAC_CommandToLocation_Param_X_Q16];
                 world2D.y = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 int occluded;
@@ -1319,12 +1320,21 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 ge_int3 end = mapcoord;
                 Print_GE_INT3(start);
                 Print_GE_INT3(end);
-                cl_uchar pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+                pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
                 if (pathFindSuccess != 0)
                 {
                     //AStarPrintPathTo(&gameState->mapSearchers[0], end);
                     AStarFormPathSteps(&gameState->mapSearchers[0], &gameState->pathSteps[0]);
+                }
+            }
 
+            while (curPeepIdx != OFFSET_NULL)
+            {
+                Peep* curPeep = &gameState->peeps[curPeepIdx];
+
+                
+                if (pathFindSuccess != 0)
+                {
 
                     curPeep->physics.drive.pathIdx = 0;
                     curPeep->physics.drive.nextPathCoordIdx = gameState->pathSteps[0].size - 1;

@@ -646,7 +646,7 @@
 
 				 SLNet::DataCompressor compressor;
 				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer.get()) + CLIENT_nextTransferOffset);
-
+				 
 
 
 				 CLIENT_nextTransferOffset += chunkSize;
