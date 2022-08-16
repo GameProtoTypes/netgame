@@ -73,7 +73,7 @@ void AStarSearchInstantiate(AStarSearch* search)
 
 
 
-
+    search->endNode = NULL;
     search->openHeapSize = 0;
 }
 
@@ -310,6 +310,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
             printf("Goal Found\n");
+            search->endNode = targetNode;
             startNode->parent = NULL;
             return 1;//found dest
         }
@@ -360,6 +361,29 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     return foundDest;
 }
 
+void AStarFormPathSteps(AStarSearch* search, AStarPathSteps* steps)
+{
+    AStarNode* curNode = search->endNode;
+    int i = 0;
+    while (curNode != NULL)
+    {
+
+
+        ge_int3 tileCenter = GE_INT3_TO_Q16(curNode->tileIdx);
+        tileCenter.x +=TO_Q16(1) >> 1;
+        tileCenter.y +=  TO_Q16(1) >> 1;
+        tileCenter.z += TO_Q16(1) >> 1;
+
+        CL_CHECKED_ARRAY_SET(steps->mapCoords_Q16, ASTARPATHSTEPSSIZE, i, tileCenter)
+        
+        //put location at center of tile
+
+
+        curNode = curNode->parent;
+        i++;
+    }
+    steps->size = i;
+}
 
 
 void PeepPrint(Peep* peep)
@@ -660,11 +684,27 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         d.z = MUL_PAD_Q16(d.z, len);
     }
 
-    if (WHOLE_Q16(len) < 2)
+    if (WHOLE_Q16(len) < 2)//within range of current target
     {
         if (peep->physics.drive.drivingToTarget)
         {
-            peep->comms.message_TargetReached_pending = 255;//send the message
+            printf("idx: %d\n", peep->physics.drive.nextPathCoordIdx);
+            if (peep->physics.drive.nextPathCoordIdx == 0)
+            {
+                //final node reached.
+                peep->comms.message_TargetReached_pending = 255;//send the message
+            }
+            else
+            {
+                peep->physics.drive.nextPathCoordIdx--;
+                ge_int3 nextTarget = gameState->pathSteps[peep->physics.drive.pathIdx].mapCoords_Q16[peep->physics.drive.nextPathCoordIdx];
+                MapToWorld(nextTarget, &nextTarget);
+                
+                peep->physics.drive.target_x_Q16 = nextTarget.x;
+                peep->physics.drive.target_y_Q16 = nextTarget.y;
+            }
+
+
             
         }
     }
@@ -954,10 +994,6 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
     }
 
 
-
-
-
-
     //revert position to last good if needed
     MapTile curTile;
     ge_int3 dummy;
@@ -966,13 +1002,17 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
     if (curTile != MapTile_NONE)
     {
+        //revert to center of last good map position
         ge_int3 lastGoodPos;
-        MapToWorld(peep->lastGoodPosMap_Q16, &lastGoodPos);
+        MapToWorld(GE_INT3_WHOLE_ONLY_Q16(peep->lastGoodPosMap_Q16), &lastGoodPos);
+        lastGoodPos.x += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+        lastGoodPos.y += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+        lastGoodPos.z += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+
 
         peep->physics.base.pos_post_Q16.x += lastGoodPos.x - peep->physics.base.pos_Q16.x;
         peep->physics.base.pos_post_Q16.y += lastGoodPos.y - peep->physics.base.pos_Q16.y;
         peep->physics.base.pos_post_Q16.z += lastGoodPos.z - peep->physics.base.pos_Q16.z;
-
     }
     else
     {
@@ -1196,8 +1236,6 @@ void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_i
 
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
-
-
     cl_uint curPeepIdx = gameState->clientStates[gameStateB->clientId].selectedPeepsLastIdx;
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
@@ -1266,17 +1304,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             while (curPeepIdx != OFFSET_NULL)
             {
                 Peep* curPeep = &gameState->peeps[curPeepIdx];
-                curPeep->physics.drive.target_x_Q16 = clientAction->intParameters[CAC_CommandToLocation_Param_X_Q16];
-                curPeep->physics.drive.target_y_Q16 = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
-                curPeep->physics.drive.drivingToTarget = 1;
+
 
                 
 
                 //Do an AStarSearch
                 ge_int3 mapcoord;
                 ge_int2 world2D;
-                world2D.x = curPeep->physics.drive.target_x_Q16;
-                world2D.y = curPeep->physics.drive.target_y_Q16;
+                world2D.x = clientAction->intParameters[CAC_CommandToLocation_Param_X_Q16];
+                world2D.y = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 int occluded;
 
                 GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateB->mapZView);
@@ -1289,12 +1325,18 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
                 AStarPrintPathTo(&gameState->mapSearchers[0], end);
+                AStarFormPathSteps(&gameState->mapSearchers[0], &gameState->pathSteps[0]);
 
 
+                curPeep->physics.drive.pathIdx = 0;
+                curPeep->physics.drive.nextPathCoordIdx = gameState->pathSteps[0].size - 1;
+                ge_int3 worldloc;
+                MapToWorld(gameState->pathSteps[0].mapCoords_Q16[curPeep->physics.drive.nextPathCoordIdx], &worldloc);
+                curPeep->physics.drive.target_x_Q16 = worldloc.x;
+                curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                curPeep->physics.drive.drivingToTarget = 1;
 
-
-
-
+                
 
                 //restrict comms to new channel
                 curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
@@ -1314,7 +1356,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             ge_int3 mapCoord;
             int occluded;
-            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateB->mapZView-1);
+            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateB->mapZView+1);
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
@@ -1532,6 +1574,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         ge_int3 worldCoord;
         MapToWorld(mapcoord, &worldCoord);
         gameState->peeps[p].physics.base.pos_Q16.z = worldCoord.z;
+        WorldToMap(gameState->peeps[p].physics.base.pos_Q16, &gameState->peeps[p].posMap_Q16);
+        gameState->peeps[p].lastGoodPosMap_Q16 = gameState->peeps[p].posMap_Q16;
+
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(1);
         BITCLEAR(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_deathState);
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_valid);

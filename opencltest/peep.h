@@ -32,6 +32,8 @@
 #define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (8)
 
+#define MAX_PATHS (32)
+
 #define MAX_CLIENTS (1024)
 
 
@@ -95,6 +97,9 @@ struct DrivePhysics
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
 
+	cl_int nextPathCoordIdx;
+	cl_int pathIdx;
+
 	int drivingToTarget;
 }typedef DrivePhysics;
 
@@ -136,6 +141,7 @@ struct Peep {
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
 	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
 
+	
 
 } typedef Peep;
 #pragma pack(pop)
@@ -215,23 +221,25 @@ struct AStarNode {
 	struct AStarNode* parent;
 } typedef AStarNode;
 
-#define AStarSetSize (512)
+
 struct AStarSearch {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
 	AStarNode* openHeap[MAPDIM * MAPDIM * MAPDEPTH];
 	cl_int openHeapSize;
-
+	AStarNode* endNode;
 
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
 	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
 	
 } typedef AStarSearch;
 
+#define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarPathSteps
 {
-	cl_uchar steps[(MAPDIM*MAPDIM*MAPDEPTH)/10];
-};
+	ge_int3 mapCoords_Q16[ASTARPATHSTEPSSIZE];
+	int size;
+}typedef AStarPathSteps;
 
 enum ClientActionCode {
 	ClientActionCode_DoSelect,
@@ -314,6 +322,7 @@ struct GameState {
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 	AStarSearch mapSearchers[8];
+	AStarPathSteps pathSteps[MAX_PATHS];
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;

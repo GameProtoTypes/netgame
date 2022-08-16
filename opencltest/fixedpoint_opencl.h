@@ -32,6 +32,7 @@
 #define GE_INT3_TO_Q16(ge)((ge_int3){TO_Q16(ge.x),TO_Q16(ge.y),TO_Q16(ge.z)})
 
 #define GE_INT3_WHOLE_Q16(ge)((ge_int3){WHOLE_Q16(ge.x),WHOLE_Q16(ge.y),WHOLE_Q16(ge.z)})
+#define GE_INT3_WHOLE_ONLY_Q16(ge)((ge_int3){WHOLE_ONLY_Q16(ge.x),WHOLE_ONLY_Q16(ge.y),WHOLE_ONLY_Q16(ge.z)})
 
 
 
