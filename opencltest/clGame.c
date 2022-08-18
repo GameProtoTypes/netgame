@@ -68,6 +68,7 @@ void AStarNodeInstantiate(AStarNode* node)
 {
     node->g_Q16 = TO_Q16(0);
     node->h_Q16 = TO_Q16(0);
+    node->child = NULL;  
     node->parent = NULL;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
@@ -283,14 +284,27 @@ void AStarPrintNodeStats(AStarNode* node)
     Print_GE_SHORT3(node->tileIdx);
     printf(" H: %f, G: %f\n", FIXED2FLTQ16(node->h_Q16), FIXED2FLTQ16(node->g_Q16));
 }
-
+void AStarPrintPathNodeStats(AStarPathNode* node)
+{
+    printf("Node: Loc: ");
+    Print_GE_INT3(node->mapCoord_Q16);
+}
 void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
 {
     AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
-        curNode = curNode->parent;
+        curNode = curNode->child;
+    }
+}
+void AStarPrintPath(AStarPathNode* startNode)
+{
+    AStarNode* curNode = startNode;
+    while (curNode != NULL)
+    {
+        AStarPrintNodeStats(curNode);
+        curNode = curNode->child;
     }
 }
 
@@ -317,6 +331,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
     AStarNode* startNode = &search->details[startTile.x][startTile.y][startTile.z];
     AStarNode* targetNode = &search->details[destTile.x][destTile.y][destTile.z];
+    search->startNode = startNode;
 
     //add start to openList
     startNode->h_Q16 = AStarNodeDistanceHuristic(search, startNode, targetNode);
@@ -337,6 +352,8 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         {
             printf("Goal Found\n");
             search->endNode = targetNode;
+            
+            search->endNode->child = NULL;
             startNode->parent = NULL;
             return 1;//found dest
         }
@@ -371,8 +388,8 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             {
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
+                current->child = prospectiveNode;
                 prospectiveNode->parent = current;
-
 
                // printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
                 AStarAddToOpen(search, prospectiveNode);
@@ -387,28 +404,89 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     return foundDest;
 }
 
-void AStarFormPathSteps(AStarSearch* search, AStarPathSteps* steps)
+cl_uchar GE_INT3_SINGLE_ENTRY(ge_int3 a)
 {
-    AStarNode* curNode = search->endNode;
+    int s = 0;
+    if (a.x != 0)
+        s++;
+    if (a.y != 0)
+        s++;
+    if (a.z != 0)
+        s++;
+
+    if (s == 1)
+        return 1;
+    else
+        return 0;
+}
+
+int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
+{
+    int idx = list->nextListIdx;
+    while (list->pathNodes[idx].nextPathNode != NULL || list->pathNodes[idx].nextPathNode == -1)
+    {
+        idx++;
+        if (idx >= ASTARPATHSTEPSSIZE)
+            idx = 0;
+    }
+    list->nextListIdx = idx;
+    return idx;
+}
+
+AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathSteps* steps)
+{
+    //grab a unused Node from pathNodes, and start building a list.
+    //NF_BAGRAOD.JK_FPUHJK:S *
+
+
+
+
+    AStarNode* curNode = search->startNode;
+
+    AStarPathNode* startNode = NULL;
+    AStarPathNode* pNP = NULL;
     int i = 0;
     while (curNode != NULL)
-    {
+    { 
+        printf("TEST: %d\n", i);
+        AStarPathNode* pN = &gameState->paths.pathNodes[AStarPathStepsNextFreePathNode(&gameState->paths)];
+        if (i == 0)
+            startNode = pN;
 
 
-        ge_int3 tileCenter = GE_INT3_TO_Q16(curNode->tileIdx);
-        tileCenter.x +=TO_Q16(1) >> 1;
-        tileCenter.y +=  TO_Q16(1) >> 1;
+        ge_int3 holdTileCoord = GE_SHORT3_TO_INT3(  curNode->tileIdx);
+        //put location at center of tile
+        ge_int3 tileCenter = GE_INT3_TO_Q16(holdTileCoord);
+        tileCenter.x += TO_Q16(1) >> 1;
+        tileCenter.y += TO_Q16(1) >> 1;
         tileCenter.z += TO_Q16(1) >> 1;
 
-        CL_CHECKED_ARRAY_SET(steps->mapCoords_Q16, ASTARPATHSTEPSSIZE, i, tileCenter)
-        
-        //put location at center of tile
+        pN->mapCoord_Q16 = tileCenter;
+        if (pNP != NULL)
+        {
+            pNP->nextPathNode = pN;
+        }
+        pNP = pN;
 
+
+        printf("TEST2: %d\n", i);
+
+        //iterate until joint in path.
+        ge_int3 sub;
+        do
+        {
+            if (curNode->child == NULL)
+                break;
+            curNode = curNode->child;
+ 
+
+            sub = GE_INT3_ADD(curNode->tileIdx, GE_INT3_NEG(holdTileCoord));
+        } while (GE_INT3_SINGLE_ENTRY(sub) == 1);
 
         curNode = curNode->parent;
         i++;
     }
-    steps->size = i;
+    return startNode;
 }
 
 
@@ -712,24 +790,21 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     {
         if (peep->physics.drive.drivingToTarget)
         {
-            printf("idx: %d\n", peep->physics.drive.nextPathCoordIdx);
-            if (peep->physics.drive.nextPathCoordIdx == 0)
+
+            if (peep->physics.drive.nextPathNode == NULL)
             {
                 //final node reached.
                 peep->comms.message_TargetReached_pending = 255;//send the message
             }
             else
             {
-                peep->physics.drive.nextPathCoordIdx--;
-                ge_int3 nextTarget = gameState->pathSteps[peep->physics.drive.pathIdx].mapCoords_Q16[peep->physics.drive.nextPathCoordIdx];
-                MapToWorld(nextTarget, &nextTarget);
+                peep->physics.drive.nextPathNode = peep->physics.drive.nextPathNode->nextPathNode;
+                ge_int3 nextTarget_Q16 = peep->physics.drive.nextPathNode->mapCoord_Q16;
+                MapToWorld(nextTarget_Q16, &nextTarget_Q16);
                 
-                peep->physics.drive.target_x_Q16 = nextTarget.x;
-                peep->physics.drive.target_y_Q16 = nextTarget.y;
+                peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
             }
-
-
-            
         }
     }
 
@@ -1328,6 +1403,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             ge_int3 mapcoord;
             ge_int2 world2D;
             cl_uchar pathFindSuccess;
+            AStarPathNode* path;
             if (curPeepIdx != OFFSET_NULL)
             {
                 //Do an AStarSearch
@@ -1347,7 +1423,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 if (pathFindSuccess != 0)
                 {
                     //AStarPrintPathTo(&gameState->mapSearchers[0], end);
-                    AStarFormPathSteps(&gameState->mapSearchers[0], &gameState->pathSteps[0]);
+                    path = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
+                    AStarPrintPath(path);
                 }
             }
 
@@ -1359,10 +1436,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 if (pathFindSuccess != 0)
                 {
 
-                    curPeep->physics.drive.pathIdx = 0;
-                    curPeep->physics.drive.nextPathCoordIdx = gameState->pathSteps[0].size - 1;
+                    curPeep->physics.drive.nextPathNode = path;
                     ge_int3 worldloc;
-                    MapToWorld(gameState->pathSteps[0].mapCoords_Q16[curPeep->physics.drive.nextPathCoordIdx], &worldloc);
+                    MapToWorld(curPeep->physics.drive.nextPathNode->mapCoord_Q16, &worldloc);
                     curPeep->physics.drive.target_x_Q16 = worldloc.x;
                     curPeep->physics.drive.target_y_Q16 = worldloc.y;
                     curPeep->physics.drive.drivingToTarget = 1;
@@ -1443,7 +1519,6 @@ void CreateMap(ALL_CORE_PARAMS)
                     {
                         tileType = MapTile_DiamondOre;
                     }
-
 
                     if (z == 0)
                     {

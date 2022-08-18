@@ -20,9 +20,9 @@
 #define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*1)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (512)
+#define MAPDIM (128)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
@@ -92,13 +92,20 @@ struct PhysicsCircleShape
 {
 	int radius_Q16;
 }typedef PhysicsCircleShape;
+
+
+struct AStarPathNode
+{
+	ge_int3 mapCoord_Q16;
+	struct AStarPathNode* nextPathNode;
+}typedef AStarPathNode;
+
 struct DrivePhysics
 {
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
 
-	cl_int nextPathCoordIdx;
-	cl_int pathIdx;
+	AStarPathNode* nextPathNode;
 
 	int drivingToTarget;
 }typedef DrivePhysics;
@@ -218,6 +225,7 @@ struct AStarNode {
 	ge_short3 tileIdx;
 	int h_Q16;
 	int g_Q16;
+	struct AStarNode* child;
 	struct AStarNode* parent;
 } typedef AStarNode;
 
@@ -228,6 +236,7 @@ struct AStarSearch {
 	AStarNode* openHeap[ASTARHEAPSIZE];
 	cl_int openHeapSize;
 	AStarNode* endNode;
+	AStarNode* startNode;
 
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
 	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
@@ -239,8 +248,8 @@ struct AStarSearch {
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarPathSteps
 {
-	ge_int3 mapCoords_Q16[ASTARPATHSTEPSSIZE];
-	int size;
+	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
+	int nextListIdx;
 }typedef AStarPathSteps;
 
 enum ClientActionCode {
@@ -324,7 +333,7 @@ struct GameState {
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 	AStarSearch mapSearchers[1];
-	AStarPathSteps pathSteps[MAX_PATHS];
+	AStarPathSteps paths;
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
