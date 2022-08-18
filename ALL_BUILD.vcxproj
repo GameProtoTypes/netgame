@@ -181,9 +181,25 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{D9FBD729-91FB-399B-8398-1B6264E4AA50}</Project>
       <Name>SLikeNet</Name>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\zlib\example.vcxproj">
+      <Project>{BE623A48-20BC-3609-B978-7E1A2DA325A0}</Project>
+      <Name>example</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\imgui.vcxproj">
       <Project>{B026A10B-95D7-3CE9-AF12-804942B93F78}</Project>
       <Name>imgui</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\zlib\minigzip.vcxproj">
+      <Project>{D939D14B-09FC-35BE-AB15-488E1AFEB20C}</Project>
+      <Name>minigzip</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\zlib\zlib.vcxproj">
+      <Project>{2BE9D356-CDE2-3311-93BD-E99E1D1BC2EA}</Project>
+      <Name>zlib</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\casht\repos\opencltest\zlib\zlibstatic.vcxproj">
+      <Project>{A6BB4C08-9A1E-3FC7-829A-B6B176AC4912}</Project>
+      <Name>zlibstatic</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

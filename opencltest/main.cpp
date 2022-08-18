@@ -61,11 +61,11 @@ int32_t main(int32_t argc, char* args[])
     GameGraphics gameGraphics;
 
     std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
-    std::shared_ptr<GameStateB> gameStateB = std::make_shared<GameStateB>();
+    std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
-    GameGPUCompute gameCompute(gameState, gameStateB, &gameGraphics);
+    GameGPUCompute gameCompute(gameState, gameStateActions, &gameGraphics);
    
-    GameNetworking gameNetworking(gameState, gameStateB, &gameCompute);
+    GameNetworking gameNetworking(gameState, gameStateActions, &gameCompute);
         
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
 
@@ -83,7 +83,7 @@ int32_t main(int32_t argc, char* args[])
 
     gameState->map.mapHeight = 2000;
     gameState->map.mapWidth = 2000;
-    gameStateB->tickIdx = 0;
+    gameStateActions->tickIdx = 0;
 
     std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
     std::cout << "Map Size (bytes): " << sizeof(Map) << std::endl;
@@ -292,7 +292,7 @@ int32_t main(int32_t argc, char* args[])
                 actionWrap.action.intParameters[CAC_DoSelect_Param_StartY_Q16] = cl_int(starty * (1 << 16));
                 actionWrap.action.intParameters[CAC_DoSelect_Param_EndX_Q16] = cl_int(endx * (1 << 16));
                 actionWrap.action.intParameters[CAC_DoSelect_Param_EndY_Q16] = cl_int(endy * (1 << 16));
-                actionWrap.action.intParameters[CAC_DoSelect_Param_ZMapView] = gameStateB->mapZView;
+                actionWrap.action.intParameters[CAC_DoSelect_Param_ZMapView] = gameStateActions->mapZView;
 
 
                 clientActions.push_back(actionWrap);
@@ -358,7 +358,7 @@ int32_t main(int32_t argc, char* args[])
 
         ImGui::Begin("View");
             ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, MAPDEPTH-1);
-            gameStateB->mapZView = rclientst->viewZIdx;
+            gameStateActions->mapZView = rclientst->viewZIdx;
         ImGui::End();
 
         ImGui::Begin("Commands");
@@ -382,15 +382,15 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        if (gameStateB->pauseState == 0)
+        if (gameStateActions->pauseState == 0)
         {
             if (ImGui::Button("PAUSE"))
-                gameStateB->pauseState = 1;
+                gameStateActions->pauseState = 1;
         }
         else
         {
             if (ImGui::Button("RESUME"))
-                gameStateB->pauseState = 0;
+                gameStateActions->pauseState = 0;
         }
         ImGui::Begin("Network");
         static int32_t port = 50010;
@@ -433,7 +433,7 @@ int32_t main(int32_t argc, char* args[])
         if (ImGui::Button("Send Message"))
         {
             char buffer[256];
-            sprintf(buffer, "HELLOOOO %d", gameStateB->tickIdx);
+            sprintf(buffer, "HELLOOOO %d", gameStateActions->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
         ImGui::Text("FrameTime: %d, TargetTickTime: %d, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
@@ -483,6 +483,11 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(0);
 
 
+        //draw map shadows
+        gameGraphics.pMapTileShadProgram->Use();
+        glBindVertexArray(gameGraphics.mapTile2VAO);
+        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
+        glBindVertexArray(0);
 
         //draw all peeps
         glEnable(GL_BLEND);
@@ -496,11 +501,7 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(0);
 
 
-        //draw map shadows
-        gameGraphics.pMapTileShadProgram->Use();
-        glBindVertexArray(gameGraphics.mapTile2VAO);
-        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
-        glBindVertexArray(0);
+
 
 
 
@@ -548,8 +549,8 @@ int32_t main(int32_t argc, char* args[])
             glDeleteBuffers(1, &mouseVBO);
         }
 
-        if(gameStateB->pauseState==0)
-            gameStateB->tickIdx++;
+        if(gameStateActions->pauseState==0)
+            gameStateActions->tickIdx++;
 
         GSCS(D)
         gameCompute.WriteGameStateB();
@@ -563,7 +564,7 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
-        ImGui::Text("TickIdx: %d", gameStateB->tickIdx);
+        ImGui::Text("TickIdx: %d", gameStateActions->tickIdx);
         ImGui::End();
 
 

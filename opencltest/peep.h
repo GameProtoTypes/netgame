@@ -22,7 +22,7 @@
 
 #define MAX_PEEPS (1024*32)
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (256)
+#define MAPDIM (512)
 #define MAPDEPTH (32)
 #define MAP_TILE_SIZE (5)
 
@@ -215,24 +215,26 @@ struct MapSector {
 
 
 struct AStarNode {
-	ge_int3 tileIdx;
+	ge_short3 tileIdx;
 	int h_Q16;
 	int g_Q16;
 	struct AStarNode* parent;
 } typedef AStarNode;
 
-
+#define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarSearch {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
-	AStarNode* openHeap[MAPDIM * MAPDIM * MAPDEPTH];
+	AStarNode* openHeap[ASTARHEAPSIZE];
 	cl_int openHeapSize;
 	AStarNode* endNode;
 
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
-	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];//TODO MERGE these 2 using bitwise
+	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
 	
 } typedef AStarSearch;
+
+
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarPathSteps
@@ -321,14 +323,14 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch mapSearchers[8];
+	AStarSearch mapSearchers[1];
 	AStarPathSteps pathSteps[MAX_PATHS];
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];
 	cl_int numClients;
 } typedef GameState;
 
-struct GameStateB {
+struct GameStateActions {
 	ActionWrap clientActions[32];
 	cl_int numActions;
 
@@ -345,4 +347,5 @@ struct GameStateB {
 
 	cl_int dummyVars[32];
 
-}typedef GameStateB;
+}typedef GameStateActions;
+

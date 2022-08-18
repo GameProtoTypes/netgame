@@ -13,6 +13,14 @@ struct ge_int3
 	int z;
 }typedef ge_int3;
 
+struct ge_short3
+{
+	short x;
+	short y;
+	short z;
+}typedef ge_short3;
+
+
 struct ge_uint2
 {
 	unsigned int x;
@@ -45,3 +53,9 @@ struct ge_int4
 #define GE_VECTOR3_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y) && (a.z == b.z))
 
 
+#define GE_SHORT3_TO_INT3(a) ((ge_int3){a.x, a.y, a.z})
+
+
+void Print_GE_INT2(ge_int2 v);
+void Print_GE_INT3(ge_int3 v);
+void Print_GE_SHORT3(ge_short3 v);

@@ -14,6 +14,9 @@
 #include "slikenet/BitStream.h"
 #include "slikenet/DataCompressor.h"
 
+
+#include "zlib.h"
+
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -23,6 +26,9 @@
 #include "peep.h"
 
 #include "GameGPUCompute.h"
+
+
+
 
 #define GAMESERVERPORT (50010)
 
@@ -42,10 +48,10 @@
 class GameNetworking
 {
 public:
-	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGPUCompute* gameCompute) {
+	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGPUCompute* gameCompute) {
 	
 		this->gameState = gameState;
-		this->gameStateB = gameStateB;
+		this->gameStateActions = gameStateActions;
 		this->gameCompute = gameCompute;
 	}
 	~GameNetworking() {}
@@ -177,12 +183,12 @@ public:
 
 	std::string HostConsolePrint() { std::string str;
 		char buff[100];
-		snprintf(buff, sizeof(buff), "[HOST (tickIdx: %d)] ", gameStateB->tickIdx);
+		snprintf(buff, sizeof(buff), "[HOST (tickIdx: %d)] ", gameStateActions->tickIdx);
 		return buff;
 	}
 	std::string ClientConsolePrint() {
 		char buff[100];
-		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameStateB->tickIdx);
+		snprintf(buff, sizeof(buff), "[CLIENT (tickIdx: %d)] ", gameStateActions->tickIdx);
 		return buff;
 	}
 
@@ -194,14 +200,14 @@ public:
 	GameGPUCompute* gameCompute = nullptr;
 
 	std::shared_ptr<GameState> gameState;
-	std::shared_ptr<GameStateB> gameStateB;
+	std::shared_ptr<GameStateActions> gameStateActions;
 
 	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
 	std::shared_ptr<GameState> HOST_gameStateTransfer;
 	
 	struct snapshotWrap {
 		std::shared_ptr<GameState> gameState;
-		std::shared_ptr<GameStateB> gameStateB;
+		std::shared_ptr<GameStateActions> gameStateActions;
 		uint64_t checksum = static_cast<uint64_t>( -1 );
 		
 	};

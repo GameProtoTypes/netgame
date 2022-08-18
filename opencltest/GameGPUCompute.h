@@ -28,7 +28,7 @@ class GameGPUCompute
 public:
 
 
-	GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateB> gameStateB, GameGraphics* graphics);
+	GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGraphics* graphics);
 	~GameGPUCompute();
 
 
@@ -93,7 +93,7 @@ public:
 
 
 	std::shared_ptr<GameState> gameState;
-	std::shared_ptr<GameStateB> gameStateB;
+	std::shared_ptr<GameStateActions> gameStateActions;
 	GameGraphics* graphics = nullptr;
 
 	std::vector<std::pair<std::string, GPUCompileVariant>> compileDefinitions;

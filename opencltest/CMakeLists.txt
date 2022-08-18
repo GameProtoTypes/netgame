@@ -100,6 +100,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../zlib"
    
 
 )
@@ -130,6 +131,7 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "glew32;"
     "glfw3;"
     "imgui;"
+    "zlibstatic;"
     "SLikeNet"
 )
 

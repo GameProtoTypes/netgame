@@ -114,14 +114,7 @@ void Print_GE_INT2_Q16(ge_int2 fixed_Q16)
 {
     printf("{%f,%f}\n", FixedToFloat(fixed_Q16.x, 16), FixedToFloat(fixed_Q16.y, 16));
 }
-void Print_GE_INT2(ge_int2 v)
-{
-    printf("{%d,%d}\n", v.x,v.y);
-}
-void Print_GE_INT3(ge_int3 v)
-{
-    printf("{%d,%d,%d}\n", v.x, v.y, v.z);
-}
+
 //Component Wise Division and Multiplication
 ge_int2 DIV_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 {

@@ -9,7 +9,7 @@
 
 #define ALL_CORE_PARAMS  __global StaticData* staticData, \
 __global GameState* gameState,\
-__global GameStateB* gameStateB, \
+__global GameStateActions* gameStateActions, \
 __global float* peepVBOBuffer, \
 __global cl_uint* mapTile1VBO, \
 __global cl_uint* mapTile1AttrVBO, \
@@ -18,12 +18,34 @@ __global cl_uint* mapTile2AttrVBO
 
 #define ALL_CORE_PARAMS_PASS  staticData, \
 gameState, \
-gameStateB, \
+gameStateActions, \
 peepVBOBuffer, \
 mapTile1VBO, \
 mapTile1AttrVBO, \
 mapTile2VBO, \
 mapTile2AttrVBO
+
+
+
+
+
+void Print_GE_INT2(ge_int2 v)
+{
+    printf("{%d,%d}\n", v.x, v.y);
+}
+void Print_GE_INT3(ge_int3 v)
+{
+    printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+}
+void Print_GE_SHORT3(ge_short3 v)
+{
+    printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+}
+
+
+
+
+
 
 MapTile GetMapTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
@@ -63,7 +85,7 @@ void AStarSearchInstantiate(AStarSearch* search)
             {
                 AStarNode* node = &search->details[x][y][z];
                 AStarNodeInstantiate(node);
-                node->tileIdx = (ge_int3){x,y,z};
+                node->tileIdx = (ge_short3){x,y,z};
 
                 search->closedMap[x][y][z] = 0;
                 search->openMap[x][x][x] = 0;
@@ -87,12 +109,12 @@ cl_uchar MapTileCoordValid(ge_int3 mapcoord)
 }
 cl_uchar AStarNodeValid(AStarNode* node)
 {
-    return MapTileCoordValid(node->tileIdx);
+    return MapTileCoordValid(GE_SHORT3_TO_INT3(node->tileIdx));
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
 
-    MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, node->tileIdx);
+    MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
     if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tile)==0)
         return 0;
 
@@ -230,14 +252,18 @@ void AStarOpenHeapInsert(AStarSearch* search, AStarNode* node)
     search->openHeap[search->openHeapSize] = node;
     AStarOpenHeapTrickleUp(search, search->openHeapSize);
     search->openHeapSize++;
+    if (search->openHeapSize > ASTARHEAPSIZE)
+        printf("ERROR: AStarHeap Size Greater than ASTARHEAPSIZE!\n");
 }
 void AStarAddToOpen(AStarSearch* search, AStarNode* node)
 {
-
     AStarOpenHeapInsert(search, node);
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
-
 }
+
+
+
+
 
 
 
@@ -254,7 +280,7 @@ cl_int AStarNodeDistanceHuristic(AStarSearch* search, AStarNode* nodeA, AStarNod
 void AStarPrintNodeStats(AStarNode* node)
 {
     printf("Node: Loc: ");
-    Print_GE_INT3(node->tileIdx);
+    Print_GE_SHORT3(node->tileIdx);
     printf(" H: %f, G: %f\n", FIXED2FLTQ16(node->h_Q16), FIXED2FLTQ16(node->g_Q16));
 }
 
@@ -667,8 +693,6 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
 void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
 {
-
-    ge_int3 driveForce; //force to keep peep moving at near constant velocity
     ge_int3 targetVelocity;
 
     ge_int3 d;
@@ -684,7 +708,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         d.z = MUL_PAD_Q16(d.z, len);
     }
 
-    if (WHOLE_Q16(len) < 2)//within range of current target
+    if (WHOLE_Q16(len) < 1)//within range of current target
     {
         if (peep->physics.drive.drivingToTarget)
         {
@@ -979,10 +1003,10 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 
     //update visibility
-    if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (gameStateB->mapZView_1 != gameStateB->mapZView))
+    if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (gameStateActions->mapZView_1 != gameStateActions->mapZView))
     {
      
-        if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, gameStateB->mapZView))
+        if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, gameStateActions->mapZView))
         {
             
             BITSET(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
@@ -1035,7 +1059,7 @@ void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
     }
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
-    for (int z = gameStateB->mapZView; z >= 1; z--)
+    for (int z = gameStateActions->mapZView; z >= 1; z--)
     {       
         MapTile center = gameState->map.levels[z].tiles[x][y];
         MapTile below = gameState->map.levels[z].tiles[x][y];
@@ -1117,11 +1141,11 @@ void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
 
 void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
 {
-    MapTile tileIdx = gameState->map.levels[gameStateB->mapZView].tiles[x][y];
+    MapTile tileIdx = gameState->map.levels[gameStateActions->mapZView].tiles[x][y];
     MapTile tileUpIdx;
-    if (gameStateB->mapZView < MAPDEPTH-1)
+    if (gameStateActions->mapZView < MAPDEPTH-1)
     {
-        tileUpIdx = gameState->map.levels[gameStateB->mapZView + 1].tiles[x][y];
+        tileUpIdx = gameState->map.levels[gameStateActions->mapZView + 1].tiles[x][y];
     }
     else
     {
@@ -1134,7 +1158,7 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
     {
         //look down...
         MapTile tileDownIdx = tileIdx;
-        int z = gameStateB->mapZView;
+        int z = gameStateActions->mapZView;
         int vz = 0;
         while (tileDownIdx == MapTile_NONE)
         {
@@ -1213,11 +1237,11 @@ void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_i
         if (tile != MapTile_NONE)
         {
             (*mapcoord_whole).z = z;
-            if (z == gameStateB->mapZView-1)
+            if (z == gameStateActions->mapZView-1)
             {
                 *occluded = 1;
             }
-            else if (z == gameStateB->mapZView)
+            else if (z == gameStateActions->mapZView)
             {
                 *occluded = 1;
             }
@@ -1236,25 +1260,25 @@ void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_i
 
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
-    cl_uint curPeepIdx = gameState->clientStates[gameStateB->clientId].selectedPeepsLastIdx;
+    cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
     {
         Peep* p = &gameState->peeps[curPeepIdx];
 
-        gameState->clientStates[gameStateB->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
+        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
-        curPeepIdx = p->prevSelectionPeepIdx[gameStateB->clientId];
+        curPeepIdx = p->prevSelectionPeepIdx[gameStateActions->clientId];
     }
 
 
 
 
     //apply turns
-    for (int32_t a = 0; a < gameStateB->numActions; a++)
+    for (int32_t a = 0; a < gameStateActions->numActions; a++)
     {
-        ClientAction* clientAction = &gameStateB->clientActions[a].action;
-        ActionTracking* actionTracking = &gameStateB->clientActions[a].tracking;
+        ClientAction* clientAction = &gameStateActions->clientActions[a].action;
+        ActionTracking* actionTracking = &gameStateActions->clientActions[a].tracking;
         cl_uchar cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
@@ -1291,7 +1315,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                 client->selectedPeepsLastIdx = pi;
 
                                 PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
-
                             }
 
                         }
@@ -1313,7 +1336,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 world2D.y = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 int occluded;
 
-                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateB->mapZView);
+                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
                 AStarSearchInstantiate(&gameState->mapSearchers[0]);
                 ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
                 mapcoord.z++;
@@ -1362,7 +1385,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             ge_int3 mapCoord;
             int occluded;
-            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateB->mapZView+1);
+            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
@@ -1381,7 +1404,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
     }
 
-    gameStateB->numActions = 0;
+    gameStateActions->numActions = 0;
 }
 
 
@@ -1510,9 +1533,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
     gameState->numClients = 1;
-    gameStateB->pauseState = 0;
-    gameStateB->mapZView = MAPDEPTH-1;
-    gameStateB->mapZView_1 = 0;
+    gameStateActions->pauseState = 0;
+    gameStateActions->mapZView = MAPDEPTH-1;
+    gameStateActions->mapZView_1 = 0;
 
     for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
     {
@@ -1573,7 +1596,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         int occluded;
 
         GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, MAPDEPTH-1);
-        printf("%d\n", mapcoord.z);
+        //printf("%d\n", mapcoord.z);
         mapcoord.z+=2;
         mapcoord = GE_INT3_TO_Q16(mapcoord);
 
@@ -1604,10 +1627,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
-       // if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
+        if(gameState->peeps[p].physics.base.pos_Q16.x > 0)
             gameState->peeps[p].stateBasic.faction = 0;
-       // else
-       //     gameState->peeps[p].stateBasic.faction = 1;
+        else
+            gameState->peeps[p].stateBasic.faction = 1;
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)
@@ -1671,10 +1694,10 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawColor.z = 1.0f;
     }
 
-    if (gameState->clientStates[gameStateB->clientId].peepRenderSupport[peep->Idx].render_selectedByClient)
+    if (gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->Idx].render_selectedByClient)
     {
         brightFactor = 1.0f;
-        gameState->clientStates[gameStateB->clientId].peepRenderSupport[peep->Idx].render_selectedByClient = 0;
+        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->Idx].render_selectedByClient = 0;
     }
     if ( BITGET(peep->stateBasic.bitflags0, PeepState_BitFlags_deathState) )
     {
@@ -1715,7 +1738,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
     //update map view
-    if (gameStateB->mapZView != gameStateB->mapZView_1)
+    if (gameStateActions->mapZView != gameStateActions->mapZView_1)
     {
         cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
         if (chunkSize == 0)
@@ -1746,7 +1769,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 __kernel void game_post_update_single( ALL_CORE_PARAMS)
 {
 
-    gameStateB->mapZView_1 = gameStateB->mapZView;
+    gameStateActions->mapZView_1 = gameStateActions->mapZView;
 
 
 
