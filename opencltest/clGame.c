@@ -457,9 +457,7 @@ int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
 
 AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathSteps* steps)
 {
-    //grab a unused Node from pathNodes, and start building a list.
-    //NF_BAGRAOD.JK_FPUHJK:S *
-
+    //grab a unused Node from pathNodes, and start building the list .
     AStarNode* curNode = search->startNode;
 
     AStarPathNode* startNode = NULL;
@@ -468,7 +466,6 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     while (curNode != NULL)
     { 
         int index = AStarPathStepsNextFreePathNode(&gameState->paths);
-        //printf("Grabbed Index: %d\n", index);
         AStarPathNode* pN = &gameState->paths.pathNodes[index];
         
         if (i == 0)
@@ -500,7 +497,6 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
             {
 
                 n2 = n2->next;
-                //printf("X(%d, %d)\n", (int)n2, (int)(NULL));
                 if (n2 != NULL) {
                     delta = GE_INT3_ADD(n2->tileIdx, GE_INT3_NEG(holdTileCoord));
                 }
@@ -525,6 +521,21 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
         i++;
     }
     pNP->next = NULL;
+
+
+
+    //form prev links
+    AStarPathNode* curNode2 = startNode;
+    while (curNode2 != NULL)
+    {
+        AStarPathNode* p = curNode2->next;
+        if (p != NULL)
+            p->prev = curNode2;
+
+        curNode2 = p;
+    }
+
+
 
     return startNode;
 }
@@ -836,15 +847,18 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
                 //final node reached.
                 peep->comms.message_TargetReached_pending = 255;//send the message
             }
-            else if(peep->physics.drive.next->next != NULL)
+            else
             {
-                
+
                 peep->physics.drive.next = peep->physics.drive.next->next;
-                ge_int3 nextTarget_Q16 = peep->physics.drive.next->mapCoord_Q16;
-                MapToWorld(nextTarget_Q16, &nextTarget_Q16);
-                
-                peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
-                peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                if (peep->physics.drive.next != NULL) 
+                {
+                    ge_int3 nextTarget_Q16 = peep->physics.drive.next->mapCoord_Q16;
+                    MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+
+                    peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                    peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                }
             }
         }
     }

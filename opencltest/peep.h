@@ -98,6 +98,7 @@ struct AStarPathNode
 {
 	ge_int3 mapCoord_Q16;
 	struct AStarPathNode* next;
+	struct AStarPathNode* prev;
 }typedef AStarPathNode;
 
 struct DrivePhysics
