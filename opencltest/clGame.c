@@ -68,8 +68,8 @@ void AStarNodeInstantiate(AStarNode* node)
 {
     node->g_Q16 = TO_Q16(0);
     node->h_Q16 = TO_Q16(0);
-    node->child = NULL;  
-    node->parent = NULL;
+    node->next = NULL;  
+    node->prev = NULL;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
     node->tileIdx.z = -1;
@@ -235,14 +235,14 @@ int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
 
 void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
 {
-    cl_int parent = (index - 1) / 2;
+    cl_int prev = (index - 1) / 2;
     AStarNode* bottom = search->openHeap[index];
 
-    while (index > 0 && AStarOpenHeapKey(search, search->openHeap[parent]) > AStarOpenHeapKey(search, bottom))
+    while (index > 0 && AStarOpenHeapKey(search, search->openHeap[prev]) > AStarOpenHeapKey(search, bottom))
     {
-        search->openHeap[index] = search->openHeap[parent];
-        index = parent;
-        parent = (parent - 1) / 2;
+        search->openHeap[index] = search->openHeap[prev];
+        index = prev;
+        prev = (prev - 1) / 2;
     }
     search->openHeap[index] = bottom;
 }
@@ -287,24 +287,34 @@ void AStarPrintNodeStats(AStarNode* node)
 void AStarPrintPathNodeStats(AStarPathNode* node)
 {
     printf("Node: Loc: ");
-    Print_GE_INT3(node->mapCoord_Q16);
+    Print_GE_INT3_Q16(node->mapCoord_Q16);
 }
-void AStarPrintPathTo(AStarSearch* search, ge_int3 destTile)
+void AStarPrintSearchPathTo(AStarSearch* search, ge_int3 destTile)
 {
     AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
-        curNode = curNode->child;
+        curNode = curNode->prev;
     }
 }
-void AStarPrintPath(AStarPathNode* startNode)
+void AStarPrintSearchPathFrom(AStarSearch* search, ge_int3 startTile)
 {
-    AStarNode* curNode = startNode;
+    AStarNode* curNode = &search->details[startTile.x][startTile.y][startTile.z];
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
-        curNode = curNode->child;
+        curNode = curNode->next;
+    }
+}
+
+void AStarPrintPath(AStarPathNode* startNode)
+{
+    AStarPathNode* curNode = startNode;
+    while (curNode != NULL)
+    {
+        AStarPrintPathNodeStats(curNode);
+        curNode = curNode->next;
     }
 }
 
@@ -352,9 +362,21 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         {
             printf("Goal Found\n");
             search->endNode = targetNode;
-            
-            search->endNode->child = NULL;
-            startNode->parent = NULL;
+            search->endNode->next = NULL;
+            startNode->prev = NULL;
+
+            //form next links
+            AStarNode* curNode = targetNode;
+            while (curNode != NULL)
+            {
+                AStarNode* p = curNode->prev;
+                if(p != NULL)
+                    p->next = curNode;
+
+                curNode = p;
+            }
+
+
             return 1;//found dest
         }
         
@@ -388,8 +410,8 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             {
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
-                current->child = prospectiveNode;
-                prospectiveNode->parent = current;
+                
+                prospectiveNode->prev = current;
 
                // printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
                 AStarAddToOpen(search, prospectiveNode);
@@ -423,13 +445,13 @@ cl_uchar GE_INT3_SINGLE_ENTRY(ge_int3 a)
 int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
 {
     int idx = list->nextListIdx;
-    while (list->pathNodes[idx].nextPathNode != NULL || list->pathNodes[idx].nextPathNode == -1)
+    while (list->pathNodes[idx].next != NULL || list->pathNodes[idx].next == -1)
     {
         idx++;
         if (idx >= ASTARPATHSTEPSSIZE)
             idx = 0;
     }
-    list->nextListIdx = idx;
+    list->nextListIdx = idx+1;
     return idx;
 }
 
@@ -448,13 +470,17 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     int i = 0;
     while (curNode != NULL)
     { 
-        printf("TEST: %d\n", i);
-        AStarPathNode* pN = &gameState->paths.pathNodes[AStarPathStepsNextFreePathNode(&gameState->paths)];
+        
+        int index = AStarPathStepsNextFreePathNode(&gameState->paths);
+        printf("Grabbed Index: %d\n", index);
+        AStarPathNode* pN = &gameState->paths.pathNodes[index];
+        
         if (i == 0)
             startNode = pN;
 
 
         ge_int3 holdTileCoord = GE_SHORT3_TO_INT3(  curNode->tileIdx);
+
         //put location at center of tile
         ge_int3 tileCenter = GE_INT3_TO_Q16(holdTileCoord);
         tileCenter.x += TO_Q16(1) >> 1;
@@ -462,30 +488,32 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
         tileCenter.z += TO_Q16(1) >> 1;
 
         pN->mapCoord_Q16 = tileCenter;
+
         if (pNP != NULL)
         {
-            pNP->nextPathNode = pN;
+            pNP->next = pN;
         }
         pNP = pN;
 
 
-        printf("TEST2: %d\n", i);
-
         //iterate until joint in path.
-        ge_int3 sub;
+        ge_int3 delta;
         do
         {
-            if (curNode->child == NULL)
-                break;
-            curNode = curNode->child;
- 
+            curNode = curNode->next;
+            if (curNode != NULL)
+                delta = GE_INT3_ADD(curNode->tileIdx, GE_INT3_NEG(holdTileCoord));
+            else
+                delta = (ge_int3){ 0,0,0 };
+        } while (GE_INT3_SINGLE_ENTRY(delta) == 1);
+        
 
-            sub = GE_INT3_ADD(curNode->tileIdx, GE_INT3_NEG(holdTileCoord));
-        } while (GE_INT3_SINGLE_ENTRY(sub) == 1);
 
-        curNode = curNode->parent;
+        //curNode = curNode->next;
         i++;
     }
+    pNP->next = NULL;
+
     return startNode;
 }
 
@@ -791,15 +819,16 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         if (peep->physics.drive.drivingToTarget)
         {
 
-            if (peep->physics.drive.nextPathNode == NULL)
+            if (peep->physics.drive.next == NULL)
             {
                 //final node reached.
                 peep->comms.message_TargetReached_pending = 255;//send the message
             }
-            else
+            else if(peep->physics.drive.next->next != NULL)
             {
-                peep->physics.drive.nextPathNode = peep->physics.drive.nextPathNode->nextPathNode;
-                ge_int3 nextTarget_Q16 = peep->physics.drive.nextPathNode->mapCoord_Q16;
+                
+                peep->physics.drive.next = peep->physics.drive.next->next;
+                ge_int3 nextTarget_Q16 = peep->physics.drive.next->mapCoord_Q16;
                 MapToWorld(nextTarget_Q16, &nextTarget_Q16);
                 
                 peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
@@ -1422,9 +1451,16 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
                 if (pathFindSuccess != 0)
                 {
-                    //AStarPrintPathTo(&gameState->mapSearchers[0], end);
+                    printf("--------------------------\n");
+                    AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
+                    printf("--------------------------\n");
+                    AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
+                    printf("--------------------------\n");
+
+
                     path = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
                     AStarPrintPath(path);
+                    printf("--------------------------\n");
                 }
             }
 
@@ -1436,9 +1472,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 if (pathFindSuccess != 0)
                 {
 
-                    curPeep->physics.drive.nextPathNode = path;
+                    curPeep->physics.drive.next = path;
                     ge_int3 worldloc;
-                    MapToWorld(curPeep->physics.drive.nextPathNode->mapCoord_Q16, &worldloc);
+                    MapToWorld(curPeep->physics.drive.next->mapCoord_Q16, &worldloc);
                     curPeep->physics.drive.target_x_Q16 = worldloc.x;
                     curPeep->physics.drive.target_y_Q16 = worldloc.y;
                     curPeep->physics.drive.drivingToTarget = 1;

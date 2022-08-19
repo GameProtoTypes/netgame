@@ -97,7 +97,7 @@ struct PhysicsCircleShape
 struct AStarPathNode
 {
 	ge_int3 mapCoord_Q16;
-	struct AStarPathNode* nextPathNode;
+	struct AStarPathNode* next;
 }typedef AStarPathNode;
 
 struct DrivePhysics
@@ -105,7 +105,7 @@ struct DrivePhysics
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
 
-	AStarPathNode* nextPathNode;
+	AStarPathNode* next;
 
 	int drivingToTarget;
 }typedef DrivePhysics;
@@ -225,8 +225,8 @@ struct AStarNode {
 	ge_short3 tileIdx;
 	int h_Q16;
 	int g_Q16;
-	struct AStarNode* child;
-	struct AStarNode* parent;
+	struct AStarNode* next;
+	struct AStarNode* prev;
 } typedef AStarNode;
 
 #define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
