@@ -460,9 +460,6 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     //grab a unused Node from pathNodes, and start building a list.
     //NF_BAGRAOD.JK_FPUHJK:S *
 
-
-
-
     AStarNode* curNode = search->startNode;
 
     AStarPathNode* startNode = NULL;
@@ -470,9 +467,8 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     int i = 0;
     while (curNode != NULL)
     { 
-        
         int index = AStarPathStepsNextFreePathNode(&gameState->paths);
-        printf("Grabbed Index: %d\n", index);
+        //printf("Grabbed Index: %d\n", index);
         AStarPathNode* pN = &gameState->paths.pathNodes[index];
         
         if (i == 0)
@@ -487,6 +483,7 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
         tileCenter.y += TO_Q16(1) >> 1;
         tileCenter.z += TO_Q16(1) >> 1;
 
+
         pN->mapCoord_Q16 = tileCenter;
 
         if (pNP != NULL)
@@ -495,21 +492,36 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
         }
         pNP = pN;
 
+        if (curNode->next != NULL) {
+            //iterate until joint in path.
+            ge_int3 delta;
+            AStarNode* n2 = curNode;
+            do
+            {
 
-        //iterate until joint in path.
-        ge_int3 delta;
-        do
-        {
-            curNode = curNode->next;
-            if (curNode != NULL)
-                delta = GE_INT3_ADD(curNode->tileIdx, GE_INT3_NEG(holdTileCoord));
+                n2 = n2->next;
+                //printf("X(%d, %d)\n", (int)n2, (int)(NULL));
+                if (n2 != NULL) {
+                    delta = GE_INT3_ADD(n2->tileIdx, GE_INT3_NEG(holdTileCoord));
+                }
+                else
+                    delta = (ge_int3){ 0,0,0 };
+
+            } while ((n2 != NULL) && (GE_INT3_SINGLE_ENTRY(delta) == 1));
+
+            if (n2 != NULL) {
+                if (curNode != n2->prev)
+                    curNode = n2->prev;
+                else
+                    curNode = n2;
+            }
             else
-                delta = (ge_int3){ 0,0,0 };
-        } while (GE_INT3_SINGLE_ENTRY(delta) == 1);
-        
+                curNode = search->endNode;
+        }
+        else
+            curNode = NULL;
 
 
-        //curNode = curNode->next;
         i++;
     }
     pNP->next = NULL;
