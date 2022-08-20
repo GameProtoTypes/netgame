@@ -20,7 +20,8 @@
 #define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
 
 
-#define MAX_PEEPS (1024*32)
+#define MAX_PEEPS (1024*64)
+
 #define MAX_TRACKNODES (1024*8)
 #define MAPDIM (256)
 #define MAPDEPTH (32)
@@ -32,7 +33,7 @@
 #define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (8)
 
-#define MAX_PATHS (32)
+#define MAX_PATHS (8096)
 
 #define MAX_CLIENTS (1024)
 
@@ -251,6 +252,7 @@ struct AStarPathSteps
 {
 	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
 	int nextListIdx;
+
 }typedef AStarPathSteps;
 
 enum ClientActionCode {
@@ -325,6 +327,7 @@ struct SynchronizedClientState {
 
 struct StaticData {
 	ge_int3 directionalOffsets[26];
+	cl_uint gameStateStructureSize;
 }typedef StaticData;
 
 struct GameState {

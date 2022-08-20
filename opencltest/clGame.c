@@ -2032,4 +2032,11 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
 
 
+__kernel void size_tests(__global StaticData* data)
+{
+
+    data->gameStateStructureSize = sizeof(GameState);
+
+
+}
 

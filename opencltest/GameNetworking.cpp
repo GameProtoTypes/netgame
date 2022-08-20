@@ -41,7 +41,7 @@
 	wrap.gameState = std::make_shared<GameState>();
 	wrap.gameStateActions = std::make_shared<GameStateActions>();
 
-	memcpy(wrap.gameState.get(), gameState.get(), sizeof(GameState));
+	memcpy(wrap.gameState.get(), gameState.get(), gameCompute->gameStateSize);
 	memcpy(wrap.gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
 
 	CLIENT_snapshotStorageQueue.push_back(wrap);
@@ -157,7 +157,7 @@
 			 {
 				 std::cout << ClientConsolePrint() << "Using Snapshot Idx: " << snapShotIdx << std::endl;
 
-				 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), sizeof(GameState));
+				 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), gameCompute->gameStateSize);
 				 memcpy(gameStateActions.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateActions.get(), sizeof(GameStateActions));//not needed?
 
 
@@ -258,7 +258,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_GAMEDATA_PART));
 
-	 uint64_t gameStateSize = sizeof(GameState);
+	 uint64_t gameStateSize = gameCompute->gameStateSize;
 	 uint32_t chunkSize = TRANSFERCHUNKSIZE;
 	 uint64_t n = HOST_nextTransferOffset[client->cliId] + chunkSize;
 	 if (n >= gameStateSize)
@@ -330,7 +330,7 @@
  {
 	 uint64_t sum = 0;
 	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state);
-	 for (uint64_t i = 0; i < sizeof(GameState); i++)
+	 for (uint64_t i = 0; i < gameCompute->gameStateSize; i++)
 	 {
 		 sum += bytePtr[i];
 	 }
@@ -616,7 +616,7 @@
 
 				 gameCompute->ReadFullGameState();
 
-				 memcpy(HOST_gameStateTransfer.get(), gameState.get(), sizeof(GameState));
+				 memcpy(HOST_gameStateTransfer.get(), gameState.get(), gameCompute->gameStateSize);
 
 				 std::cout << "Pausing." << std::endl;
 				 
@@ -651,7 +651,7 @@
 
 
 				 CLIENT_nextTransferOffset += chunkSize;
-				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / sizeof(GameState));
+				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / gameCompute->gameStateSize);
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
 
 
@@ -667,7 +667,7 @@
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), sizeof(GameState));
+					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), gameCompute->gameStateSize);
 					 gameCompute->WriteFullGameState();
 					 
 					 gameStateActions->pauseState = 0;
@@ -680,7 +680,7 @@
 					 wrap.gameStateActions = std::make_shared<GameStateActions>();
 
 					 CLIENT_snapshotStorageQueue.push_back(wrap);
-					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get(), gameState.get(), sizeof(GameState));
+					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get(), gameState.get(), gameCompute->gameStateSize);
 					 memcpy(CLIENT_snapshotStorageQueue.back().gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
 
 
@@ -899,7 +899,7 @@
 		std::cout << "Snapshot Taken" << std::endl;
 
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
-			reinterpret_cast<void*>(gameState.get()), sizeof(GameState));
+			reinterpret_cast<void*>(gameState.get()), gameCompute->gameStateSize);
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameStateActions.get()),
 			reinterpret_cast<void*>(gameStateActions.get()), sizeof(GameStateActions));
 

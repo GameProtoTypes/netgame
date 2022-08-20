@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <thread>
 #ifdef __APPLE__
@@ -68,6 +69,9 @@ int32_t main(int32_t argc, char* args[])
     GameNetworking gameNetworking(gameState, gameStateActions, &gameCompute);
         
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
+    gameCompute.AddCompileDefinition("MAX_PEEPS", 1024 * 1);
+
+
 
     gameCompute.RunInitCompute();
     gameNetworking.Init();
@@ -85,7 +89,7 @@ int32_t main(int32_t argc, char* args[])
     gameState->map.mapWidth = 2000;
     gameStateActions->tickIdx = 0;
 
-    std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
+    std::cout << "GameState Size (bytes): " << gameCompute.gameStateSize << std::endl;
     std::cout << "Map Size (bytes): " << sizeof(Map) << std::endl;
     std::cout << "AStarSearch Size (bytes): " << sizeof(AStarSearch) << std::endl;
 
@@ -459,7 +463,13 @@ int32_t main(int32_t argc, char* args[])
                 SLNet::RakNetGUID::ToUint32(client.rakGuid), client.hostTickOffset, client.avgHostPing);
         }
                 
-
+        if (ImGui::Button("Save GameState To File"))
+        {
+            std::ofstream myfile;
+            myfile.open("gamestate.bin");
+            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()), gameCompute.gameStateSize);
+            myfile.close();
+        }
 
 
         ImGui::End();
@@ -499,11 +509,6 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(gameGraphics.peepVAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
         glBindVertexArray(0);
-
-
-
-
-
 
 
 

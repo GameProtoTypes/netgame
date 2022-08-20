@@ -35,6 +35,9 @@ public:
 
 	void AddCompileDefinition(std::string name, GPUCompileVariant val);
 
+
+	void RunStructureSizeTests();
+
 	void RunInitCompute();
 
 	void Stage1();
@@ -50,6 +53,7 @@ public:
 	cl_command_queue command_queue;
 	cl_program program;
 
+	cl_kernel sizetests_kernel;
 
 	cl_kernel preupdate_kernel;
 	cl_kernel preupdate_kernel_2;
@@ -91,6 +95,7 @@ public:
 
 	std::vector<cl_mem> graphicsObjects;
 
+	cl_uint gameStateSize = 0;
 
 	std::shared_ptr<GameState> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;

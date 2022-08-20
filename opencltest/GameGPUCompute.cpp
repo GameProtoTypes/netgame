@@ -29,10 +29,6 @@ GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared
 
 GameGPUCompute::~GameGPUCompute()
 {
-
-
-
-
     cl_int ret = clFlush(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clFinish(command_queue); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(update_kernel); CL_HOST_ERROR_CHECK(ret)
@@ -57,6 +53,12 @@ GameGPUCompute::~GameGPUCompute()
 void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant val)
 {
     compileDefinitions.push_back({ name, val });
+}
+
+void GameGPUCompute::RunStructureSizeTests()
+{
+    //start size tests kernel and get the actual data structure sizes by using 
+
 }
 
 void GameGPUCompute::RunInitCompute()
@@ -109,17 +111,76 @@ void GameGPUCompute::RunInitCompute()
     context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-
-
-        // Create a command queue
-        command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+    printf("Building CL Programs...\n");
+    // Create a program from the update_kernel source
+    program = clCreateProgramWithSource(context, 1,
+        (const char**)&source_str, (const size_t*)&source_size, &ret);
     CL_HOST_ERROR_CHECK(ret)
+
+    //make preprocessor defs
+    std::string defs = buildPreProcessorString();
+
+    // Build the program
+    ret = clBuildProgram(program, 1, &device_id, defs.c_str(), NULL, NULL);
+
+    if (ret != CL_SUCCESS) {
+        // Determine the size of the log
+        size_t log_size;
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+
+        // Allocate memory for the log
+        char* log = (char*)malloc(log_size);
+
+        // Get the log
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+
+        // Print the log
+        printf("%s\n", log);
+
+        delete log;
+    }
+    CL_HOST_ERROR_CHECK(ret)
+
+    printf("CL Programs built.\n");
+
+    // Create a command queue
+    command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+    {
+        //run size tests
+
+        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
+        CL_HOST_ERROR_CHECK(ret)
+
+        sizetests_kernel = clCreateKernel(program, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
+
+        cl_event sizeTestEvent;
+        ret = clSetKernelArg(sizetests_kernel, 0, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
+            ret = clEnqueueNDRangeKernel(command_queue, sizetests_kernel, 1, NULL,
+                SingleKernelWorkItems, NULL, 0, NULL, &sizeTestEvent);
+        CL_HOST_ERROR_CHECK(ret)
+
+
+        clWaitForEvents(1, &sizeTestEvent);
+        StaticData data;
+        ret = clEnqueueReadBuffer(command_queue, staticData_mem_obj, CL_TRUE, 0,
+            sizeof(StaticData), &data, 0, NULL, &sizeTestEvent);
+        CL_HOST_ERROR_CHECK(ret)
+
+
+        clWaitForEvents(1, &sizeTestEvent);
+
+        gameStateSize = data.gameStateStructureSize;
+        std::cout << "GAMESTATE SIZE: " << data.gameStateStructureSize << std::endl;
+
+    }
 
         // Create memory buffers on the device
-        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
-    CL_HOST_ERROR_CHECK(ret)
 
-        gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameState), nullptr, &ret);
+
+        gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, gameStateSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
 
@@ -153,39 +214,12 @@ void GameGPUCompute::RunInitCompute()
 
 
 
-        printf("Building CL Programs...\n");
-    // Create a program from the update_kernel source
-    program = clCreateProgramWithSource(context, 1,
-        (const char**)&source_str, (const size_t*)&source_size, &ret);
-    CL_HOST_ERROR_CHECK(ret)
-
-    //make preprocessor defs
-    std::string defs = buildPreProcessorString();
-
-    // Build the program
-    ret = clBuildProgram(program, 1, &device_id, defs.c_str(), NULL, NULL);
 
 
 
-    if (ret != CL_SUCCESS) {
-        // Determine the size of the log
-        size_t log_size;
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 
-        // Allocate memory for the log
-        char* log = (char*)malloc(log_size);
 
-        // Get the log
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
 
-        // Print the log
-        printf("%s\n", log);
-
-        delete log;
-    }
-    CL_HOST_ERROR_CHECK(ret)
-
-    printf("programs built\n");
 
 
     cl_ulong localMemSize;
@@ -256,7 +290,7 @@ void GameGPUCompute::RunInitCompute()
 
 
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState.get(), 0, NULL, NULL);
+        gameStateSize, gameState.get(), 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
@@ -347,7 +381,7 @@ void GameGPUCompute::ReadFullGameState()
 {
     // Read the memory buffer C on the device to the local variable C
      ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState.get(), 0, NULL, &readEvent);
+         gameStateSize, gameState.get(), 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     // Read the memory buffer C on the device to the local variable C
@@ -362,7 +396,7 @@ void GameGPUCompute::ReadFullGameState()
 void GameGPUCompute::WriteFullGameState()
 {
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        sizeof(GameState), gameState.get(), 0, NULL, &writeEvent);
+        gameStateSize, gameState.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     WriteGameStateB();
@@ -386,9 +420,10 @@ void GameGPUCompute::WriteGameStateB()
 std::string GameGPUCompute::buildPreProcessorString()
 {
     std::string str;
+    str += std::string("-D ");
     for (auto pair : compileDefinitions)
     {
-        str += std::string("-D ") + pair.first + std::string("=") + compileVariantString(pair.second);
+        str += pair.first + std::string("=") + compileVariantString(pair.second) + "\n";
     }
 
     return str;
@@ -409,14 +444,14 @@ std::string GameGPUCompute::compileVariantString(GPUCompileVariant variant)
     try
     {
         stream << std::get<int>(variant);
-        return stream.str();
+        return "(" + stream.str() + ")";
     }
     catch (const std::exception& e) {};
 
     try
     {
         stream << std::get<float>(variant);
-        return stream.str();
+        return "(" + stream.str() + ")";
     }
     catch (const std::exception& e) {};
     
