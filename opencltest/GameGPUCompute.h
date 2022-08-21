@@ -32,8 +32,8 @@ typedef  std::variant<int, float, std::string> GPUCompileVariant;
 class GameState_Pointer
 {
 public:
-	GameState_Pointer() {}
-	~GameState_Pointer() { delete data; }
+	GameState_Pointer(int size) { data = new int8_t[size]; }
+	~GameState_Pointer() { delete[] data; }
 	void* data = nullptr;
 };
 
@@ -47,7 +47,7 @@ class GameGPUCompute
 public:
 
 
-	GameGPUCompute(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions);
+	GameGPUCompute();
 	~GameGPUCompute();
 
 
@@ -55,9 +55,8 @@ public:
 	void AddCompileDefinition(std::string name, GPUCompileVariant val);
 
 
-	void RunStructureSizeTests();
-
-	void RunInitCompute();
+	void RunInitCompute1();
+	void RunInitCompute2();
 
 	void Stage1();
 
@@ -68,6 +67,8 @@ public:
 	void WriteGameStateB();
 
 	cl_context context;
+
+	cl_device_id device_id = NULL;
 
 	cl_command_queue command_queue;
 	cl_program gameProgram;

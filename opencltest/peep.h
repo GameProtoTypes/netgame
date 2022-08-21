@@ -16,17 +16,8 @@
 #endif
 
 #include "cpugpuvectortypes.h"
-//#define WARPSIZE (32)
-//#define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
-
-
-//#define MAX_PEEPS (1024*64)
 
 #define MAX_TRACKNODES (1024*8)
-//#define MAPDIM (256)
-//#define MAPDEPTH (32)
-//#define MAP_TILE_SIZE (5)
-
 
 
 

@@ -991,7 +991,7 @@ void PeepPreUpdate1(Peep* peep)
 
 void PeepPreUpdate2(Peep* peep)
 {
-
+    
     peep->physics.base.pos_Q16.x += peep->physics.base.v_Q16.x;
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
     peep->physics.base.pos_Q16.z += peep->physics.base.v_Q16.z;
@@ -1038,9 +1038,11 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     offset.z = 0;
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole);
 
+
     while (ctile == MapTile_NONE && tileMapCoordWhole.z < MAPDEPTH)
     {
         tileMapCoordWhole.z++;
+
         ctile = gameState->map.levels[tileMapCoordWhole.z].tiles[tileMapCoordWhole.x][tileMapCoordWhole.y];
     }
     //printf("%d\n", tileMapCoordWhole.z);
@@ -1118,7 +1120,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
         }
     }
    
-    
+
     WorldToMap(peep->physics.base.pos_Q16, &peep->posMap_Q16);
 
     ge_int3 maptilecoords;
@@ -1135,10 +1137,8 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
     //update visibility
     if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (gameStateActions->mapZView_1 != gameStateActions->mapZView))
     {
-     
         if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, gameStateActions->mapZView))
-        {
-            
+        {     
             BITSET(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
         }
         else
@@ -1751,7 +1751,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
-
+        gameState->peeps[p].physics.base.vel_add_Q16 = (ge_int3){ 0,0,0 };
+        gameState->peeps[p].physics.base.pos_post_Q16 = (ge_int3){ 0,0,0 };
 
 
         gameState->peeps[p].minDistPeepIdx = OFFSET_NULL;
@@ -1891,11 +1892,9 @@ __kernel void game_update(ALL_CORE_PARAMS)
                 BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
                 UpdateMapShadow(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
             }
-               
-
         }
     }
-
+    
 }
 
 
@@ -1925,9 +1924,12 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
     {
         if (pi + globalid * chunkSize < MAX_PEEPS) {
             Peep* p;
+            
             CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
                 CL_CHECK_NULL(p)
+                
                 PeepPreUpdate1(p);
+
         }
     }
 

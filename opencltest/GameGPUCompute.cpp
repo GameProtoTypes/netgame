@@ -18,11 +18,10 @@
 
 
 
-GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions)
+GameGPUCompute::GameGPUCompute()
 {
 
-    this->gameState = gameState;
-    this->gameStateActions = gameStateActions;
+
 
 
 
@@ -56,15 +55,8 @@ void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant va
     compileDefinitions.push_back({ name, val });
 }
 
-void GameGPUCompute::RunStructureSizeTests()
+void GameGPUCompute::RunInitCompute1()
 {
-    //start size tests kernel and get the actual data structure sizes by using 
-
-}
-
-void GameGPUCompute::RunInitCompute()
-{
-
     // Load the update_kernel source code into the array source_str
     FILE* fp;
     char* source_str;
@@ -83,7 +75,6 @@ void GameGPUCompute::RunInitCompute()
 
     printf("source loading done\n");
     // Get platform and device information
-    cl_device_id device_id = NULL;
     cl_uint ret_num_devices;
     cl_uint ret_num_platforms;
 
@@ -100,8 +91,8 @@ void GameGPUCompute::RunInitCompute()
         ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
 
-    // Create an OpenCL context
-    std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
+        // Create an OpenCL context
+        std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
     cl_context_properties props[] =
     {
         CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),
@@ -112,15 +103,15 @@ void GameGPUCompute::RunInitCompute()
     context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-    printf("Building CL Programs...\n");
+        printf("Building CL Programs...\n");
     // Create a gameProgram from the update_kernel source
     gameProgram = clCreateProgramWithSource(context, 1,
         (const char**)&source_str, (const size_t*)&source_size, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-    //make preprocessor defs
-    //std::string defs = buildPreProcessorString();
-    writePreProcessorHeaderFile();
+        //make preprocessor defs
+        //std::string defs = buildPreProcessorString();
+        writePreProcessorHeaderFile();
 
 
     // Build the gameProgram
@@ -144,7 +135,7 @@ void GameGPUCompute::RunInitCompute()
     }
     CL_HOST_ERROR_CHECK(ret)
 
-    printf("CL Programs built.\n");
+        printf("CL Programs built.\n");
 
     // Create a command queue
     command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
@@ -156,9 +147,9 @@ void GameGPUCompute::RunInitCompute()
         sizeTests_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(SIZETESTSDATA), nullptr, &ret);
         CL_HOST_ERROR_CHECK(ret)
 
-        sizetests_kernel = clCreateKernel(gameProgram, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
+            sizetests_kernel = clCreateKernel(gameProgram, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
 
-        cl_event sizeTestEvent;
+            cl_event sizeTestEvent;
         ret = clSetKernelArg(sizetests_kernel, 0, sizeof(cl_mem), (void*)&sizeTests_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
             ret = clEnqueueNDRangeKernel(command_queue, sizetests_kernel, 1, NULL,
@@ -166,21 +157,27 @@ void GameGPUCompute::RunInitCompute()
         CL_HOST_ERROR_CHECK(ret)
 
 
-        clWaitForEvents(1, &sizeTestEvent);
+            clWaitForEvents(1, &sizeTestEvent);
         SIZETESTSDATA data;
         ret = clEnqueueReadBuffer(command_queue, sizeTests_mem_obj, CL_TRUE, 0,
             sizeof(SIZETESTSDATA), &data, 0, NULL, &sizeTestEvent);
         CL_HOST_ERROR_CHECK(ret)
 
 
-        clWaitForEvents(1, &sizeTestEvent);
+            clWaitForEvents(1, &sizeTestEvent);
 
         gameStateSize = data.gameStateStructureSize;
         std::cout << "GAMESTATE SIZE: " << data.gameStateStructureSize << std::endl;
-
-        gameState->data = new int8_t[gameStateSize];
-
     }
+}
+
+
+
+
+
+void GameGPUCompute::RunInitCompute2()
+{
+
 
 
 

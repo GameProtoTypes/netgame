@@ -32,13 +32,11 @@
 	
 
 
-	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>();
-	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>();
+	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
+	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
 
 	snapshotWrap wrap;
-	wrap.gameState = std::make_shared<GameState_Pointer>();
-	wrap.gameState.get()->data = new int8_t[gameCompute->gameStateSize];
-
+	wrap.gameState = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
 	wrap.gameStateActions = std::make_shared<GameStateActions>();
 
 	memcpy(wrap.gameState.get()->data, gameState.get()->data, gameCompute->gameStateSize);
@@ -267,7 +265,7 @@
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateTransfer.get()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateTransfer.get()->data) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
 
@@ -616,7 +614,7 @@
 
 				 gameCompute->ReadFullGameState();
 
-				 memcpy(HOST_gameStateTransfer.get(), gameState.get()->data, gameCompute->gameStateSize);
+				 memcpy(HOST_gameStateTransfer.get()->data, gameState.get()->data, gameCompute->gameStateSize);
 
 				 std::cout << "Pausing." << std::endl;
 				 
@@ -646,7 +644,7 @@
 				 bts.Read(chunkSize);
 
 				 SLNet::DataCompressor compressor;
-				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer.get()) + CLIENT_nextTransferOffset);
+				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer.get()->data) + CLIENT_nextTransferOffset);
 				 
 
 
@@ -667,7 +665,7 @@
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get(), gameCompute->gameStateSize);
+					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get()->data, gameCompute->gameStateSize);
 					 gameCompute->WriteFullGameState();
 					 
 					 gameStateActions->pauseState = 0;
@@ -676,8 +674,7 @@
 
 					 //also add as a snapshot
 					 snapshotWrap wrap;
-					 wrap.gameState = std::make_shared<GameState_Pointer>();
-					 wrap.gameState.get()->data = new int8_t[gameCompute->gameStateSize];
+					 wrap.gameState = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
 					 wrap.gameStateActions = std::make_shared<GameStateActions>();
 
 					 CLIENT_snapshotStorageQueue.push_back(wrap);

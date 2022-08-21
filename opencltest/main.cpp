@@ -74,17 +74,11 @@ void WaitTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTim
 
 int32_t main(int32_t argc, char* args[]) 
 {
-   
-
-    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>();
-    std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
-
-    GameGPUCompute gameCompute(gameState, gameStateActions);
+    GameGPUCompute gameCompute;
+    GameGraphics gameGraphics(&gameCompute);      
+    gameGraphics.Init();  
+    gameCompute.graphics = &gameGraphics;    
     
-    GameGraphics gameGraphics(&gameCompute);
-    gameGraphics.Init();
-    gameCompute.graphics = &gameGraphics;
-
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
     gameCompute.AddCompileDefinition("MAX_PEEPS", gameCompute.maxPeeps);
     gameCompute.AddCompileDefinition("MAPDIM", gameCompute.mapDim);
@@ -94,8 +88,15 @@ int32_t main(int32_t argc, char* args[])
     gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
     gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);
 
-    gameCompute.RunInitCompute();
+    gameCompute.RunInitCompute1();
+    
+    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>(gameCompute.gameStateSize);
+    std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
+    gameCompute.gameState = gameState;
+    gameCompute.gameStateActions = gameStateActions;
+
+    gameCompute.RunInitCompute2();
 
 
 
