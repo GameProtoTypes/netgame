@@ -75,7 +75,12 @@ void AStarNodeInstantiate(AStarNode* node)
     node->tileIdx.z = -1;
 
 }
-
+void AStarInitPathNode(AStarPathNode* node)
+{
+    node->mapCoord_Q16 = (ge_int3){ 0,0,0 };
+    node->next = NULL;
+    node->prev = NULL;
+}
 void AStarSearchInstantiate(AStarSearch* search)
 {
     for (int x = 0; x < MAPDIM; x++)
@@ -460,19 +465,22 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     //grab a unused Node from pathNodes, and start building the list .
     AStarNode* curNode = search->startNode;
 
+
     AStarPathNode* startNode = NULL;
     AStarPathNode* pNP = NULL;
     int i = 0;
     while (curNode != NULL)
     { 
+
         int index = AStarPathStepsNextFreePathNode(&gameState->paths);
+
         AStarPathNode* pN = &gameState->paths.pathNodes[index];
-        
+
         if (i == 0)
             startNode = pN;
 
 
-        ge_int3 holdTileCoord = GE_SHORT3_TO_INT3(  curNode->tileIdx);
+        ge_int3 holdTileCoord = GE_SHORT3_TO_INT3(  curNode->tileIdx  );
 
         //put location at center of tile
         ge_int3 tileCenter = GE_INT3_TO_Q16(holdTileCoord);
@@ -1485,6 +1493,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
                     path = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
+                    CL_CHECK_NULL(path);
                     AStarPrintPath(path);
                     printf("--------------------------\n");
                 }
@@ -1494,7 +1503,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             {
                 Peep* curPeep = &gameState->peeps[curPeepIdx];
 
-                
                 if (pathFindSuccess != 0)
                 {
 
@@ -1687,7 +1695,14 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Sectors Initialized.\n");
 
 
+
     CreateMap(ALL_CORE_PARAMS_PASS);
+
+    for (int i = 0; i < ASTARPATHSTEPSSIZE; i++)
+    {
+        AStarInitPathNode( &gameState->paths.pathNodes[i] );
+    }
+    gameState->paths.nextListIdx = 0;
 
 
     printf("AStarTests:\n");
