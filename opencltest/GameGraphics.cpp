@@ -31,12 +31,16 @@
 #include <gtx/transform2.hpp>
 #include <gtx/string_cast.hpp>
 
-#include "peep.h"
+#include "GameGPUCompute.h"
+GameGraphics::GameGraphics(GameGPUCompute* gameCompute)
+{
+    this->gameCompute = gameCompute;
 
 
+}
 
 
-GameGraphics::GameGraphics()
+void GameGraphics::Init()
 {
     //Initialization flag
     bool success = true;
@@ -157,19 +161,19 @@ GameGraphics::GameGraphics()
 
 
 
-    pPeepShadProgram->Link();
+        pPeepShadProgram->Link();
     pBasicShadProgram->Link();
     pMapTileShadProgram->Link();
 
     GL_HOST_ERROR_CHECK()
 
 
-    float quadVertices[] = {
+        float quadVertices[] = {
         // positions    
         -1.0f,  1.0f,
         -1.0f, -1.0f,
          1.0f, -1.0f,
-       
+
 
         -1.0f,  1.0f,
          1.0f, -1.0f,
@@ -178,7 +182,7 @@ GameGraphics::GameGraphics()
 
     float quadUVs[] = {
         // positions    
-        0.0f,  1/16.0f,
+        0.0f,  1 / 16.0f,
         0.0f, 0.0f,
         1 / 16.0f, 0.0f,
 
@@ -191,15 +195,15 @@ GameGraphics::GameGraphics()
         quadUVs[i * 2 + 0] += 0.0f;
         quadUVs[i * 2 + 1] += 2 / 16.0f;
     }
-    
+
     //Make VAO's
 
     GL_HOST_ERROR_CHECK()
 
 
-    //map
-    std::shared_ptr<cl_uint> mapStartData(new cl_uint[MAPDIM * MAPDIM]);
-    for (int i = 0; i < MAPDIM * MAPDIM; i++)
+        //map
+        std::shared_ptr<cl_uint> mapStartData(new cl_uint[(gameCompute->mapDim * gameCompute->mapDim)]);
+    for (int i = 0; i < (gameCompute->mapDim * gameCompute->mapDim); i++)
     {
         mapStartData.get()[i] = 0;
     }
@@ -211,26 +215,26 @@ GameGraphics::GameGraphics()
 
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTile1VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, mapTile1VBO);
-            glBufferData(GL_ARRAY_BUFFER, MAPDIM*MAPDIM*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
-            glEnableVertexAttribArray(0); 
+    glBindBuffer(GL_ARRAY_BUFFER, mapTile1VBO);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
 
-            glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0); 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glGenBuffers(1, &mapTile1AttrVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, mapTile1AttrVBO);
-            glBufferData(GL_ARRAY_BUFFER, MAPDIM*MAPDIM*sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
-            glEnableVertexAttribArray(1);
+    glGenBuffers(1, &mapTile1AttrVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mapTile1AttrVBO);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(1);
 
-            glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     GL_HOST_ERROR_CHECK()
-    
-    //overlay map
-    glGenVertexArrays(1, &mapTile2VAO);
+
+        //overlay map
+        glGenVertexArrays(1, &mapTile2VAO);
     glBindVertexArray(mapTile2VAO);
 
     GL_HOST_ERROR_CHECK()
@@ -238,7 +242,7 @@ GameGraphics::GameGraphics()
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTile2VBO);
     glBindBuffer(GL_ARRAY_BUFFER, mapTile2VBO);
-    glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
 
     glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
@@ -246,7 +250,7 @@ GameGraphics::GameGraphics()
 
     glGenBuffers(1, &mapTile2AttrVBO);
     glBindBuffer(GL_ARRAY_BUFFER, mapTile2AttrVBO);
-    glBufferData(GL_ARRAY_BUFFER, MAPDIM * MAPDIM * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(1);
 
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
@@ -257,57 +261,57 @@ GameGraphics::GameGraphics()
 
 
 
-    //peeps
-    glGenVertexArrays(1, &peepVAO);
+        //peeps
+        glGenVertexArrays(1, &peepVAO);
     glBindVertexArray(peepVAO);
 
-        glGenBuffers(1, &peepQuadVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, peepQuadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glGenBuffers(1, &peepQuadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, peepQuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
-        glGenBuffers(1, &peepQuadUVVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, peepQuadUVVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadUVs), quadUVs, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        
+    glGenBuffers(1, &peepQuadUVVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, peepQuadUVVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadUVs), quadUVs, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
 
-        // also set instance data
-        peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
-        glGenBuffers(1, &peepInstanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
-            glBufferData(GL_ARRAY_BUFFER, peepInstanceSIZE* MAX_PEEPS, nullptr, GL_DYNAMIC_DRAW);
-            glEnableVertexAttribArray(3);
-            glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
-            glEnableVertexAttribArray(4);
-            glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
-            glEnableVertexAttribArray(5);
-            glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
 
-        
-            glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
-            glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
-            glVertexAttribDivisor(5, 1); // tell OpenGL this is an instanced vertex attribute.
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // also set instance data
+    peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
+    glGenBuffers(1, &peepInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, peepInstanceSIZE * gameCompute->maxPeeps, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
+
+
+    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+    glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
+    glVertexAttribDivisor(5, 1); // tell OpenGL this is an instanced vertex attribute.
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
 
 
 
     GL_HOST_ERROR_CHECK()
-    
-        
-        
-    glm::ivec2 dims;
+
+
+
+        glm::ivec2 dims;
     int chIFile;
     int desiredCh = 4;
     stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, desiredCh);
@@ -319,7 +323,7 @@ GameGraphics::GameGraphics()
     glGenTextures(1, &mapTileTexId);
     glBindTexture(GL_TEXTURE_2D, mapTileTexId);
 
-    
+
 
     int Mode = GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg);
@@ -332,6 +336,8 @@ GameGraphics::GameGraphics()
 
 
     glFinish();
+
+
 }
 
 GameGraphics::~GameGraphics()

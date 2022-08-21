@@ -19,8 +19,7 @@
 #include "SDL_opengl.h"
 
 
-#include "peep.h"
-#include "PeepFuncs.h"
+
 
 
 #include "glm.hpp"
@@ -38,6 +37,22 @@
 
 #include "GEShader.h"
 #include "GEShaderProgram.h"
+
+void ActionTrackingInit(ActionTracking* actionTracking)
+{
+    actionTracking->clientId = 0;
+    actionTracking->ticksLate = 0;
+    actionTracking->clientApplied = false;
+}
+
+void ActionWrapInit(ActionWrap* actionWrap)
+{
+    ActionTrackingInit(&actionWrap->tracking);
+}
+
+
+
+
 
 //#define GSCSTESTS
 #ifdef GSCSTESTS
@@ -59,21 +74,35 @@ void WaitTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTim
 
 int32_t main(int32_t argc, char* args[]) 
 {
-    GameGraphics gameGraphics;
+   
 
-    std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
+    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>();
     std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
-    GameGPUCompute gameCompute(gameState, gameStateActions, &gameGraphics);
-   
-    GameNetworking gameNetworking(gameState, gameStateActions, &gameCompute);
-        
+    GameGPUCompute gameCompute(gameState, gameStateActions);
+    
+    GameGraphics gameGraphics(&gameCompute);
+    gameGraphics.Init();
+    gameCompute.graphics = &gameGraphics;
+
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
-    gameCompute.AddCompileDefinition("MAX_PEEPS", 1024 * 1);
-
-
+    gameCompute.AddCompileDefinition("MAX_PEEPS", gameCompute.maxPeeps);
+    gameCompute.AddCompileDefinition("MAPDIM", gameCompute.mapDim);
+    gameCompute.AddCompileDefinition("MAPDEPTH", gameCompute.mapDepth);
+    gameCompute.AddCompileDefinition("WARPSIZE", WARPSIZE);
+    gameCompute.AddCompileDefinition("GAME_UPDATE_WORKITEMS", gameCompute.GameUpdateWorkItems);
+    gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
+    gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);
 
     gameCompute.RunInitCompute();
+
+
+
+
+
+    GameNetworking gameNetworking(gameState, gameStateActions, &gameCompute);
+        
+
     gameNetworking.Init();
     gameNetworking.Update();
 
@@ -85,13 +114,10 @@ int32_t main(int32_t argc, char* args[])
 
     int32_t mousex, mousey;
 
-    gameState->map.mapHeight = 2000;
-    gameState->map.mapWidth = 2000;
+
     gameStateActions->tickIdx = 0;
 
     std::cout << "GameState Size (bytes): " << gameCompute.gameStateSize << std::endl;
-    std::cout << "Map Size (bytes): " << sizeof(Map) << std::endl;
-    std::cout << "AStarSearch Size (bytes): " << sizeof(AStarSearch) << std::endl;
 
     uint64_t timerStartMs = SDL_GetTicks64();
 
@@ -361,7 +387,7 @@ int32_t main(int32_t argc, char* args[])
 
 
         ImGui::Begin("View");
-            ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, MAPDEPTH-1);
+            ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, gameCompute.mapDepth-1);
             gameStateActions->mapZView = rclientst->viewZIdx;
         ImGui::End();
 
@@ -467,7 +493,7 @@ int32_t main(int32_t argc, char* args[])
         {
             std::ofstream myfile;
             myfile.open("gamestate.bin");
-            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()), gameCompute.gameStateSize);
+            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.gameStateSize);
             myfile.close();
         }
 
@@ -481,22 +507,22 @@ int32_t main(int32_t argc, char* args[])
         gameGraphics.pMapTileShadProgram->Use();
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
         glm::mat4 mapTransform(1.0f);
-        mapTransform = glm::scale(mapTransform, glm::vec3(MAP_TILE_SIZE, MAP_TILE_SIZE, 1));
-        mapTransform = glm::translate(mapTransform, glm::vec3(-MAPDIM * 0.5f, -MAPDIM * 0.5f, 0));
+        mapTransform = glm::scale(mapTransform, glm::vec3(gameCompute.mapTileSize, gameCompute.mapTileSize, 1));
+        mapTransform = glm::translate(mapTransform, glm::vec3(-gameCompute.mapDim * 0.5f, -gameCompute.mapDim * 0.5f, 0));
         
         gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
-        glm::ivec2 mapSize = { MAPDIM , MAPDIM };
+        glm::ivec2 mapSize = { gameCompute.mapDim , gameCompute.mapDim };
         gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
 
         glBindVertexArray(gameGraphics.mapTile1VAO);
-        glDrawArrays(GL_POINTS, 0, MAPDIM*MAPDIM);
+        glDrawArrays(GL_POINTS, 0, gameCompute.mapDim* gameCompute.mapDim);
         glBindVertexArray(0);
 
 
         //draw map shadows
         gameGraphics.pMapTileShadProgram->Use();
         glBindVertexArray(gameGraphics.mapTile2VAO);
-        glDrawArrays(GL_POINTS, 0, MAPDIM * MAPDIM);
+        glDrawArrays(GL_POINTS, 0, gameCompute.mapDim * gameCompute.mapDim);
         glBindVertexArray(0);
 
         //draw all peeps
@@ -507,7 +533,7 @@ int32_t main(int32_t argc, char* args[])
         gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
         glBindVertexArray(gameGraphics.peepVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, MAX_PEEPS);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxPeeps);
         glBindVertexArray(0);
 
 

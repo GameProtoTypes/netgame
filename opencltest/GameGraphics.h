@@ -21,13 +21,15 @@
 #define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
 
 //graphics resources/buffers access
+struct GameGPUCompute;
 class GameGraphics
 {
 public:
 
-	GameGraphics();
+	GameGraphics(GameGPUCompute* gameCompute);
 	~GameGraphics();
 
+	void Init();
 
 	//Screen dimension constants
 	const int32_t SCREEN_WIDTH = 1024;
@@ -105,5 +107,6 @@ public:
 
 	float viewScaleInterp = 0.0f;
 
+	GameGPUCompute* gameCompute;
 };
 

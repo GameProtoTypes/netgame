@@ -14,13 +14,32 @@
 #include <string>
 #include <vector>
 
-#include "peep.h"
 #include "assert.h"
+
+
+#include "sizeTests.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
 #define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
 
+#define WARPSIZE (32)
 typedef  std::variant<int, float, std::string> GPUCompileVariant;
+
+
+
+
+
+class GameState_Pointer
+{
+public:
+	GameState_Pointer() {}
+	~GameState_Pointer() { delete data; }
+	void* data = nullptr;
+};
+
+
+
+
 
 class GameGraphics;
 class GameGPUCompute
@@ -28,7 +47,7 @@ class GameGPUCompute
 public:
 
 
-	GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGraphics* graphics);
+	GameGPUCompute(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions);
 	~GameGPUCompute();
 
 
@@ -51,7 +70,7 @@ public:
 	cl_context context;
 
 	cl_command_queue command_queue;
-	cl_program program;
+	cl_program gameProgram;
 
 	cl_kernel sizetests_kernel;
 
@@ -78,10 +97,13 @@ public:
     size_t SingleKernelWorkItems[1] = { 1 };
     size_t SingleKernelWorkItemsPerWorkGroup[1] = { 1 };
 
-
-    size_t WorkItems[1] = { GAME_UPDATE_WORKITEMS };
+	const long GameUpdateWorkItems = WARPSIZE * 1024 * 4;
+    size_t WorkItems[1] = { static_cast<size_t>(GameUpdateWorkItems) };
 	size_t WorkItems1Warp[1] = { WARPSIZE };
 
+	cl_mem sizeTests_mem_obj;
+
+	cl_mem synchClients_mem_obj;
 	cl_mem staticData_mem_obj;
 	cl_mem gamestate_mem_obj;
 	cl_mem gamestateB_mem_obj;
@@ -97,7 +119,12 @@ public:
 
 	cl_uint gameStateSize = 0;
 
-	std::shared_ptr<GameState> gameState;
+	int maxPeeps = 1024 * 1;
+	int mapDim = 256;
+	int mapDepth = 32;
+	int mapTileSize = 5;
+
+	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;
 	GameGraphics* graphics = nullptr;
 
@@ -107,6 +134,8 @@ public:
 	cl_int ret = 0;
 
 	std::string buildPreProcessorString();
+	void writePreProcessorHeaderFile();
+
 	std::string compileVariantString(GPUCompileVariant variant);
 
 

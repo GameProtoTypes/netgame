@@ -30,8 +30,7 @@ set(CMAKE_CXX_STANDARD 20)
 # Source groups
 ################################################################################
 set(Header_Files
-    "peep.h"
-    "PeepFuncs.h"
+    "sizeTests.h"
     "GEShaderProgram.h"
     "GEShader.h"
     "GameGraphics.h"
@@ -45,6 +44,8 @@ set(Header_Files
     "randomcl.h"
     "clLimits.h"
     "cl_type_glue.h"
+
+
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -72,14 +73,23 @@ source_group("Source Files" FILES ${Source_Files})
 set(OPENCL_Source_Files
 
     "clGame.c"
+    "clSizeTests.c"
    
 )
 source_group("CL Source Files" FILES ${OPENCL_Source_Files})
+
+set(OPENCL_Header_Files
+    "peep.h"
+    "PeepFuncs.h"
+    "sizeTests.h"
+)
+source_group("CL Header Files" FILES ${OPENCL_Header_Files})
 
 set(ALL_FILES
     ${Header_Files}
     ${Source_Files}
     ${OPENCL_Source_Files}
+    ${OPENCL_Header_Files}
 )
 
 ################################################################################

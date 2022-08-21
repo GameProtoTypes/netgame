@@ -317,8 +317,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\sizeTests.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShader.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GameGraphics.h" />
@@ -353,6 +352,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clGame.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clSizeTests.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h" />
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\ZERO_CHECK.vcxproj">

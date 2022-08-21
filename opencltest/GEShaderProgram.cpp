@@ -29,7 +29,7 @@ void GEShaderProgram::Link(void)
 	if (!success)
 	{
 
-		std::cout << "Error Linking shader program " << programID << "." << std::endl;
+		std::cout << "Error Linking shader gameProgram " << programID << "." << std::endl;
 		GLint maxLength = 0;
 		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
 

@@ -23,7 +23,6 @@
 #include <CL/cl.h>
 #endif
 
-#include "peep.h"
 
 #include "GameGPUCompute.h"
 
@@ -45,10 +44,17 @@
 #define TRANSFERCHUNKSIZE (1024*1024)
 
 #define CLIENT_TIMEOUT_TICKS (25)
+
+
+#define MAX_CLIENTS (1024)
+
+
+
+
 class GameNetworking
 {
 public:
-	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGPUCompute* gameCompute) {
+	GameNetworking(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGPUCompute* gameCompute) {
 	
 		this->gameState = gameState;
 		this->gameStateActions = gameStateActions;
@@ -127,7 +133,7 @@ public:
 	void SendTickSyncToClients();
 
 
-	uint64_t CheckSumGameState(GameState* state);
+	uint64_t CheckSumGameState(GameState_Pointer* state);
 	uint64_t CheckSumAction(ActionWrap* state);
 
 
@@ -199,14 +205,14 @@ public:
 
 	GameGPUCompute* gameCompute = nullptr;
 
-	std::shared_ptr<GameState> gameState;
+	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;
 
-	std::shared_ptr<GameState> CLIENT_gameStateTransfer;
-	std::shared_ptr<GameState> HOST_gameStateTransfer;
+	std::shared_ptr<GameState_Pointer> CLIENT_gameStateTransfer;
+	std::shared_ptr<GameState_Pointer> HOST_gameStateTransfer;
 	
 	struct snapshotWrap {
-		std::shared_ptr<GameState> gameState;
+		std::shared_ptr<GameState_Pointer> gameState;
 		std::shared_ptr<GameStateActions> gameStateActions;
 		uint64_t checksum = static_cast<uint64_t>( -1 );
 		

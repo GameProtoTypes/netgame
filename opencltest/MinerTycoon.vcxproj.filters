@@ -22,13 +22,13 @@
     <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clGame.c">
       <Filter>CL Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\opencltest\clSizeTests.c">
+      <Filter>CL Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\sizeTests.h">
+      <Filter>CL Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\GEShaderProgram.h">
       <Filter>Header Files</Filter>
@@ -63,6 +63,12 @@
     <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\cl_type_glue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\peep.h">
+      <Filter>CL Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\opencltest\PeepFuncs.h">
+      <Filter>CL Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\casht\repos\opencltest\opencltest\CMakeLists.txt" />
@@ -91,6 +97,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="CL Header Files">
+      <UniqueIdentifier>{62FF36B3-ABFD-3276-BF55-17C966B5CDDB}</UniqueIdentifier>
+    </Filter>
     <Filter Include="CL Source Files">
       <UniqueIdentifier>{A7FD844E-C74B-32F2-8050-2AE95A3F8853}</UniqueIdentifier>
     </Filter>

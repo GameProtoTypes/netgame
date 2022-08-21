@@ -1881,10 +1881,6 @@ __kernel void game_update(ALL_CORE_PARAMS)
         if (chunkSize == 0)
             chunkSize = 1;
 
-        
-        
-
-
 
         for (cl_ulong i = 0; i < chunkSize; i++)
         {
@@ -2022,21 +2018,12 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
             atomic_dec(lock);
         }
     }
-
-
-
-
-
-
 }
 
 
-
-__kernel void size_tests(__global StaticData* data)
+__kernel void size_tests(__global SIZETESTSDATA* data)
 {
 
     data->gameStateStructureSize = sizeof(GameState);
 
-
 }
-

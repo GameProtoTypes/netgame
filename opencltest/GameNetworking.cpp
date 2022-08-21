@@ -15,8 +15,6 @@
 
 
 
-
-
  void GameNetworking::Init()
 {
 
@@ -34,14 +32,16 @@
 	
 
 
-	CLIENT_gameStateTransfer = std::make_shared<GameState>();
-	HOST_gameStateTransfer = std::make_shared<GameState>();
+	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>();
+	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>();
 
 	snapshotWrap wrap;
-	wrap.gameState = std::make_shared<GameState>();
+	wrap.gameState = std::make_shared<GameState_Pointer>();
+	wrap.gameState.get()->data = new int8_t[gameCompute->gameStateSize];
+
 	wrap.gameStateActions = std::make_shared<GameStateActions>();
 
-	memcpy(wrap.gameState.get(), gameState.get(), gameCompute->gameStateSize);
+	memcpy(wrap.gameState.get()->data, gameState.get()->data, gameCompute->gameStateSize);
 	memcpy(wrap.gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
 
 	CLIENT_snapshotStorageQueue.push_back(wrap);
@@ -157,7 +157,7 @@
 			 {
 				 std::cout << ClientConsolePrint() << "Using Snapshot Idx: " << snapShotIdx << std::endl;
 
-				 memcpy(gameState.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get(), gameCompute->gameStateSize);
+				 memcpy(gameState.get()->data, CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get()->data, gameCompute->gameStateSize);
 				 memcpy(gameStateActions.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateActions.get(), sizeof(GameStateActions));//not needed?
 
 
@@ -326,10 +326,10 @@
 	 }
  }
 
- inline uint64_t GameNetworking::CheckSumGameState(GameState* state)
+ inline uint64_t GameNetworking::CheckSumGameState(GameState_Pointer* state)
  {
 	 uint64_t sum = 0;
-	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state);
+	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state->data);
 	 for (uint64_t i = 0; i < gameCompute->gameStateSize; i++)
 	 {
 		 sum += bytePtr[i];
@@ -616,7 +616,7 @@
 
 				 gameCompute->ReadFullGameState();
 
-				 memcpy(HOST_gameStateTransfer.get(), gameState.get(), gameCompute->gameStateSize);
+				 memcpy(HOST_gameStateTransfer.get(), gameState.get()->data, gameCompute->gameStateSize);
 
 				 std::cout << "Pausing." << std::endl;
 				 
@@ -667,7 +667,7 @@
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState.get(), CLIENT_gameStateTransfer.get(), gameCompute->gameStateSize);
+					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get(), gameCompute->gameStateSize);
 					 gameCompute->WriteFullGameState();
 					 
 					 gameStateActions->pauseState = 0;
@@ -676,11 +676,12 @@
 
 					 //also add as a snapshot
 					 snapshotWrap wrap;
-					 wrap.gameState = std::make_shared<GameState>();
+					 wrap.gameState = std::make_shared<GameState_Pointer>();
+					 wrap.gameState.get()->data = new int8_t[gameCompute->gameStateSize];
 					 wrap.gameStateActions = std::make_shared<GameStateActions>();
 
 					 CLIENT_snapshotStorageQueue.push_back(wrap);
-					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get(), gameState.get(), gameCompute->gameStateSize);
+					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get()->data, gameState.get()->data, gameCompute->gameStateSize);
 					 memcpy(CLIENT_snapshotStorageQueue.back().gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
 
 
@@ -964,19 +965,16 @@
 		if (clients[i].clientGUID == clientGUID)
 		{
 			removeIdx = i;
-			gameState->clientStates[clientId].connected = false;
 		}
 	}
+
+
 	if (removeIdx >= 0)
 	{
 		clients.erase(std::next(clients.begin(), removeIdx));
-
 	}
 	else
 		assert(0);
-
-
-
 
 }
 
@@ -989,7 +987,6 @@
 		if (clients[i].cliId == clientID)
 		{
 			removeIdx = i;
-			gameState->clientStates[clientId].connected = false;
 		}
 	}
 	if (removeIdx >= 0)
@@ -1007,7 +1004,6 @@ void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID ra
 	meta.ticksSinceLastCommunication = 0;
 	meta.downloadingState = 0;
 	clients.push_back(meta);
-	gameState->clientStates[meta.cliId].connected = 1;
 
 	nextCliIdx++;
 }

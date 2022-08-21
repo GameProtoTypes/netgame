@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <typeinfo>
 #include <variant>
 
@@ -13,16 +14,16 @@
 
 #include "GameGraphics.h"
 
+#include "sizeTests.h"
 
 
 
-
-GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGraphics* graphics)
+GameGPUCompute::GameGPUCompute(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions)
 {
 
     this->gameState = gameState;
     this->gameStateActions = gameStateActions;
-    this->graphics = graphics;
+
 
 
 }
@@ -38,7 +39,7 @@ GameGPUCompute::~GameGPUCompute()
     ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
 
-    ret = clReleaseProgram(program); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseProgram(gameProgram); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
@@ -112,27 +113,29 @@ void GameGPUCompute::RunInitCompute()
     CL_HOST_ERROR_CHECK(ret)
 
     printf("Building CL Programs...\n");
-    // Create a program from the update_kernel source
-    program = clCreateProgramWithSource(context, 1,
+    // Create a gameProgram from the update_kernel source
+    gameProgram = clCreateProgramWithSource(context, 1,
         (const char**)&source_str, (const size_t*)&source_size, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
     //make preprocessor defs
-    std::string defs = buildPreProcessorString();
+    //std::string defs = buildPreProcessorString();
+    writePreProcessorHeaderFile();
 
-    // Build the program
-    ret = clBuildProgram(program, 1, &device_id, defs.c_str(), NULL, NULL);
+
+    // Build the gameProgram
+    ret = clBuildProgram(gameProgram, 1, &device_id, NULL, NULL, NULL);
 
     if (ret != CL_SUCCESS) {
         // Determine the size of the log
         size_t log_size;
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+        clGetProgramBuildInfo(gameProgram, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 
         // Allocate memory for the log
         char* log = (char*)malloc(log_size);
 
         // Get the log
-        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+        clGetProgramBuildInfo(gameProgram, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
 
         // Print the log
         printf("%s\n", log);
@@ -150,13 +153,13 @@ void GameGPUCompute::RunInitCompute()
     {
         //run size tests
 
-        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
+        sizeTests_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(SIZETESTSDATA), nullptr, &ret);
         CL_HOST_ERROR_CHECK(ret)
 
-        sizetests_kernel = clCreateKernel(program, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
+        sizetests_kernel = clCreateKernel(gameProgram, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
 
         cl_event sizeTestEvent;
-        ret = clSetKernelArg(sizetests_kernel, 0, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
+        ret = clSetKernelArg(sizetests_kernel, 0, sizeof(cl_mem), (void*)&sizeTests_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
             ret = clEnqueueNDRangeKernel(command_queue, sizetests_kernel, 1, NULL,
                 SingleKernelWorkItems, NULL, 0, NULL, &sizeTestEvent);
@@ -164,9 +167,9 @@ void GameGPUCompute::RunInitCompute()
 
 
         clWaitForEvents(1, &sizeTestEvent);
-        StaticData data;
-        ret = clEnqueueReadBuffer(command_queue, staticData_mem_obj, CL_TRUE, 0,
-            sizeof(StaticData), &data, 0, NULL, &sizeTestEvent);
+        SIZETESTSDATA data;
+        ret = clEnqueueReadBuffer(command_queue, sizeTests_mem_obj, CL_TRUE, 0,
+            sizeof(SIZETESTSDATA), &data, 0, NULL, &sizeTestEvent);
         CL_HOST_ERROR_CHECK(ret)
 
 
@@ -175,10 +178,16 @@ void GameGPUCompute::RunInitCompute()
         gameStateSize = data.gameStateStructureSize;
         std::cout << "GAMESTATE SIZE: " << data.gameStateStructureSize << std::endl;
 
+        gameState->data = new int8_t[gameStateSize];
+
     }
+
+
 
         // Create memory buffers on the device
 
+        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
 
         gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, gameStateSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
@@ -245,12 +254,12 @@ void GameGPUCompute::RunInitCompute()
 
 
     // Create the OpenCL update_kernel
-        preupdate_kernel = clCreateKernel(program, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
-        preupdate_kernel_2 = clCreateKernel(program, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
-        update_kernel = clCreateKernel(program, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
-        action_kernel = clCreateKernel(program, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
-        init_kernel = clCreateKernel(program, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
-        post_update_single_kernel = clCreateKernel(program, "game_post_update_single", &ret); CL_HOST_ERROR_CHECK(ret)
+        preupdate_kernel = clCreateKernel(gameProgram, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
+        preupdate_kernel_2 = clCreateKernel(gameProgram, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
+        update_kernel = clCreateKernel(gameProgram, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
+        action_kernel = clCreateKernel(gameProgram, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
+        init_kernel = clCreateKernel(gameProgram, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
+        post_update_single_kernel = clCreateKernel(gameProgram, "game_post_update_single", &ret); CL_HOST_ERROR_CHECK(ret)
 
 
 
@@ -264,14 +273,15 @@ void GameGPUCompute::RunInitCompute()
         // Set the arguments of the kernels
         for (cl_kernel k : kernels)
         {
-            ret = clSetKernelArg(k, 0, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 1, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 2, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 3, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 4, sizeof(cl_mem), (void*)&graphics_mapTile1VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 5, sizeof(cl_mem), (void*)&graphics_mapTile1AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 6, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
-            ret = clSetKernelArg(k, 7, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            int i = 0;
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile1VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile1AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
         }
         
 
@@ -290,11 +300,11 @@ void GameGPUCompute::RunInitCompute()
 
 
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        gameStateSize, gameState.get(), 0, NULL, NULL);
+        gameStateSize, gameState.get()->data, 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
-        sizeof(GameStateActions), gameState.get(), 0, NULL, NULL);
+        sizeof(GameStateActions), gameStateActions.get(), 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
 
@@ -340,6 +350,8 @@ void GameGPUCompute::Stage1()
         WorkItems1Warp, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
     CL_HOST_ERROR_CHECK(ret)
 
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
 
 
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
@@ -381,7 +393,7 @@ void GameGPUCompute::ReadFullGameState()
 {
     // Read the memory buffer C on the device to the local variable C
      ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-         gameStateSize, gameState.get(), 0, NULL, &readEvent);
+         gameStateSize, gameState.get()->data, 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     // Read the memory buffer C on the device to the local variable C
@@ -396,7 +408,7 @@ void GameGPUCompute::ReadFullGameState()
 void GameGPUCompute::WriteFullGameState()
 {
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        gameStateSize, gameState.get(), 0, NULL, &writeEvent);
+        gameStateSize, gameState.get()->data, 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     WriteGameStateB();
@@ -425,9 +437,26 @@ std::string GameGPUCompute::buildPreProcessorString()
     {
         str += pair.first + std::string("=") + compileVariantString(pair.second) + "\n";
     }
-
+    std::cout << str;
     return str;
 }
+
+
+void GameGPUCompute::writePreProcessorHeaderFile()
+{
+    std::string str;
+    for (auto pair : compileDefinitions)
+    {
+        str += std::string("#define ") + pair.first + std::string(" ") + compileVariantString(pair.second) + "\n";
+    }
+    std::cout << str;
+
+    std::ofstream preProcessorHeader;
+    preProcessorHeader.open("dynamicDefines.h", std::ofstream::out | std::ofstream::trunc);
+    preProcessorHeader << str;
+    preProcessorHeader.close();
+}
+
 
 std::string GameGPUCompute::compileVariantString(GPUCompileVariant variant)
 {

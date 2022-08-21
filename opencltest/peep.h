@@ -10,22 +10,22 @@
 
 
 #include <cl_type_glue.h>
-
-
+#include "dynamicDefines.h"
+#include "sizeTests.h"
 
 #endif
 
 #include "cpugpuvectortypes.h"
-#define WARPSIZE (32)
-#define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
+//#define WARPSIZE (32)
+//#define GAME_UPDATE_WORKITEMS (WARPSIZE*1024*4)
 
 
-#define MAX_PEEPS (1024*64)
+//#define MAX_PEEPS (1024*64)
 
 #define MAX_TRACKNODES (1024*8)
-#define MAPDIM (256)
-#define MAPDEPTH (32)
-#define MAP_TILE_SIZE (5)
+//#define MAPDIM (256)
+//#define MAPDEPTH (32)
+//#define MAP_TILE_SIZE (5)
 
 
 
@@ -35,9 +35,7 @@
 
 #define MAX_PATHS (8096)
 
-#define MAX_CLIENTS (1024)
-
-
+//#define MAX_CLIENTS (1024)
 
 #define OFFSET_NULL (0xFFFFFFFF)
 #define OFFSET_NULL_2D (0xFFFFFFFF , 0xFFFFFFFF)
@@ -155,10 +153,6 @@ struct Peep {
 } typedef Peep;
 #pragma pack(pop)
 
-struct PeepRenderSupport {
-	cl_int render_selectedByClient;
-}typedef PeepRenderSupport;
-
 
 
 
@@ -255,65 +249,13 @@ struct AStarPathSteps
 
 }typedef AStarPathSteps;
 
-enum ClientActionCode {
-	ClientActionCode_DoSelect,
-	ClientActionCode_CommandToLocation,
-	ClientActionCode_CommandTileDelete,
-	ClientActionCode_SetZView,
-	ClientActionCode_NONE = 255
-} typedef ClientActionCode;
-
-enum ClientActionCode_DoSelect_IntParams {
-	CAC_DoSelect_Param_StartX_Q16,
-	CAC_DoSelect_Param_StartY_Q16,
-	CAC_DoSelect_Param_EndX_Q16,
-	CAC_DoSelect_Param_EndY_Q16,
-	CAC_DoSelect_Param_ZMapView,
-	CAC_MAX//Move to largest enum as appropriate
-};
-
-enum ClientActionCode_CommandToLocation_IntParams {
-	CAC_CommandToLocation_Param_X_Q16,
-	CAC_CommandToLocation_Param_Y_Q16
-};
-
-enum ClientActionCode_CommandTileDelete_IntParams {
-	CAC_CommandTileDelete_Param_X_Q16,
-	CAC_CommandTileDelete_Param_Y_Q16
-};
-enum ClientActionCode_SetZView_IntParams {
-	CAC_CommandTileDelete_Param_ZViewIdx
-};
-
-struct ClientAction {
-
-	//cl_uint submittedTickIdx;//the client tickidx when the action was created
-	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
 
 
-	ClientActionCode actionCode;
-	int intParameters[CAC_MAX];//MAX of ClientActionCode_******_IntParams enums
-	
-} typedef ClientAction;
 
-struct ActionTracking {	
+struct PeepRenderSupport {
+	cl_int render_selectedByClient;
+}typedef PeepRenderSupport;
 
-	cl_int clientId;
-
-	cl_uint hostGivenId;
-	cl_uint clientGivenId;
-	cl_int ticksLate;//action could not be applied on client at scheduled tickId;
-	bool finalActionVerified;
-	bool clientApplied;
-
-} typedef ActionTracking;
-
-
-struct ActionWrap {
-	ClientAction action;
-	ActionTracking tracking;
-
-} typedef ActionWrap;
 
 
 struct SynchronizedClientState {
@@ -325,12 +267,15 @@ struct SynchronizedClientState {
 } typedef SynchronizedClientState;
 
 
-struct StaticData {
-	ge_int3 directionalOffsets[26];
-	cl_uint gameStateStructureSize;
-}typedef StaticData;
+
+
+
 
 struct GameState {
+
+	SynchronizedClientState clientStates[MAX_CLIENTS];
+	cl_int numClients;
+
 
 	Peep peeps[MAX_PEEPS];
 	Map map;
@@ -339,26 +284,7 @@ struct GameState {
 	AStarSearch mapSearchers[1];
 	AStarPathSteps paths;
 
-	SynchronizedClientState clientStates[MAX_CLIENTS];
-	cl_int numClients;
+
 } typedef GameState;
 
-struct GameStateActions {
-	ActionWrap clientActions[32];
-	cl_int numActions;
-
-
-	cl_uint tickIdx;
-	int32_t pauseState;
-
-
-	//ClientSide only stuff that is processed in cl but not strictly gamestate and driven by host.
-	cl_uint clientId;
-	cl_int mapZView;
-	cl_int mapZView_1;
-
-
-	cl_int dummyVars[32];
-
-}typedef GameStateActions;
 
