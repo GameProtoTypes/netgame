@@ -611,7 +611,7 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 
 void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 {
-    if (peep->stateBasic.deathState || otherPeep->stateBasic.deathState)
+    if (peep->stateBasic.deathState != 0 || otherPeep->stateBasic.deathState != 0)
         return;
 
 
@@ -625,7 +625,6 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     
 
     PeepPeepPhysics(ALL_CORE_PARAMS_PASS, peep, otherPeep);
-
 
 
 }
@@ -1115,6 +1114,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             {
                 if (curPeep != peep) {
                     PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, curPeep);
+
                 }
 
                 
@@ -1763,7 +1763,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_valid);
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_visible);
         gameState->peeps[p].stateBasic.health = 10;
-
+        gameState->peeps[p].stateBasic.deathState = 0;
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
         gameState->peeps[p].physics.base.vel_add_Q16 = (ge_int3){ 0,0,0 };

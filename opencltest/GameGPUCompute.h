@@ -32,7 +32,10 @@ typedef  std::variant<int, float, std::string> GPUCompileVariant;
 class GameState_Pointer
 {
 public:
-	GameState_Pointer(int size) { data = new int8_t[size]; }
+	GameState_Pointer(int size) { 
+		data = new int8_t[size];
+		memset(data, 0, size);
+	}
 	~GameState_Pointer() { delete[] data; }
 	void* data = nullptr;
 };
@@ -121,7 +124,7 @@ public:
 	cl_uint gameStateSize = 0;
 
 	int maxPeeps = 1024 * 1;
-	int mapDim = 256;
+	int mapDim = 128;
 	int mapDepth = 32;
 	int mapTileSize = 5;
 
