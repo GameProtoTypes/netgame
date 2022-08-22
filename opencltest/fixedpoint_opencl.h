@@ -89,9 +89,18 @@ inline void SHIFT_POINT_QMP64(QMP64* qmp, int shift)
 
 inline void NORMALIZE_QMP32(QMP32* qmp)
 {
+    cl_int number1 = 1;
+    cl_int signBitMask = (number1 << (sizeof(cl_int) * 8 - 1));
+
+    cl_int sign = qmp->number & signBitMask;
+    cl_int comparisonNumber = qmp->number;
+    if (sign)
+    {
+        comparisonNumber = ~qmp->number + 1;
+    }
     for (int s = 30; s >= 0; s--)
     {
-        if ((qmp->number & (1 << s)) != 0)
+        if ((comparisonNumber & (1 << s)) != 0)
         {
             if(s>=qmp->q)
                 SHIFT_POINT_QMP32(qmp, -(30 - s));
@@ -103,12 +112,21 @@ inline void NORMALIZE_QMP32(QMP32* qmp)
 }
 inline void NORMALIZE_QMP64(QMP64* qmp)
 {
-    for (int s = 30; s >= 0; s--)
+    cl_long number1 = 1;
+    cl_long signBitMask = (number1 << (sizeof(cl_long) * 8 - 1));
+
+    cl_long sign = qmp->number & signBitMask;
+    cl_long comparisonNumber = qmp->number;
+    if (sign)
     {
-        if ((qmp->number & (1 << s)) != 0)
+        comparisonNumber = ~qmp->number + 1;
+    }
+    for (int s = 62; s >= 0; s--)
+    {
+        if ((comparisonNumber & (1 << s)) != 0)
         {
             if (s >= qmp->q)
-                SHIFT_POINT_QMP64(qmp, -(30 - s));
+                SHIFT_POINT_QMP64(qmp, -(62 - s));
             return;
         }
     }
@@ -257,15 +275,27 @@ void Print_GE_INT2_Q16(ge_int2 fixed_Q16)
 
 inline QMP32 QMP64_TO_QMP32(QMP64 qmp)
 {
+    cl_long number1 = 1;
+    cl_long signBitMask = (number1 << (sizeof(cl_long) * 8 - 1));
+
+    cl_long sign = qmp.number & signBitMask;
+    cl_long magnitude = qmp.number;
+    cl_long comparisonNumber = qmp.number;
+    if (sign)
+    {
+        comparisonNumber = ~qmp.number + 1;
+    }
+
+
+
     QMP32 res;
     cl_long someLong = 1;
     for (int s = 62; s >= 0; s--)
     {
-        if ((qmp.number & ((someLong << s))) != 0)
+        if ((comparisonNumber & ((someLong << s))) != 0)
         {
             if (s > 30)
             {
-                //printf("s: %d\n", s);
                 //something needs to be done
                 int minmove = s - 30;
                 int wholerange = s - qmp.q;
@@ -297,8 +327,9 @@ inline QMP32 ADD_QMP32(QMP32 qmpA, QMP32 qmpB)
     r.number = (cl_long)qmpA.number + (cl_long)qmpB.number;
     r.q = qmpA.q;
 
-    QMP32 result = QMP64_TO_QMP32(r);
 
+    QMP32 result = QMP64_TO_QMP32(r);
+    
     NORMALIZE_QMP32(&result);
     return result;
 }
@@ -316,6 +347,7 @@ inline QMP32 MUL_QMP32(QMP32 qmpA, QMP32 qmpB)
 }
 inline QMP32 DIV_QMP32(QMP32 qmpA, QMP32 qmpB)
 {
+
     QMP64 bigA = QMP32_TO_QMP64(qmpA);
 
     SHIFT_POINT_QMP64(&bigA, -qmpB.q);
@@ -324,7 +356,6 @@ inline QMP32 DIV_QMP32(QMP32 qmpA, QMP32 qmpB)
     bigA.q = qmpA.q;
 
     QMP32 result = QMP64_TO_QMP32(bigA);
-
     NORMALIZE_QMP32(&result);
     return result;
 }
@@ -776,42 +807,35 @@ void fixedPointTests()
     printf("Sign of 0: %f\n", FixedToFloat(SIGN_MAG_Q15_16(TO_Q16(0)), 16));
 
     printf("QMP32-------------------------------------\n");
-
+    printf("QMP32 Size: %d\n", sizeof(QMP32));
+    printf("QMP64 Size: %d\n", sizeof(QMP64));
     QMP32 numberA;
-    const int a2 = 1;
-    const int b2 = 3;
+    const int a2 = -1;
+    const int b2 = -12364;
     numberA.number = TO_Q16(a2);
     numberA.q = 16;
     NORMALIZE_QMP32(&numberA);
-    //printf("%d\n", numberA.q);
+    
 
     QMP32 numberB;
     numberB.number = TO_Q16(b2);
     numberB.q = 16;
     NORMALIZE_QMP32(&numberB);
-
-    //printf("%d\n", numberB.q);
+    //PrintQMP32(numberB);
 
     QMP32 numberR;
     numberR = ADD_QMP32(numberA, numberB);
-    printf("%d+%d=",a2,b2);
+    printf("%d+%d=%f = ",a2,b2,(float)a2+b2);
     PrintQMP32(numberR);
 
     numberR = MUL_QMP32(numberA, numberB);
-    printf("%d*%d=", a2, b2);
+    printf("%d*%d=%f = ", a2, b2, (float)a2*b2);
     PrintQMP32(numberR);
 
 
     numberR = DIV_QMP32(numberA, numberB);
-    printf("%d/%d=", a2, b2);
+    printf("%d/%d=%f = ", a2, b2, (float)a2 / b2);
     PrintQMP32(numberR);
-
-
-
-
-
-
-
 
 
 
