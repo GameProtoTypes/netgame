@@ -200,14 +200,40 @@ cl_long FloatToFixed(float floatingNumber, int Q)
     return DoubleToFixed((double)floatingNumber, Q);
 }
 
+QMP32 FloatToQMP32(float floatingNumber)
+{
+    int whole = floatingNumber;
+    //determine q;
+    int q = 30;
+    int bits = whole;
 
+    int signBitMask = (1 << (sizeof(int) * 8 - 1));
+    int sign = bits & signBitMask;
+
+    if (sign)
+    {
+        bits = ~bits+1;
+    }
+    for (int s = 30; s >= 0; s--)
+    {
+        if ((bits & ((1 << s))) != 0)
+        {
+            q = 30 - s;
+            break;
+        }
+    }
+    QMP32 res;
+    res.number = FloatToFixed(floatingNumber, q);
+    res.q = q;
+    return res;
+}
 
 float FixedToFloat(cl_long fixedPoint, int Q)
 {
     cl_ulong bits = 0;
     bits |= fixedPoint;
-
-    cl_ulong signBitMask = (1 << (sizeof(cl_long) * 8 - 1));
+    cl_long number1 = 1;
+    cl_ulong signBitMask = (number1 << (sizeof(cl_long) * 8 - 1));
 
     cl_ulong sign = bits & signBitMask;
 
@@ -809,8 +835,14 @@ void fixedPointTests()
     printf("QMP32-------------------------------------\n");
     printf("QMP32 Size: %d\n", sizeof(QMP32));
     printf("QMP64 Size: %d\n", sizeof(QMP64));
+
+    const float z = -0.000123456;
+    QMP32 numberZ = FloatToQMP32(z);
+    printf("%f=", z); PrintQMP32(numberZ);
+
+
     QMP32 numberA;
-    const int a2 = -1;
+    const int a2 = -14;
     const int b2 = -12364;
     numberA.number = TO_Q16(a2);
     numberA.q = 16;
