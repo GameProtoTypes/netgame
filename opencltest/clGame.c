@@ -49,12 +49,38 @@ void Print_GE_SHORT3(ge_short3 v)
     printf("{%d,%d,%d}\n", v.x, v.y, v.z);
 }
 
+inline cl_uint BITBANK_GET_SUBNUMBER_UINT(cl_uint bank, cl_int lsbBitIdx, cl_int numBits)
+{
+    cl_uint mask = 0;
+    for (int i = 0; i < numBits; i++)
+    {
+        mask |= (1 << (i + lsbBitIdx));
+    }
+
+    return (bank & mask) >> lsbBitIdx;
+}
+inline void BITBANK_SET_SUBNUMBER_UINT(cl_uint* bank, cl_int lsbBitIdx, cl_int numBits, cl_uint number)
+{
+    cl_uint mask = 0;
+    for (int i = 0; i < numBits; i++)
+    {
+        mask |= (1 << (i + lsbBitIdx));
+    }
+
+    *bank &= ~mask;//clear the region
+    *bank |= ((number << lsbBitIdx) & mask);
+}
+
+
+
+///----------------------------------------------------------------------------------------------------------------
+///
+/// 
 
 
 
 
-
-MapTile GetMapTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
+MapTile MapGetTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
     return gameState->map.levels[(mapcoord).z].tiles[(mapcoord).x][(mapcoord).y];
 }
@@ -69,7 +95,7 @@ cl_uchar MapTileTraversible(ALL_CORE_PARAMS, MapTile tile)
 }
 cl_uchar MapTileCoordTraversible(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    return MapTileTraversible(ALL_CORE_PARAMS_PASS, GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord));
+    return MapTileTraversible(ALL_CORE_PARAMS_PASS, MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord));
 }
 void AStarNodeInstantiate(AStarNode* node)
 {
@@ -127,13 +153,13 @@ cl_uchar AStarNodeValid(AStarNode* node)
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
 
-    MapTile tile = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
+    MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
     if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tile)==0)
         return 0;
 
  
     
-    MapTile tileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(node->tileIdx, staticData->directionalOffsets[5]));
+    MapTile tileDown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(node->tileIdx, staticData->directionalOffsets[5]));
     if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tileDown)==0)
     {
         return 1;
@@ -141,7 +167,7 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* 
     //else
     //{
     //    //check if its an edge off of a cliff.
-    //    MapTile prevNodeTileDown = GetMapTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
+    //    MapTile prevNodeTileDown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD( prevNode->tileIdx , staticData->directionalOffsets[5]));
     //    if(prevNode->tileIdx.z == node->tileIdx.z && !MapTileTraversible(ALL_CORE_PARAMS_PASS, prevNodeTileDown))
     //        return 1;
 
@@ -908,7 +934,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 }
 
 
-void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
+void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
 {
 
     cl_int x = ((peep->physics.base.pos_Q16.x >> 16) / (SECTOR_SIZE));
@@ -970,7 +996,7 @@ void AssignPeepToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
     }
 
 }
-void AssignPeepToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
+void PeepAssignToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 {
     //assign new sector
     if (!CL_VECTOR2_EQUAL(peep->mapSectorIdx, peep->mapSector_pendingIdx))
@@ -1198,7 +1224,7 @@ void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
 }
 
 
-void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
+void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 {
     if (x < 1 || x >= MAPDIM - 1 || y < 1 || y >= MAPDIM - 1)
     {
@@ -1290,16 +1316,9 @@ void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
 
 
 
-inline cl_uint BITBANK_GET_SUBNUMBER_UINT(cl_uint bank, cl_int lsbBitIdx, cl_int numBits)
-{
-    cl_uint mask = 0;
-    for (int i = 0; i < numBits; i++)
-    {
-        mask |= (1 << (i + lsbBitIdx));
-    }
 
-    return (bank & mask) >> lsbBitIdx;
-}
+
+
 
 inline MapTile MapTileGetTile(cl_uint tileData) {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
@@ -1311,7 +1330,7 @@ inline MapTileSlopeType MapTileGetSlope(cl_uint tileData) {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, 10, 2);
 }
 
-void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
+void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 {
     MapTile tileIdx = gameState->map.levels[gameStateActions->mapZView].tiles[x][y];
     MapTile tileUpIdx;
@@ -1579,13 +1598,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             {
                 gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
 
-                BuildMapTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                MapBuildTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
 
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
             }
 
         }
@@ -1596,10 +1615,41 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     gameStateActions->numActions = 0;
 }
 
+ge_int3 MapTileWholeToMapTileCenterQ16(int x, int y, int z)
+{
+    ge_int3 mapCoordsTileCenter_Q16 = (ge_int3){TO_Q16(x) + TO_Q16(1) >> 1,
+    TO_Q16(y) + TO_Q16(1) >> 1 ,
+    TO_Q16(z) + TO_Q16(1) >> 1 };
+    return mapCoordsTileCenter_Q16;
+}
+
+void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
+{
+    ge_int3 world_Q16;
+    ge_int3 mapCoords2D_Q16 = MapTileWholeToMapTileCenterQ16(x, y, 0);
 
 
 
-void CreateMap(ALL_CORE_PARAMS)
+    MapToWorld(mapCoords2D_Q16, &world_Q16);
+    ge_int2 world2d_Q16 = (ge_int2){world_Q16.x, world_Q16.y };
+
+    ge_int3 mapCoordWhole;//top tile
+    int occluded;
+    GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2d_Q16,
+        &mapCoordWhole, &occluded, MAPDEPTH - 1);
+
+
+    //do 3x3 kernel test
+    for (int i = 0; i < 5; i++)
+    {
+        MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole + staticData->directionalOffsets[i]);
+    }
+
+    
+
+}
+
+void MapCreate(ALL_CORE_PARAMS)
 {
     printf("Creating Map..\n");
 
@@ -1624,11 +1674,11 @@ void CreateMap(ALL_CORE_PARAMS)
                     {
                         tileType = MapTile_IronOre;
                     }
-                    else if (RandomRange(x * y * z+1, 0, 20) == 1)
+                    else if (RandomRange(x * y * z + 1, 0, 20) == 1)
                     {
                         tileType = MapTile_CopperOre;
                     }
-                    else if (RandomRange(x * y * z+2, 0, 100) == 1)
+                    else if (RandomRange(x * y * z + 2, 0, 100) == 1)
                     {
                         tileType = MapTile_DiamondOre;
                     }
@@ -1684,8 +1734,10 @@ void CreateMap(ALL_CORE_PARAMS)
     {
         for (int y = 0; y < MAPDIM; y++)
         {
-            BuildMapTileView(ALL_CORE_PARAMS_PASS,x,y);
-            UpdateMapShadow(ALL_CORE_PARAMS_PASS, x, y);
+            MapCreateSlope(ALL_CORE_PARAMS_PASS, x, y);
+
+            MapBuildTileView(ALL_CORE_PARAMS_PASS,x,y);
+            MapUpdateShadow(ALL_CORE_PARAMS_PASS, x, y);
         }
     }
 }
@@ -1739,7 +1791,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
 
-    CreateMap(ALL_CORE_PARAMS_PASS);
+    MapCreate(ALL_CORE_PARAMS_PASS);
 
     for (int i = 0; i < ASTARPATHSTEPSSIZE; i++)
     {
@@ -1846,8 +1898,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     {
         __global Peep* p = &gameState->peeps[pi];
 
-        AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
-        AssignPeepToSector_Insert(ALL_CORE_PARAMS_PASS, p);
+        PeepAssignToSector_Detach(ALL_CORE_PARAMS_PASS, p);
+        PeepAssignToSector_Insert(ALL_CORE_PARAMS_PASS, p);
 
     }
 
@@ -1993,8 +2045,8 @@ __kernel void game_update(ALL_CORE_PARAMS)
             
             if (xyIdx < (MAPDIM * MAPDIM))
             {
-                BuildMapTileView(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
-                UpdateMapShadow(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
+                MapBuildTileView(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
+                MapUpdateShadow(ALL_CORE_PARAMS_PASS, xyIdx % MAPDIM, xyIdx / MAPDIM);
             }
         }
     }
@@ -2069,7 +2121,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
             while (*lock != reservation) {}
 
-            AssignPeepToSector_Detach(ALL_CORE_PARAMS_PASS, p);
+            PeepAssignToSector_Detach(ALL_CORE_PARAMS_PASS, p);
 
             atomic_dec(lock);
         }
@@ -2119,7 +2171,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
             while (atomic_add(lock, 0) != reservation) {}
 
-            AssignPeepToSector_Insert(ALL_CORE_PARAMS_PASS, p);
+            PeepAssignToSector_Insert(ALL_CORE_PARAMS_PASS, p);
 
             atomic_dec(lock);
         }

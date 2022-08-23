@@ -142,11 +142,22 @@ struct Particle {
 
 
 
+
+enum MapTileFlags {
+	MapTileFlags_claimed = 0,
+	MapTileFlags_miningInProgress,
+
+
+
+	MapTileFlags_LASTFLAG
+} typedef MapTileFlags;
+
+
 enum MapTileSlopeType {
 	MapTileSlopeType_Ramp_1Down = 0,
 	MapTileSlopeType_Ramp_2Down,
 	MapTileSlopeType_Ramp_2Down_Opposites,
-	MapTileSlopeType_Ramp_3Down,
+	MapTileSlopeType_Ramp_3Down
 } typedef MapTileSlopeType;
 
 enum MapTile {
