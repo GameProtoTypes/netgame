@@ -153,7 +153,7 @@ cl_uchar AStarNodeValid(AStarNode* node)
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
 
-    MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
+    MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tile));
     if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tile)==0)
         return 0;
 
