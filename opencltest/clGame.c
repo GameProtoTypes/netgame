@@ -78,11 +78,21 @@ inline void BITBANK_SET_SUBNUMBER_UINT(cl_uint* bank, cl_int lsbBitIdx, cl_int n
 /// 
 
 
+inline MapTile MapDataGetTile(cl_uint tileData) {
+    return (MapTile)BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
+}
+inline int MapTileGetRotation(cl_uint tileData) {
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, 8, 2);
+}
 
+cl_uint* MapGetDataPointerFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
+{
+    return &(gameState->map.levels[(mapcoord).z].data[(mapcoord).x][(mapcoord).y]);
+}
 
 MapTile MapGetTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    return gameState->map.levels[(mapcoord).z].tiles[(mapcoord).x][(mapcoord).y];
+    return MapDataGetTile(gameState->map.levels[(mapcoord).z].data[(mapcoord).x][(mapcoord).y]);
 }
 
 cl_uchar MapTileTraversible(ALL_CORE_PARAMS, MapTile tile)
@@ -153,7 +163,7 @@ cl_uchar AStarNodeValid(AStarNode* node)
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
 
-    MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tile));
+    MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
     if (MapTileTraversible(ALL_CORE_PARAMS_PASS, tile)==0)
         return 0;
 
@@ -712,7 +722,7 @@ void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_ma
     }
     
 
-    *out_map_tile = gameState->map.levels[(*out_map_tile_coord_whole).z].tiles[(*out_map_tile_coord_whole).x][(*out_map_tile_coord_whole).y];
+    *out_map_tile = gameState->map.levels[(*out_map_tile_coord_whole).z].data[(*out_map_tile_coord_whole).x][(*out_map_tile_coord_whole).y];
    
 }
 
@@ -744,49 +754,49 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 {
 
     //maptile collisions
-    MapTile tiles[26];
+    MapTile data[26];
     ge_int3 tileCenters_Q16[26];
     ge_int3 dummy;
 
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & tiles[0], & tileCenters_Q16[0],&dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & tiles[1], & tileCenters_Q16[1], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & tiles[2], & tileCenters_Q16[2], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & tiles[3], & tileCenters_Q16[3], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & tiles[4], & tileCenters_Q16[4], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & tiles[5], & tileCenters_Q16[5], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & data[0], & tileCenters_Q16[0],&dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & data[1], & tileCenters_Q16[1], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & data[2], & tileCenters_Q16[2], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & data[3], & tileCenters_Q16[3], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & data[4], & tileCenters_Q16[4], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & data[5], & tileCenters_Q16[5], &dummy);
 
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, & tiles[6], & tileCenters_Q16[6]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, & data[6], & tileCenters_Q16[6]);
 
-    /*PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & tiles[6], & tileCenters_Q16[6]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & tiles[7], & tileCenters_Q16[7]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & tiles[8], & tileCenters_Q16[8]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & tiles[9], & tileCenters_Q16[9]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & tiles[10], & tileCenters_Q16[10]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & tiles[11], & tileCenters_Q16[11]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & tiles[12], & tileCenters_Q16[12]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & tiles[13], & tileCenters_Q16[13]);
+    /*PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & data[6], & tileCenters_Q16[6]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & data[7], & tileCenters_Q16[7]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & data[8], & tileCenters_Q16[8]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & data[9], & tileCenters_Q16[9]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & data[10], & tileCenters_Q16[10]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & data[11], & tileCenters_Q16[11]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & data[12], & tileCenters_Q16[12]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & data[13], & tileCenters_Q16[13]);
 
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & tiles[14], & tileCenters_Q16[14]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & tiles[15], & tileCenters_Q16[15]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & tiles[16], & tileCenters_Q16[16]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & tiles[17], & tileCenters_Q16[17]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & tiles[18], & tileCenters_Q16[18]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & tiles[19], & tileCenters_Q16[19]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & tiles[20], & tileCenters_Q16[20]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & data[14], & tileCenters_Q16[14]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & data[15], & tileCenters_Q16[15]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & data[16], & tileCenters_Q16[16]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & data[17], & tileCenters_Q16[17]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & data[18], & tileCenters_Q16[18]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & data[19], & tileCenters_Q16[19]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & data[20], & tileCenters_Q16[20]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & data[21], & tileCenters_Q16[21]);
 
 
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 0 }, & tiles[22], & tileCenters_Q16[23]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 0 }, & tiles[23], & tileCenters_Q16[24]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 0 }, & tiles[24], & tileCenters_Q16[25]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 0 }, & tiles[25], & tileCenters_Q16[26]);*/
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 0 }, & data[22], & tileCenters_Q16[23]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 0 }, & data[23], & tileCenters_Q16[24]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 0 }, & data[24], & tileCenters_Q16[25]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 0 }, & data[25], & tileCenters_Q16[26]);*/
 
     
 
     for (int i = 0; i < 6; i++)
     {
         //circle-circle collision with incorrect corner forces.
-        MapTile tile = tiles[i];
+        MapTile tile = data[i];
         if (tile != MapTile_NONE)
         {
             cl_int3 tileMin_Q16;
@@ -1081,7 +1091,7 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     {
         tileMapCoordWhole.z++;
 
-        ctile = gameState->map.levels[tileMapCoordWhole.z].tiles[tileMapCoordWhole.x][tileMapCoordWhole.y];
+        ctile = gameState->map.levels[tileMapCoordWhole.z].data[tileMapCoordWhole.x][tileMapCoordWhole.y];
     }
     //printf("%d\n", tileMapCoordWhole.z);
 
@@ -1226,6 +1236,7 @@ void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
 
 void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 {
+   
     if (x < 1 || x >= MAPDIM - 1 || y < 1 || y >= MAPDIM - 1)
     {
         mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
@@ -1233,10 +1244,11 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
     }
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
+    return;
     for (int z = gameStateActions->mapZView; z >= 1; z--)
     {       
-        MapTile center = gameState->map.levels[z].tiles[x][y];
-        MapTile below = gameState->map.levels[z].tiles[x][y];
+        MapTile center = gameState->map.levels[z].data[x][y];
+        MapTile below = gameState->map.levels[z].data[x][y];
 
 
         if (center != MapTile_NONE)
@@ -1246,14 +1258,14 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
         // b | c | d
         // e |cen| f
         // g | h | i
-        MapTile b = gameState->map.levels[z].tiles[x-1][y-1];
-        MapTile c = gameState->map.levels[z].tiles[x][y-1];
-        MapTile d = gameState->map.levels[z].tiles[x+1][y-1];
-        MapTile e = gameState->map.levels[z].tiles[x-1][y];
-        MapTile f = gameState->map.levels[z].tiles[x + 1][y];
-        MapTile g = gameState->map.levels[z].tiles[x - 1][y+1];
-        MapTile h = gameState->map.levels[z].tiles[x][y + 1];
-        MapTile i = gameState->map.levels[z].tiles[x+1][y + 1];
+        MapTile b = gameState->map.levels[z].data[x-1][y-1];
+        MapTile c = gameState->map.levels[z].data[x][y-1];
+        MapTile d = gameState->map.levels[z].data[x+1][y-1];
+        MapTile e = gameState->map.levels[z].data[x-1][y];
+        MapTile f = gameState->map.levels[z].data[x + 1][y];
+        MapTile g = gameState->map.levels[z].data[x - 1][y+1];
+        MapTile h = gameState->map.levels[z].data[x][y + 1];
+        MapTile i = gameState->map.levels[z].data[x+1][y + 1];
 
 
         if ((f != MapTile_NONE) && (c == MapTile_NONE) && (e == MapTile_NONE) && (h == MapTile_NONE))
@@ -1320,100 +1332,97 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 
 
 
-inline MapTile MapTileGetTile(cl_uint tileData) {
-    return BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
-}
-inline int MapTileGetRotation(cl_uint tileData) {
-    return BITBANK_GET_SUBNUMBER_UINT(tileData, 8, 2);
-}
-inline MapTileSlopeType MapTileGetSlope(cl_uint tileData) {
-    return BITBANK_GET_SUBNUMBER_UINT(tileData, 10, 2);
-}
 
 void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 {
-    MapTile tileIdx = gameState->map.levels[gameStateActions->mapZView].tiles[x][y];
-    MapTile tileUpIdx;
+    ge_int3 coord = (ge_int3){x,y,gameStateActions->mapZView };
+    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+    MapTile tile = MapDataGetTile(*data);
+    MapTile tileUp;
     if (gameStateActions->mapZView < MAPDEPTH-1)
     {
-        tileUpIdx = gameState->map.levels[gameStateActions->mapZView + 1].tiles[x][y];
+        coord.z = gameStateActions->mapZView + 1;
+        cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+
+
+        tileUp = MapDataGetTile(*dataup);
+
     }
     else
     {
-        tileUpIdx = MapTile_NONE;
+        tileUp = MapTile_NONE;
     }
 
     mapTile1AttrVBO[y * MAPDIM + x] = 0;
 
-    if (tileIdx == MapTile_NONE)
+
+    //look down...
+
+    int vz = 0;
+    while (tile == MapTile_NONE)
     {
-        //look down...
-        MapTile tileDownIdx = tileIdx;
-        int z = gameStateActions->mapZView;
-        int vz = 0;
-        while (tileDownIdx == MapTile_NONE)
-        {
-            tileDownIdx = gameState->map.levels[z].tiles[x][y];
-            z--;
+        data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+        tile = MapDataGetTile(*data);
+        if (tile == MapTile_NONE) {
+            coord.z--;
             vz++;
         }
-        tileIdx = tileDownIdx;
-
-        cl_uint shade = clamp(vz * 2, 0, 15);
-        cl_uint finalAttr=0;
-        finalAttr |= shade;
-        finalAttr |= (shade << 4);
-        finalAttr |= (shade << 8);
-        finalAttr |= (shade << 12);
-
-        mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
-        mapTile1OtherAttrVBO[y * MAPDIM + x] = RandomRange(x,0,4);
     }
-            
-            
 
-    if (tileUpIdx != MapTile_NONE)
+    //quick hack for the top level transitions
+    int m = 1;
+    if (vz == 0)
+        m = 2;
+
+    cl_uint finalAttr=0;
+    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT)*m) * 2, 0, 15);
+    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT)*m) * 2, 0, 15) << 4;
+    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT)*m) * 2, 0, 15) << 8;
+    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)*m) * 2, 0, 15) << 12;
+
+    mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
+    mapTile1OtherAttrVBO[ y * MAPDIM + x ] = RandomRange(x,0,4);
+    
+    if (tileUp != MapTile_NONE)
     {
         mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;//view obstructed by foottile above.
     }
     else
     {
-        mapTile1VBO[y * MAPDIM + x] = tileIdx;
+        mapTile1VBO[y * MAPDIM + x] = tile;
     }
-
-
 }
 
 void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
 {
 ///    Print_GE_INT3_Q16(p->physics.base.pos_Q16);
     Peep* peep = p;
-    MapTile tiles[22];
+    MapTile data[22];
     ge_int3 tileCenters_Q16[22];
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & tiles[0], & tileCenters_Q16[0]); printf("{ 1, 0, 0 }: %d\n", tiles[0]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & tiles[1], & tileCenters_Q16[1]); printf("{ -1, 0, 0 }: %d\n", tiles[1]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & tiles[2], & tileCenters_Q16[2]); printf("{ 0, -1, 0 }: %d\n", tiles[2]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & tiles[3], & tileCenters_Q16[3]); printf("{ 0, 1, 0 }: %d\n", tiles[3]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & tiles[4], & tileCenters_Q16[4]); printf("{ 0, 0, 1 }: %d\n", tiles[4]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & tiles[5], & tileCenters_Q16[5]); printf("{ 0, 0, -1 }: %d\n", tiles[5]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & data[0], & tileCenters_Q16[0]); printf("{ 1, 0, 0 }: %d\n", data[0]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & data[1], & tileCenters_Q16[1]); printf("{ -1, 0, 0 }: %d\n", data[1]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & data[2], & tileCenters_Q16[2]); printf("{ 0, -1, 0 }: %d\n", data[2]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & data[3], & tileCenters_Q16[3]); printf("{ 0, 1, 0 }: %d\n", data[3]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & data[4], & tileCenters_Q16[4]); printf("{ 0, 0, 1 }: %d\n", data[4]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & data[5], & tileCenters_Q16[5]); printf("{ 0, 0, -1 }: %d\n", data[5]);
 
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & tiles[6], & tileCenters_Q16[6]); printf("{ 1, 0, -1 }: %d\n", tiles[6]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & tiles[7], & tileCenters_Q16[7]); printf("{ 0, 1, -1 }: %d\n", tiles[7]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & tiles[8], & tileCenters_Q16[8]); printf("{ 1, 1, -1 }: %d\n", tiles[8]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & tiles[9], & tileCenters_Q16[9]); printf("{ -1, 0, -1 }: %d\n", tiles[9]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & tiles[10], & tileCenters_Q16[10]); printf("{ 0, -1, -1 }: %d\n", tiles[10]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & tiles[11], & tileCenters_Q16[11]); printf("{ -1, -1, -1 }: %d\n", tiles[11]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & tiles[12], & tileCenters_Q16[12]); printf("{ 1, -1, -1 }: %d\n", tiles[12]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & tiles[13], & tileCenters_Q16[13]); printf("{ -1, 1, -1 }: %d\n", tiles[13]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, -1 }, & data[6], & tileCenters_Q16[6]); printf("{ 1, 0, -1 }: %d\n", data[6]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, -1 }, & data[7], & tileCenters_Q16[7]); printf("{ 0, 1, -1 }: %d\n", data[7]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, -1 }, & data[8], & tileCenters_Q16[8]); printf("{ 1, 1, -1 }: %d\n", data[8]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, -1 }, & data[9], & tileCenters_Q16[9]); printf("{ -1, 0, -1 }: %d\n", data[9]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, -1 }, & data[10], & tileCenters_Q16[10]); printf("{ 0, -1, -1 }: %d\n", data[10]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, -1 }, & data[11], & tileCenters_Q16[11]); printf("{ -1, -1, -1 }: %d\n", data[11]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, -1 }, & data[12], & tileCenters_Q16[12]); printf("{ 1, -1, -1 }: %d\n", data[12]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, -1 }, & data[13], & tileCenters_Q16[13]); printf("{ -1, 1, -1 }: %d\n", data[13]);
 
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & tiles[14], & tileCenters_Q16[14]); printf("{ 1, 0, 1 }: %d\n", tiles[14]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & tiles[15], & tileCenters_Q16[15]); printf("{ 0, 1, 1 }: %d\n", tiles[15]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & tiles[16], & tileCenters_Q16[16]); printf("{ 1, 1, 1 }: %d\n", tiles[16]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & tiles[17], & tileCenters_Q16[17]); printf("{ -1, 0, 1 }: %d\n", tiles[17]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & tiles[18], & tileCenters_Q16[18]); printf("{ 0, -1, 1 }: %d\n", tiles[18]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & tiles[19], & tileCenters_Q16[19]); printf("{ -1, -1, 1 }: %d\n", tiles[19]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & tiles[20], & tileCenters_Q16[20]); printf("{ 1, -1, 1 }: %d\n", tiles[20]);
-    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & tiles[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", tiles[21]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 1 }, & data[14], & tileCenters_Q16[14]); printf("{ 1, 0, 1 }: %d\n", data[14]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 1 }, & data[15], & tileCenters_Q16[15]); printf("{ 0, 1, 1 }: %d\n", data[15]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 1, 1 }, & data[16], & tileCenters_Q16[16]); printf("{ 1, 1, 1 }: %d\n", data[16]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 1 }, & data[17], & tileCenters_Q16[17]); printf("{ -1, 0, 1 }: %d\n", data[17]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 1 }, & data[18], & tileCenters_Q16[18]); printf("{ 0, -1, 1 }: %d\n", data[18]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 1 }, & data[19], & tileCenters_Q16[19]); printf("{ -1, -1, 1 }: %d\n", data[19]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, -1, 1 }, & data[20], & tileCenters_Q16[20]); printf("{ 1, -1, 1 }: %d\n", data[20]);
+    //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & data[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", data[21]);
 
 }
 
@@ -1432,7 +1441,7 @@ void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_i
     for (int z = zViewRestrictLevel; z >= 0; z--)
     {
         
-        MapTile tile = gameState->map.levels[z].tiles[(*mapcoord_whole).x][(*mapcoord_whole).y];
+        MapTile tile = gameState->map.levels[z].data[(*mapcoord_whole).x][(*mapcoord_whole).y];
 
         if (tile != MapTile_NONE)
         {
@@ -1596,7 +1605,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
             if (mapCoord.z > 0) 
             {
-                gameState->map.levels[mapCoord.z].tiles[mapCoord.x][mapCoord.y] = MapTile_NONE;
+                gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
 
                 MapBuildTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
 
@@ -1617,9 +1626,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 ge_int3 MapTileWholeToMapTileCenterQ16(int x, int y, int z)
 {
-    ge_int3 mapCoordsTileCenter_Q16 = (ge_int3){TO_Q16(x) + TO_Q16(1) >> 1,
-    TO_Q16(y) + TO_Q16(1) >> 1 ,
-    TO_Q16(z) + TO_Q16(1) >> 1 };
+    ge_int3 mapCoordsTileCenter_Q16 = (ge_int3){TO_Q16(x) + (TO_Q16(1) >> 1),
+    TO_Q16(y) + (TO_Q16(1) >> 1) ,
+    TO_Q16(z) + (TO_Q16(1) >> 1) };
     return mapCoordsTileCenter_Q16;
 }
 
@@ -1627,7 +1636,6 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
 {
     ge_int3 world_Q16;
     ge_int3 mapCoords2D_Q16 = MapTileWholeToMapTileCenterQ16(x, y, 0);
-
 
 
     MapToWorld(mapCoords2D_Q16, &world_Q16);
@@ -1638,12 +1646,87 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2d_Q16,
         &mapCoordWhole, &occluded, MAPDEPTH - 1);
 
-
+    cl_uint* tileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole);
     //do 3x3 kernel test
-    for (int i = 0; i < 5; i++)
+
+
+    //offsets[22] = (ge_int3){ 1, 1, 0 };
+    //offsets[23] = (ge_int3){ -1, 1, 0 };
+    //offsets[24] = (ge_int3){ 1, -1, 0 };
+    //offsets[25] = (ge_int3){ -1, -1, 0 };
+
+    cl_uint* data22 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[22]));
+    MapTile tile22 = MapDataGetTile(*data22);
+    if (tile22 == MapTile_NONE)
     {
-        MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole + staticData->directionalOffsets[i]);
+        BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
     }
+    cl_uint* data24 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[24]));
+    MapTile tile24 = MapDataGetTile(*data24);
+    if (tile24 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
+    }
+    cl_uint* data23 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[23]));
+    MapTile tile23 = MapDataGetTile(*data23);
+    if (tile23 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
+    }
+    cl_uint* data25 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[25]));
+    MapTile tile25 = MapDataGetTile(*data25);
+    if (tile25 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
+    }
+
+
+
+
+
+
+
+
+    //offsets[0] = (ge_int3){ 1, 0, 0 };
+    //offsets[1] = (ge_int3){ -1, 0, 0 };
+    //offsets[2] = (ge_int3){ 0, -1, 0 };
+    //offsets[3] = (ge_int3){ 0, 1, 0 };
+    //offsets[4] = (ge_int3){ 0, 0, 1 };
+    //offsets[5] = (ge_int3){ 0, 0, -1 };
+
+
+
+    cl_uint* data0 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[0]));
+    MapTile tile0 = MapDataGetTile(*data0);
+    if (tile0 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
+        BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
+    }
+    cl_uint* data1 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[1]));
+    MapTile tile1 = MapDataGetTile(*data1);
+    if (tile1 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
+        BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
+    }
+    cl_uint* data2 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[2]));
+    MapTile tile2 = MapDataGetTile(*data2);
+    if (tile2 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
+        BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
+    }
+    cl_uint* data3 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[3]));
+    MapTile tile3 = MapDataGetTile(*data3);
+    if (tile3 == MapTile_NONE)
+    {
+        BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
+        BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
+    }
+
+
+
 
     
 
@@ -1720,7 +1803,7 @@ void MapCreate(ALL_CORE_PARAMS)
 
 
 
-                gameState->map.levels[z].tiles[x][y] = tileType;
+                gameState->map.levels[z].data[x][y] = tileType;
 
 
                 i++;

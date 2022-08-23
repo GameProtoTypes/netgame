@@ -27,9 +27,10 @@
 
 #define GE_OFFSET_NULL_2D (ge_uint2){0xFFFFFFFF , 0xFFFFFFFF}
 
-#define BITSET(BITBANK, BITFLAG) {BITBANK |= (1 << BITFLAG);}
-#define BITCLEAR(BITBANK, BITFLAG) {BITBANK &= ~(1 << BITFLAG);}
-#define BITGET(BITBANK, BITFLAG) (BITBANK & (1 << BITFLAG))
+#define BITSET(BITBANK, BITFLAG) {(BITBANK) |= (1 << BITFLAG);}
+#define BITCLEAR(BITBANK, BITFLAG) {(BITBANK) &= ~(1 << BITFLAG);}
+#define BITGET(BITBANK, BITFLAG) ((BITBANK) & (1 << BITFLAG))
+#define BITGET_MF(BITBANK, BITFLAG) (((BITBANK) & (1 << BITFLAG))>>BITFLAG)
 
 
 
@@ -144,21 +145,20 @@ struct Particle {
 
 
 enum MapTileFlags {
-	MapTileFlags_claimed = 0,
+	MapTileFlags_claimed = 10,
 	MapTileFlags_miningInProgress,
-
+	
+	MapTileFlags_LowCornerTPLEFT,
+	MapTileFlags_LowCornerTPRIGHT,
+	MapTileFlags_LowCornerBTMRIGHT,
+	MapTileFlags_LowCornerBTMLEFT,
 
 
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;
 
 
-enum MapTileSlopeType {
-	MapTileSlopeType_Ramp_1Down = 0,
-	MapTileSlopeType_Ramp_2Down,
-	MapTileSlopeType_Ramp_2Down_Opposites,
-	MapTileSlopeType_Ramp_3Down
-} typedef MapTileSlopeType;
+
 
 enum MapTile {
 	MapTile_Dirt = 0,
@@ -194,11 +194,10 @@ enum MapTile {
 
 
 struct MapLevel {	
-	//[xxxx|xxxx|xxxx|xxxx|xxxx|BBCC|AAAA|AAAA]
+	//[xxxx|xxxx|xxxx|xxxx|xxxx|xxCC|AAAA|AAAA]
 	//AA - MapTile
 	//C - Rotation
-	//B - SlopeType
-	cl_uint tiles[MAPDIM][MAPDIM];
+	cl_uint data[MAPDIM][MAPDIM];
 } typedef MapLevel;
 
 struct Map {

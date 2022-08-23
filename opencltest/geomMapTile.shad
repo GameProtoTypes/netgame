@@ -32,22 +32,18 @@ uint cornerIdx = 0;
 void CornerA()
 {
     texCoord = vec2(tileX + B, tileY + B);
-    shading =topShading1;
 }
 void CornerB()
 {
     texCoord = vec2(tileX + S - B, tileY + B);
-    shading = topShading2;
 }
 void CornerC()
 {
-        texCoord = vec2(tileX + B, tileY + S - B);
-        shading = topShading3;
+     texCoord = vec2(tileX + B, tileY + S - B);
 }
 void CornerD()
 {
-        texCoord = vec2(tileX + S - B, tileY + S - B);
-        shading = topShading4;
+     texCoord = vec2(tileX + S - B, tileY + S - B);
 }
 
 void NextCorner()
@@ -148,10 +144,10 @@ void NextCorner()
 
 
 void main() {
-    topShading1 = float((gs_in[0].shadeAttr & 15u))/16.0;//darkshading 4 bits
-    topShading2 = float((gs_in[0].shadeAttr & (15u << 4))>>4)/16.0;//darkshading 4 bits
-    topShading3 = float((gs_in[0].shadeAttr & (15u << 8))>>8)/16.0;//darkshading 4 bits
-    topShading4 = float((gs_in[0].shadeAttr & (15u << 12))>>12)/16.0;//darkshading 4 bits
+    topShading1 = float((gs_in[0].shadeAttr & 15u))/15.0;//darkshading 4 bits
+    topShading2 = float((gs_in[0].shadeAttr & (15u << 4))>>4)/15.0;//darkshading 4 bits
+    topShading3 = float((gs_in[0].shadeAttr & (15u << 8))>>8)/15.0;//darkshading 4 bits
+    topShading4 = float((gs_in[0].shadeAttr & (15u << 12))>>12)/15.0;//darkshading 4 bits
 
     rot = (gs_in[0].otherAttr & 15u);
 
@@ -163,18 +159,22 @@ void main() {
 
         gl_Position = projection * (localTransform * gl_in[0].gl_Position);
         NextCorner();
+        shading = topShading1;
         EmitVertex();
 
         gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0)));
         NextCorner();
+        shading = topShading2;
         EmitVertex();
 
         gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0)));
         NextCorner();
+        shading = topShading4;
         EmitVertex();
 
         gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0)));
         NextCorner();
+        shading = topShading3;
         EmitVertex();
 
         EndPrimitive();
