@@ -80,7 +80,9 @@ int32_t main(int32_t argc, char* args[])
     gameCompute.graphics = &gameGraphics;    
     
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
+    gameCompute.AddCompileDefinition("PARTICLE_VBO_INSTANCE_SIZE", gameGraphics.particleInstanceSIZE);
     gameCompute.AddCompileDefinition("MAX_PEEPS", gameCompute.maxPeeps);
+    gameCompute.AddCompileDefinition("MAX_PARTICLES", gameCompute.maxParticles);
     gameCompute.AddCompileDefinition("MAPDIM", gameCompute.mapDim);
     gameCompute.AddCompileDefinition("MAPDEPTH", gameCompute.mapDepth);
     gameCompute.AddCompileDefinition("WARPSIZE", WARPSIZE);
@@ -535,6 +537,18 @@ int32_t main(int32_t argc, char* args[])
 
         glBindVertexArray(gameGraphics.peepVAO);
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxPeeps);
+        glBindVertexArray(0);
+
+
+        //draw all particles
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        gameGraphics.pParticleShadProgram->Use();
+        gameGraphics.pParticleShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
+        glBindVertexArray(gameGraphics.particleVAO);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxParticles);
         glBindVertexArray(0);
 
 

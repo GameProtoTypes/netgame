@@ -61,7 +61,6 @@ public:
 		int viewZIdx =0 ;
 
 		glm::vec2 viewFrameDelta = glm::vec2();
-
 		glm::vec2 worldCameraPos = glm::vec2();
 
 		bool waitingMapAction = false;
@@ -89,6 +88,7 @@ public:
     std::vector<std::shared_ptr<GEShaderProgram>> shaderProgramList;
 
 	std::shared_ptr<GEShaderProgram> pPeepShadProgram;
+	std::shared_ptr<GEShaderProgram> pParticleShadProgram;
 	std::shared_ptr<GEShaderProgram> pMapTileShadProgram;
 
 
@@ -99,9 +99,13 @@ public:
 	uint32_t peepVAO, peepQuadVBO, peepQuadUVVBO, peepInstanceVBO;
 	int peepInstanceSIZE = 0;
 
+	uint32_t particleVAO, particleQuadVBO, particleQuadUVVBO, particleInstanceVBO;
+	int particleInstanceSIZE = 0;
 
-	uint32_t mapTile1VAO, mapTile1VBO, mapTile1AttrVBO;	
-	uint32_t mapTile2VAO, mapTile2VBO, mapTile2AttrVBO;
+
+
+	uint32_t mapTile1VAO, mapTile1VBO, mapTile1AttrVBO, mapTile1OtherAttrVBO;	
+	uint32_t mapTile2VAO, mapTile2VBO, mapTile2AttrVBO, mapTile2OtherAttrVBO;
 	int mapTileInstanceSIZE = 0;
 	GLuint mapTileTexId = 0;
 

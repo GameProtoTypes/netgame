@@ -151,6 +151,12 @@ void GameGraphics::Init()
     shaderProgramList.push_back(pPeepShadProgram);
 
 
+    pParticleShadProgram = std::make_shared<GEShaderProgram>();
+    pParticleShadProgram->AttachShader(pVertPeepShad);
+    pParticleShadProgram->AttachShader(pFragPeepShad);
+    shaderProgramList.push_back(pParticleShadProgram);
+
+
     pMapTileShadProgram = std::make_shared<GEShaderProgram>();
     pMapTileShadProgram->AttachShader(pVertMapTileShad);
     pMapTileShadProgram->AttachShader(pGeomMapTileShad);
@@ -160,10 +166,11 @@ void GameGraphics::Init()
     GL_HOST_ERROR_CHECK()
 
 
+    for (auto shader : shaderProgramList)
+    {
+        shader->Link();
+    }
 
-        pPeepShadProgram->Link();
-    pBasicShadProgram->Link();
-    pMapTileShadProgram->Link();
 
     GL_HOST_ERROR_CHECK()
 
@@ -201,8 +208,8 @@ void GameGraphics::Init()
     GL_HOST_ERROR_CHECK()
 
 
-        //map
-        std::shared_ptr<cl_uint> mapStartData(new cl_uint[(gameCompute->mapDim * gameCompute->mapDim)]);
+    //map
+    std::shared_ptr<cl_uint> mapStartData(new cl_uint[(gameCompute->mapDim * gameCompute->mapDim)]);
     for (int i = 0; i < (gameCompute->mapDim * gameCompute->mapDim); i++)
     {
         mapStartData.get()[i] = 0;
@@ -211,30 +218,41 @@ void GameGraphics::Init()
     glGenVertexArrays(1, &mapTile1VAO);
     glBindVertexArray(mapTile1VAO);
 
-    GL_HOST_ERROR_CHECK()
+        GL_HOST_ERROR_CHECK()
 
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTile1VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, mapTile1VBO);
-    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTile1VBO);
+        glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uchar), mapStartData.get(), GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
 
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glGenBuffers(1, &mapTile1AttrVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, mapTile1AttrVBO);
-    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(1);
 
-    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+        glVertexAttribIPointer(0, 1, GL_UNSIGNED_BYTE, sizeof(cl_uchar), (void*)0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glGenBuffers(1, &mapTile1AttrVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTile1AttrVBO);
+        glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+
+        glGenBuffers(1, &mapTile1OtherAttrVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, mapTile1OtherAttrVBO);
+        glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     GL_HOST_ERROR_CHECK()
 
-        //overlay map
-        glGenVertexArrays(1, &mapTile2VAO);
+    //overlay map
+    glGenVertexArrays(1, &mapTile2VAO);
     glBindVertexArray(mapTile2VAO);
 
     GL_HOST_ERROR_CHECK()
@@ -242,10 +260,10 @@ void GameGraphics::Init()
         GL_HOST_ERROR_CHECK()
         glGenBuffers(1, &mapTile2VBO);
     glBindBuffer(GL_ARRAY_BUFFER, mapTile2VBO);
-    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uchar), mapStartData.get(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_BYTE, sizeof(cl_uchar), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glGenBuffers(1, &mapTile2AttrVBO);
@@ -254,6 +272,16 @@ void GameGraphics::Init()
     glEnableVertexAttribArray(1);
 
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+
+    glGenBuffers(1, &mapTile2OtherAttrVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, mapTile2OtherAttrVBO);
+    glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uint), mapStartData.get(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(2);
+
+    glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(cl_uint), (void*)0);
+
+
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -281,9 +309,6 @@ void GameGraphics::Init()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
-
-
-
     // also set instance data
     peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
     glGenBuffers(1, &peepInstanceVBO);
@@ -308,6 +333,68 @@ void GameGraphics::Init()
 
 
     GL_HOST_ERROR_CHECK()
+
+
+
+
+
+    //particles
+
+    //set different image
+    for (int i = 0; i < 6; i++)
+    {
+        quadUVs[i * 2 + 0] += 1 / 16.0f;
+        quadUVs[i * 2 + 1] += 0;
+    }
+
+    glGenVertexArrays(1, &particleVAO);
+    glBindVertexArray(particleVAO);
+
+    glGenBuffers(1, &particleQuadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleQuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+    glGenBuffers(1, &particleQuadUVVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleQuadUVVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadUVs), quadUVs, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+    // also set instance data
+    particleInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each particle
+    glGenBuffers(1, &particleInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, particleInstanceSIZE* gameCompute->maxParticles, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, particleInstanceSIZE, (void*)0);//position
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, particleInstanceSIZE, (void*)sizeof(glm::vec2));//color
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, particleInstanceSIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
+
+
+    glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
+    glVertexAttribDivisor(4, 1); // tell OpenGL this is an instanced vertex attribute.
+    glVertexAttribDivisor(5, 1); // tell OpenGL this is an instanced vertex attribute.
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+
+
+
+    GL_HOST_ERROR_CHECK()
+
+
+
+
+
 
 
 

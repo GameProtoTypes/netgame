@@ -1,25 +1,13 @@
 #pragma once
 
 
-
-#ifndef __OPENCL_VERSION__
-#include <stdint.h>
-
-#else
-
-
-
 #include <cl_type_glue.h>
 #include "dynamicDefines.h"
 #include "sizeTests.h"
 
-#endif
-
 #include "cpugpuvectortypes.h"
 
 #define MAX_TRACKNODES (1024*8)
-
-
 
 #define SQRT_MAXSECTORS (128)
 #define SECTOR_SIZE (8)
@@ -42,6 +30,9 @@
 #define BITSET(BITBANK, BITFLAG) {BITBANK |= (1 << BITFLAG);}
 #define BITCLEAR(BITBANK, BITFLAG) {BITBANK &= ~(1 << BITFLAG);}
 #define BITGET(BITBANK, BITFLAG) (BITBANK & (1 << BITFLAG))
+
+
+
 
 struct Cell;
 struct MapSector;
@@ -139,21 +130,24 @@ struct Peep {
 	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
 	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
 
-	
-
 } typedef Peep;
 #pragma pack(pop)
 
 
+struct Particle {
+
+	QMP32_2 pos;
+	QMP32_2 vel;
+}typedef Particle;
 
 
 
-
-enum MapTileBitAttr {
-	MapTileBitAttr_MiningMarkBit = 0,
-	MapTileBitAttr_Visible = 1
-
-} typedef MapTileBitAttr;
+enum MapTileSlopeType {
+	MapTileSlopeType_Ramp_1Down = 0,
+	MapTileSlopeType_Ramp_2Down,
+	MapTileSlopeType_Ramp_2Down_Opposites,
+	MapTileSlopeType_Ramp_3Down,
+} typedef MapTileSlopeType;
 
 enum MapTile {
 	MapTile_Dirt = 0,
@@ -188,11 +182,13 @@ enum MapTile {
 }typedef MapTile;
 
 
-struct MapLevel {
-	cl_short tiles[MAPDIM][MAPDIM];
+struct MapLevel {	
+	//[xxxx|xxxx|xxxx|xxxx|xxxx|BBCC|AAAA|AAAA]
+	//AA - MapTile
+	//C - Rotation
+	//B - SlopeType
+	cl_uint tiles[MAPDIM][MAPDIM];
 } typedef MapLevel;
-
-
 
 struct Map {
 	MapLevel levels[MAPDEPTH];
@@ -269,11 +265,16 @@ struct GameState {
 
 
 	Peep peeps[MAX_PEEPS];
+	
+	Particle particles[MAX_PARTICLES];
+	
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 	AStarSearch mapSearchers[1];
 	AStarPathSteps paths;
+
+
 
 
 } typedef GameState;

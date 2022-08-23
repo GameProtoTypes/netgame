@@ -11,19 +11,26 @@
 __global GameState* gameState,\
 __global GameStateActions* gameStateActions, \
 __global float* peepVBOBuffer, \
-__global cl_uint* mapTile1VBO, \
+__global float* particleVBOBuffer, \
+__global cl_uchar* mapTile1VBO, \
 __global cl_uint* mapTile1AttrVBO, \
-__global cl_uint* mapTile2VBO, \
-__global cl_uint* mapTile2AttrVBO
+__global cl_uint* mapTile1OtherAttrVBO, \
+__global cl_uchar* mapTile2VBO, \
+__global cl_uint* mapTile2AttrVBO, \
+__global cl_uint* mapTile2OtherAttrVBO
+
 
 #define ALL_CORE_PARAMS_PASS  staticData, \
 gameState, \
 gameStateActions, \
 peepVBOBuffer, \
+particleVBOBuffer, \
 mapTile1VBO, \
 mapTile1AttrVBO, \
+mapTile1OtherAttrVBO, \
 mapTile2VBO, \
-mapTile2AttrVBO
+mapTile2AttrVBO, \
+mapTile2OtherAttrVBO
 
 
 
@@ -625,8 +632,6 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     
 
     PeepPeepPhysics(ALL_CORE_PARAMS_PASS, peep, otherPeep);
-
-
 }
 
 void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
@@ -1186,6 +1191,11 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 }
 
+void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
+{
+    p->pos.x = ADD_QMP32(p->pos.x, p->vel.x);
+    p->pos.y = ADD_QMP32(p->pos.y, p->vel.y);
+}
 
 
 void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
@@ -1277,6 +1287,30 @@ void UpdateMapShadow(ALL_CORE_PARAMS, int x, int y)
 
 }
 
+
+
+
+inline cl_uint BITBANK_GET_SUBNUMBER_UINT(cl_uint bank, cl_int lsbBitIdx, cl_int numBits)
+{
+    cl_uint mask = 0;
+    for (int i = 0; i < numBits; i++)
+    {
+        mask |= (1 << (i + lsbBitIdx));
+    }
+
+    return (bank & mask) >> lsbBitIdx;
+}
+
+inline MapTile MapTileGetTile(cl_uint tileData) {
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
+}
+inline int MapTileGetRotation(cl_uint tileData) {
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, 8, 2);
+}
+inline MapTileSlopeType MapTileGetSlope(cl_uint tileData) {
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, 10, 2);
+}
+
 void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
 {
     MapTile tileIdx = gameState->map.levels[gameStateActions->mapZView].tiles[x][y];
@@ -1305,7 +1339,16 @@ void BuildMapTileView(ALL_CORE_PARAMS, int x, int y)
             vz++;
         }
         tileIdx = tileDownIdx;
-        mapTile1AttrVBO[ y * MAPDIM + x ] |= clamp(vz*2,0,15);
+
+        cl_uint shade = clamp(vz * 2, 0, 15);
+        cl_uint finalAttr=0;
+        finalAttr |= shade;
+        finalAttr |= (shade << 4);
+        finalAttr |= (shade << 8);
+        finalAttr |= (shade << 12);
+
+        mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
+        mapTile1OtherAttrVBO[y * MAPDIM + x] = RandomRange(x,0,4);
     }
             
             
@@ -1812,6 +1855,19 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
 
+
+    for (int i = 0; i < MAX_PARTICLES; i++)
+    {
+        Particle* p = &gameState->particles[i];
+
+        p->pos.x = FloatToQMP32( (float)RandomRange(i, -spread, spread ));
+        p->pos.y = FloatToQMP32((float)RandomRange(i+1, -spread, spread));
+
+        p->vel.x = FloatToQMP32(((float)RandomRange(i, -1000, 1000))*0.001f);
+        p->vel.y = FloatToQMP32(((float)RandomRange(i + 1, -1000, 1000)) * 0.001f);
+    }
+
+
 }
 
 
@@ -1869,12 +1925,38 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
 
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x* brightFactor;
+    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
 
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
 }
+
+void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint idx)
+{
+    float3 drawColor;
+    float drawPosX = (float)((float)particle->pos.x.number / (1 << particle->pos.x.q));
+    float drawPosY = (float)((float)particle->pos.y.number / (1 << particle->pos.y.q));
+
+
+    drawColor.x = 1.0f;
+    drawColor.y = 1.0f;
+    drawColor.z = 1.0f;
+  
+
+    float brightFactor = 1.0f;
+
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
+
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
+
+    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = 0;
+}
+
+
 
 __kernel void game_update(ALL_CORE_PARAMS)
 {
@@ -1887,6 +1969,13 @@ __kernel void game_update(ALL_CORE_PARAMS)
         Peep* p = &gameState->peeps[globalid];
         PeepUpdate(ALL_CORE_PARAMS_PASS, p);
         PeepDraw(ALL_CORE_PARAMS_PASS, p);
+    }
+
+    if (globalid < MAX_PARTICLES) {
+        Particle* p = &gameState->particles[globalid];
+        ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
+        ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
+
     }
 
 
