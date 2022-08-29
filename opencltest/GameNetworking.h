@@ -211,13 +211,7 @@ public:
 	std::shared_ptr<GameState_Pointer> CLIENT_gameStateTransfer;
 	std::shared_ptr<GameState_Pointer> HOST_gameStateTransfer;
 	
-	struct snapshotWrap {
-		std::shared_ptr<GameState_Pointer> gameState;
-		std::shared_ptr<GameStateActions> gameStateActions;
-		uint64_t checksum = static_cast<uint64_t>( -1 );
-		
-	};
-	std::vector<snapshotWrap> CLIENT_snapshotStorageQueue;
+
 	std::vector<ActionWrap> CLIENT_actionList;
 
 	uint64_t HOST_nextTransferOffset[MAX_CLIENTS] = { 0 };

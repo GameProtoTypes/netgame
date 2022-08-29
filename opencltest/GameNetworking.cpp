@@ -35,14 +35,7 @@
 	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
 	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
 
-	snapshotWrap wrap;
-	wrap.gameState = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
-	wrap.gameStateActions = std::make_shared<GameStateActions>();
 
-	memcpy(wrap.gameState.get()->data, gameState.get()->data, gameCompute->gameStateSize);
-	memcpy(wrap.gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
-
-	CLIENT_snapshotStorageQueue.push_back(wrap);
 
 
 
@@ -118,7 +111,6 @@
 		 std::vector<int32_t> removals;
 		 std::vector<ActionWrap> newList;
 
-		 int snapShotIdx = CLIENT_snapshotStorageQueue.size() - 1;
 		 std::vector<ActionWrap>& actionSack = CLIENT_actionList;
 
 		 //first pass check all turns for lateness
@@ -142,48 +134,12 @@
 			 int32_t ticksLate = gameStateActions->tickIdx - earliestExpiredScheduledTick;
 
 			 std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late" << std::endl;
-			 std::cout << ClientConsolePrint() << "Going Back To Last Snapshot to catchback up." << std::endl;
+			 std::cout << ClientConsolePrint() << "All is Pretty Much Lost - Reconnect?" << std::endl;
 
-			 
-			 while (snapShotIdx >= 0 && CLIENT_snapshotStorageQueue[snapShotIdx].gameStateActions->tickIdx > earliestExpiredScheduledTick)
-			 {
-				 std::cout << ClientConsolePrint() << "Snapshot not far enough back, trying previous snapshot.." << std::endl;
-				 snapShotIdx--;
-			 }
-
-			 if (snapShotIdx >= 0)
-			 {
-				 std::cout << ClientConsolePrint() << "Using Snapshot Idx: " << snapShotIdx << std::endl;
-
-				 memcpy(gameState.get()->data, CLIENT_snapshotStorageQueue[snapShotIdx].gameState.get()->data, gameCompute->gameStateSize);
-				 memcpy(gameStateActions.get(), CLIENT_snapshotStorageQueue[snapShotIdx].gameStateActions.get(), sizeof(GameStateActions));//not needed?
-
-
-				 gameCompute->WriteFullGameState();
-
-				 for (int i = 0; i < actionSack.size(); i++)
-				 {
-					 if (actionSack[i].action.scheduledTickIdx >= gameStateActions.get()->tickIdx)
-						 actionSack[i].tracking.clientApplied = false;
-
-					 if (actionSack[i].action.scheduledTickIdx == gameStateActions.get()->tickIdx)
-					 {	
-						 std::cout << ClientConsolePrint()  << "RARE tickIdx equality case..";
-						 repeat = true;
-					 }
-				 }
-			 }
-			 else
-			 {
-				 std::cout << ClientConsolePrint() << "All is lost!  Disconnecting..." << std::endl;
-				 CLIENT_HardDisconnect();
-				 return;
-			 }
 		 }
 
 
 		 //at this point game state may be reverted from above.
-
 		 int32_t i = 0;
 		 for (int32_t a = 0; a < actionSack.size(); a++)
 		 {
@@ -671,15 +627,6 @@
 					 gameStateActions->pauseState = 0;
 					 gameStateActions->clientId = clientId;
 					 std::cout << "[CLIENT] GSCS: " << recievedCS << std::endl;
-
-					 //also add as a snapshot
-					 snapshotWrap wrap;
-					 wrap.gameState = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
-					 wrap.gameStateActions = std::make_shared<GameStateActions>();
-
-					 CLIENT_snapshotStorageQueue.push_back(wrap);
-					 memcpy(CLIENT_snapshotStorageQueue.back().gameState.get()->data, gameState.get()->data, gameCompute->gameStateSize);
-					 memcpy(CLIENT_snapshotStorageQueue.back().gameStateActions.get(), gameStateActions.get(), sizeof(GameStateActions));
 
 
 

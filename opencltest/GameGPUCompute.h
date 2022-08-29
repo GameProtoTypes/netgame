@@ -32,7 +32,7 @@ typedef  std::variant<int, float, std::string> GPUCompileVariant;
 class GameState_Pointer
 {
 public:
-	GameState_Pointer(int size) { 
+	GameState_Pointer(uint64_t size) { 
 		data = new int8_t[size];
 		memset(data, 0, size);
 	}
@@ -84,10 +84,19 @@ public:
 	cl_kernel post_update_single_kernel;
 	cl_kernel action_kernel;
 	cl_kernel init_kernel;
+	cl_kernel init_kernal_multi;
+	cl_kernel init_kernal_multi2;
+	cl_kernel init_kernel_2;
+
+
 
 	std::vector<cl_kernel> kernels;
 
 	cl_event initEvent;
+	cl_event initMultiEvent;
+	cl_event initMultiEvent2;
+	cl_event init2Event;
+
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updateEvent;    
@@ -103,6 +112,7 @@ public:
 
 	const long GameUpdateWorkItems = WARPSIZE * 1024 * 4;
     size_t WorkItems[1] = { static_cast<size_t>(GameUpdateWorkItems) };
+	size_t WorkItemsInitMulti[1] = { 0 };
 	size_t WorkItems1Warp[1] = { WARPSIZE };
 
 	cl_mem sizeTests_mem_obj;
@@ -125,7 +135,7 @@ public:
 
 	std::vector<cl_mem> graphicsObjects;
 
-	cl_uint gameStateSize = 0;
+	uint64_t gameStateSize = 0;
 
 	int maxPeeps = 1024 * 1;
 	int maxParticles = 1024;

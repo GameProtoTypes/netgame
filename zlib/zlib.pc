@@ -1,8 +1,8 @@
 prefix=C:/Program Files (x86)/game
 exec_prefix=C:/Program Files (x86)/game
-libdir=C:/Program Files (x86)/game/lib
-sharedlibdir=C:/Program Files (x86)/game/lib
-includedir=C:/Program Files (x86)/game/include
+libdir=
+sharedlibdir=
+includedir=
 
 Name: zlib
 Description: zlib compression library

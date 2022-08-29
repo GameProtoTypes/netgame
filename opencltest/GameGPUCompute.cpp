@@ -101,9 +101,12 @@ void GameGPUCompute::RunInitCompute1()
         0
     };
     context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
+    if (ret != 0)
+        printf("Unable To Initialize Good-Ol OpenCL.  Check your Driviers.");
+    
     CL_HOST_ERROR_CHECK(ret)
 
-        printf("Building CL Programs...\n");
+    printf("Building CL Programs...\n");
     // Create a gameProgram from the update_kernel source
     gameProgram = clCreateProgramWithSource(context, 1,
         (const char**)&source_str, (const size_t*)&source_size, &ret);
@@ -179,7 +182,7 @@ void GameGPUCompute::RunInitCompute2()
 {
 
 
-
+    WorkItemsInitMulti[0] = static_cast<size_t>(mapDim * mapDim) ;
 
         // Create memory buffers on the device
 
@@ -261,6 +264,13 @@ void GameGPUCompute::RunInitCompute2()
         update_kernel = clCreateKernel(gameProgram, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
         action_kernel = clCreateKernel(gameProgram, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernel = clCreateKernel(gameProgram, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
+        init_kernal_multi = clCreateKernel(gameProgram, "game_init_multi", &ret); CL_HOST_ERROR_CHECK(ret)
+        init_kernal_multi2 = clCreateKernel(gameProgram, "game_init_multi2", &ret); CL_HOST_ERROR_CHECK(ret)
+        init_kernel_2 = clCreateKernel(gameProgram, "game_init_single2", &ret); CL_HOST_ERROR_CHECK(ret)
+
+
+
+
         post_update_single_kernel = clCreateKernel(gameProgram, "game_post_update_single", &ret); CL_HOST_ERROR_CHECK(ret)
 
 
@@ -270,6 +280,9 @@ void GameGPUCompute::RunInitCompute2()
         kernels.push_back(update_kernel);
         kernels.push_back(action_kernel);
         kernels.push_back(init_kernel);
+        kernels.push_back(init_kernal_multi);
+        kernels.push_back(init_kernal_multi2);
+        kernels.push_back(init_kernel_2);
         kernels.push_back(post_update_single_kernel);
 
         // Set the arguments of the kernels
@@ -320,9 +333,21 @@ void GameGPUCompute::RunInitCompute2()
             SingleKernelWorkItems, NULL, 0, NULL, &initEvent);
         CL_HOST_ERROR_CHECK(ret)
 
+        ret = clEnqueueNDRangeKernel(command_queue, init_kernal_multi, 1, NULL,
+            WorkItemsInitMulti, NULL, 1, &initEvent, &initMultiEvent);
+        CL_HOST_ERROR_CHECK(ret)
 
+        ret = clEnqueueNDRangeKernel(command_queue, init_kernal_multi2, 1, NULL,
+            WorkItemsInitMulti, NULL, 1, &initMultiEvent, &initMultiEvent2);
+        CL_HOST_ERROR_CHECK(ret)
+
+        ret = clEnqueueNDRangeKernel(command_queue, init_kernel_2, 1, NULL,
+            SingleKernelWorkItems, NULL, 1, &initMultiEvent2, &init2Event);
+        CL_HOST_ERROR_CHECK(ret)
+
+        
     ReleaseAllGraphicsObjects();
-    clWaitForEvents(1, &initEvent);
+    clWaitForEvents(1, &init2Event);
     ReadFullGameState();
 }
 

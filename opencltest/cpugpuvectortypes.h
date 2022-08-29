@@ -38,6 +38,8 @@ struct ge_int4
 
 
 
+#define GE_INT2_ZERO(a) (a.x == 0 && a.y == 0 ).
+#define GE_INT3_ZERO(a) (a.x == 0 && a.y == 0 && a.z == 0 )
 
 #define GE_INT2_ADD(a,b) ((ge_int2){a.x+b.x,a.y+b.y})
 #define GE_INT3_ADD(a,b) ((ge_int3){a.x+b.x,a.y+b.y,a.z+b.z})
