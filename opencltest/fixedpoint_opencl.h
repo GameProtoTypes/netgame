@@ -21,7 +21,7 @@
 #define MUL_PAD_V2_Q16(x,y) ((((cl_long2)(x))*((cl_long2)(y))) >> 16)
 
 
-#define DIV_PAD_Q16(x,y) ((((cl_long)x)<<16)/((cl_long)y))
+#define DIV_PAD_Q16(x,y) ((((cl_long)(x))<<16)/((cl_long)y))
 
 #define MUL_2D_COMP_Q16(a,b) ((cl_int2)( ((a.x)*(b.x)) >> 16 , ((a.y)*(b.y)) >> 16 ))
 #define MUL_PAD_2D_COMP_Q16(a,b) ((cl_int2)( (((cl_long)(a.x))*((cl_long)(b.x))) >> 16 , (((cl_long)(a.y))*((cl_long)(b.y))) >> 16 ))
@@ -403,7 +403,7 @@ ge_int2 MUL_v2_Q16(ge_int2 a_Q16, ge_int2 b_Q16)
 
     return result;
 }
-ge_int3 MUL_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
+ge_int3 GE_INT3_MUL_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
 {
     ge_int3 result;
 
@@ -414,7 +414,16 @@ ge_int3 MUL_v3_Q16(ge_int3 a_Q16, ge_int3 b_Q16)
     return result;
 }
 
+ge_int3 GE_INT3_SCALAR_MUL_Q16(int scalar_Q16, ge_int3 a_Q16)
+{
+    ge_int3 result;
 
+    result.x = MUL_PAD_Q16(scalar_Q16, a_Q16.x);
+    result.y = MUL_PAD_Q16(scalar_Q16, a_Q16.y);
+    result.z = MUL_PAD_Q16(scalar_Q16, a_Q16.z);
+
+    return result;
+}
 
 
 
@@ -468,11 +477,11 @@ cl_int ge_length_v3_Q16(ge_int3 v_Q16)
     return (cl_int)len_Q16;
 }
 
-ge_int3 GE_INT3_NORMALIZE_Q16(ge_int3 v_Q16)
+ge_int3 GE_INT3_NORMALIZE_Q16(ge_int3 v_Q16, int* mag)
 {
-    int mag = ge_length_v3_Q16(v_Q16);
-    return (ge_int3) { DIV_PAD_Q16( v_Q16.x,  mag), DIV_PAD_Q16(v_Q16.y, mag)
-    , DIV_PAD_Q16(v_Q16.z, mag)};
+    *mag = ge_length_v3_Q16(v_Q16);
+    return (ge_int3) { DIV_PAD_Q16( v_Q16.x, *mag), DIV_PAD_Q16(v_Q16.y, *mag)
+    , DIV_PAD_Q16(v_Q16.z, *mag)};
 }
 
 
@@ -758,9 +767,9 @@ void cl_catmull_rom_uniform_2d_Q16(
 
 
 ge_int3 GE_INT3_CROSS_PRODUCT_Q16(ge_int3 a, ge_int3 b) {
-    int x = MUL_PAD_Q16(a.y, b.z) - MUL_PAD_Q16(a.z, b.y);
-    int y = MUL_PAD_Q16(-a.x, b.z) + MUL_PAD_Q16(a.z, b.x);
-    int z = MUL_PAD_Q16(a.x, b.y) - MUL_PAD_Q16(a.y, b.x);
+    long x = MUL_PAD_Q16(a.y, b.z) - MUL_PAD_Q16(a.z, b.y);
+    long y = MUL_PAD_Q16(-a.x, b.z) + MUL_PAD_Q16(a.z, b.x);
+    long z = MUL_PAD_Q16(a.x, b.y) - MUL_PAD_Q16(a.y, b.x);
 
     return (ge_int3) { x, y, z };
 }
@@ -777,6 +786,9 @@ ge_int3 GE_INT3_DIV_Q16(ge_int3 a, ge_int3 b) {
     res.z = DIV_PAD_Q16(a.z, b.z);
     return res;
 }
+
+
+
 
 //v rotated about axis 90 degrees - axis does not need to be normalized.
 inline ge_int3 GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(ge_int3 v, ge_int3 axis)
@@ -797,7 +809,8 @@ inline ge_int3 GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(ge_int3 v, ge_int3 axis)
     int a_orth_b_mag = ge_length_v3_Q16(a_orth_b);
 
     ge_int3 w = GE_INT3_CROSS_PRODUCT_Q16(b, a_orth_b);
-    ge_int3 w_norm = GE_INT3_NORMALIZE_Q16(w);
+    int w_mag;
+    ge_int3 w_norm = GE_INT3_NORMALIZE_Q16(w, &w_mag);
 
     ge_int3 v_rot;
     v_rot.x = MUL_PAD_Q16(a_orth_b_mag, w_norm.x) + a_par_b.x;

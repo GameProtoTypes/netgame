@@ -740,39 +740,166 @@ cl_uchar BaryCentric_In_Triangle_Q16(ge_int3 baryCoords)
 }
 
 
-void Triangle2DHeavy_ProjectedPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16, ge_int3* barycentricCoords_Q16, ge_int3* projectedPoint_Q16)
+int SOME_INTERNAL_CORDIST(int x, int y)
 {
-    ge_int3 baryCoords_Q16;
+    if (y <= 0.0)
+    {
+        return -y;
+    }
+    else if (x <= 0)
+        return  x;
+    else
+        return 0;
+}
 
-    ge_int3 w_Q16 = GE_INT3_SUB(point_Q16, triangle->base.verts_Q16[0]);//P - P_1
+ge_int3 Triangle3D_ToBaryCentric(Triangle3DHeavy* triangle, ge_int3 point)
+{
+    ge_int3 U = triangle->u_Q16;
+    ge_int3 V = triangle->v_Q16;
+    ge_int3 W = GE_INT3_SUB(point, triangle->base.verts_Q16[0]);
 
 
-    baryCoords_Q16.x = GE_INT3_DOT_PRODUCT_Q16(GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, w_Q16), triangle->normal_Q16);
-    baryCoords_Q16.x = DIV_PAD_Q16(baryCoords_Q16.x, GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16));
-
-
-    baryCoords_Q16.y = GE_INT3_DOT_PRODUCT_Q16(GE_INT3_CROSS_PRODUCT_Q16(w_Q16, triangle->v_Q16), triangle->normal_Q16);
-    baryCoords_Q16.y = DIV_PAD_Q16(baryCoords_Q16.y, GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16));
-
-    baryCoords_Q16.z = TO_Q16(1) - baryCoords_Q16.x - baryCoords_Q16.y;
-
-    *barycentricCoords_Q16 = baryCoords_Q16;
-
-    (*projectedPoint_Q16).x = baryCoords_Q16.x * triangle->base.verts_Q16[0].x + baryCoords_Q16.y * triangle->base.verts_Q16[1].x + baryCoords_Q16.z * triangle->base.verts_Q16[2].x;
-    (*projectedPoint_Q16).y = baryCoords_Q16.x * triangle->base.verts_Q16[0].y + baryCoords_Q16.y * triangle->base.verts_Q16[1].y + baryCoords_Q16.z * triangle->base.verts_Q16[2].y;
-    (*projectedPoint_Q16).z = baryCoords_Q16.x * triangle->base.verts_Q16[0].z + baryCoords_Q16.y * triangle->base.verts_Q16[1].z + baryCoords_Q16.z * triangle->base.verts_Q16[2].z;
+    long d00 = GE_INT3_DOT_PRODUCT_Q16(U , U );
+    long d01 = GE_INT3_DOT_PRODUCT_Q16(U , V);
+    long d11 = GE_INT3_DOT_PRODUCT_Q16(V , V);
+    long d20 = GE_INT3_DOT_PRODUCT_Q16(W , U);
+    long d21 = GE_INT3_DOT_PRODUCT_Q16(W , V);
+    long denom = MUL_PAD_Q16( d00 , d11 ) - MUL_PAD_Q16(d01 , d01);
+    long u, v, w;
+    v = DIV_PAD_Q16((MUL_PAD_Q16(d11 , d20) - MUL_PAD_Q16(d01 , d21)) , denom);
+    w = DIV_PAD_Q16((MUL_PAD_Q16(d00 , d21) - MUL_PAD_Q16(d01 , d20)) , denom);
+    u = (TO_Q16(1) - v ) - w;
+    return (ge_int3) {
+        u, v, w
+    };
 }
 
 ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16)
-{
+{   
+    ge_int3 P1 = triangle->base.verts_Q16[0];
+    ge_int3 P2 = triangle->base.verts_Q16[1];
+    ge_int3 P3 = triangle->base.verts_Q16[2];
 
     
+    //printf("P1: ");
+    //Print_GE_INT3_Q16(P1);
+    //printf("P2: ");
+    //Print_GE_INT3_Q16(P2);
+    //printf("P3: ");
+    //Print_GE_INT3_Q16(P3);
 
 
+    ge_int3 P_prime;
+    ge_int3 P_prime_bary;
 
-   
+    int Nmag;
+    ge_int3 N_n = GE_INT3_NORMALIZE_Q16(triangle->normal_Q16, &Nmag);
+    //printf("N_n: ");
+    //Print_GE_INT3_Q16(N_n);
 
 
+    ge_int3 W = GE_INT3_SUB(point_Q16, P1);
+
+    //printf("W: ");
+    //Print_GE_INT3_Q16(W);
+
+
+    int dot = GE_INT3_DOT_PRODUCT_Q16(W, N_n);
+    //printf("dot: ");
+    //PrintQ16(dot);
+    ge_int3 term2 = GE_INT3_SCALAR_MUL_Q16(dot, GE_INT3_NEG(N_n));
+    P_prime = GE_INT3_ADD(point_Q16, term2);
+
+
+    //Triangle2DHeavy_ProjectedPoint(triangle, point_Q16, &P_prime_bary, &P_prime);
+
+    //printf("P_prime: ");
+    //Print_GE_INT3_Q16(P_prime);
+
+    P_prime_bary = Triangle3D_ToBaryCentric(triangle, P_prime);
+    //printf("P_prime_bary: ");
+    //Print_GE_INT3_Q16(P_prime_bary);
+    cl_uchar onSurface = BaryCentric_In_Triangle_Q16(P_prime_bary);
+
+    if (onSurface == 1)
+        return P_prime;
+
+    ge_int3 P1_P_prime = GE_INT3_SUB(P_prime, P1);
+    ge_int3 P2_P_prime = GE_INT3_SUB(P_prime, P2);
+    ge_int3 P3_P_prime = GE_INT3_SUB(P_prime, P3);
+
+    ge_int3 R1 = GE_INT3_SUB(P1, P2);
+    ge_int3 R2 = GE_INT3_SUB(P2, P3);
+    ge_int3 R3 = GE_INT3_SUB(P3, P1);
+
+    int R1_mag;
+    ge_int3 R1_N = GE_INT3_NORMALIZE_Q16(R1, &R1_mag);
+    int R2_mag;
+    ge_int3 R2_N = GE_INT3_NORMALIZE_Q16(R2, &R2_mag);
+    int R3_mag;
+    ge_int3 R3_N = GE_INT3_NORMALIZE_Q16(R3, &R3_mag);
+
+
+    ge_int3 R1_N_PERP = GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(R1_N, triangle->normal_Q16);
+    ge_int3 R2_N_PERP = GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(R2_N, triangle->normal_Q16);
+    ge_int3 R3_N_PERP = GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(R3_N, triangle->normal_Q16);
+
+
+    int DOT1 = GE_INT3_DOT_PRODUCT_Q16(P1_P_prime, R3_N_PERP);
+    int DOT2 = GE_INT3_DOT_PRODUCT_Q16(P2_P_prime, R1_N_PERP);
+    int DOT3 = GE_INT3_DOT_PRODUCT_Q16(P3_P_prime, R2_N_PERP);
+
+
+    ge_int3 D1R3 = GE_INT3_SCALAR_MUL_Q16(DOT1, R3_N_PERP);
+    ge_int3 D2R1 = GE_INT3_SCALAR_MUL_Q16(DOT2, R1_N_PERP);
+    ge_int3 D3R2 = GE_INT3_SCALAR_MUL_Q16(DOT3, R2_N_PERP);
+
+
+    //p_prime projected to 3 edges
+    ge_int3 P_prime_C1 = GE_INT3_SUB(P_prime, D1R3);
+    ge_int3 P_prime_C2 = GE_INT3_SUB(P_prime, D2R1);
+    ge_int3 P_prime_C3 = GE_INT3_SUB(P_prime, D3R2);
+
+
+    //clamp C points to edge limits
+    int Z1i = GE_INT3_DOT_PRODUCT_Q16(P1_P_prime, R3_N);
+    int Z2i = GE_INT3_DOT_PRODUCT_Q16(P2_P_prime, R1_N);
+    int Z3i = GE_INT3_DOT_PRODUCT_Q16(P3_P_prime, R2_N);
+
+    int Z1 = R3_mag - Z1i;
+    int Z2 = R1_mag - Z2i;
+    int Z3 = R2_mag - Z3i;
+
+
+    int CD1 = SOME_INTERNAL_CORDIST(Z1, Z1i);
+    int CD2 = SOME_INTERNAL_CORDIST(Z2, Z2i);
+    int CD3 = SOME_INTERNAL_CORDIST(Z3, Z3i);
+
+
+    ge_int3 J1 = GE_INT3_SCALAR_MUL_Q16(CD1, R3_N);
+    ge_int3 J2 = GE_INT3_SCALAR_MUL_Q16(CD2, R1_N);
+    ge_int3 J3 = GE_INT3_SCALAR_MUL_Q16(CD3, R2_N);
+
+    ge_int3 L1 = GE_INT3_ADD(J1, P_prime_C1);
+    ge_int3 L2 = GE_INT3_ADD(J2, P_prime_C2);
+    ge_int3 L3 = GE_INT3_ADD(J3, P_prime_C3);
+
+    //get closest L to P_prime
+    int L1D = ge_length_v3_Q16( GE_INT3_SUB(L1, P_prime) );
+    int L2D = ge_length_v3_Q16( GE_INT3_SUB(L2, P_prime) );
+    int L3D = ge_length_v3_Q16( GE_INT3_SUB(L3, P_prime) );
+
+
+    if (L1D < L2D && L1D < L2D)
+    {
+        return L1;
+    }
+    else if (L2D < L1D && L2D < L3D)
+    {
+        return L2;
+    }
+    else
+        return L3;
 
 }
 
@@ -797,12 +924,17 @@ void MapTileConvexHull_ClosestPointTo(ConvexHull* hull, ge_int3 point_Q16)
 
 void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
 {
-    ge_int3 a = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);
-    ge_int3 b = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);
-    triangle->normal_Q16 = GE_INT3_CROSS_PRODUCT_Q16(a, b);
-
     triangle->u_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
     triangle->v_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
+
+    printf("U");
+    Print_GE_INT3_Q16(triangle->u_Q16);
+    printf("V");
+    Print_GE_INT3_Q16(triangle->v_Q16);
+
+    triangle->normal_Q16 =  GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, triangle->v_Q16);
+    printf("N");
+    Print_GE_INT3_Q16(triangle->normal_Q16);
 
 }
 void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
@@ -982,7 +1114,7 @@ void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
     map_tilecoords_Q16.x -= (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f
     map_tilecoords_Q16.y -= (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f
 
-    *world_Q16 = MUL_v3_Q16(map_tilecoords_Q16, b);
+    *world_Q16 = GE_INT3_MUL_Q16(map_tilecoords_Q16, b);
 }
 
 
@@ -1122,8 +1254,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
 
-            ConvexHull hull;
-            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
+            //ConvexHull hull;
+           // MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
 
 
 
@@ -2180,15 +2312,31 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         ge_int3 a = (ge_int3){ TO_Q16(i), TO_Q16(2), TO_Q16(i*2) };
         ge_int3 b = (ge_int3){ TO_Q16(i*2), TO_Q16(i), TO_Q16(i) };
 
-        ge_int3 c = MUL_v3_Q16(a, b);
+        ge_int3 c = GE_INT3_MUL_Q16(a, b);
         s += c.x + c.y + c.z;
     }
+
+
+
 
 
     printf("End Tests: %d\n", s);
 
     fixedPointTests();
 
+    printf("Triangle Tests\n");
+
+
+    ge_int3 point = (ge_int3){TO_Q16(7), TO_Q16(26), TO_Q16(35) };
+    Triangle3DHeavy tri;
+    tri.base.verts_Q16[0] = (ge_int3){ TO_Q16(-21), TO_Q16(-1), TO_Q16(19) };
+    tri.base.verts_Q16[1] = (ge_int3){ TO_Q16(17), TO_Q16(10), TO_Q16(12) };
+    tri.base.verts_Q16[2] = (ge_int3){ TO_Q16(9), TO_Q16(-16), TO_Q16(-7) };
+
+    Triangle3DMakeHeavy(&tri);
+
+    ge_int3 closestPoint = Triangle3DHeavy_ClosestPoint(&tri, point);
+    Print_GE_INT3_Q16(closestPoint);
 
 
     gameState->numClients = 1;

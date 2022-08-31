@@ -50,6 +50,7 @@ struct ge_int4
 #define GE_INT4_SUB(a,b) ((ge_int4){a.x-b.x,a.y-b.y,a.z-b.z, a.w-b.w})
 
 
+
 #define GE_INT2_NEG(a) ((ge_int2){-a.x, -a.y            })
 #define GE_INT3_NEG(a) ((ge_int3){-a.x, -a.y, -a.z      })
 #define GE_INT4_NEG(a) ((ge_int4){-a.x, -a.y, -a.z, -a.w})
