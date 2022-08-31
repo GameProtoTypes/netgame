@@ -1,0 +1,864 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						5,
+						7
+					]
+				},
+				{
+					"build" : "opencltest",
+					"jsonFile" : "directory-opencltest-Debug-970b1c6455a137cfe3db.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "opencltest",
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"build" : "SLikeNet",
+					"jsonFile" : "directory-SLikeNet-Debug-c9a8328962e6e928ba51.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "SLikeNet",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "zlib",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-zlib-Debug-22271028db91a8f68f58.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.4.4"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "zlib",
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						2
+					],
+					"name" : "game",
+					"targetIndexes" : 
+					[
+						0,
+						4,
+						5,
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "MinerTycoon",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "zlib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-Debug-ff4728be973fb8c3388d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-ALL_BUILD-Debug-d554f996efcd291f8c8f.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ALL_BUILD::@036b525f80ea8433013a",
+					"jsonFile" : "target-ALL_BUILD-Debug-0bb5748812d91e05b287.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MinerTycoon::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-MinerTycoon-Debug-e78b02ce5a7331261a7c.json",
+					"name" : "MinerTycoon",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SLikeNet::@74d9b763750fd0e015d6",
+					"jsonFile" : "target-SLikeNet-Debug-8655bd780120a8f5caba.json",
+					"name" : "SLikeNet",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-Debug-d66aacf53c8eac0b3651.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "example::@036b525f80ea8433013a",
+					"jsonFile" : "target-example-Debug-21823a0d47a08a57936d.json",
+					"name" : "example",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-Debug-2303be571e4408bd81e8.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "minigzip::@036b525f80ea8433013a",
+					"jsonFile" : "target-minigzip-Debug-7edd9dc79a76de5b1ffd.json",
+					"name" : "minigzip",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlib::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlib-Debug-f866013971da3bcfc265.json",
+					"name" : "zlib",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlibstatic::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlibstatic-Debug-309c049b498545027bc8.json",
+					"name" : "zlibstatic",
+					"projectIndex" : 2
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						5,
+						7
+					]
+				},
+				{
+					"build" : "opencltest",
+					"jsonFile" : "directory-opencltest-Release-970b1c6455a137cfe3db.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "opencltest",
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"build" : "SLikeNet",
+					"jsonFile" : "directory-SLikeNet-Release-c9a8328962e6e928ba51.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "SLikeNet",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "zlib",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-zlib-Release-1f582a3e33be18f69849.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.4.4"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "zlib",
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						2
+					],
+					"name" : "game",
+					"targetIndexes" : 
+					[
+						0,
+						4,
+						5,
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "MinerTycoon",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "zlib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-Release-ff4728be973fb8c3388d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-ALL_BUILD-Release-d554f996efcd291f8c8f.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ALL_BUILD::@036b525f80ea8433013a",
+					"jsonFile" : "target-ALL_BUILD-Release-0bb5748812d91e05b287.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MinerTycoon::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-MinerTycoon-Release-98eca709f4517ec85027.json",
+					"name" : "MinerTycoon",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SLikeNet::@74d9b763750fd0e015d6",
+					"jsonFile" : "target-SLikeNet-Release-ba1bf6e071a683f928d1.json",
+					"name" : "SLikeNet",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-Release-d66aacf53c8eac0b3651.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "example::@036b525f80ea8433013a",
+					"jsonFile" : "target-example-Release-8075e6505d4007a8ecc1.json",
+					"name" : "example",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-Release-429ced79d1eea89ce799.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "minigzip::@036b525f80ea8433013a",
+					"jsonFile" : "target-minigzip-Release-2d9d17c9fdbf95ee7ef8.json",
+					"name" : "minigzip",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlib::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlib-Release-aeebf43a81c06b26787a.json",
+					"name" : "zlib",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlibstatic::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlibstatic-Release-17756ff66ffee5fe9f50.json",
+					"name" : "zlibstatic",
+					"projectIndex" : 2
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-MinSizeRel-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						5,
+						7
+					]
+				},
+				{
+					"build" : "opencltest",
+					"jsonFile" : "directory-opencltest-MinSizeRel-970b1c6455a137cfe3db.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "opencltest",
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"build" : "SLikeNet",
+					"jsonFile" : "directory-SLikeNet-MinSizeRel-c9a8328962e6e928ba51.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "SLikeNet",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "zlib",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-zlib-MinSizeRel-0e5ae0040368d4627f42.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.4.4"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "zlib",
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"name" : "MinSizeRel",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						2
+					],
+					"name" : "game",
+					"targetIndexes" : 
+					[
+						0,
+						4,
+						5,
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "MinerTycoon",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "zlib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-ff4728be973fb8c3388d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-d554f996efcd291f8c8f.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ALL_BUILD::@036b525f80ea8433013a",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-0bb5748812d91e05b287.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MinerTycoon::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-MinerTycoon-MinSizeRel-e6c19f239898898a93cf.json",
+					"name" : "MinerTycoon",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SLikeNet::@74d9b763750fd0e015d6",
+					"jsonFile" : "target-SLikeNet-MinSizeRel-59f2ee8034e8ff2e668c.json",
+					"name" : "SLikeNet",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-MinSizeRel-d66aacf53c8eac0b3651.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "example::@036b525f80ea8433013a",
+					"jsonFile" : "target-example-MinSizeRel-d16afa0b2ad19acb02ba.json",
+					"name" : "example",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-MinSizeRel-e97448c7bf9eec699fbf.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "minigzip::@036b525f80ea8433013a",
+					"jsonFile" : "target-minigzip-MinSizeRel-a211f4aa967b9ff21900.json",
+					"name" : "minigzip",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlib::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlib-MinSizeRel-e0a205f9c48deb02e8cd.json",
+					"name" : "zlib",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlibstatic::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlibstatic-MinSizeRel-d592e9d78d7a028887fa.json",
+					"name" : "zlibstatic",
+					"projectIndex" : 2
+				}
+			]
+		},
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-RelWithDebInfo-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						5,
+						7
+					]
+				},
+				{
+					"build" : "opencltest",
+					"jsonFile" : "directory-opencltest-RelWithDebInfo-970b1c6455a137cfe3db.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "opencltest",
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"build" : "SLikeNet",
+					"jsonFile" : "directory-SLikeNet-RelWithDebInfo-c9a8328962e6e928ba51.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "SLikeNet",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "zlib",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-zlib-RelWithDebInfo-73658c0f2056440b98a4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "2.4.4"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "zlib",
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						2
+					],
+					"name" : "game",
+					"targetIndexes" : 
+					[
+						0,
+						4,
+						5,
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "MinerTycoon",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1,
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "zlib",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						6,
+						8,
+						9,
+						10
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-ff4728be973fb8c3388d.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "ALL_BUILD::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-d554f996efcd291f8c8f.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "ALL_BUILD::@036b525f80ea8433013a",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-0bb5748812d91e05b287.json",
+					"name" : "ALL_BUILD",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "MinerTycoon::@8ffd28af5cb4a4dd3cee",
+					"jsonFile" : "target-MinerTycoon-RelWithDebInfo-46db169771dae470bee2.json",
+					"name" : "MinerTycoon",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SLikeNet::@74d9b763750fd0e015d6",
+					"jsonFile" : "target-SLikeNet-RelWithDebInfo-385780377f0bc2c673b4.json",
+					"name" : "SLikeNet",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ZERO_CHECK-RelWithDebInfo-d66aacf53c8eac0b3651.json",
+					"name" : "ZERO_CHECK",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "example::@036b525f80ea8433013a",
+					"jsonFile" : "target-example-RelWithDebInfo-99ad38a3e11a0ad55652.json",
+					"name" : "example",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "imgui::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-imgui-RelWithDebInfo-0eabf074c331af0c0970.json",
+					"name" : "imgui",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "minigzip::@036b525f80ea8433013a",
+					"jsonFile" : "target-minigzip-RelWithDebInfo-571fe9b6e6b907667ec1.json",
+					"name" : "minigzip",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlib::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlib-RelWithDebInfo-1d4dd8d8c5585095004c.json",
+					"name" : "zlib",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "zlibstatic::@036b525f80ea8433013a",
+					"jsonFile" : "target-zlibstatic-RelWithDebInfo-99a33e2f4034b32b2d41.json",
+					"name" : "zlibstatic",
+					"projectIndex" : 2
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/casht/repos/opencltest",
+		"source" : "C:/Users/casht/repos/opencltest"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

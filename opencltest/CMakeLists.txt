@@ -91,11 +91,16 @@ set(ALL_FILES
     ${OPENCL_Source_Files}
     ${OPENCL_Header_Files}
 )
+set(COMPILE_FILES
+    ${Header_Files}
+    ${Source_Files}
+)
+
 
 ################################################################################
 # Target
 ################################################################################
-add_executable(${PROJECT_NAME} ${ALL_FILES})
+add_executable(${PROJECT_NAME} ${COMPILE_FILES})
 
 
 ################################################################################

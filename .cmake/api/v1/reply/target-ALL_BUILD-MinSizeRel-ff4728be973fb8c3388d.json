@@ -1,0 +1,54 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "minigzip::@036b525f80ea8433013a"
+		},
+		{
+			"id" : "zlibstatic::@036b525f80ea8433013a"
+		},
+		{
+			"id" : "example::@036b525f80ea8433013a"
+		},
+		{
+			"id" : "imgui::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "SLikeNet::@74d9b763750fd0e015d6"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		},
+		{
+			"id" : "MinerTycoon::@8ffd28af5cb4a4dd3cee"
+		},
+		{
+			"id" : "zlib::@036b525f80ea8433013a"
+		}
+	],
+	"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

@@ -142,6 +142,31 @@ struct Particle {
 }typedef Particle;
 
 
+struct  {
+	ge_int3 verts_Q16[3];
+} typedef Triangle3D;
+
+struct {
+	Triangle3D base;
+
+	ge_int3 normal_Q16;
+	ge_int3 u_Q16;
+	ge_int3 v_Q16;
+} typedef Triangle3DHeavy;
+
+struct  {
+	Triangle3DHeavy triangles[14];
+} typedef ConvexHull;
+
+
+
+
+
+
+
+
+
+
 
 
 enum MapTileFlags {

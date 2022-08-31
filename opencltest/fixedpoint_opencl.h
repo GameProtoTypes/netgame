@@ -468,6 +468,14 @@ cl_int ge_length_v3_Q16(ge_int3 v_Q16)
     return (cl_int)len_Q16;
 }
 
+ge_int3 GE_INT3_NORMALIZE_Q16(ge_int3 v_Q16)
+{
+    int mag = ge_length_v3_Q16(v_Q16);
+    return (ge_int3) { DIV_PAD_Q16( v_Q16.x,  mag), DIV_PAD_Q16(v_Q16.y, mag)
+    , DIV_PAD_Q16(v_Q16.z, mag)};
+}
+
+
 cl_int cl_distance_v2_Q16(int2 v1_Q16, int2 v2_Q16)
 {
     return cl_length_v2_Q16(v2_Q16 - v1_Q16);
@@ -749,6 +757,56 @@ void cl_catmull_rom_uniform_2d_Q16(
 
 
 
+ge_int3 GE_INT3_CROSS_PRODUCT_Q16(ge_int3 a, ge_int3 b) {
+    int x = MUL_PAD_Q16(a.y, b.z) - MUL_PAD_Q16(a.z, b.y);
+    int y = MUL_PAD_Q16(-a.x, b.z) + MUL_PAD_Q16(a.z, b.x);
+    int z = MUL_PAD_Q16(a.x, b.y) - MUL_PAD_Q16(a.y, b.x);
+
+    return (ge_int3) { x, y, z };
+}
+int GE_INT3_DOT_PRODUCT_Q16(ge_int3 a, ge_int3 b) {
+    return MUL_PAD_Q16(a.x, b.x) +
+        MUL_PAD_Q16(a.y, b.y) + 
+        MUL_PAD_Q16(a.z, b.z);
+}
+
+ge_int3 GE_INT3_DIV_Q16(ge_int3 a, ge_int3 b) {
+    ge_int3 res;
+    res.x = DIV_PAD_Q16(a.x, b.x);
+    res.y = DIV_PAD_Q16(a.y, b.y);
+    res.z = DIV_PAD_Q16(a.z, b.z);
+    return res;
+}
+
+//v rotated about axis 90 degrees - axis does not need to be normalized.
+inline ge_int3 GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(ge_int3 v, ge_int3 axis)
+{
+    ge_int3 a = v;
+    ge_int3 b = axis;
+
+    int a_dot_b = GE_INT3_DOT_PRODUCT_Q16(a, b);
+    int b_dot_b = GE_INT3_DOT_PRODUCT_Q16(b, b);
+
+    int s = DIV_PAD_Q16(a_dot_b, b_dot_b);
+    ge_int3 a_par_b;
+    a_par_b.x = MUL_PAD_Q16(s, b.x);
+    a_par_b.y = MUL_PAD_Q16(s, b.y);
+    a_par_b.z = MUL_PAD_Q16(s, b.z);
+
+    ge_int3 a_orth_b = GE_INT3_SUB(a, a_par_b);
+    int a_orth_b_mag = ge_length_v3_Q16(a_orth_b);
+
+    ge_int3 w = GE_INT3_CROSS_PRODUCT_Q16(b, a_orth_b);
+    ge_int3 w_norm = GE_INT3_NORMALIZE_Q16(w);
+
+    ge_int3 v_rot;
+    v_rot.x = MUL_PAD_Q16(a_orth_b_mag, w_norm.x) + a_par_b.x;
+    v_rot.y = MUL_PAD_Q16(a_orth_b_mag, w_norm.y) + a_par_b.y;
+    v_rot.z = MUL_PAD_Q16(a_orth_b_mag, w_norm.z) + a_par_b.z;
+
+    return v_rot;
+}
+
 
 
 void fixedPointTests()
@@ -852,27 +910,44 @@ void fixedPointTests()
     printf("%f/%f=%f = ", a2, b2, (float)a2 / b2);
     PrintQMP32(numberR);
 
+    //QMP32 r_qmp = FloatToQMP32(1.001f);
+    //QMP32 b_qmp = FloatToQMP32(1.001f);
+    //for (long i = 0; i < 1000000; i++)
+    //{
+    //    r_qmp = ADD_QMP32(r_qmp, b_qmp);
+    //}
+    //PrintQMP32(r_qmp);
 
 
-    QMP32 r_qmp = FloatToQMP32(1.001f);
-    QMP32 b_qmp = FloatToQMP32(1.001f);
-    for (long i = 0; i < 1000000; i++)
-    {
-        r_qmp = ADD_QMP32(r_qmp, b_qmp);
-    }
-    PrintQMP32(r_qmp);
+    //int r_Q16 = TO_Q16(1);
+    //int b_Q16 = TO_Q16(1);
+
+    //for (long i = 0; i < 1000000; i++)
+    //{
+
+    //    b_Q16 = TO_Q16(i)>>1;
+    //    r_Q16 = r_Q16 + b_Q16>>2;
+    //}
+    //PrintQ16(r_Q16);
+    printf("GE_INT* FUNC TESTS:\n");
+
+    ge_int3 A;
+    A.z = TO_Q16(10);
+    ge_int3 B;
+    B.x = TO_Q16(10);
+    B.y = TO_Q16(1);
 
 
-    int r_Q16 = TO_Q16(1);
-    int b_Q16 = TO_Q16(1);
 
-    for (long i = 0; i < 1000000; i++)
-    {
+    Print_GE_INT3_Q16(A);
+    Print_GE_INT3_Q16(B);
+   // Print_GE_INT3_Q16(GE_INT3_CROSS_PRODUCT_Q16(A, B));
 
-        b_Q16 = TO_Q16(i)>>1;
-        r_Q16 = r_Q16 + b_Q16>>2;
-    }
-    PrintQ16(r_Q16);
+    //Print_GE_INT3_Q16(GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(B, GE_INT3_NEG(A)));
+
+    //Print_GE_INT3_Q16(GE_INT3_NORMALIZE_Q16( B));
+   // GE_INT3_NORMALIZE_Q16
+
 
 
 }

@@ -724,6 +724,168 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
     return startNode;
 }
 
+cl_uchar BaryCentric_In_Triangle_Q16(ge_int3 baryCoords)
+{
+    if (baryCoords.x >= 0 && baryCoords.x <= TO_Q16(1))
+    {
+        if (baryCoords.y >= 0 && baryCoords.y <= TO_Q16(1))
+        {
+            if (baryCoords.z >= 0 && baryCoords.z <= TO_Q16(1))
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+void Triangle2DHeavy_ProjectedPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16, ge_int3* barycentricCoords_Q16, ge_int3* projectedPoint_Q16)
+{
+    ge_int3 baryCoords_Q16;
+
+    ge_int3 w_Q16 = GE_INT3_SUB(point_Q16, triangle->base.verts_Q16[0]);//P - P_1
+
+
+    baryCoords_Q16.x = GE_INT3_DOT_PRODUCT_Q16(GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, w_Q16), triangle->normal_Q16);
+    baryCoords_Q16.x = DIV_PAD_Q16(baryCoords_Q16.x, GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16));
+
+
+    baryCoords_Q16.y = GE_INT3_DOT_PRODUCT_Q16(GE_INT3_CROSS_PRODUCT_Q16(w_Q16, triangle->v_Q16), triangle->normal_Q16);
+    baryCoords_Q16.y = DIV_PAD_Q16(baryCoords_Q16.y, GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16));
+
+    baryCoords_Q16.z = TO_Q16(1) - baryCoords_Q16.x - baryCoords_Q16.y;
+
+    *barycentricCoords_Q16 = baryCoords_Q16;
+
+    (*projectedPoint_Q16).x = baryCoords_Q16.x * triangle->base.verts_Q16[0].x + baryCoords_Q16.y * triangle->base.verts_Q16[1].x + baryCoords_Q16.z * triangle->base.verts_Q16[2].x;
+    (*projectedPoint_Q16).y = baryCoords_Q16.x * triangle->base.verts_Q16[0].y + baryCoords_Q16.y * triangle->base.verts_Q16[1].y + baryCoords_Q16.z * triangle->base.verts_Q16[2].y;
+    (*projectedPoint_Q16).z = baryCoords_Q16.x * triangle->base.verts_Q16[0].z + baryCoords_Q16.y * triangle->base.verts_Q16[1].z + baryCoords_Q16.z * triangle->base.verts_Q16[2].z;
+}
+
+ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16)
+{
+
+    
+
+
+
+   
+
+
+
+}
+
+void MapTileConvexHull_ClosestPointTo(ConvexHull* hull, ge_int3 point_Q16)
+{
+    // for each triangle,
+    
+    for (int i = 0; i < 14; i++)
+    {
+        //get closest point
+
+
+
+        
+
+        //hull->triangles[i].base.verts_Q16
+    }
+
+    //use closest point from group above.
+
+}
+
+void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
+{
+    ge_int3 a = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);
+    ge_int3 b = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);
+    triangle->normal_Q16 = GE_INT3_CROSS_PRODUCT_Q16(a, b);
+
+    triangle->u_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
+    triangle->v_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
+
+}
+void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
+{
+    triangle1->base.verts_Q16[0] = fourCorners[0];
+    triangle1->base.verts_Q16[1] = fourCorners[1];
+    triangle1->base.verts_Q16[2] = fourCorners[2];
+
+    triangle2->base.verts_Q16[0] = fourCorners[2];
+    triangle2->base.verts_Q16[1] = fourCorners[3];
+    triangle2->base.verts_Q16[2] = fourCorners[0];
+
+    Triangle3DMakeHeavy(triangle1);
+    Triangle3DMakeHeavy(triangle2);
+}
+
+
+
+void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
+{
+    ge_int3 A = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(-1) << 1, TO_Q16(-1) << 1 };
+    ge_int3 B = (ge_int3){ TO_Q16(1) << 1, TO_Q16(-1) << 1, TO_Q16(-1) << 1 };
+    ge_int3 C = (ge_int3){ TO_Q16(1) << 1, TO_Q16(1) << 1, TO_Q16(-1) << 1 };
+    ge_int3 D = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(1) << 1, TO_Q16(-1) << 1 };
+    
+    ge_int3 E = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(-1) << 1, TO_Q16(1) << 1 };
+    ge_int3 F = (ge_int3){ TO_Q16(1)  << 1, TO_Q16(-1) << 1, TO_Q16(1) << 1 };
+    ge_int3 G = (ge_int3){ TO_Q16(1)  << 1, TO_Q16(1)  << 1, TO_Q16(1) << 1 };
+    ge_int3 H = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(1)  << 1, TO_Q16(1) << 1 };
+
+
+
+    int i = 0;
+    //bottom (1)
+    ge_int3 bottomFace[4];
+    bottomFace[0] = A;
+    bottomFace[1] = B;
+    bottomFace[2] = C;
+    bottomFace[3] = D;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &bottomFace[0]);
+
+
+
+    ge_int3 NegYFace[4];
+    NegYFace[0] = A;
+    NegYFace[1] = E;
+    NegYFace[2] = F;
+    NegYFace[3] = B;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &NegYFace[0]);
+
+    ge_int3 POSYFace[4];
+    POSYFace[0] = C;
+    POSYFace[1] = G;
+    POSYFace[2] = H;
+    POSYFace[3] = D;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &POSYFace[0]);
+
+    ge_int3 POSXFace[4];
+    POSXFace[0] = B;
+    POSXFace[1] = F;
+    POSXFace[2] = G;
+    POSXFace[3] = C;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &POSXFace[0]);
+
+    ge_int3 NEGXFace[4];
+    NEGXFace[0] = D;
+    NEGXFace[1] = H;
+    NEGXFace[2] = E;
+    NEGXFace[3] = A;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &NEGXFace[0]);
+
+    ge_int3 TOPFace[4];
+    TOPFace[0] = H;
+    TOPFace[1] = G;
+    TOPFace[2] = F;
+    TOPFace[3] = E;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace[0]);
+
+
+}
+
+
+
 
 void PeepPrint(Peep* peep)
 {
@@ -824,7 +986,7 @@ void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
 }
 
 
-void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_map_tile, ge_int3* out_tile_world_pos_center_Q16, ge_int3* out_map_tile_coord_whole)
+void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_map_tile, ge_int3* out_tile_world_pos_center_Q16, ge_int3* out_map_tile_coord_whole, cl_int* out_tile_data)
 {
     (*out_map_tile_coord_whole).z = WHOLE_Q16(peep->posMap_Q16.z) + (offset.z);
     (*out_map_tile_coord_whole).x = WHOLE_Q16(peep->posMap_Q16.x) + (offset.x);
@@ -854,9 +1016,9 @@ void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_ma
         return;
     }
     
-
-    *out_map_tile = gameState->map.levels[(*out_map_tile_coord_whole).z].data[(*out_map_tile_coord_whole).x][(*out_map_tile_coord_whole).y];
-   
+    *out_tile_data = gameState->map.levels[(*out_map_tile_coord_whole).z].data[(*out_map_tile_coord_whole).x][(*out_map_tile_coord_whole).y];
+    *out_map_tile = MapDataGetTile(*out_tile_data);
+    
 }
 
 void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr)
@@ -898,16 +1060,17 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 {
 
     //maptile collisions
-    MapTile data[26];
+    MapTile tiles[26];
     ge_int3 tileCenters_Q16[26];
     ge_int3 dummy;
+    cl_int tileDatas[26];
 
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & data[0], & tileCenters_Q16[0],&dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & data[1], & tileCenters_Q16[1], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & data[2], & tileCenters_Q16[2], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & data[3], & tileCenters_Q16[3], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & data[4], & tileCenters_Q16[4], &dummy);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & data[5], & tileCenters_Q16[5], &dummy);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & tiles[0], & tileCenters_Q16[0],&dummy, &tileDatas[0]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 0, 0 }, & tiles[1], & tileCenters_Q16[1], &dummy, & tileDatas[1]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, -1, 0 }, & tiles[2], & tileCenters_Q16[2], &dummy, & tileDatas[2]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & tiles[3], & tileCenters_Q16[3], &dummy, & tileDatas[3]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & tiles[4], & tileCenters_Q16[4], &dummy, & tileDatas[4]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & tiles[5], & tileCenters_Q16[5], &dummy, & tileDatas[5]);
 
     /*
     {
@@ -941,7 +1104,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
     for (int i = 0; i < 6; i++)
     {
-        MapTile tile = data[i];
+        MapTile tile = tiles[i];
         if (tile != MapTile_NONE)
         {
             cl_int3 tileMin_Q16;
@@ -955,13 +1118,12 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
 
-
-
-            
             tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
             tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
 
+            ConvexHull hull;
+            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
 
 
 
@@ -1238,10 +1400,11 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     //search up to z level 0
     ge_int3 offset, tilePWorldCen, tileMapCoordWhole;
     MapTile ctile;
+    cl_int tileData;
     offset.x = 0;
     offset.y = 0;
     offset.z = 0;
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole, &tileData);
 
 
     while (ctile == MapTile_NONE && tileMapCoordWhole.z < MAPDEPTH)
@@ -1356,9 +1519,10 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
     //revert position to last good if needed
     MapTile curTile;
+    cl_int tileData;
     ge_int3 dummy;
     ge_int3 dummy2;
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, &curTile, &dummy, & dummy2);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, &curTile, &dummy, & dummy2, & tileData);
 
     if (curTile != MapTile_NONE)
     {
