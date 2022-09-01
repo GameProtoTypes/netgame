@@ -33,9 +33,6 @@ mapTile2AttrVBO, \
 mapTile2OtherAttrVBO
 
 
-
-
-
 void Print_GE_INT2(ge_int2 v)
 {
     printf("{%d,%d}\n", v.x, v.y);
@@ -1269,7 +1266,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             ge_int3 nearestPoint;
 
 
-            //determine if simple box or convex hull col
+            //determine if simple box or convex hull collision
             if (MapTileDataHasLowCorner(tileDatas[i]))
             {
 
