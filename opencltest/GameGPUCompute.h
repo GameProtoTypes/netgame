@@ -137,9 +137,9 @@ public:
 
 	uint64_t gameStateSize = 0;
 
-	int maxPeeps = 1024 * 1;
+	int maxPeeps = 1024;
 	int maxParticles = 1024;
-	int mapDim = 128;
+	int mapDim = 256;
 	int mapDepth = 32;
 	int mapTileSize = 5;
 

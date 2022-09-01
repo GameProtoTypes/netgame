@@ -2,7 +2,7 @@
 #define PARTICLE_VBO_INSTANCE_SIZE (24)
 #define MAX_PEEPS (1024)
 #define MAX_PARTICLES (1024)
-#define MAPDIM (128)
+#define MAPDIM (256)
 #define MAPDEPTH (32)
 #define WARPSIZE (32)
 #define GAME_UPDATE_WORKITEMS (131072)

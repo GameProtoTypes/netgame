@@ -774,7 +774,7 @@ ge_int3 Triangle3D_ToBaryCentric(Triangle3DHeavy* triangle, ge_int3 point)
     };
 }
 
-ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16)
+ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16, int* dist_Q16)
 {   
     ge_int3 P1 = triangle->base.verts_Q16[0];
     ge_int3 P2 = triangle->base.verts_Q16[1];
@@ -822,7 +822,10 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     cl_uchar onSurface = BaryCentric_In_Triangle_Q16(P_prime_bary);
 
     if (onSurface == 1)
+    {
+        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, P_prime));
         return P_prime;
+    }
 
     ge_int3 P1_P_prime = GE_INT3_SUB(P_prime, P1);
     ge_int3 P2_P_prime = GE_INT3_SUB(P_prime, P2);
@@ -892,49 +895,31 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
 
     if (L1D < L2D && L1D < L2D)
     {
+        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L1));
         return L1;
     }
     else if (L2D < L1D && L2D < L3D)
     {
+        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L2));
         return L2;
     }
     else
-        return L3;
-
-}
-
-void MapTileConvexHull_ClosestPointTo(ConvexHull* hull, ge_int3 point_Q16)
-{
-    // for each triangle,
-    
-    for (int i = 0; i < 14; i++)
     {
-        //get closest point
-
-
-
-        
-
-        //hull->triangles[i].base.verts_Q16
+        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L3));
+        return L3;
     }
 
-    //use closest point from group above.
-
 }
+
+
 
 void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
 {
     triangle->u_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
     triangle->v_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
 
-    printf("U");
-    Print_GE_INT3_Q16(triangle->u_Q16);
-    printf("V");
-    Print_GE_INT3_Q16(triangle->v_Q16);
 
     triangle->normal_Q16 =  GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, triangle->v_Q16);
-    printf("N");
-    Print_GE_INT3_Q16(triangle->normal_Q16);
 
 }
 void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
@@ -955,15 +940,15 @@ void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2
 
 void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
 {
-    ge_int3 A = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(-1) << 1, TO_Q16(-1) << 1 };
-    ge_int3 B = (ge_int3){ TO_Q16(1) << 1, TO_Q16(-1) << 1, TO_Q16(-1) << 1 };
-    ge_int3 C = (ge_int3){ TO_Q16(1) << 1, TO_Q16(1) << 1, TO_Q16(-1) << 1 };
-    ge_int3 D = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(1) << 1, TO_Q16(-1) << 1 };
+    ge_int3 A = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
+    ge_int3 B = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
+    ge_int3 C = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(1) >> 1, TO_Q16(-1) >> 1 };
+    ge_int3 D = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(1) >> 1, TO_Q16(-1) >> 1 };
     
-    ge_int3 E = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(-1) << 1, TO_Q16(1) << 1 };
-    ge_int3 F = (ge_int3){ TO_Q16(1)  << 1, TO_Q16(-1) << 1, TO_Q16(1) << 1 };
-    ge_int3 G = (ge_int3){ TO_Q16(1)  << 1, TO_Q16(1)  << 1, TO_Q16(1) << 1 };
-    ge_int3 H = (ge_int3){ TO_Q16(-1) << 1, TO_Q16(1)  << 1, TO_Q16(1) << 1 };
+    ge_int3 E = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(-1) >> 1, TO_Q16(1) >> 1 };
+    ge_int3 F = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(1) >> 1 };
+    ge_int3 G = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(1) >> 1, TO_Q16(1) >> 1 };
+    ge_int3 H = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(1) >> 1, TO_Q16(1) >> 1 };
 
 
 
@@ -1188,6 +1173,33 @@ cl_int MapTileZHeight_Q16(cl_uint* tileData, ge_int2 inTileCoord_Q16)
 }
 
 
+ge_int3 MapTileConvexHull_ClosestPoint(ConvexHull* hull, ge_int3 point_Q16)
+{
+    int smallestDist_Q16 = TO_Q16(1000);
+    ge_int3 closestPoint;
+    for (int i = 0; i < 12; i++)
+    {
+        Triangle3DHeavy* tri = &hull->triangles[i];
+
+        int dist_Q16;
+        ge_int3 closest = Triangle3DHeavy_ClosestPoint(tri, point_Q16, &dist_Q16);
+        //printf("Dist(%d): ", i);
+        //PrintQ16(dist_Q16);
+        if (dist_Q16 < smallestDist_Q16)
+        {
+            smallestDist_Q16 = dist_Q16;
+            closestPoint = closest;
+        }
+    }
+    //printf("Chosen Dist: ");
+    //PrintQ16(smallestDist_Q16);
+    //printf("Chosen Point: ");
+    //Print_GE_INT3_Q16(closestPoint);
+    return closestPoint;
+}
+
+
+
 void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 {
 
@@ -1233,32 +1245,30 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
         PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, -1, 0 }, & data[25], & tileCenters_Q16[26]);
     }
     */
-
+    //printf("peep Pos: "); Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
     for (int i = 0; i < 6; i++)
     {
+        
         MapTile tile = tiles[i];
         if (tile != MapTile_NONE)
         {
-            cl_int3 tileMin_Q16;
-            cl_int3 tileMax_Q16;
+            //cl_int3 tileMin_Q16;
+            //cl_int3 tileMax_Q16;
 
-            tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            tileMin_Q16.y = tileCenters_Q16[i].y - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            
+            //tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
+            //tileMin_Q16.y = tileCenters_Q16[i].y - (TO_Q16(MAP_TILE_SIZE) >> 1);
+            //
 
-            tileMax_Q16.x = tileCenters_Q16[i].x + (TO_Q16(MAP_TILE_SIZE) >> 1);
-            tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-
-            tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
+            //tileMax_Q16.x = tileCenters_Q16[i].x + (TO_Q16(MAP_TILE_SIZE) >> 1);
+            //tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
 
-            //ConvexHull hull;
-           // MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
+            //tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
+            //tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
 
 
-
+            ConvexHull hull;
+            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
 
 
             ge_int3 futurePos;
@@ -1266,10 +1276,44 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             futurePos.y = peep->physics.base.pos_Q16.y + peep->physics.base.v_Q16.y;
             futurePos.z = peep->physics.base.pos_Q16.z + peep->physics.base.v_Q16.z;
 
-            ge_int3 nearestPoint;
-            nearestPoint.x = clamp(futurePos.x, tileMin_Q16.x, tileMax_Q16.x);
-            nearestPoint.y = clamp(futurePos.y, tileMin_Q16.y, tileMax_Q16.y);
-            nearestPoint.z = clamp(futurePos.z, tileMin_Q16.z, tileMax_Q16.z);
+            
+
+            ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
+
+            peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+            , TO_Q16(MAP_TILE_SIZE)
+            });
+
+            //if (i == 5) {
+            //    printf("local to hull:");
+            //    Print_GE_INT3_Q16(peepPosLocalToHull_Q16);
+
+            //}
+           // printf("-----------------------------\n");
+            ge_int3 nearestPoint = MapTileConvexHull_ClosestPoint(&hull, peepPosLocalToHull_Q16);
+            //if (i == 5) {
+            //    printf("hull nearest:");
+            //    Print_GE_INT3_Q16(nearestPoint);
+
+            //}
+            nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
+                TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+                    , TO_Q16(MAP_TILE_SIZE)
+            });
+            //printf("hull world nearest");
+            //Print_GE_INT3_Q16(nearestPoint);
+            nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
+            //if(i == 5)
+            //Print_GE_INT3_Q16(nearestPoint);
+
+
+
+            //Print_GE_INT3_Q16(nearestPoint);
+
+            //ge_int3 nearestPoint;
+            //nearestPoint.x = clamp(futurePos.x, tileMin_Q16.x, tileMax_Q16.x);
+            //nearestPoint.y = clamp(futurePos.y, tileMin_Q16.y, tileMax_Q16.y);
+            //nearestPoint.z = clamp(futurePos.z, tileMin_Q16.z, tileMax_Q16.z);
 
             ge_int3 A;
             A.x = futurePos.x - nearestPoint.x;
@@ -1524,6 +1568,7 @@ void PeepPreUpdate2(Peep* peep)
 
 int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
 {
+ 
     ge_int3 maptilecoords;
     maptilecoords.x = WHOLE_Q16(peep->posMap_Q16.x);
     maptilecoords.y = WHOLE_Q16(peep->posMap_Q16.y);
@@ -2327,17 +2372,60 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Triangle Tests\n");
 
 
-    ge_int3 point = (ge_int3){TO_Q16(7), TO_Q16(26), TO_Q16(35) };
+    ge_int3 point = (ge_int3){TO_Q16(1), TO_Q16(0), TO_Q16(1) };
     Triangle3DHeavy tri;
-    tri.base.verts_Q16[0] = (ge_int3){ TO_Q16(-21), TO_Q16(-1), TO_Q16(19) };
-    tri.base.verts_Q16[1] = (ge_int3){ TO_Q16(17), TO_Q16(10), TO_Q16(12) };
-    tri.base.verts_Q16[2] = (ge_int3){ TO_Q16(9), TO_Q16(-16), TO_Q16(-7) };
+    tri.base.verts_Q16[0] = (ge_int3){ TO_Q16(-1), TO_Q16(-1), TO_Q16(0) };
+    tri.base.verts_Q16[1] = (ge_int3){ TO_Q16( 1), TO_Q16(-1), TO_Q16(0) };
+    tri.base.verts_Q16[2] = (ge_int3){ TO_Q16(-1), TO_Q16( 1), TO_Q16(0) };
 
     Triangle3DMakeHeavy(&tri);
 
-    ge_int3 closestPoint = Triangle3DHeavy_ClosestPoint(&tri, point);
+    int dist;
+    ge_int3 closestPoint = Triangle3DHeavy_ClosestPoint(&tri, point, &dist);
+    printf("CP: ");
     Print_GE_INT3_Q16(closestPoint);
+    printf("Dist: ");
+    PrintQ16(dist);
 
+
+
+
+
+
+
+
+
+    printf("Convex Hull Tests:\n");
+
+
+
+    ConvexHull hull;    
+    cl_int tileData = 1;
+    MapTileConvexHull_From_TileData(&hull, &tileData);
+
+    printf("convex hull tris:\n");
+    for (int i = 0; i < 6; i++)
+    {
+        Print_GE_INT3_Q16(hull.triangles[i].base.verts_Q16[0]);
+        Print_GE_INT3_Q16(hull.triangles[i].base.verts_Q16[1]);
+        Print_GE_INT3_Q16(hull.triangles[i].base.verts_Q16[2]);
+    }
+
+
+    ge_int3 p = (ge_int3){TO_Q16(-1),TO_Q16(0),TO_Q16(0)};
+    ge_int3 nearestPoint = MapTileConvexHull_ClosestPoint(&hull, p);
+
+    printf("np: ");
+    Print_GE_INT3_Q16(nearestPoint);
+
+
+
+
+
+
+
+
+    printf("End Tests\n");
 
     gameState->numClients = 1;
     gameStateActions->pauseState = 0;
