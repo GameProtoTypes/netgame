@@ -150,6 +150,11 @@ cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
         return 4;
 }
 
+cl_uchar MapTileDataHasLowCorner(cl_int tileData)
+{
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, MapTileFlags_LowCornerTPLEFT, 4);
+}
+
 cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
     cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
@@ -157,9 +162,15 @@ cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
 
-    return BITBANK_GET_SUBNUMBER_UINT(*data, MapTileFlags_LowCornerTPLEFT, 4);
+    return MapTileDataHasLowCorner(*data);
 }
-
+cl_uchar MapTileDataCornerCount(cl_int tileData)
+{
+    return (BITGET_MF(tileData, MapTileFlags_LowCornerTPLEFT) +
+        BITGET_MF(tileData, MapTileFlags_LowCornerTPRIGHT) +
+        BITGET_MF(tileData, MapTileFlags_LowCornerBTMRIGHT) +
+        BITGET_MF(tileData, MapTileFlags_LowCornerBTMLEFT));
+}
 cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
     cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
@@ -167,10 +178,7 @@ cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
 
-    return (BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT) +
-        BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) +
-        BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) +
-        BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT));
+    return MapTileDataCornerCount(*data);
 }
 
 
@@ -1250,70 +1258,64 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
     {
         
         MapTile tile = tiles[i];
+        
         if (tile != MapTile_NONE)
         {
-            //cl_int3 tileMin_Q16;
-            //cl_int3 tileMax_Q16;
-
-            //tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            //tileMin_Q16.y = tileCenters_Q16[i].y - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            //
-
-            //tileMax_Q16.x = tileCenters_Q16[i].x + (TO_Q16(MAP_TILE_SIZE) >> 1);
-            //tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-
-            //tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
-            //tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-
-            ConvexHull hull;
-            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
-
-
             ge_int3 futurePos;
             futurePos.x = peep->physics.base.pos_Q16.x + peep->physics.base.v_Q16.x;
             futurePos.y = peep->physics.base.pos_Q16.y + peep->physics.base.v_Q16.y;
             futurePos.z = peep->physics.base.pos_Q16.z + peep->physics.base.v_Q16.z;
 
-            
-
-            ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
-
-            peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
-            , TO_Q16(MAP_TILE_SIZE)
-            });
-
-            //if (i == 5) {
-            //    printf("local to hull:");
-            //    Print_GE_INT3_Q16(peepPosLocalToHull_Q16);
-
-            //}
-           // printf("-----------------------------\n");
-            ge_int3 nearestPoint = MapTileConvexHull_ClosestPoint(&hull, peepPosLocalToHull_Q16);
-            //if (i == 5) {
-            //    printf("hull nearest:");
-            //    Print_GE_INT3_Q16(nearestPoint);
-
-            //}
-            nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
-                TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
-                    , TO_Q16(MAP_TILE_SIZE)
-            });
-            //printf("hull world nearest");
-            //Print_GE_INT3_Q16(nearestPoint);
-            nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
-            //if(i == 5)
-            //Print_GE_INT3_Q16(nearestPoint);
+            ge_int3 nearestPoint;
 
 
+            //determine if simple box or convex hull col
+            if (MapTileDataHasLowCorner(tileDatas[i]))
+            {
 
-            //Print_GE_INT3_Q16(nearestPoint);
+                ConvexHull hull;
+                MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
+                ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
 
-            //ge_int3 nearestPoint;
-            //nearestPoint.x = clamp(futurePos.x, tileMin_Q16.x, tileMax_Q16.x);
-            //nearestPoint.y = clamp(futurePos.y, tileMin_Q16.y, tileMax_Q16.y);
-            //nearestPoint.z = clamp(futurePos.z, tileMin_Q16.z, tileMax_Q16.z);
+                peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {
+                    TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+                        , TO_Q16(MAP_TILE_SIZE)
+                });
+
+                nearestPoint = MapTileConvexHull_ClosestPoint(&hull, peepPosLocalToHull_Q16);
+
+                nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
+                    TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+                        , TO_Q16(MAP_TILE_SIZE)
+                });
+
+                nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
+            }
+            else
+            {
+                cl_int3 tileMin_Q16;
+                cl_int3 tileMax_Q16;
+
+                tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
+                tileMin_Q16.y = tileCenters_Q16[i].y - (TO_Q16(MAP_TILE_SIZE) >> 1);
+
+
+                tileMax_Q16.x = tileCenters_Q16[i].x + (TO_Q16(MAP_TILE_SIZE) >> 1);
+                tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
+
+
+                tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
+                tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
+
+                nearestPoint.x = clamp(futurePos.x, tileMin_Q16.x, tileMax_Q16.x);
+                nearestPoint.y = clamp(futurePos.y, tileMin_Q16.y, tileMax_Q16.y);
+                nearestPoint.z = clamp(futurePos.z, tileMin_Q16.z, tileMax_Q16.z);
+
+            }
+
+
+
+
 
             ge_int3 A;
             A.x = futurePos.x - nearestPoint.x;

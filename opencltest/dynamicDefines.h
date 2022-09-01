@@ -1,6 +1,6 @@
 #define PEEP_VBO_INSTANCE_SIZE (24)
 #define PARTICLE_VBO_INSTANCE_SIZE (24)
-#define MAX_PEEPS (1024)
+#define MAX_PEEPS (32768)
 #define MAX_PARTICLES (1024)
 #define MAPDIM (256)
 #define MAPDEPTH (32)
