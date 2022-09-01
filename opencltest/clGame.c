@@ -1,3 +1,4 @@
+#include "cpugpuvectortypes.h"
 #include "cl_type_glue.h"
 #include "fixedpoint_opencl.h"
 
@@ -829,6 +830,7 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     if (onSurface == 1)
     {
         *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, P_prime));
+
         return P_prime;
     }
 
@@ -901,16 +903,19 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     if (L1D < L2D && L1D < L2D)
     {
         *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L1));
+
         return L1;
     }
     else if (L2D < L1D && L2D < L3D)
     {
         *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L2));
+
         return L2;
     }
     else
     {
         *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L3));
+
         return L3;
     }
 
@@ -925,6 +930,9 @@ void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
 
 
     triangle->normal_Q16 =  GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, triangle->v_Q16);
+
+    if (GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16) < (1 >> 5))
+        printf("Warning! Small triangle!\n");
 
 }
 void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
@@ -949,11 +957,46 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
     ge_int3 B = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
     ge_int3 C = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(1) >> 1, TO_Q16(-1) >> 1 };
     ge_int3 D = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(1) >> 1, TO_Q16(-1) >> 1 };
+
     
     ge_int3 E = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(-1) >> 1, TO_Q16(1) >> 1 };
     ge_int3 F = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(1) >> 1 };
     ge_int3 G = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(1) >> 1, TO_Q16(1) >> 1 };
     ge_int3 H = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(1) >> 1, TO_Q16(1) >> 1 };
+    ge_int3 X = (ge_int3){ 0, 0, TO_Q16(1) >> 1 };
+
+    cl_uchar lowCornerCount = MapTileDataCornerCount(*tileData);
+
+    if (lowCornerCount > 0) 
+    {
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerBTMLEFT) != 0)
+            E.z = (TO_Q16(-1) >> 1);
+
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerBTMRIGHT) != 0)
+            F.z = (TO_Q16(-1) >> 1);
+
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPLEFT) != 0)
+            H.z = (TO_Q16(-1) >> 1);
+
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPRIGHT) != 0)
+            G.z = (TO_Q16(-1) >> 1);
+
+
+        //simple ramp cases
+        if      (E.z < 0 && F.z < 0 && G.z > 0 && H.z > 0)
+            X.z = 0;
+        else if (F.z < 0 && G.z < 0 && H.z > 0 && E.z > 0)
+            X.z = 0;
+        else if (G.z < 0 && H.z < 0 && E.z > 0 && F.z > 0)
+            X.z = 0;
+        else if (H.z < 0 && E.z < 0 && F.z > 0 && G.z > 0)
+            X.z = 0;
+        else if (lowCornerCount == 3)
+        {
+            X.z = TO_Q16(-1) >> 1;
+        }
+    }
+
 
 
 
@@ -996,13 +1039,19 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
     NEGXFace[3] = A;
     Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &NEGXFace[0]);
 
-    ge_int3 TOPFace[4];
-    TOPFace[0] = H;
-    TOPFace[1] = G;
-    TOPFace[2] = F;
-    TOPFace[3] = E;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace[0]);
+    ge_int3 TOPFace1[4];
+    TOPFace1[0] = X;
+    TOPFace1[1] = G;
+    TOPFace1[2] = F;
+    TOPFace1[3] = E;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace1[0]);
 
+    ge_int3 TOPFace2[4];
+    TOPFace2[0] = X;
+    TOPFace2[1] = E;
+    TOPFace2[2] = H;
+    TOPFace2[3] = G;
+    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace2[0]);
 
 }
 
@@ -1182,7 +1231,7 @@ ge_int3 MapTileConvexHull_ClosestPoint(ConvexHull* hull, ge_int3 point_Q16)
 {
     int smallestDist_Q16 = TO_Q16(1000);
     ge_int3 closestPoint;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 14; i++)
     {
         Triangle3DHeavy* tri = &hull->triangles[i];
 
@@ -1268,6 +1317,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
             //determine if simple box or convex hull collision
             if (MapTileDataHasLowCorner(tileDatas[i]))
+            //if(0)
             {
 
                 ConvexHull hull;
@@ -2403,7 +2453,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     MapTileConvexHull_From_TileData(&hull, &tileData);
 
     printf("convex hull tris:\n");
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 14; i++)
     {
         Print_GE_INT3_Q16(hull.triangles[i].base.verts_Q16[0]);
         Print_GE_INT3_Q16(hull.triangles[i].base.verts_Q16[1]);
@@ -2411,7 +2461,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     }
 
 
-    ge_int3 p = (ge_int3){TO_Q16(-1),TO_Q16(0),TO_Q16(0)};
+    ge_int3 p = (ge_int3){TO_Q16(0),TO_Q16(0),TO_Q16(2)};
     ge_int3 nearestPoint = MapTileConvexHull_ClosestPoint(&hull, p);
 
     printf("np: ");
