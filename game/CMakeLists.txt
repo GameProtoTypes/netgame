@@ -73,23 +73,30 @@ source_group("Shader Files" FILES ${Shader_Files})
 
 set(OPENCL_Source_Files
 
-    "clGame.c"
-    "clSizeTests.c"
+    "openCL/clGame.c"
+    "openCL/AStar.c"
+    "openCL/Map.c"
+    "openCL/Peep.c"
+    "openCL/clSizeTests.c"
    
 )
 source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 
 set(OPENCL_Header_Files
-    "peep.h"
-    "PeepFuncs.h"
-    "sizeTests.h"
+    "openCL/peep.h"
+    "openCL/Map.h"
+    "openCL/AStar.h"
+    "openCL/common.h"
 
-    "cpugpuvectortypes.h"
-    "fixedpoint_opencl.h"
-    "perlincl.h"
-    "randomcl.h"
-    "clLimits.h"
-    "cl_type_glue.h"
+    "openCL/PeepFuncs.h"
+    "openCL/sizeTests.h"
+
+    "openCL/cpugpuvectortypes.h"
+    "openCL/fixedpoint_opencl.h"
+    "openCL/perlincl.h"
+    "openCL/randomcl.h"
+    "openCL/clLimits.h"
+    "openCL/cl_type_glue.h"
 
 )
 source_group("CL Header Files" FILES ${OPENCL_Header_Files})
