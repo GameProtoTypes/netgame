@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGraphics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameNetworking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\sizeTests.h">
+      <Filter>CL Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGraphics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameNetworking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\opencltest\game\cpugpuvectortypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\casht\repos\opencltest\game\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CL Header Files">
+      <UniqueIdentifier>{017477FA-9AFF-3966-A32C-E416A8EF6C89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{F968F0C1-1657-3D46-A1B5-0CFFA0436291}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{FEF97670-C656-31A4-A612-A9A219331289}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

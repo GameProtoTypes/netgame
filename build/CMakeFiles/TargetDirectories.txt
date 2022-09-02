@@ -1,0 +1,15 @@
+C:/Users/casht/repos/opencltest/build/CMakeFiles/imgui.dir
+C:/Users/casht/repos/opencltest/build/CMakeFiles/INSTALL.dir
+C:/Users/casht/repos/opencltest/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/casht/repos/opencltest/build/CMakeFiles/ZERO_CHECK.dir
+C:/Users/casht/repos/opencltest/build/game/CMakeFiles/MinerTycoon.dir
+C:/Users/casht/repos/opencltest/build/game/CMakeFiles/INSTALL.dir
+C:/Users/casht/repos/opencltest/build/game/CMakeFiles/ALL_BUILD.dir
+C:/Users/casht/repos/opencltest/build/SLikeNet/CMakeFiles/SLikeNet.dir
+C:/Users/casht/repos/opencltest/build/SLikeNet/CMakeFiles/INSTALL.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/zlib.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/zlibstatic.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/example.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/minigzip.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/INSTALL.dir
+C:/Users/casht/repos/opencltest/build/zlib/CMakeFiles/ALL_BUILD.dir
