@@ -87,6 +87,7 @@ struct DrivePhysics
 {
 	int32_t target_x_Q16;
 	int32_t target_y_Q16;
+	int32_t target_z_Q16;
 
 	AStarPathNode* next;
 
@@ -142,19 +143,21 @@ struct Particle {
 }typedef Particle;
 
 
-struct  {
+struct Triangle3D {
 	ge_int3 verts_Q16[3];
 } typedef Triangle3D;
 
-struct {
+struct Triangle3DHeavy{
 	Triangle3D base;
 
 	ge_int3 normal_Q16;
 	ge_int3 u_Q16;
 	ge_int3 v_Q16;
+
+	cl_uchar valid;
 } typedef Triangle3DHeavy;
 
-struct  {
+struct  ConvexHull{
 	Triangle3DHeavy triangles[14];
 } typedef ConvexHull;
 

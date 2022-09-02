@@ -9,6 +9,9 @@
 #include "perlincl.h"
 
 
+#define PEEP_ALL_ALWAYS_VISIBLE
+#define PEEP_DISABLE_TILECORRECTIONS
+
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
@@ -36,7 +39,6 @@ mapTile1OtherAttrVBO, \
 mapTile2VBO, \
 mapTile2AttrVBO, \
 mapTile2OtherAttrVBO
-
 
 
 
@@ -263,7 +265,7 @@ void AStarSearchInstantiate(AStarSearch* search)
         }  
     }
 
-
+    
 
     search->endNode = NULL;
     search->openHeapSize = 0;
@@ -655,6 +657,17 @@ int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
     return idx;
 }
 
+//get the last path node from a node in a path
+AStarPathNode* AStarPathNode_LastPathNode(AStarPathNode* pathNode)
+{
+    AStarPathNode* curNode = pathNode;
+    while(curNode->next != NULL)
+    {
+        curNode = curNode->next;
+    }
+    return curNode;
+}
+
 AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathSteps* steps)
 {
     //grab a unused Node from pathNodes, and start building the list .
@@ -944,8 +957,14 @@ void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
 
     triangle->normal_Q16 =  GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, triangle->v_Q16);
 
-    if (GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16) < (1 >> 5))
-        printf("Warning! Small triangle!\n");
+
+    if (GE_INT3_DOT_PRODUCT_Q16(triangle->normal_Q16, triangle->normal_Q16) < (TO_Q16(1) >> 5)){
+        //printf("Warning! Small triangle!\n");
+        triangle->valid = 0;
+    }
+    else{
+        triangle->valid = 1;
+    }
 
 }
 void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
@@ -1247,6 +1266,8 @@ ge_int3 MapTileConvexHull_ClosestPoint(ConvexHull* hull, ge_int3 point_Q16)
     for (int i = 0; i < 14; i++)
     {
         Triangle3DHeavy* tri = &hull->triangles[i];
+        if(tri->valid == 0)
+            continue;
 
         int dist_Q16;
         ge_int3 closest = Triangle3DHeavy_ClosestPoint(tri, point_Q16, &dist_Q16);
@@ -1399,7 +1420,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                 B.y = MUL_PAD_Q16(An.y, dot);
                 B.z = MUL_PAD_Q16(An.z, dot);
 
-
+                
+                
                 
                 peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16 - mag));
                 peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, (peep->physics.shape.radius_Q16 - mag));
@@ -1416,7 +1438,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                 if ((-B.x) < peep->physics.base.vel_add_Q16.x || (-B.x) > peep->physics.base.vel_add_Q16.x)
                     peep->physics.base.vel_add_Q16.x += -B.x;
                 
-
+                
             }
 
         }
@@ -1434,6 +1456,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     ge_int3 d;
     d.x = peep->physics.drive.target_x_Q16 - peep->physics.base.pos_Q16.x;
     d.y = peep->physics.drive.target_y_Q16 - peep->physics.base.pos_Q16.y;
+    d.z = peep->physics.drive.target_z_Q16 - peep->physics.base.pos_Q16.z;
     int len;
     ge_normalize_v3_Q16(&d, &len);
 
@@ -1465,6 +1488,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
 
                     peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
                     peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                    peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
                 }
             }
         }
@@ -1474,10 +1498,12 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     {
         targetVelocity.x = d.x >> 2;
         targetVelocity.y = d.y >> 2;
+        targetVelocity.z = d.z >> 2;
 
 
         peep->physics.base.vel_add_Q16.x += targetVelocity.x;
         peep->physics.base.vel_add_Q16.y += targetVelocity.y;
+        peep->physics.base.vel_add_Q16.z += targetVelocity.z;
 
 
         peep->physics.base.CS_angle_rad = atan2(((float)(d.x))/(1<<16), ((float)(d.y)) / (1 << 16));
@@ -1632,7 +1658,11 @@ void PeepPreUpdate2(Peep* peep)
 
 int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
 {
- 
+    #ifdef PEEP_ALL_ALWAYS_VISIBLE
+        return 1;
+    #endif
+
+
     ge_int3 maptilecoords;
     maptilecoords.x = WHOLE_Q16(peep->posMap_Q16.x);
     maptilecoords.y = WHOLE_Q16(peep->posMap_Q16.y);
@@ -1765,9 +1795,10 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
     ge_int3 dummy2;
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, &curTile, &dummy, & dummy2, & tileData);
 
-    if (curTile != MapTile_NONE)
+    if ((curTile != MapTile_NONE) && (MapTileDataHasLowCorner(tileData) == 0))//if curTile is solid
     {
         //revert to center of last good map position
+        #ifndef PEEP_DISABLE_TILECORRECTIONS
         ge_int3 lastGoodPos;
         MapToWorld(GE_INT3_WHOLE_ONLY_Q16(peep->lastGoodPosMap_Q16), &lastGoodPos);
         lastGoodPos.x += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
@@ -1778,6 +1809,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
         peep->physics.base.pos_post_Q16.x += lastGoodPos.x - peep->physics.base.pos_Q16.x;
         peep->physics.base.pos_post_Q16.y += lastGoodPos.y - peep->physics.base.pos_Q16.y;
         peep->physics.base.pos_post_Q16.z += lastGoodPos.z - peep->physics.base.pos_Q16.z;
+        #endif
     }
     else
     {
@@ -2154,12 +2186,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 if (pathFindSuccess != 0)
                 {
-
                     curPeep->physics.drive.next = path;
+
                     ge_int3 worldloc;
                     MapToWorld(curPeep->physics.drive.next->mapCoord_Q16, &worldloc);
                     curPeep->physics.drive.target_x_Q16 = worldloc.x;
                     curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                    curPeep->physics.drive.target_z_Q16 = worldloc.z;
                     curPeep->physics.drive.drivingToTarget = 1;
 
                     //restrict comms to new channel
