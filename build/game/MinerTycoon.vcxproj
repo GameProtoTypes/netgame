@@ -115,7 +115,7 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>						</Message>
+      <Message>					</Message>
       <Command>setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -153,25 +153,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/cpugpuvectortypes.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/cpugpuvectortypes.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/sizeTests.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/sizeTests.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -225,7 +216,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>						</Message>
+      <Message>					</Message>
       <Command>setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -263,25 +254,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/cpugpuvectortypes.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/cpugpuvectortypes.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/sizeTests.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/sizeTests.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -335,7 +317,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>						</Message>
+      <Message>					</Message>
       <Command>setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -373,25 +355,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/cpugpuvectortypes.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/cpugpuvectortypes.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/sizeTests.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/sizeTests.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -444,7 +417,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>						</Message>
+      <Message>					</Message>
       <Command>setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
@@ -482,25 +455,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/cpugpuvectortypes.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/cpugpuvectortypes.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/sizeTests.h C:/Users/casht/repos/opencltest/build/game/Debug/openCL/sizeTests.h
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -581,13 +545,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\sizeTests.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShader.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGraphics.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.h" />
     <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameNetworking.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\cpugpuvectortypes.h" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\game\main.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShader.cpp" />

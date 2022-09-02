@@ -14,8 +14,6 @@
 
 #include "GameGraphics.h"
 
-#include "sizeTests.h"
-
 
 
 GameGPUCompute::GameGPUCompute()
@@ -118,7 +116,7 @@ void GameGPUCompute::RunInitCompute1()
 
 
     // Build the gameProgram
-    ret = clBuildProgram(gameProgram, 1, &device_id, NULL, NULL, NULL);
+    ret = clBuildProgram(gameProgram, 1, &device_id,  "-I openCL", NULL, NULL);
 
     if (ret != CL_SUCCESS) {
         // Determine the size of the log

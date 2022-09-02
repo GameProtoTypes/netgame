@@ -5,8 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/game",
-                "${workspaceFolder}/build/game/Debug"
+                "${workspaceFolder}/game/openCL"
             ],
+
+            
+
             "defines": [
                 "_DEBUG",
                 "UNICODE",

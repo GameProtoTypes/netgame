@@ -30,17 +30,12 @@ set(CMAKE_CXX_STANDARD 20)
 # Source groups
 ################################################################################
 set(Header_Files
-    "sizeTests.h"
+
     "GEShaderProgram.h"
     "GEShader.h"
     "GameGraphics.h"
     "GameGPUCompute.h"
     "GameNetworking.h" 
-
-    "cpugpuvectortypes.h"
-    
-
-
 
 )
 source_group("Header Files" FILES ${Header_Files})
@@ -89,6 +84,7 @@ set(OPENCL_Header_Files
     "PeepFuncs.h"
     "sizeTests.h"
 
+    "cpugpuvectortypes.h"
     "fixedpoint_opencl.h"
     "perlincl.h"
     "randomcl.h"
@@ -176,7 +172,7 @@ target_link_directories(${PROJECT_NAME} PUBLIC
 )
 
 
-
+#COPY ThINGS INTO BINARY DIRECTORY
 add_custom_command(
         TARGET MinerTycoon POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
@@ -202,21 +198,6 @@ add_custom_command(
                 ${CMAKE_CURRENT_SOURCE_DIR}/openCL
                 ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL)
         
-     
-add_custom_command(
-    TARGET MinerTycoon POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_SOURCE_DIR}/cpugpuvectortypes.h
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/cpugpuvectortypes.h)
-
-add_custom_command(
-    TARGET MinerTycoon POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_SOURCE_DIR}/sizeTests.h
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/sizeTests.h)
-            
-            
-
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
@@ -224,5 +205,12 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/Debug/TileSet.png)
 
 
+#COPY THINGS FROM RUNTIME BACK INTO SOURCE (FOR EDITOR NESSECITIES AND SUCH STRANGE THINGS)
+add_custom_command(
+    TARGET MinerTycoon POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/dynamicDefines.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/openCL/dynamicDefines.h)
 
-message(${CMAKE_CURRENT_BINARY_DIR}/Debug)
+
+

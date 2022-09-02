@@ -1,11 +1,11 @@
 #pragma once
 
 
-#include "openCL/cl_type_glue.h"
-#include "openCL/dynamicDefines.h"
-#include "openCL/sizeTests.h"
+#include "cl_type_glue.h"
+#include "dynamicDefines.h"
+#include "sizeTests.h"
 
-#include "openCL/cpugpuvectortypes.h"
+#include "cpugpuvectortypes.h"
 
 #define MAX_TRACKNODES (1024*8)
 

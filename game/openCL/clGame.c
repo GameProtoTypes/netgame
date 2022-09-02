@@ -1,10 +1,14 @@
-#include "openCL/cpugpuvectortypes.h"
-#include "openCL/cl_type_glue.h"
-#include "openCL/fixedpoint_opencl.h"
 
-#include "openCL/peep.h"
-#include "openCL/randomcl.h"
-#include "openCL/perlincl.h"
+
+
+#include "cpugpuvectortypes.h"
+#include "cl_type_glue.h"
+#include "fixedpoint_opencl.h"
+#include "peep.h"
+#include "randomcl.h"
+#include "perlincl.h"
+
+
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
@@ -353,6 +357,7 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
         index = largerChild;
 
     }
+    
     search->openHeap[index] = top;
 }
 
@@ -1368,7 +1373,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
             }
 
-
+            
 
 
 
@@ -1376,6 +1381,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             A.x = futurePos.x - nearestPoint.x;
             A.y = futurePos.y - nearestPoint.y;
             A.z = futurePos.z - nearestPoint.z;
+
+            
 
             ge_int3 An = A;
             cl_int mag;
@@ -1462,7 +1469,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
             }
         }
     }
-
+   
     if (peep->physics.drive.drivingToTarget)
     {
         targetVelocity.x = d.x >> 2;
