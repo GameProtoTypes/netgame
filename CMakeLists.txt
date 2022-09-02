@@ -7,13 +7,9 @@ cmake_minimum_required(VERSION 3.20)
 
 
 
-add_subdirectory(opencltest)
+add_subdirectory(game)
 add_subdirectory(SLikeNet)
 add_subdirectory(zlib)
-
-
-
-
 
 
 
@@ -43,8 +39,6 @@ target_include_directories(imgui PUBLIC ./glew-2.1.0/include)
 target_include_directories(imgui PUBLIC ./imgui/ ./imgui/backends/)
 # Configure Imgui to use OpengGL through SDL2
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<glfw3native.h>  GL_GLEXT_PROTOTYPES=1)
-
-
 
 
 
