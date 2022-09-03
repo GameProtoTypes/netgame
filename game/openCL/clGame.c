@@ -9,7 +9,7 @@
 #include "perlincl.h"
 
 
-#define PEEP_ALL_ALWAYS_VISIBLE
+//#define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
 
 
@@ -163,6 +163,16 @@ cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
 cl_uchar MapTileDataHasLowCorner(cl_int tileData)
 {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, MapTileFlags_LowCornerTPLEFT, 4);
+}
+
+cl_uchar MapTileData_TileSolid(cl_int tileData)
+{
+    if(MapTileDataHasLowCorner(tileData) == 0 && MapDataGetTile(tileData) != MapTile_NONE)
+    {
+        return 1;
+    }
+    else 
+        return 0;
 }
 
 cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
@@ -1259,7 +1269,7 @@ cl_int MapTileZHeight_Q16(cl_uint* tileData, ge_int2 inTileCoord_Q16)
 }
 
 
-ge_int3 MapTileConvexHull_ClosestPoint(ConvexHull* hull, ge_int3 point_Q16)
+ge_int3 MapTileConvexHull_ClosestPointToPoint(ConvexHull* hull, ge_int3 point_Q16)
 {
     int smallestDist_Q16 = TO_Q16(1000);
     ge_int3 closestPoint;
@@ -1286,7 +1296,31 @@ ge_int3 MapTileConvexHull_ClosestPoint(ConvexHull* hull, ge_int3 point_Q16)
     return closestPoint;
 }
 
+cl_uchar MapTileConvexHull_PointInside(ConvexHull* hull, ge_int3 point)
+{
+    //check dot product of point to verts against normal of the triangle
+    for (int i = 0; i < 14; i++)
+    {
+        Triangle3DHeavy* tri = &hull->triangles[i];
+        if(tri->valid == 0)
+            continue;
 
+        for(int v = 0; v < 3; v++)
+        {
+            ge_int3 vert = hull->triangles[i].base.verts_Q16[v];
+            
+            ge_int3 point_vert = GE_INT3_SUB(point, vert);
+            //int mag;
+            //ge_int3 point_vert_normalized = GE_INT3_NORMALIZE_Q16(point_vert, &mag);
+
+            int dot = GE_INT3_DOT_PRODUCT_Q16(point_vert, hull->triangles[i].normal_Q16);
+            if(dot <= 0)
+                return 0;
+        }
+    }
+
+    return 1;
+}
 
 void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 {
@@ -1334,6 +1368,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
     }
     */
     //printf("peep Pos: "); Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
+    ConvexHull hull;//hull for use below
     for (int i = 0; i < 6; i++)
     {
         
@@ -1347,63 +1382,36 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             futurePos.z = peep->physics.base.pos_Q16.z + peep->physics.base.v_Q16.z;
 
             ge_int3 nearestPoint;
+            cl_uchar insideSolidRegion;
+  
+            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
+            ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
 
+            peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {
+                TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+                    , TO_Q16(MAP_TILE_SIZE)
+            });
 
-            //determine if simple box or convex hull collision
-            if (MapTileDataHasLowCorner(tileDatas[i]))
-            //if(0)
-            {
+            nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
+            insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
 
-                ConvexHull hull;
-                MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
-                ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
+            nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
+                TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
+                    , TO_Q16(MAP_TILE_SIZE)
+            });
 
-                peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {
-                    TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
-                        , TO_Q16(MAP_TILE_SIZE)
-                });
-
-                nearestPoint = MapTileConvexHull_ClosestPoint(&hull, peepPosLocalToHull_Q16);
-
-                nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
-                    TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
-                        , TO_Q16(MAP_TILE_SIZE)
-                });
-
-                nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
-            }
-            else
-            {
-                cl_int3 tileMin_Q16;
-                cl_int3 tileMax_Q16;
-
-                tileMin_Q16.x = tileCenters_Q16[i].x - (TO_Q16(MAP_TILE_SIZE) >> 1);
-                tileMin_Q16.y = tileCenters_Q16[i].y - (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-
-                tileMax_Q16.x = tileCenters_Q16[i].x + (TO_Q16(MAP_TILE_SIZE) >> 1);
-                tileMax_Q16.y = tileCenters_Q16[i].y + (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-
-                tileMin_Q16.z = tileCenters_Q16[i].z - (TO_Q16(MAP_TILE_SIZE) >> 1);
-                tileMax_Q16.z = tileCenters_Q16[i].z + (TO_Q16(MAP_TILE_SIZE) >> 1);
-
-                nearestPoint.x = clamp(futurePos.x, tileMin_Q16.x, tileMax_Q16.x);
-                nearestPoint.y = clamp(futurePos.y, tileMin_Q16.y, tileMax_Q16.y);
-                nearestPoint.z = clamp(futurePos.z, tileMin_Q16.z, tileMax_Q16.z);
-
-            }
-
-            
-
-
+            nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
+        
 
             ge_int3 A;
             A.x = futurePos.x - nearestPoint.x;
             A.y = futurePos.y - nearestPoint.y;
             A.z = futurePos.z - nearestPoint.z;
 
-            
+            //make A vector always point to outside the shape
+            if(insideSolidRegion==1)
+               A = GE_INT3_NEG(A);
+
 
             ge_int3 An = A;
             cl_int mag;
@@ -1412,7 +1420,6 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
             if (mag < peep->physics.shape.radius_Q16)
             {
-
                 cl_int dot;
                 ge_dot_product_3D_Q16(peep->physics.base.v_Q16, An, &dot);
                 ge_int3 B;//velocity to cancel
@@ -1420,15 +1427,19 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                 B.y = MUL_PAD_Q16(An.y, dot);
                 B.z = MUL_PAD_Q16(An.z, dot);
 
-                
-                
-                
-                peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, (peep->physics.shape.radius_Q16 - mag));
-                peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, (peep->physics.shape.radius_Q16 - mag));
-                peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(An.x, (peep->physics.shape.radius_Q16 - mag));
+
+                int pushAmt;
+                if(insideSolidRegion)
+                    pushAmt = (peep->physics.shape.radius_Q16 + mag);
+                else
+                    pushAmt = (peep->physics.shape.radius_Q16 - mag);
+
+
+                peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, pushAmt);
+                peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, pushAmt);
+                peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(An.x, pushAmt);
 
                 
-
                 if((-B.z) < peep->physics.base.vel_add_Q16.z || (-B.z) > peep->physics.base.vel_add_Q16.z)
                     peep->physics.base.vel_add_Q16.z += -B.z;
                     
@@ -1437,7 +1448,6 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
                 if ((-B.x) < peep->physics.base.vel_add_Q16.x || (-B.x) > peep->physics.base.vel_add_Q16.x)
                     peep->physics.base.vel_add_Q16.x += -B.x;
-                
                 
             }
 
@@ -1795,20 +1805,25 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
     ge_int3 dummy2;
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, &curTile, &dummy, & dummy2, & tileData);
 
-    if ((curTile != MapTile_NONE) && (MapTileDataHasLowCorner(tileData) == 0))//if curTile is solid
+    
+
+    if (MapTileData_TileSolid(tileData) == 1)//if curTile is solid
     {
         //revert to center of last good map position
         #ifndef PEEP_DISABLE_TILECORRECTIONS
-        ge_int3 lastGoodPos;
-        MapToWorld(GE_INT3_WHOLE_ONLY_Q16(peep->lastGoodPosMap_Q16), &lastGoodPos);
-        lastGoodPos.x += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
-        lastGoodPos.y += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
-        lastGoodPos.z += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+
+            ge_int3 lastGoodPos;
+            MapToWorld(GE_INT3_WHOLE_ONLY_Q16(peep->lastGoodPosMap_Q16), &lastGoodPos);
+            lastGoodPos.x += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+            lastGoodPos.y += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
+            lastGoodPos.z += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
 
 
-        peep->physics.base.pos_post_Q16.x += lastGoodPos.x - peep->physics.base.pos_Q16.x;
-        peep->physics.base.pos_post_Q16.y += lastGoodPos.y - peep->physics.base.pos_Q16.y;
-        peep->physics.base.pos_post_Q16.z += lastGoodPos.z - peep->physics.base.pos_Q16.z;
+            peep->physics.base.pos_post_Q16.x += lastGoodPos.x - peep->physics.base.pos_Q16.x;
+            peep->physics.base.pos_post_Q16.y += lastGoodPos.y - peep->physics.base.pos_Q16.y;
+            peep->physics.base.pos_post_Q16.z += lastGoodPos.z - peep->physics.base.pos_Q16.z;
+
+
         #endif
     }
     else
@@ -2432,20 +2447,11 @@ void MapCreate2(ALL_CORE_PARAMS, int x, int y)
 
 }
 
-
-__kernel void game_init_single(ALL_CORE_PARAMS)
+void StartupTests()
 {
-    printf("Game Initializing...\n");
-
-
-
-
-    printf("Initializing StaticData Buffer..\n");
-    MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
-
-    printf("Speed Tests:\n");
-
-
+  printf("StartupTests Tests------------------------------------------------------:\n");
+  if(0){
+  printf("Speed Tests:\n");
 
     int s = 0;
     for (cl_ulong i = 0; i < 0; i++)
@@ -2457,16 +2463,16 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         s += c.x + c.y + c.z;
     }
 
-
-
-
-
-    printf("End Tests: %d\n", s);
-
+  }
+  if(0)
+  {
     fixedPointTests();
+  }
+
+  if(0)
+  {
 
     printf("Triangle Tests\n");
-
 
     ge_int3 point = (ge_int3){TO_Q16(1), TO_Q16(0), TO_Q16(1) };
     Triangle3DHeavy tri;
@@ -2478,21 +2484,16 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     int dist;
     ge_int3 closestPoint = Triangle3DHeavy_ClosestPoint(&tri, point, &dist);
-    printf("CP: ");
+    printf("closest point: ");
     Print_GE_INT3_Q16(closestPoint);
     printf("Dist: ");
     PrintQ16(dist);
+  }
 
 
-
-
-
-
-
-
-
+  if(0)
+  {
     printf("Convex Hull Tests:\n");
-
 
 
     ConvexHull hull;    
@@ -2509,19 +2510,35 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
 
     ge_int3 p = (ge_int3){TO_Q16(0),TO_Q16(0),TO_Q16(2)};
-    ge_int3 nearestPoint = MapTileConvexHull_ClosestPoint(&hull, p);
+    ge_int3 nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, p);
 
-    printf("np: ");
+    printf("nearest point: ");
     Print_GE_INT3_Q16(nearestPoint);
 
+    p = (ge_int3){TO_Q16(0),TO_Q16(0),TO_Q16(0)};
+    cl_uchar inside = MapTileConvexHull_PointInside(&hull, p);
+    printf("should be inside(1): %d\n", inside);
+
+    p = (ge_int3){TO_Q16(0),TO_Q16(1),TO_Q16(0)};
+    inside = MapTileConvexHull_PointInside(&hull, p);
+    printf("should be outside(0): %d\n", inside);
+  }
+    printf("End Tests-----------------------------------------------------------------\n");
+
+}
+
+__kernel void game_init_single(ALL_CORE_PARAMS)
+{
+    printf("Game Initializing...\n");
 
 
 
 
+    printf("Initializing StaticData Buffer..\n");
+    MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
 
+    StartupTests();
 
-
-    printf("End Tests\n");
 
     gameState->numClients = 1;
     gameStateActions->pauseState = 0;
@@ -2828,7 +2845,6 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS)
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
-
 
 
 }

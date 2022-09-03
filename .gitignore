@@ -349,3 +349,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /CMakeFiles
+build/.cmake/api/v1/reply/target-ALL_BUILD-RelWithDebInfo-5c76f729c8d7afc8ea16.json

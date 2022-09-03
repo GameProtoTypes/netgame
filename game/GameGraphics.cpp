@@ -127,13 +127,13 @@ void GameGraphics::Init()
     printf("GLSL Version : %s\n", glslVersion);
 
 
-    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertShader.shad");
-    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragShader.shad");
-    std::shared_ptr<GEShader> pVertPeepShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertPeep.shad");
-    std::shared_ptr<GEShader> pFragPeepShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragPeep.shad");
-    std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertMapTile.shad");
-    std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragMapTile.shad");
-    std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "shaders/geomMapTile.shad");
+    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertShader.glsl");
+    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragShader.glsl");
+    std::shared_ptr<GEShader> pVertPeepShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertPeep.glsl");
+    std::shared_ptr<GEShader> pFragPeepShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragPeep.glsl");
+    std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertMapTile.glsl");
+    std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragMapTile.glsl");
+    std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "shaders/geomMapTile.glsl");
 
 
 
@@ -437,14 +437,6 @@ GameGraphics::~GameGraphics()
 
     //Quit SDL subsystems
     SDL_Quit();
-
-
-
-
-
-
-
-
 
 
 

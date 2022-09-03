@@ -45,6 +45,13 @@ void CornerD()
 {
      texCoord = vec2(tileX + S - B, tileY + S - B);
 }
+void CornerX()
+{
+     texCoord = vec2(tileX + S*0.5 , tileY + S*0.5 );
+}
+
+
+
 
 void NextCorner()
 {

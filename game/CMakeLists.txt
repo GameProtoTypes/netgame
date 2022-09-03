@@ -56,15 +56,15 @@ source_group("Source Files" FILES ${Source_Files})
 
 set(Shader_Files
 
-    "vertPeep.shad"
-    "vertShader.shad"
-    "vertMapTile.shad"
+    "vertPeep.glsl"
+    "vertShader.glsl"
+    "vertMapTile.glsl"
 
-    "geomMapTile.shad"
+    "geomMapTile.glsl"
 
-    "fragPeep.shad"
-    "fragShader.shad"
-    "fragMapTile.shad"
+    "fragPeep.glsl"
+    "fragShader.glsl"
+    "fragMapTile.glsl"
 
 )
 source_group("Shader Files" FILES ${Shader_Files})

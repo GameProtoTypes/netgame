@@ -965,6 +965,34 @@ void fixedPointTests()
 
 }
 
+int GE_INT_TO_NEAREST_OF_TWO_Q16(int x_Q16, int a_Q16, int b_Q16)
+{
+    int dA = x_Q16 - a_Q16;
+    int dB = x_Q16 - b_Q16;
+
+    if(abs(dA) > abs(dB))
+        return b_Q16;
+    else
+        return a_Q16;
+}
 
 
+cl_uchar GE_INT_IN_DOMAIN_Q16(int x_Q16, int a_Q16, int b_Q16)
+{
+    if(x_Q16 > a_Q16 && x_Q16 < b_Q16)
+        return 1;
+    else
+        return 0;
+}
+
+
+cl_uchar GE_INT3_IN_DOMAIN_Q16(ge_int3 x_Q16, ge_int3 a_Q16, ge_int3 b_Q16)
+{
+    if((GE_INT_IN_DOMAIN_Q16(x_Q16.x, a_Q16.x, b_Q16.x) == 1) &&
+       (GE_INT_IN_DOMAIN_Q16(x_Q16.y, a_Q16.y, b_Q16.y) == 1) &&
+       (GE_INT_IN_DOMAIN_Q16(x_Q16.z, a_Q16.z, b_Q16.z) == 1))
+       return 1;
+    else
+       return 0;
+}
 
