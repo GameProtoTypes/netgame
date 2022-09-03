@@ -32,8 +32,8 @@
 	
 
 
-	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
-	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->gameStateSize);
+	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->structSizes.gameStateStructureSize);
+	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->structSizes.gameStateStructureSize);
 
 
 
@@ -212,7 +212,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_GAMEDATA_PART));
 
-	 uint64_t gameStateSize = gameCompute->gameStateSize;
+	 uint64_t gameStateSize = gameCompute->structSizes.gameStateStructureSize;
 	 uint32_t chunkSize = TRANSFERCHUNKSIZE;
 	 uint64_t n = HOST_nextTransferOffset[client->cliId] + chunkSize;
 	 if (n >= gameStateSize)
@@ -284,7 +284,7 @@
  {
 	 uint64_t sum = 0;
 	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state->data);
-	 for (uint64_t i = 0; i < gameCompute->gameStateSize; i++)
+	 for (uint64_t i = 0; i < gameCompute->structSizes.gameStateStructureSize; i++)
 	 {
 		 sum += bytePtr[i];
 	 }
@@ -570,7 +570,7 @@
 
 				 gameCompute->ReadFullGameState();
 
-				 memcpy(HOST_gameStateTransfer.get()->data, gameState.get()->data, gameCompute->gameStateSize);
+				 memcpy(HOST_gameStateTransfer.get()->data, gameState.get()->data, gameCompute->structSizes.gameStateStructureSize);
 
 				 std::cout << "Pausing." << std::endl;
 				 
@@ -605,7 +605,7 @@
 
 
 				 CLIENT_nextTransferOffset += chunkSize;
-				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / gameCompute->gameStateSize);
+				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / gameCompute->structSizes.gameStateStructureSize);
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
 
 
@@ -621,7 +621,7 @@
 						 assert(0);
 					 }
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get()->data, gameCompute->gameStateSize);
+					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get()->data, gameCompute->structSizes.gameStateStructureSize);
 					 gameCompute->WriteFullGameState();
 					 
 					 gameStateActions->pauseState = 0;

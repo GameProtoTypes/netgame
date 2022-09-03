@@ -318,3 +318,7 @@ struct GameState {
 } typedef GameState;
 
 
+struct StaticData {
+	ge_int3 directionalOffsets[26];
+
+}typedef StaticData;

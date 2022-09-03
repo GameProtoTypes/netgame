@@ -135,7 +135,8 @@ public:
 
 	std::vector<cl_mem> graphicsObjects;
 
-	uint64_t gameStateSize = 0;
+
+	SIZETESTSDATA structSizes;
 
 	int maxPeeps = 1024*32;
 	int maxParticles = 1024;

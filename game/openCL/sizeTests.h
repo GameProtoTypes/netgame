@@ -6,7 +6,7 @@
 struct SIZETESTSDATA {
 
 	cl_uint gameStateStructureSize;
-
+	cl_uint staticDataStructSize;
 
 
 
@@ -98,10 +98,6 @@ struct GameStateActions {
 
 
 
-struct StaticData {
-	ge_int3 directionalOffsets[26];
-
-}typedef StaticData;
 
 
 

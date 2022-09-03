@@ -9,11 +9,8 @@
 #include <fstream>
 #include <typeinfo>
 #include <variant>
-
 #include "glew.h"
-
 #include "GameGraphics.h"
-
 
 
 GameGPUCompute::GameGPUCompute()
@@ -158,17 +155,17 @@ void GameGPUCompute::RunInitCompute1()
         CL_HOST_ERROR_CHECK(ret)
 
 
-            clWaitForEvents(1, &sizeTestEvent);
-        SIZETESTSDATA data;
+        clWaitForEvents(1, &sizeTestEvent);
+
         ret = clEnqueueReadBuffer(command_queue, sizeTests_mem_obj, CL_TRUE, 0,
-            sizeof(SIZETESTSDATA), &data, 0, NULL, &sizeTestEvent);
+            sizeof(SIZETESTSDATA), &structSizes, 0, NULL, &sizeTestEvent);
         CL_HOST_ERROR_CHECK(ret)
 
 
-            clWaitForEvents(1, &sizeTestEvent);
+        clWaitForEvents(1, &sizeTestEvent);
 
-        gameStateSize = data.gameStateStructureSize;
-        std::cout << "GAMESTATE SIZE: " << data.gameStateStructureSize << std::endl;
+        std::cout << "GAMESTATE SIZE: " << structSizes.gameStateStructureSize << std::endl;
+        std::cout << "STATICDATA SIZE: " << structSizes.staticDataStructSize << std::endl;
     }
 }
 
@@ -184,16 +181,15 @@ void GameGPUCompute::RunInitCompute2()
 
         // Create memory buffers on the device
 
-        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(StaticData), nullptr, &ret);
+        staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, structSizes.staticDataStructSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
-        gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, gameStateSize, nullptr, &ret);
+        gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, structSizes.gameStateStructureSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
 
         gamestateB_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameStateActions), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
-
 
 
 
@@ -316,7 +312,7 @@ void GameGPUCompute::RunInitCompute2()
 
 
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        gameStateSize, gameState.get()->data, 0, NULL, NULL);
+        structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueWriteBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
@@ -421,7 +417,7 @@ void GameGPUCompute::ReadFullGameState()
 {
     // Read the memory buffer C on the device to the local variable C
      ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-         gameStateSize, gameState.get()->data, 0, NULL, &readEvent);
+         structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, &readEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     // Read the memory buffer C on the device to the local variable C
@@ -436,7 +432,7 @@ void GameGPUCompute::ReadFullGameState()
 void GameGPUCompute::WriteFullGameState()
 {
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
-        gameStateSize, gameState.get()->data, 0, NULL, &writeEvent);
+        structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 
     WriteGameStateB();

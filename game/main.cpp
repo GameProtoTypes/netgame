@@ -93,7 +93,7 @@ int32_t main(int32_t argc, char* args[])
 
     gameCompute.RunInitCompute1();
     
-    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>(gameCompute.gameStateSize);
+    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>(gameCompute.structSizes.gameStateStructureSize);
     std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
     gameCompute.gameState = gameState;
@@ -121,7 +121,7 @@ int32_t main(int32_t argc, char* args[])
 
     gameStateActions->tickIdx = 0;
 
-    std::cout << "GameState Size (bytes): " << gameCompute.gameStateSize << std::endl;
+    std::cout << "GameState Size (bytes): " << gameCompute.structSizes.gameStateStructureSize << std::endl;
 
     uint64_t timerStartMs = SDL_GetTicks64();
 
@@ -497,7 +497,7 @@ int32_t main(int32_t argc, char* args[])
         {
             std::ofstream myfile;
             myfile.open("gamestate.bin");
-            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.gameStateSize);
+            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
             myfile.close();
         }
 
