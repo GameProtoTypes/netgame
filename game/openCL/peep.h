@@ -55,6 +55,11 @@ struct PeepState_Basic
 
 	cl_int health;
 	cl_int deathState;
+
+
+	cl_int buriedState;
+
+
 }typedef PeepState_Basic;
 #pragma pack(pop)
 

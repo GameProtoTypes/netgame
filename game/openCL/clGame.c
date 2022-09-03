@@ -9,7 +9,7 @@
 #include "perlincl.h"
 
 
-//#define PEEP_ALL_ALWAYS_VISIBLE
+#define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
 
 
@@ -1025,7 +1025,7 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
 
 
         //simple ramp cases
-        if      (E.z < 0 && F.z < 0 && G.z > 0 && H.z > 0)
+        if (E.z < 0 && F.z < 0 && G.z > 0 && H.z > 0)
             X.z = 0;
         else if (F.z < 0 && G.z < 0 && H.z > 0 && E.z > 0)
             X.z = 0;
@@ -1371,7 +1371,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
     ConvexHull hull;//hull for use below
     for (int i = 0; i < 6; i++)
     {
-        
+       
         MapTile tile = tiles[i];
         
         if (tile != MapTile_NONE)
@@ -1395,6 +1395,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
             insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
 
+            peep->stateBasic.buriedState = insideSolidRegion;
+
             nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
                 TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
                     , TO_Q16(MAP_TILE_SIZE)
@@ -1409,8 +1411,10 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             A.z = futurePos.z - nearestPoint.z;
 
             //make A vector always point to outside the shape
-            if(insideSolidRegion==1)
+            if(insideSolidRegion==1){
                A = GE_INT3_NEG(A);
+               printf("inside region!");
+            }
 
 
             ge_int3 An = A;
@@ -2434,9 +2438,7 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
 
 
 
-            MapCreateSlope(ALL_CORE_PARAMS_PASS, x, y);
-            MapBuildTileView(ALL_CORE_PARAMS_PASS,x,y);
-            MapUpdateShadow(ALL_CORE_PARAMS_PASS, x, y);
+
 
 }
 void MapCreate2(ALL_CORE_PARAMS, int x, int y)
@@ -2648,6 +2650,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_visible);
         gameState->peeps[p].stateBasic.health = 10;
         gameState->peeps[p].stateBasic.deathState = 0;
+        gameState->peeps[p].stateBasic.buriedState = 0;
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
         gameState->peeps[p].physics.base.vel_add_Q16 = (ge_int3){ 0,0,0 };
@@ -2760,6 +2763,22 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawPosY = 99999;
     }
 
+
+    if(peep->physics.base.pos_Q16.z < 0)
+    {   brightFactor = 1.0f;
+        drawColor.x = 1.0f;
+        drawColor.y = 0.0f;
+        drawColor.z = 0.0f;
+    }
+
+    if(peep->stateBasic.buriedState > 0)
+    { 
+       
+        brightFactor = 1.0f;
+        drawColor.x = 0.0f;
+        drawColor.y = 1.0f;
+        drawColor.z = 0.0f;
+    }
 
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
     peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
@@ -2951,7 +2970,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
             CL_CHECK_NULL(lock)
 
 
-                int reservation = atomic_add(lock, 1) + 1;
+            int reservation = atomic_add(lock, 1) + 1;
 
             barrier(CLK_GLOBAL_MEM_FENCE);
 
