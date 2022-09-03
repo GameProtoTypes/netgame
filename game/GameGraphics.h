@@ -21,7 +21,7 @@
 #define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
 
 //graphics resources/buffers access
-struct GameGPUCompute;
+class GameGPUCompute;
 class GameGraphics
 {
 public:

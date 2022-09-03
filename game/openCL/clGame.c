@@ -2055,7 +2055,7 @@ void MapTileCoordClamp(ge_int3* mapCoord)
 }
 
 
-void GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* mapcoord_whole, int* occluded, int zViewRestrictLevel)
+void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* mapcoord_whole, int* occluded, int zViewRestrictLevel)
 {
     ge_int3 wrld_Q16;
     wrld_Q16.x = world_Q16.x;
@@ -2175,7 +2175,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 world2D.y = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
                 int occluded;
 
-                GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
+                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
                 AStarSearchInstantiate(&gameState->mapSearchers[0]);
                 ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
                 mapcoord.z++;
@@ -2232,7 +2232,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             ge_int3 mapCoord;
             int occluded;
-            GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
+            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
@@ -2273,7 +2273,7 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
 
     ge_int3 mapCoordWhole;//top tile
     int occluded;
-    GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2d_Q16,
+    GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2d_Q16,
         &mapCoordWhole, &occluded, MAPDEPTH - 1);
 
     cl_uint* tileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole);
@@ -2633,7 +2633,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         world2D.y = gameState->peeps[p].physics.base.pos_Q16.y;
         int occluded;
 
-        GetMapTileCoordWithViewFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, MAPDEPTH - 1);
+        GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, MAPDEPTH - 1);
         //printf("%d\n", mapcoord.z);
         mapcoord.z += 2;
         mapcoord = GE_INT3_TO_Q16(mapcoord);

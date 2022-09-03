@@ -15,7 +15,7 @@
 #include "slikenet/DataCompressor.h"
 
 
-#include "zlib.h"
+
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>

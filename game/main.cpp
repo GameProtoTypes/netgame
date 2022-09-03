@@ -146,17 +146,17 @@ int32_t main(int32_t argc, char* args[])
         clGetEventProfilingInfo(gameCompute.updateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
 
         ImGui::Begin("Profiling");
-        double nanoSeconds = time_end - time_start;
+        double nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("update_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
         clGetEventProfilingInfo(gameCompute.preUpdateEvent1, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
         clGetEventProfilingInfo(gameCompute.preUpdateEvent2, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
 
-        nanoSeconds = time_end - time_start;
+        nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("preupdate_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
             
         clGetEventProfilingInfo(gameCompute.readEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
         clGetEventProfilingInfo(gameCompute.readEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = time_end - time_start;
+        nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
@@ -252,8 +252,8 @@ int32_t main(int32_t argc, char* args[])
 
         if (rclientst->mouseSecondaryDown)
         {
-            rclientst->viewFrameDelta.x = (rclientst->mousex - rclientst->mouse_dragBeginx);
-            rclientst->viewFrameDelta.y = (rclientst->mousey - rclientst->mouse_dragBeginy);
+            rclientst->viewFrameDelta.x = float(rclientst->mousex - rclientst->mouse_dragBeginx);
+            rclientst->viewFrameDelta.y = float(rclientst->mousey - rclientst->mouse_dragBeginy);
             rclientst->viewX = rclientst->view_beginX + rclientst->viewFrameDelta.x;
             rclientst->viewY = rclientst->view_beginY + rclientst->viewFrameDelta.y;
             
@@ -467,7 +467,7 @@ int32_t main(int32_t argc, char* args[])
         if (ImGui::Button("Send Message"))
         {
             char buffer[256];
-            sprintf(buffer, "HELLOOOO %d", gameStateActions->tickIdx);
+            sprintf_s(buffer, "HELLOOOO %d", gameStateActions->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
         ImGui::Text("FrameTime: %d, TargetTickTime: %d, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
@@ -607,7 +607,7 @@ int32_t main(int32_t argc, char* args[])
  
         clGetEventProfilingInfo(gameCompute.writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
         clGetEventProfilingInfo(gameCompute.writeEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = time_end - time_start;
+        nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 

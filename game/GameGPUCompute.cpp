@@ -57,8 +57,8 @@ void GameGPUCompute::RunInitCompute1()
     char* source_str;
     size_t source_size;
 
-    fp = fopen("openCL/clGame.c", "r");
-    if (!fp) {
+    int err = fopen_s(&fp, "openCL/clGame.c", "r");
+    if (!fp || err) {
         fprintf(stderr, "Failed to load update_kernel.\n");
         exit(1);
     }
@@ -141,7 +141,7 @@ void GameGPUCompute::RunInitCompute1()
 
     {
         //run size tests
-
+        printf("Running Size Tests\n");
         sizeTests_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(SIZETESTSDATA), nullptr, &ret);
         CL_HOST_ERROR_CHECK(ret)
 
@@ -237,7 +237,7 @@ void GameGPUCompute::RunInitCompute2()
         &localMemSize,
         NULL);
 
-    printf("CL_DEVICE_LOCAL_MEM_SIZE: %u\n", localMemSize);
+    std::cout << "CL_DEVICE_LOCAL_MEM_SIZE: " << localMemSize << std::endl;
 
 
     cl_ulong globalMemSize;
@@ -247,7 +247,7 @@ void GameGPUCompute::RunInitCompute2()
         &globalMemSize,
         NULL);
 
-    printf("CL_DEVICE_GLOBAL_MEM_SIZE: %u\n", globalMemSize);
+    std::cout << "CL_DEVICE_GLOBAL_MEM_SIZE: " << globalMemSize << std::endl;
 
 
 
@@ -306,7 +306,7 @@ void GameGPUCompute::RunInitCompute2()
         sizeof(cl_ulong),
         &usedLocalMemSize,
         NULL);
-    printf("CL_KERNEL_LOCAL_MEM_SIZE: %u\n", usedLocalMemSize);
+    std::cout << "CL_KERNEL_LOCAL_MEM_SIZE: " << usedLocalMemSize << std::endl;
 
 
 
@@ -486,29 +486,28 @@ std::string GameGPUCompute::compileVariantString(GPUCompileVariant variant)
 {
 
     std::stringstream stream;
-
     try
     {
         stream << std::get<std::string>(variant);
         return stream.str();
     }
-    catch(const std::exception& e) {};
+    catch(...) {};
 
     try
     {
         stream << std::get<int>(variant);
         return "(" + stream.str() + ")";
     }
-    catch (const std::exception& e) {};
+    catch (...) {};
 
     try
     {
         stream << std::get<float>(variant);
         return "(" + stream.str() + ")";
     }
-    catch (const std::exception& e) {};
+    catch (...) {};
     
-
+    return "";
 }
 
 void GameGPUCompute::AquireAllGraphicsObjects()

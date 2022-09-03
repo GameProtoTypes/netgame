@@ -172,7 +172,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Debug\imgui.lib;..\zlib\Debug\zlibstaticd.lib;..\SLikeNet\Debug\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Debug\imgui.lib;..\SLikeNet\Debug\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -273,7 +273,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Release\imgui.lib;..\zlib\Release\zlibstatic.lib;..\SLikeNet\Release\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Release\imgui.lib;..\SLikeNet\Release\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -374,7 +374,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\MinSizeRel\imgui.lib;..\zlib\MinSizeRel\zlibstatic.lib;..\SLikeNet\MinSizeRel\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\MinSizeRel\imgui.lib;..\SLikeNet\MinSizeRel\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -474,7 +474,7 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\RelWithDebInfo\imgui.lib;..\zlib\RelWithDebInfo\zlibstatic.lib;..\SLikeNet\RelWithDebInfo\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\RelWithDebInfo\imgui.lib;..\SLikeNet\RelWithDebInfo\SLikeNet.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -571,10 +571,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="C:\Users\casht\repos\opencltest\build\imgui.vcxproj">
       <Project>{34EFB1D4-3308-3362-B511-67ABF8B31051}</Project>
       <Name>imgui</Name>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\zlib\zlibstatic.vcxproj">
-      <Project>{DC92C7F9-C1BB-3D0D-BDEF-41CFD3E482A3}</Project>
-      <Name>zlibstatic</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -72,10 +72,7 @@ source_group("Shader Files" FILES ${Shader_Files})
 
 
 set(OPENCL_Source_Files
-
     "openCL/clGame.c"
-    "openCL/clSizeTests.c"
-   
 )
 source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 
@@ -154,7 +151,6 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "glew32;"
     "glfw3;"
     "imgui;"
-    "zlibstatic;"
     "SLikeNet"
 )
 

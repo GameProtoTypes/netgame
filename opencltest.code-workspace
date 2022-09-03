@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"peep.h": "c",
+			"cl_type_glue.h": "c",
+			"fixedpoint_opencl.h": "c",
+			"cpugpuvectortypes.h": "c",
+			"__locale": "cpp",
+			"random": "c",
+			"iostream": "cpp",
+			"*.included": "cpp"
+		},
+		"gitdoc.enabled": false
+	}
+}
