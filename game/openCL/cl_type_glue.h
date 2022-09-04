@@ -40,7 +40,6 @@ typedef long4 cl_long4;
 
 
 
-
 typedef int int32_t;
 typedef uint uint32_t;
 typedef char int8_t;

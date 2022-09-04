@@ -98,21 +98,21 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Debug-a77cbb76b06f3deb5bd0.json",
+					"jsonFile" : "target-ALL_BUILD-Debug-388dd746f4c4987a964c.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "ALL_BUILD::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-ALL_BUILD-Debug-5e2a4586a013857dc2b8.json",
+					"jsonFile" : "target-ALL_BUILD-Debug-3586257afcbf35bcb96b.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 1
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-Debug-9cc0319438a5696001ab.json",
+					"jsonFile" : "target-MinerTycoon-Debug-e208dc4e158923ba29c1.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -236,21 +236,21 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Release-a77cbb76b06f3deb5bd0.json",
+					"jsonFile" : "target-ALL_BUILD-Release-388dd746f4c4987a964c.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "ALL_BUILD::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-ALL_BUILD-Release-5e2a4586a013857dc2b8.json",
+					"jsonFile" : "target-ALL_BUILD-Release-3586257afcbf35bcb96b.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 1
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-Release-16692e7abaf5c05dfbbf.json",
+					"jsonFile" : "target-MinerTycoon-Release-8a1d61e03a0239c8acc8.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -374,21 +374,21 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-MinSizeRel-a77cbb76b06f3deb5bd0.json",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-388dd746f4c4987a964c.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "ALL_BUILD::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-ALL_BUILD-MinSizeRel-5e2a4586a013857dc2b8.json",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-3586257afcbf35bcb96b.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 1
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-MinSizeRel-3891643dd9d9aa73670b.json",
+					"jsonFile" : "target-MinerTycoon-MinSizeRel-dc376b87b412ca51b9d4.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -512,21 +512,21 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-a77cbb76b06f3deb5bd0.json",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-388dd746f4c4987a964c.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "ALL_BUILD::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-5e2a4586a013857dc2b8.json",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-3586257afcbf35bcb96b.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 1
 				},
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-RelWithDebInfo-e7f1fcc1d305e15c7040.json",
+					"jsonFile" : "target-MinerTycoon-RelWithDebInfo-a7339f45b313176bcd5e.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},

@@ -17,7 +17,7 @@
 #include "assert.h"
 
 
-#include "openCL/sizeTests.h"
+#include "openCL/cpu_gpu_structs.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
 #define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
@@ -138,7 +138,7 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1024*64;
+	int maxPeeps = 1024*1;
 	int maxParticles = 1024;
 	int mapDim = 256;
 	int mapDepth = 32;

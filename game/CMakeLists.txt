@@ -79,7 +79,7 @@ source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 set(OPENCL_Header_Files
     "openCL/peep.h"
     "openCL/PeepFuncs.h"
-    "openCL/sizeTests.h"
+    "openCL/cpu_gpu_structs.h"
 
     "openCL/cpugpuvectortypes.h"
     "openCL/fixedpoint_opencl.h"

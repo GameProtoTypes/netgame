@@ -33,7 +33,7 @@ public:
 
 	//Screen dimension constants
 	const int32_t SCREEN_WIDTH = 1024;
-	const int32_t SCREEN_HEIGHT = 768;
+	const int32_t SCREEN_HEIGHT = 600;
 
 	struct RenderClientState {
 		int32_t mousex = 0;

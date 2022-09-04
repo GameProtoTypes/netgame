@@ -656,15 +656,15 @@ cl_uchar GE_INT3_WHACHAMACOLIT1_ENTRY(ge_int3 a)
 
 int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
 {
-    int idx = list->nextListIdx;
-    while (list->pathNodes[idx].next != NULL || list->pathNodes[idx].next == -1)
+    int ptr = list->nextListIdx;
+    while (list->pathNodes[ptr].next != NULL || list->pathNodes[ptr].next == -1)
     {
-        idx++;
-        if (idx >= ASTARPATHSTEPSSIZE)
-            idx = 0;
+        ptr++;
+        if (ptr >= ASTARPATHSTEPSSIZE)
+            ptr = 0;
     }
-    list->nextListIdx = idx+1;
-    return idx;
+    list->nextListIdx = ptr+1;
+    return ptr;
 }
 
 //get the last path node from a node in a path
@@ -1171,7 +1171,7 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
         peep->minDistPeep_Q16 = dist_Q16;
-        peep->minDistPeepIdx = otherPeep->Idx;
+        peep->minDistPeepPtr = otherPeep->ptr;
     }
     
 
@@ -1564,7 +1564,7 @@ void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
     CL_CHECK_NULL(newSector)
 
     MapSector* curSector;
-    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorIdx, curSector);
+    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, curSector);
 
     if ((curSector != newSector))
     {
@@ -1573,56 +1573,56 @@ void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
         {
 
             //remove peep from old sector
-            if ((peep->prevSectorPeepIdx != OFFSET_NULL))
+            if ((peep->prevSectorPeepPtr != OFFSET_NULL))
             {
-                gameState->peeps[peep->prevSectorPeepIdx].nextSectorPeepIdx = peep->nextSectorPeepIdx;
+                gameState->peeps[peep->prevSectorPeepPtr].nextSectorPeepPtr = peep->nextSectorPeepPtr;
             }
-            if ((peep->nextSectorPeepIdx != OFFSET_NULL))
+            if ((peep->nextSectorPeepPtr != OFFSET_NULL))
             {
-                gameState->peeps[peep->nextSectorPeepIdx].prevSectorPeepIdx = peep->prevSectorPeepIdx;
+                gameState->peeps[peep->nextSectorPeepPtr].prevSectorPeepPtr = peep->prevSectorPeepPtr;
             }
 
 
-            if (curSector->lastPeepIdx == peep->Idx) {
+            if (curSector->lastPeepPtr == peep->ptr) {
 
-                if (peep->prevSectorPeepIdx != OFFSET_NULL)
-                    curSector->lastPeepIdx = gameState->peeps[peep->prevSectorPeepIdx].Idx;
+                if (peep->prevSectorPeepPtr != OFFSET_NULL)
+                    curSector->lastPeepPtr = gameState->peeps[peep->prevSectorPeepPtr].ptr;
                 else
-                    curSector->lastPeepIdx = OFFSET_NULL;
+                    curSector->lastPeepPtr = OFFSET_NULL;
                 
-                if (curSector->lastPeepIdx != OFFSET_NULL)
-                    gameState->peeps[curSector->lastPeepIdx].nextSectorPeepIdx = OFFSET_NULL;
+                if (curSector->lastPeepPtr != OFFSET_NULL)
+                    gameState->peeps[curSector->lastPeepPtr].nextSectorPeepPtr = OFFSET_NULL;
             }
 
             //completely detach
-            peep->nextSectorPeepIdx = OFFSET_NULL;
-            peep->prevSectorPeepIdx = OFFSET_NULL;
+            peep->nextSectorPeepPtr = OFFSET_NULL;
+            peep->prevSectorPeepPtr = OFFSET_NULL;
 
         }
 
         //assign new sector for next stage
-        peep->mapSector_pendingIdx = newSector->idx;
+        peep->mapSector_pendingPtr = newSector->ptr;
     }
 
 }
 void PeepAssignToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
 {
     //assign new sector
-    if (!CL_VECTOR2_EQUAL(peep->mapSectorIdx, peep->mapSector_pendingIdx))
+    if (!CL_VECTOR2_EQUAL(peep->mapSectorPtr, peep->mapSector_pendingPtr))
     {
-        peep->mapSectorIdx = peep->mapSector_pendingIdx;
+        peep->mapSectorPtr = peep->mapSector_pendingPtr;
 
         MapSector* mapSector;
-        OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorIdx, mapSector)
+        OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, mapSector)
 
 
         //put peep in the sector.  extend list
-        if (mapSector->lastPeepIdx != OFFSET_NULL)
+        if (mapSector->lastPeepPtr != OFFSET_NULL)
         {
-            gameState->peeps[mapSector->lastPeepIdx].nextSectorPeepIdx = peep->Idx;
-            peep->prevSectorPeepIdx = gameState->peeps[mapSector->lastPeepIdx].Idx;
+            gameState->peeps[mapSector->lastPeepPtr].nextSectorPeepPtr = peep->ptr;
+            peep->prevSectorPeepPtr = gameState->peeps[mapSector->lastPeepPtr].ptr;
         }
-        mapSector->lastPeepIdx = peep->Idx;
+        mapSector->lastPeepPtr = peep->ptr;
     }
 }
 void PeepPreUpdate1(Peep* peep)
@@ -1731,17 +1731,17 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 {
 
     peep->minDistPeep_Q16 = (1 << 30);
-    peep->minDistPeepIdx = OFFSET_NULL;
+    peep->minDistPeepPtr = OFFSET_NULL;
 
     MapSector* cursector;
-    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorIdx, cursector);
+    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, cursector);
 
     //traverse sector
-    int minx = cursector->idx.x - 1; if (minx == 0xFFFFFFFF) minx = 0;
-    int miny = cursector->idx.y - 1; if (miny == 0xFFFFFFFF) miny = 0;
+    int minx = cursector->ptr.x - 1; if (minx == 0xFFFFFFFF) minx = 0;
+    int miny = cursector->ptr.y - 1; if (miny == 0xFFFFFFFF) miny = 0;
 
-    int maxx = cursector->idx.x + 1; if (maxx >= SQRT_MAXSECTORS) maxx = SQRT_MAXSECTORS-1;
-    int maxy = cursector->idx.y + 1; if (maxy >= SQRT_MAXSECTORS) maxy = SQRT_MAXSECTORS-1;
+    int maxx = cursector->ptr.x + 1; if (maxx >= SQRT_MAXSECTORS) maxx = SQRT_MAXSECTORS-1;
+    int maxy = cursector->ptr.y + 1; if (maxy >= SQRT_MAXSECTORS) maxy = SQRT_MAXSECTORS-1;
     
     for(cl_int sectorx = minx; sectorx <= maxx; sectorx++)
     {
@@ -1752,7 +1752,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             CL_CHECK_NULL(sector);
 
             Peep* curPeep;
-            OFFSET_TO_PTR(gameState->peeps, sector->lastPeepIdx, curPeep);
+            OFFSET_TO_PTR(gameState->peeps, sector->lastPeepPtr, curPeep);
             
 
             Peep* firstPeep = curPeep;
@@ -1764,7 +1764,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
                 }
 
                 
-                OFFSET_TO_PTR(gameState->peeps, curPeep->prevSectorPeepIdx, curPeep);
+                OFFSET_TO_PTR(gameState->peeps, curPeep->prevSectorPeepPtr, curPeep);
 
 
                 if (curPeep == firstPeep)
@@ -1850,11 +1850,12 @@ void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
 
 void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 {
-    if (x < 1 || x >= MAPDIM - 1 || y < 1 || y >= MAPDIM - 1)
+    if ((x < 1) || (x >= MAPDIM - 1) || (y < 1) || (y >= MAPDIM - 1))
     {
-        mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
         return;
     }
+
+
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
 
@@ -1883,11 +1884,6 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
         cl_uchar h = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x , y+1, z }, (ge_int3) { 0, 1, 0 });
         cl_uchar e = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x - 1, y, z }, (ge_int3) { -1, 0, 0 });
         cl_uchar c = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x, y-1, z }, (ge_int3) { 0, -1, 0 });
-
-
-
-
-
 
 
         if ((f != 0) && (c == 0) && (e == 0) && (h == 0))
@@ -2106,7 +2102,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
-        curPeepIdx = p->prevSelectionPeepIdx[gameStateActions->clientId];
+        curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
     }
 
 
@@ -2141,14 +2137,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                                 if (client->selectedPeepsLastIdx != OFFSET_NULL)
                                 {
-                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepIdx[cliId] = pi;
-                                    p->prevSelectionPeepIdx[cliId] = client->selectedPeepsLastIdx;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
+                                    p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
+                                    p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
                                 }
                                 else
                                 {
-                                    p->prevSelectionPeepIdx[cliId] = OFFSET_NULL;
-                                    p->nextSelectionPeepIdx[cliId] = OFFSET_NULL;
+                                    p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
+                                    p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
                                 }
                                 client->selectedPeepsLastIdx = pi;
 
@@ -2219,7 +2215,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     curPeep->comms.message_TargetReached = 0;
                     curPeep->comms.message_TargetReached_pending = 0;
                 }
-                curPeepIdx = curPeep->prevSelectionPeepIdx[cliId];
+                curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
             }
         }
         else if (clientAction->actionCode == ClientActionCode_CommandTileDelete)
@@ -2233,16 +2229,23 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             ge_int3 mapCoord;
             int occluded;
             GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
+            
+            printf("delete coord: ");
+            Print_GE_INT3(mapCoord);
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
-
+                printf("A");
                 MapBuildTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-
+                printf("B");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                printf("C");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+                printf("D");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+                printf("E");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+                printf("F");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
             }
 
@@ -2551,9 +2554,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     {
         for (int secy = 0; secy < SQRT_MAXSECTORS; secy++)
         {
-            gameState->sectors[secx][secy].idx.x = secx;
-            gameState->sectors[secx][secy].idx.y = secy;
-            gameState->sectors[secx][secy].lastPeepIdx = OFFSET_NULL;
+            gameState->sectors[secx][secy].ptr.x = secx;
+            gameState->sectors[secx][secy].ptr.y = secy;
+            gameState->sectors[secx][secy].lastPeepPtr = OFFSET_NULL;
             gameState->sectors[secx][secy].lock = 0;
         }
     }
@@ -2622,7 +2625,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
     const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
-        gameState->peeps[p].Idx = p;
+        gameState->peeps[p].ptr = p;
         gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p, -spread << 16, spread << 16);
         gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p + 1, -spread << 16, spread << 16);
 
@@ -2657,12 +2660,12 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.base.pos_post_Q16 = (ge_int3){ 0,0,0 };
 
 
-        gameState->peeps[p].minDistPeepIdx = OFFSET_NULL;
+        gameState->peeps[p].minDistPeepPtr = OFFSET_NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
-        gameState->peeps[p].mapSectorIdx = GE_OFFSET_NULL_2D;
-        gameState->peeps[p].mapSector_pendingIdx = GE_OFFSET_NULL_2D;
-        gameState->peeps[p].nextSectorPeepIdx = OFFSET_NULL;
-        gameState->peeps[p].prevSectorPeepIdx = OFFSET_NULL;
+        gameState->peeps[p].mapSectorPtr = GE_OFFSET_NULL_2D;
+        gameState->peeps[p].mapSector_pendingPtr = GE_OFFSET_NULL_2D;
+        gameState->peeps[p].nextSectorPeepPtr = OFFSET_NULL;
+        gameState->peeps[p].prevSectorPeepPtr = OFFSET_NULL;
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
@@ -2678,8 +2681,8 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
             gameState->clientStates[i].selectedPeepsLastIdx = OFFSET_NULL;
 
 
-            CL_CHECKED_ARRAY_SET(gameState->peeps[p].nextSelectionPeepIdx, MAX_CLIENTS, i, OFFSET_NULL)
-                CL_CHECKED_ARRAY_SET(gameState->peeps[p].prevSelectionPeepIdx, MAX_CLIENTS, i, OFFSET_NULL)
+            CL_CHECKED_ARRAY_SET(gameState->peeps[p].nextSelectionPeepPtr, MAX_CLIENTS, i, OFFSET_NULL)
+                CL_CHECKED_ARRAY_SET(gameState->peeps[p].prevSelectionPeepPtr, MAX_CLIENTS, i, OFFSET_NULL)
         }
 
     }
@@ -2745,10 +2748,10 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawColor.z = 1.0f;
     }
 
-    if (gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->Idx].render_selectedByClient)
+    if (gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->ptr].render_selectedByClient)
     {
         brightFactor = 1.0f;
-        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->Idx].render_selectedByClient = 0;
+        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[peep->ptr].render_selectedByClient = 0;
     }
     if ( BITGET(peep->stateBasic.bitflags0, PeepState_BitFlags_deathState) )
     {
@@ -2780,17 +2783,17 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawColor.z = 0.0f;
     }
 
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
 
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
 
-    peepVBOBuffer[peep->Idx * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
+    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
 }
 
-void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint idx)
+void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint ptr)
 {
     float3 drawColor;
     float drawPosX = (float)((float)particle->pos.x.number / (1 << particle->pos.x.q));
@@ -2804,14 +2807,14 @@ void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint idx)
 
     float brightFactor = 1.0f;
 
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
 
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
 
-    particleVBOBuffer[idx * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = 0;
+    particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = 0;
 }
 
 
@@ -2911,7 +2914,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 
             global volatile MapSector* mapSector;
-            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorIdx, mapSector);
+            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorPtr, mapSector);
             CL_CHECK_NULL(mapSector)
 
                 global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
@@ -2960,7 +2963,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
             Peep* p = &gameState->peeps[pi + globalid * chunkSize];
 
             global volatile MapSector* mapSector;
-            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingIdx, mapSector);
+            OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingPtr, mapSector);
 
 
             CL_CHECK_NULL(mapSector)

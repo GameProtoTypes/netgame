@@ -28,6 +28,13 @@ struct ge_uint2
 	unsigned int y;
 }typedef ge_uint2;
 
+struct ge_uint3
+{
+	unsigned int x;
+	unsigned int y;
+	unsigned int z;
+}typedef ge_uint3;
+
 struct ge_int4
 {
 	int x;
@@ -36,7 +43,9 @@ struct ge_int4
 	int w;
 }typedef ge_int4;
 
-
+typedef unsigned int offsetPtr;
+typedef ge_uint2 offsetPtr2;
+typedef ge_uint3 offsetPtr3;
 
 #define GE_INT2_ZERO(a) (a.x == 0 && a.y == 0 ).
 #define GE_INT3_ZERO(a) (a.x == 0 && a.y == 0 && a.z == 0 )

@@ -391,25 +391,31 @@ int32_t main(int32_t argc, char* args[])
 
 
         ImGui::Begin("View");
-            ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, gameCompute.mapDepth-1);
-            gameStateActions->mapZView = rclientst->viewZIdx;
+        ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, gameCompute.mapDepth-1);
+        gameStateActions->mapZView = rclientst->viewZIdx;
         ImGui::End();
 
         ImGui::Begin("Commands");
-        ImGui::Button("Mine");
-        ImGui::Button("Move");
-        if (ImGui::Button("Delete"))
+        if (rclientst->waitingDelete )
         {
-
-            rclientst->waitingMapAction = true;
-            rclientst->waitingDelete = !rclientst->waitingDelete;
-            if (!rclientst->waitingDelete)
+            if(ImGui::Button("[Delete Tile]"))
             {
+                rclientst->waitingDelete = false;
                 rclientst->waitingMapAction = false;
             }
-
-
         }
+        else 
+        {
+            if(ImGui::Button("Delete Tile"))
+            {
+                rclientst->waitingDelete = true; 
+                rclientst->waitingMapAction = true;
+            }
+        }
+        
+
+
+
         ImGui::End();
 
 
@@ -494,11 +500,38 @@ int32_t main(int32_t argc, char* args[])
         }
                 
         if (ImGui::Button("Save GameState To File"))
-        {
+        {   gameCompute.ReadFullGameState();
             std::ofstream myfile;
-            myfile.open("gamestate.bin");
-            myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
+            myfile.open("gamestate.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
+            if (!myfile.is_open())
+                std::cout << "Error Saving File!" << std::endl;
+            else
+            {
+                myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
+            }
+            
             myfile.close();
+        }
+        if (ImGui::Button("Load GameState From File"))
+        {
+            std::ifstream myfile;
+            myfile.open("gamestate.bin", std::ifstream::binary);
+            if (!myfile.is_open())
+                std::cout << "Error Reading File!" << std::endl;
+            else {
+                std::cout << "Reading " << gameCompute.structSizes.gameStateStructureSize << " bytes" << std::endl;
+                myfile.read(reinterpret_cast<char*>(gameCompute.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
+            
+                if (myfile)
+                    std::cout << "all characters read successfully.";
+                else
+                    std::cout << "error: only " << myfile.gcount() << " could be read";
+            
+            }
+            myfile.close();
+
+            gameCompute.WriteFullGameState();
+    
         }
 
 

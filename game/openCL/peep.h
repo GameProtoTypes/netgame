@@ -115,27 +115,27 @@ struct PeepCommunication {
 
 #pragma pack(push, 4)
 struct Peep {
-	cl_uint Idx;
+	offsetPtr ptr;
 
 	struct PeepState_Basic stateBasic;
 	struct PeepPhysics physics;
 	struct PeepCommunication comms;
 
 	cl_int minDistPeep_Q16;
-	cl_uint minDistPeepIdx;
+	offsetPtr minDistPeepPtr;
 
 	ge_int3 posMap_Q16;
 	ge_int3 lastGoodPosMap_Q16;
 	
-	ge_uint2 mapSector_pendingIdx;
-	ge_uint2 mapSectorIdx;
+	offsetPtr2 mapSector_pendingPtr;
+	offsetPtr2 mapSectorPtr;
 
-	cl_uint nextSectorPeepIdx;
-	cl_uint prevSectorPeepIdx;
+	offsetPtr nextSectorPeepPtr;
+	offsetPtr prevSectorPeepPtr;
 
 	//selection by clients
-	cl_uint nextSelectionPeepIdx[MAX_CLIENTS];
-	cl_uint prevSelectionPeepIdx[MAX_CLIENTS];
+	offsetPtr nextSelectionPeepPtr[MAX_CLIENTS];
+	offsetPtr prevSelectionPeepPtr[MAX_CLIENTS];
 
 } typedef Peep;
 #pragma pack(pop)
@@ -165,14 +165,6 @@ struct Triangle3DHeavy{
 struct  ConvexHull{
 	Triangle3DHeavy triangles[14];
 } typedef ConvexHull;
-
-
-
-
-
-
-
-
 
 
 
@@ -241,8 +233,8 @@ struct Map {
 
 
 struct MapSector {
-	cl_uint lastPeepIdx;
-	ge_uint2 idx;
+	offsetPtr lastPeepPtr;
+	offsetPtr2 ptr;
 	cl_uint lock;
 } typedef MapSector;
 
@@ -251,6 +243,7 @@ struct AStarNode {
 	ge_short3 tileIdx;
 	int h_Q16;
 	int g_Q16;
+
 	struct AStarNode* next;
 	struct AStarNode* prev;
 } typedef AStarNode;

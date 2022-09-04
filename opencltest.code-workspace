@@ -13,7 +13,8 @@
 			"__locale": "cpp",
 			"random": "c",
 			"iostream": "cpp",
-			"*.included": "cpp"
+			"*.included": "cpp",
+			"string": "c"
 		},
 		"gitdoc.enabled": false
 	}
