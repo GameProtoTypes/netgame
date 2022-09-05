@@ -383,23 +383,25 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
     search->openHeap_OPtrs[index] = topOPtr;
 }
 
-AStarNode* AStarOpenHeapRemove(AStarSearch* search)
+offsetPtr3 AStarOpenHeapRemove(AStarSearch* search)
 {
-    AStarNode* root;
-    OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[0], root);
+    offsetPtr3 rootOPtr = search->openHeap_OPtrs[0];
 
     search->openHeap_OPtrs[0] = search->openHeap_OPtrs[search->openHeapSize-1];
     search->openHeapSize--;
     AStarOpenHeapTrickleDown(search, 0);
 
-    return root;
+    return rootOPtr;
 }
 
-AStarNode* AStarRemoveFromOpen(AStarSearch* search)
+offsetPtr3 AStarRemoveFromOpen(AStarSearch* search)
 {
-    AStarNode* node = AStarOpenHeapRemove(search);
+    offsetPtr3 nodeOPtr = AStarOpenHeapRemove(search);
+    AStarNode* node;
+    OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
+
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
-    return node;
+    return nodeOPtr;
 }
 void AStarAddToClosed( AStarSearch* search, AStarNode* node)
 {
@@ -557,9 +559,10 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     {
         
         //find node in open with lowest f cost
-        AStarNode* current = AStarRemoveFromOpen(search);
+        offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
         
-        
+        AStarNode* current;
+        OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
 
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
@@ -608,7 +611,9 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                 continue;
             }
             
-            AStarNode* prospectiveNode = &search->details[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
+            offsetPtr3 prospectiveNodeOPtr = (offsetPtr3){prospectiveTileCoord.x,prospectiveTileCoord.y,prospectiveTileCoord.z};
+            AStarNode* prospectiveNode;
+            OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
 
             if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0))
             {
@@ -623,10 +628,10 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                 prospectiveNode->g_Q16 = totalMoveCost;
                 prospectiveNode->h_Q16 = AStarNodeDistanceHuristic(search, prospectiveNode, targetNode);
                 
-                prospectiveNode->prev = current;
+                prospectiveNode->prevOPtr = currentOPtr;
 
                // printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
-                AStarAddToOpen(search, prospectiveNode);
+                AStarAddToOpen(search, prospectiveNodeOPtr);
             }
         }
 
@@ -716,7 +721,9 @@ AStarPathNode* AStarPathNode_LastPathNode(AStarPathNode* pathNode)
 AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathSteps* steps)
 {
     //grab a unused Node from pathNodes, and start building the list .
-    AStarNode* curNode = search->startNode;
+    offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
+    AStarNode* curNode;
+    OFFSET_TO_PTR_3D(search->details, curNodeOPtr, curNode);
 
 
     AStarPathNode* startNode = NULL;
@@ -750,14 +757,15 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
         }
         pNP = pN;
 
-        if (curNode->next != NULL) {
+        if (!GE_VECTOR3_EQUAL(curNode->nextOPtr, OFFSET_NULL_3D)) 
+        {
             //iterate until joint in path.
             ge_int3 delta;
             AStarNode* n2 = curNode;
             do
             {
+                OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
 
-                n2 = n2->next;
                 if (n2 != NULL) {
                     delta = GE_INT3_ADD(n2->tileIdx, GE_INT3_NEG(holdTileCoord));
                 }
@@ -766,14 +774,20 @@ AStarPathNode* AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPat
 
             } while ((n2 != NULL) && (GE_INT3_WHACHAMACOLIT1_ENTRY(delta) == 1));
 
-            if (n2 != NULL) {
-                if (curNode != n2->prev)
-                    curNode = n2->prev;
+            if (n2 != NULL) 
+            {
+                AStarNode* n2Prev;
+                OFFSET_TO_PTR_3D(search->details, n2->prevOPtr, n2Prev);
+
+                if (curNode != n2Prev)
+                    curNode = n2Prev;
                 else
                     curNode = n2;
             }
             else
-                curNode = search->endNode;
+            {
+                OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, curNode);
+            }
         }
         else
             curNode = NULL;
@@ -2697,8 +2711,8 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
         gameState->peeps[p].minDistPeepPtr = OFFSET_NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
-        gameState->peeps[p].mapSectorPtr = GE_OFFSET_NULL_2D;
-        gameState->peeps[p].mapSector_pendingPtr = GE_OFFSET_NULL_2D;
+        gameState->peeps[p].mapSectorPtr = OFFSET_NULL_2D;
+        gameState->peeps[p].mapSector_pendingPtr = OFFSET_NULL_2D;
         gameState->peeps[p].nextSectorPeepPtr = OFFSET_NULL;
         gameState->peeps[p].prevSectorPeepPtr = OFFSET_NULL;
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
