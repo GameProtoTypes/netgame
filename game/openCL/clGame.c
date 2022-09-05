@@ -244,8 +244,8 @@ void AStarNodeInstantiate(AStarNode* node)
 {
     node->g_Q16 = TO_Q16(0);
     node->h_Q16 = TO_Q16(0);
-    node->next = NULL;  
-    node->prev = NULL;
+    node->nextOPtr = OFFSET_NULL_3D;  
+    node->prevOPtr = OFFSET_NULL_3D;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
     node->tileIdx.z = -1;
@@ -351,26 +351,36 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
 void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
 {
     cl_int largerChild;
-    AStarNode* top = search->openHeap[index];
+    AStarNode* top;
+    offsetPtr3 topOPtr = search->openHeapOPtrs[index];
+    OFFSET_TO_PTR_3D(search->details, topOPtr, top);
+
     while (index < search->openHeapSize / 2)
     {
         int leftChild = 2 * index + 1;
         int rightChild = leftChild + 1;
 
-        if (rightChild < search->openHeapSize && AStarOpenHeapKey(search, search->openHeap[leftChild]) > AStarOpenHeapKey(search, search->openHeap[rightChild]))
+        AStarNode* leftChildNode;
+        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[leftChild], leftChild)
+        AStarNode* rightChildNode;
+        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[rightChild], rightChild)
+
+        if ((rightChild < search->openHeapSize) && AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode))
             largerChild = rightChild;
         else
             largerChild = leftChild;
 
-        if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, search->openHeap[largerChild]))
+        AStarNode* largerChildNode;
+        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[largerChild], largerChildNode)
+
+        if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, largerChildNode))
             break;
 
-        search->openHeap[index] = search->openHeap[largerChild];
+        search->openHeapOPtrs[index] = search->openHeap[largerChild];
         index = largerChild;
-
     }
     
-    search->openHeap[index] = top;
+    search->openHeapOPtrs[index] = topOPtr;
 }
 
 AStarNode* AStarOpenHeapRemove(AStarSearch* search)
@@ -472,7 +482,7 @@ void AStarPrintSearchPathTo(AStarSearch* search, ge_int3 destTile)
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
-        curNode = curNode->prev;
+        OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, curNode);
     }
 }
 void AStarPrintSearchPathFrom(AStarSearch* search, ge_int3 startTile)
@@ -481,7 +491,7 @@ void AStarPrintSearchPathFrom(AStarSearch* search, ge_int3 startTile)
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
-        curNode = curNode->next;
+        OFFSET_TO_PTR_3D(search->details, curNode->nextOPtr, curNode);
     }
 }
 

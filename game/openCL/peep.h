@@ -17,15 +17,18 @@
 //#define MAX_CLIENTS (1024)
 
 #define OFFSET_NULL (0xFFFFFFFF)
-#define OFFSET_NULL_2D (0xFFFFFFFF , 0xFFFFFFFF)
+#define OFFSET_NULL_2D  ((offsetPtr2){0xFFFFFFFF , 0xFFFFFFFF})
+#define OFFSET_NULL_3D  ((offsetPtr3){0xFFFFFFFF , 0xFFFFFFFF,  0xFFFFFFFF})
+
 #define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } else ARRAY[INDEX] = VALUE; }
 #define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
 #define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
 
 #define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL){  POINTER = NULL;} else POINTER = &(ARRAY[OFFSET]);} 
 #define OFFSET_TO_PTR_2D(ARRAY2D, OFFSET2D, POINTER) { if((OFFSET2D.x == OFFSET_NULL) || (OFFSET2D.y == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY2D[OFFSET2D.x][OFFSET2D.y]); } 
+#define OFFSET_TO_PTR_3D(ARRAY3D, OFFSET3D, POINTER) { if((OFFSET3D.x == OFFSET_NULL) || (OFFSET3D.y == OFFSET_NULL) || (OFFSET3D.z == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY3D[OFFSET3D.x][OFFSET3D.y][OFFSET3D.z]); } 
 
-#define GE_OFFSET_NULL_2D (ge_uint2){0xFFFFFFFF , 0xFFFFFFFF}
+
 
 #define BITSET(BITBANK, BITFLAG) {(BITBANK) |= (1 << BITFLAG);}
 #define BITCLEAR(BITBANK, BITFLAG) {(BITBANK) &= ~(1 << BITFLAG);}
@@ -244,18 +247,19 @@ struct AStarNode {
 	int h_Q16;
 	int g_Q16;
 
-	struct AStarNode* next;
-	struct AStarNode* prev;
+	offsetPtr3 nextOPtr;
+	offsetPtr3 prevOPtr;
+
 } typedef AStarNode;
 
 #define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarSearch {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
-	AStarNode* openHeap[ASTARHEAPSIZE];
+	offsetPtr3 openHeap_OPtrs[ASTARHEAPSIZE];
 	cl_int openHeapSize;
-	AStarNode* endNode;
-	AStarNode* startNode;
+	offsetPtr3 endNodeOPtr;
+	offsetPtr3 startNodeOPtr;
 
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
 	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
