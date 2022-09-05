@@ -149,14 +149,8 @@ cl_uchar MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
     return 2;
 }
 
-
-cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
+cl_uchar MapDataHas2LowAdjacentCorners(cl_uint* data)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
-
-    if (MapDataGetTile(*data) == MapTile_NONE)
-        return 0;
-
     if (BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT) + BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) == 2)
         return 1;
 
@@ -170,6 +164,13 @@ cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
         return 4;
 
     return 0;
+}
+
+cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
+{
+    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+
+    return MapDataHas2LowAdjacentCorners(data);
 }
 
 
@@ -198,7 +199,7 @@ cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
 
     return MapTileDataHasLowCorner(*data);
 }
-cl_uchar MapTileDataCornerCount(cl_int tileData)
+cl_uchar MapDataLowCornerCount(cl_int tileData)
 {
     return (BITGET_MF(tileData, MapTileFlags_LowCornerTPLEFT) +
         BITGET_MF(tileData, MapTileFlags_LowCornerTPRIGHT) +
@@ -212,15 +213,16 @@ cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
 
-    return MapTileDataCornerCount(*data);
+    return MapDataLowCornerCount(*data);
 }
-cl_uchar MapTileXLevel(ALL_CORE_PARAMS, ge_int3 mapCoords)
+
+cl_uchar MapDataXLevel(cl_uint* data)
 {
-    if(MapHas2LowAdjacentCorners(ALL_CORE_PARAMS_PASS, mapCoords) == 1 && MapLowCornerCount(ALL_CORE_PARAMS_PASS, mapCoords) == 2)
+    if(MapDataHas2LowAdjacentCorners(data) > 0 && MapDataLowCornerCount(*data) == 2)
     {
         return 1;
     }
-    else if(MapHas2LowAdjacentCorners(ALL_CORE_PARAMS_PASS, mapCoords) == 1 && MapLowCornerCount(ALL_CORE_PARAMS_PASS, mapCoords) == 3)
+    else if(MapDataLowCornerCount(*data) == 3)
     {
         return 0;
     }
@@ -228,6 +230,12 @@ cl_uchar MapTileXLevel(ALL_CORE_PARAMS, ge_int3 mapCoords)
         return 2;
 }
 
+cl_uchar MapTileXLevel(ALL_CORE_PARAMS, ge_int3 mapCoords)
+{
+    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+
+    return MapDataXLevel(data);
+}
 
 cl_uchar MapTileCoordStandInValid(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
@@ -1116,36 +1124,36 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
     ge_int3 H = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(1) >> 1, TO_Q16(1) >> 1 };
     ge_int3 X = (ge_int3){ 0, 0, TO_Q16(1) >> 1 };
 
-    cl_uchar lowCornerCount = MapTileDataCornerCount(*tileData);
+    cl_uchar lowCornerCount = MapDataLowCornerCount(*tileData);
 
     if (lowCornerCount > 0) 
     {
         if (BITGET_MF(*tileData, MapTileFlags_LowCornerBTMLEFT) != 0)
-            E.z = (TO_Q16(-1) >> 1);
-
-        if (BITGET_MF(*tileData, MapTileFlags_LowCornerBTMRIGHT) != 0)
-            F.z = (TO_Q16(-1) >> 1);
-
-        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPLEFT) != 0)
             H.z = (TO_Q16(-1) >> 1);
 
-        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPRIGHT) != 0)
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerBTMRIGHT) != 0)
             G.z = (TO_Q16(-1) >> 1);
+
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPLEFT) != 0)
+            E.z = (TO_Q16(-1) >> 1);
+
+        if (BITGET_MF(*tileData, MapTileFlags_LowCornerTPRIGHT) != 0)
+            F.z = (TO_Q16(-1) >> 1);
 
 
         //simple ramp cases
-        if (E.z < 0 && F.z < 0 && G.z > 0 && H.z > 0)
+        uint xlevel = MapDataXLevel(tileData);
+        if(xlevel == 0)
+        {
             X.z = 0;
-        else if (F.z < 0 && G.z < 0 && H.z > 0 && E.z > 0)
-            X.z = 0;
-        else if (G.z < 0 && H.z < 0 && E.z > 0 && F.z > 0)
-            X.z = 0;
-        else if (H.z < 0 && E.z < 0 && F.z > 0 && G.z > 0)
-            X.z = 0;
-        else if (lowCornerCount == 3)
+        }
+        else if(xlevel == 1)
         {
             X.z = TO_Q16(-1) >> 1;
         }
+
+
+
     }
 
 
@@ -2483,7 +2491,7 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
 
 
     
-    if(MapTileDataCornerCount(*tileData) == 4)
+    if(MapDataLowCornerCount(*tileData) == 4)
         MapDataSetTile(tileData, MapTile_NONE);
 
     
