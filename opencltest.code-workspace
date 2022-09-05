@@ -14,7 +14,9 @@
 			"random": "c",
 			"iostream": "cpp",
 			"*.included": "cpp",
-			"string": "c"
+			"string": "c",
+			"xutility": "c",
+			"__node_handle": "c"
 		},
 		"gitdoc.enabled": false
 	}

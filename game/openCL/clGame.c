@@ -277,7 +277,7 @@ void AStarSearchInstantiate(AStarSearch* search)
 
     
 
-    search->endNode = NULL;
+    search->endNodeOPtr = OFFSET_NULL_3D;
     search->openHeapSize = 0;
 }
 
@@ -352,7 +352,7 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
 {
     cl_int largerChild;
     AStarNode* top;
-    offsetPtr3 topOPtr = search->openHeapOPtrs[index];
+    offsetPtr3 topOPtr = search->openHeap_OPtrs[index];
     OFFSET_TO_PTR_3D(search->details, topOPtr, top);
 
     while (index < search->openHeapSize / 2)
@@ -361,9 +361,9 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
         int rightChild = leftChild + 1;
 
         AStarNode* leftChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[leftChild], leftChild)
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[leftChild], leftChild)
         AStarNode* rightChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[rightChild], rightChild)
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChild)
 
         if ((rightChild < search->openHeapSize) && AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode))
             largerChild = rightChild;
@@ -371,27 +371,30 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
             largerChild = leftChild;
 
         AStarNode* largerChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeapOPtrs[largerChild], largerChildNode)
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[largerChild], largerChildNode)
 
         if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, largerChildNode))
             break;
 
-        search->openHeapOPtrs[index] = search->openHeap[largerChild];
+        search->openHeap_OPtrs[index] = search->openHeap_OPtrs[largerChild];
         index = largerChild;
     }
     
-    search->openHeapOPtrs[index] = topOPtr;
+    search->openHeap_OPtrs[index] = topOPtr;
 }
 
 AStarNode* AStarOpenHeapRemove(AStarSearch* search)
 {
-    AStarNode* root = search->openHeap[0];
-    search->openHeap[0] = search->openHeap[search->openHeapSize-1];
+    AStarNode* root;
+    OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[0], root);
+
+    search->openHeap_OPtrs[0] = search->openHeap_OPtrs[search->openHeapSize-1];
     search->openHeapSize--;
     AStarOpenHeapTrickleDown(search, 0);
 
     return root;
 }
+
 AStarNode* AStarRemoveFromOpen(AStarSearch* search)
 {
     AStarNode* node = AStarOpenHeapRemove(search);
@@ -421,21 +424,28 @@ int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
 void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
 {
     cl_int prev = (index - 1) / 2;
-    AStarNode* bottom = search->openHeap[index];
+    offsetPtr3 bottomOPtr = search->openHeap_OPtrs[index];
 
-    while (index > 0 && AStarOpenHeapKey(search, search->openHeap[prev]) > AStarOpenHeapKey(search, bottom))
+    AStarNode* bottomNode;
+    OFFSET_TO_PTR_3D(search->details, bottomOPtr, bottomNode);
+
+    AStarNode* prevNode;
+    OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[prev], prevNode);
+
+    while (index > 0 && AStarOpenHeapKey(search, prevNode) > AStarOpenHeapKey(search, bottomNode))
     {
-        search->openHeap[index] = search->openHeap[prev];
+        search->openHeap_OPtrs[index] = search->openHeap_OPtrs[prev];
         index = prev;
         prev = (prev - 1) / 2;
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[prev], prevNode);
     }
-    search->openHeap[index] = bottom;
+    search->openHeap_OPtrs[index] = bottomOPtr;
 }
 
 
-void AStarOpenHeapInsert(AStarSearch* search, AStarNode* node)
+void AStarOpenHeapInsert(AStarSearch* search, offsetPtr3 nodeOPtr)
 {
-    search->openHeap[search->openHeapSize] = node;
+    search->openHeap_OPtrs[search->openHeapSize] = nodeOPtr;
     AStarOpenHeapTrickleUp(search, search->openHeapSize);
     search->openHeapSize++;
     if (search->openHeapSize > ASTARHEAPSIZE)
@@ -443,9 +453,12 @@ void AStarOpenHeapInsert(AStarSearch* search, AStarNode* node)
 
 
 }
-void AStarAddToOpen(AStarSearch* search, AStarNode* node)
+void AStarAddToOpen(AStarSearch* search, offsetPtr3 nodeOPtr)
 {
-    AStarOpenHeapInsert(search, node);
+    AStarOpenHeapInsert(search, nodeOPtr);
+
+    AStarNode* node;
+    OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
 
@@ -528,11 +541,14 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
     AStarNode* startNode = &search->details[startTile.x][startTile.y][startTile.z];
     AStarNode* targetNode = &search->details[destTile.x][destTile.y][destTile.z];
-    search->startNode = startNode;
 
+    offsetPtr3 targetNodeOPtr = (offsetPtr3){destTile.x,destTile.y,destTile.z};
+
+    search->startNodeOPtr = (offsetPtr3){startTile.x,startTile.y,startTile.z};
+    
     //add start to openList
     startNode->h_Q16 = AStarNodeDistanceHuristic(search, startNode, targetNode);
-    AStarAddToOpen(search, startNode);
+    AStarAddToOpen(search, search->startNodeOPtr );
 
 
     cl_uchar foundDest = 0;
@@ -548,17 +564,26 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
             printf("Goal Found\n");
-            search->endNode = targetNode;
-            search->endNode->next = NULL;
-            startNode->prev = NULL;
+            search->endNodeOPtr = targetNodeOPtr;
+
+            AStarNode* endNode;
+            OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, endNode);
+            endNode->nextOPtr = OFFSET_NULL_3D;
+            startNode->prevOPtr = OFFSET_NULL_3D;
 
             //form next links
             AStarNode* curNode = targetNode;
+            offsetPtr3 curNodeOPtr = targetNodeOPtr;
             while (curNode != NULL)
             {
-                AStarNode* p = curNode->prev;
+                curNodeOPtr = curNode->prevOPtr;
+
+                AStarNode* p;
+                OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, p);
+                
+
                 if(p != NULL)
-                    p->next = curNode;
+                    p->nextOPtr = curNodeOPtr;
 
                 curNode = p;
             }
