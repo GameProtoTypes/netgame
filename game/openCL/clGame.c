@@ -279,8 +279,13 @@ void AStarSearchInstantiate(AStarSearch* search)
         }  
     }
 
+    for(int i = 0; i < ASTARHEAPSIZE; i++)
+    {
+        search->openHeap_OPtrs[i] = OFFSET_NULL_3D;
+    }
     
 
+    search->startNodeOPtr = OFFSET_NULL_3D;
     search->endNodeOPtr = OFFSET_NULL_3D;
     search->openHeapSize = 0;
 }
@@ -596,8 +601,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
             while (curNode != NULL)
             {
-                curNodeOPtr = curNode->prevOPtr;
-
                 AStarNode* p;
                 OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, p);
                 
@@ -605,8 +608,8 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                 if(p != NULL)
                     p->nextOPtr = curNodeOPtr;
 
+                curNodeOPtr = curNode->prevOPtr;
                 curNode = p;
-                        printf("E\n");
             }
 
 
