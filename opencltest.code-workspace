@@ -17,7 +17,8 @@
 			"string": "c",
 			"xutility": "c",
 			"__node_handle": "c",
-			"filesystem": "c"
+			"filesystem": "c",
+			"algorithm": "c"
 		},
 		"gitdoc.enabled": false
 	}

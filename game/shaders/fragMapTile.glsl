@@ -8,6 +8,6 @@ out vec4 FragColor;
 void main()
 {
     vec4 color = texture(texture0, texCoord);
-    color.xyz *= (1.0-shading*0.5);
+    color.xyz *= (shading);
     FragColor = color;
 }

@@ -14,12 +14,13 @@ out vec2 texCoord;
 out float shading;
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+layout (triangle_strip, max_vertices = 12) out;
 
-float topShading1;
-float topShading2;
-float topShading3;
-float topShading4;
+float topShadingA;
+float topShadingB;
+float topShadingC;
+float topShadingD;
+float topShadingX;
 
 float tileX;
 float tileY;
@@ -55,8 +56,6 @@ void CornerX()
 
 void NextCorner()
 {
-    if(rot == 0)
-    {
         if(cornerIdx == 0)
         {
             CornerA();
@@ -69,94 +68,86 @@ void NextCorner()
         }
         else if(cornerIdx == 2)
         {
-            CornerC();
-            cornerIdx=3;
-        }
-        else if(cornerIdx == 3)
-        {
-            CornerD();
-            cornerIdx=0;
-        }
-    }
-    else if(rot == 1)
-    {
-        if(cornerIdx == 0)
-        {
-            CornerC();
-            cornerIdx=1;
-        }
-        else if(cornerIdx == 1)
-        {
-            CornerA();
-            cornerIdx=2;
-        }
-        else if(cornerIdx == 2)
-        {
-            CornerD();
+            CornerX();
             cornerIdx=3;
         }
         else if(cornerIdx == 3)
         {
             CornerB();
-            cornerIdx=0;
+            cornerIdx=4;
         }
-    }
-    else if(rot == 2)
-    {
-        if(cornerIdx == 0)
+        else if(cornerIdx == 4)
         {
             CornerD();
-            cornerIdx=1;
+            cornerIdx=5;
         }
-        else if(cornerIdx == 1)
+        else if(cornerIdx == 5)
         {
-            CornerC();
-            cornerIdx=2;
+            CornerX();
+            cornerIdx=6;
         }
-        else if(cornerIdx == 2)
-        {
-            CornerB();
-            cornerIdx=3;
-        }
-        else if(cornerIdx == 3)
-        {
-            CornerA();
-            cornerIdx=0;
-        }
-    }
-    else if(rot == 3)
-    {
-        if(cornerIdx == 0)
-        {
-            CornerB();
-            cornerIdx=1;
-        }
-        else if(cornerIdx == 1)
+        else if(cornerIdx == 6)
         {
             CornerD();
-            cornerIdx=2;
+            cornerIdx=7;
         }
-        else if(cornerIdx == 2)
-        {
-            CornerA();
-            cornerIdx=3;
-        }
-        else if(cornerIdx == 3)
+        else if(cornerIdx == 7)
         {
             CornerC();
+            cornerIdx=8;
+        }
+        else if(cornerIdx ==8)
+        {
+            CornerX();
+            cornerIdx=9;
+        }        
+        else if(cornerIdx == 9)
+        {
+            CornerC();
+            cornerIdx=10;
+        }
+        else if(cornerIdx == 10)
+        {
+            CornerA();
+            cornerIdx=11;
+        }
+        else if(cornerIdx == 11)
+        {
+            CornerX();
             cornerIdx=0;
         }
-    }
 }
 
 
 void main() {
-    topShading1 = float((gs_in[0].shadeAttr & 15u))/15.0;//darkshading 4 bits
-    topShading2 = float((gs_in[0].shadeAttr & (15u << 4))>>4)/15.0;//darkshading 4 bits
-    topShading3 = float((gs_in[0].shadeAttr & (15u << 8))>>8)/15.0;//darkshading 4 bits
-    topShading4 = float((gs_in[0].shadeAttr & (15u << 12))>>12)/15.0;//darkshading 4 bits
+    uint cornerALow =  (gs_in[0].shadeAttr & (1)) >> 0;
+    uint cornerBLow =  (gs_in[0].shadeAttr & (1 << 1)) >> 1;
+    uint cornerCLow =  (gs_in[0].shadeAttr & (1 << 2)) >> 2;
+    uint cornerDLow =  (gs_in[0].shadeAttr & (1 << 3 )) >> 3;
+    uint cornerXLow =  (gs_in[0].shadeAttr & (3 << 4 )) >> 4;
+    float shadingBase = float((gs_in[0].shadeAttr & (15u << 6)) >> 6)/15.0;
+
+
+    float shadingLowAdd = 0.5f;
+
+
+    topShadingA = shadingBase - cornerALow*shadingLowAdd; 
+    topShadingB = shadingBase - cornerBLow*shadingLowAdd; 
+    topShadingC = shadingBase - cornerCLow*shadingLowAdd; 
+    topShadingD = shadingBase - cornerDLow*shadingLowAdd; 
+
+
+    if(cornerXLow == 0)
+        topShadingX = shadingBase - 0.0*shadingLowAdd; 
+    if(cornerXLow == 1)
+        topShadingX = shadingBase - 0.5*shadingLowAdd; 
+    if(cornerXLow == 2)
+        topShadingX = shadingBase - 1.0*shadingLowAdd; 
+
 
     rot = (gs_in[0].otherAttr & 15u);
+
+    cornerIdx = rot*3;
 
     if(gs_in[0].tileId != 255)
     {
@@ -166,24 +157,80 @@ void main() {
 
         gl_Position = projection * (localTransform * gl_in[0].gl_Position);
         NextCorner();
-        shading = topShading1;
+        shading = topShadingA;
         EmitVertex();
 
         gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0)));
         NextCorner();
-        shading = topShading2;
+        shading = topShadingB;
         EmitVertex();
 
-        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0)));
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.0, 0.0)));
         NextCorner();
-        shading = topShading4;
+        shading = topShadingX;
+        EmitVertex();
+        EndPrimitive();
+
+
+
+
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 0.0, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingB;
         EmitVertex();
 
         gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0)));
         NextCorner();
-        shading = topShading3;
+        shading = topShadingD;
         EmitVertex();
 
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingX;
+        EmitVertex();
         EndPrimitive();
+
+
+
+
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(1.0, 1.0, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingD;
+        EmitVertex();
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingC;
+        EmitVertex();
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingX;
+        EmitVertex();
+        EndPrimitive();
+
+
+
+
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.0, 1.0, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingC;
+        EmitVertex();
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.0, 0.0, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingA;
+        EmitVertex();
+
+        gl_Position = projection * (localTransform * (gl_in[0].gl_Position + vec4(0.5, 0.5, 0.0, 0.0)));
+        NextCorner();
+        shading = topShadingX;
+        EmitVertex();
+        EndPrimitive();
+
+
     }
 }  

@@ -97,6 +97,10 @@ inline void BITBANK_SET_SUBNUMBER_UINT(cl_uint* bank, cl_int lsbBitIdx, cl_int n
 inline MapTile MapDataGetTile(cl_uint tileData) {
     return (MapTile)BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
 }
+inline void MapDataSetTile(cl_uint* tileData, MapTile tile) {
+    BITBANK_SET_SUBNUMBER_UINT(tileData, 0, 8, tile);
+}
+
 inline int MapTileGetRotation(cl_uint tileData) {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, 8, 2);
 }
@@ -118,13 +122,13 @@ cl_uchar MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
 
+
     /*offsets[0] = (ge_int3){ 1, 0, 0 };
     offsets[1] = (ge_int3){ -1, 0, 0 };
     offsets[2] = (ge_int3){ 0, -1, 0 };
     offsets[3] = (ge_int3){ 0, 1, 0 };
     offsets[4] = (ge_int3){ 0, 0, 1 };
     offsets[5] = (ge_int3){ 0, 0, -1 };*/
-
 
     if (GE_VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[0]))
     {
@@ -168,10 +172,12 @@ cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
     return 0;
 }
 
+
 cl_uchar MapTileDataHasLowCorner(cl_int tileData)
 {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, MapTileFlags_LowCornerTPLEFT, 4);
 }
+
 
 cl_uchar MapTileData_TileSolid(cl_int tileData)
 {
@@ -207,6 +213,19 @@ cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
         return 0;
 
     return MapTileDataCornerCount(*data);
+}
+cl_uchar MapTileXLevel(ALL_CORE_PARAMS, ge_int3 mapCoords)
+{
+    if(MapHas2LowAdjacentCorners(ALL_CORE_PARAMS_PASS, mapCoords) == 1 && MapLowCornerCount(ALL_CORE_PARAMS_PASS, mapCoords) == 2)
+    {
+        return 1;
+    }
+    else if(MapHas2LowAdjacentCorners(ALL_CORE_PARAMS_PASS, mapCoords) == 1 && MapLowCornerCount(ALL_CORE_PARAMS_PASS, mapCoords) == 3)
+    {
+        return 0;
+    }
+    else 
+        return 2;
 }
 
 
@@ -2089,10 +2108,19 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
         m = 2;
 
     cl_uint finalAttr=0;
-    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT)*m) * 2, 0, 15);
-    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT)*m) * 2, 0, 15) << 4;
-    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT)*m) * 2, 0, 15) << 8;
-    finalAttr |= clamp((vz + (int)BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)*m) * 2, 0, 15) << 12;
+
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT);//A
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) << 1;//B
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)<< 2;//C
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) << 3;//D
+
+
+    uint xlev = MapTileXLevel(ALL_CORE_PARAMS_PASS, coord);
+    finalAttr |= xlev << 4;//X
+
+
+    finalAttr |= (clamp(15-vz, 0, 15) << 6);
+
 
     mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
     mapTile1OtherAttrVBO[ y * MAPDIM + x ] = RandomRange(x,0,4);
@@ -2454,7 +2482,9 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     }
 
 
-
+    
+    if(MapTileDataCornerCount(*tileData) == 4)
+        MapDataSetTile(tileData, MapTile_NONE);
 
     
 
