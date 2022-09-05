@@ -296,10 +296,6 @@ struct SynchronizedClientState {
 } typedef SynchronizedClientState;
 
 
-
-
-
-
 struct GameState {
 
 	SynchronizedClientState clientStates[MAX_CLIENTS];

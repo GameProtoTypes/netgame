@@ -68,8 +68,10 @@ inline cl_uint BITBANK_GET_SUBNUMBER_UINT(cl_uint bank, cl_int lsbBitIdx, cl_int
     }
 
 
-    return (bank & mask) >> lsbBitIdx;
+    return ((bank & mask) >> lsbBitIdx);
 }
+
+
 inline void BITBANK_SET_SUBNUMBER_UINT(cl_uint* bank, cl_int lsbBitIdx, cl_int numBits, cl_uint number)
 {
     int i = 0;
@@ -162,6 +164,8 @@ cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
 
     if (BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT) + BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT) == 2)
         return 4;
+
+    return 0;
 }
 
 cl_uchar MapTileDataHasLowCorner(cl_int tileData)
@@ -356,6 +360,11 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
     offsets[24] = (ge_int3){ 1, -1, 0 };
     offsets[25] = (ge_int3){ -1, -1, 0 };
 }
+int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
+{
+    //f
+    return node->g_Q16 + node->h_Q16;
+}
 
 void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
 {
@@ -375,7 +384,7 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
         AStarNode* rightChildNode;
         OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChildNode)
 
-        if ((rightChild < search->openHeapSize) && AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode))
+        if ((rightChild < search->openHeapSize) && (AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode)))
             largerChild = rightChild;
         else
             largerChild = leftChild;
@@ -435,11 +444,6 @@ cl_uchar AStarNodeInOpen(AStarSearch* search, AStarNode* node)
     return search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
-int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
-{
-    //f
-    return node->g_Q16 + node->h_Q16;
-}
 
 void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
 {
@@ -1135,8 +1139,8 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
     bottomFace[1] = B;
     bottomFace[2] = C;
     bottomFace[3] = D;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &bottomFace[0]);
-
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &bottomFace[0]);
+    i+=2;
 
 
     ge_int3 NegYFace[4];
@@ -1144,42 +1148,48 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
     NegYFace[1] = E;
     NegYFace[2] = F;
     NegYFace[3] = B;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &NegYFace[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &NegYFace[0]);
+    i+=2;
 
     ge_int3 POSYFace[4];
     POSYFace[0] = C;
     POSYFace[1] = G;
     POSYFace[2] = H;
     POSYFace[3] = D;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &POSYFace[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &POSYFace[0]);
+    i+=2;
 
     ge_int3 POSXFace[4];
     POSXFace[0] = B;
     POSXFace[1] = F;
     POSXFace[2] = G;
     POSXFace[3] = C;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &POSXFace[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &POSXFace[0]);
+    i+=2;
 
     ge_int3 NEGXFace[4];
     NEGXFace[0] = D;
     NEGXFace[1] = H;
     NEGXFace[2] = E;
     NEGXFace[3] = A;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &NEGXFace[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &NEGXFace[0]);
+    i+=2;
 
     ge_int3 TOPFace1[4];
     TOPFace1[0] = X;
     TOPFace1[1] = G;
     TOPFace1[2] = F;
     TOPFace1[3] = E;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace1[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &TOPFace1[0]);
+    i+=2;
 
     ge_int3 TOPFace2[4];
     TOPFace2[0] = X;
     TOPFace2[1] = E;
     TOPFace2[2] = H;
     TOPFace2[3] = G;
-    Triangle3D_Make2Face(&hull->triangles[i++], &hull->triangles[i++], &TOPFace2[0]);
+    Triangle3D_Make2Face(&hull->triangles[i], &hull->triangles[i+1], &TOPFace2[0]);
+    i+=2;
 
 }
 
@@ -1236,7 +1246,7 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
     }
 
     //spread messages
-    if ((peep->comms.orders_channel == otherPeep->comms.orders_channel))
+    if (peep->comms.orders_channel == otherPeep->comms.orders_channel)
     {
         if (otherPeep->comms.message_TargetReached)
         {
@@ -1345,14 +1355,6 @@ void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr
 }
 
 
-//inTileCoord_Q16 is [-1,1],[-1,1]
-cl_int MapTileZHeight_Q16(cl_uint* tileData, ge_int2 inTileCoord_Q16)
-{
-
-    //4 corners
-    
-
-}
 
 
 ge_int3 MapTileConvexHull_ClosestPointToPoint(ConvexHull* hull, ge_int3 point_Q16)
@@ -2334,17 +2336,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
-                printf("A");
                 MapBuildTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                printf("B");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                printf("C");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
-                printf("D");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
-                printf("E");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
-                printf("F");
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
             }
 
@@ -2558,7 +2554,7 @@ void StartupTests()
   printf("Speed Tests:\n");
 
     int s = 0;
-    for (cl_ulong i = 0; i < 0; i++)
+    for (cl_ulong i = 0; i < 1000; i++)
     {
         ge_int3 a = (ge_int3){ TO_Q16(i), TO_Q16(2), TO_Q16(i*2) };
         ge_int3 b = (ge_int3){ TO_Q16(i*2), TO_Q16(i), TO_Q16(i) };

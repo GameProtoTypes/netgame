@@ -65,6 +65,7 @@ inline QMP32 Q16_TO_QMP32(cl_int number_Q16)
     QMP32 qmp;
     qmp.number = number_Q16;
     qmp.q = 16;
+    return qmp;
 }
 
 
@@ -132,7 +133,7 @@ inline void MATCH_QMP32(QMP32* qmpA, QMP32* qmpB, int offset)
     SHIFT_QMP32(qmpA,  offsetA);
     SHIFT_QMP32(qmpB,  offsetB);
 }
-inline void MATCH_QMP64(QMP32* qmpA, QMP32* qmpB, int offset)
+inline void MATCH_QMP64(QMP64* qmpA, QMP64* qmpB, int offset)
 {
     if (qmpA->q > qmpB->q)
     {
@@ -588,7 +589,11 @@ cl_int cl_noise_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int seed)
     cl_cubic_interp_1D_Q16(low_Q16, high_Q16, y_frac_Q16, &result_Q16);
     return result_Q16;
 }
-
+cl_int cl_noise_3d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int z_Q16, cl_int seed)
+{
+    //stub
+    return 0;
+}
 
 
 cl_int cl_perlin_2d_Q16(cl_int x_Q16, cl_int y_Q16, cl_int freq_Q16, cl_int depth,  cl_int seed)
