@@ -89,8 +89,8 @@ struct PhysicsCircleShape
 struct AStarPathNode
 {
 	ge_int3 mapCoord_Q16;
-	struct AStarPathNode* next;
-	struct AStarPathNode* prev;
+	offsetPtr nextOPtr;
+	offsetPtr prevOPtr;
 }typedef AStarPathNode;
 
 struct DrivePhysics
@@ -99,7 +99,7 @@ struct DrivePhysics
 	int32_t target_y_Q16;
 	int32_t target_z_Q16;
 
-	AStarPathNode* next;
+	offsetPtr nextPathNodeOPtr;
 
 	int drivingToTarget;
 }typedef DrivePhysics;

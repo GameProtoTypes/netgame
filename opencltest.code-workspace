@@ -16,7 +16,8 @@
 			"*.included": "cpp",
 			"string": "c",
 			"xutility": "c",
-			"__node_handle": "c"
+			"__node_handle": "c",
+			"filesystem": "c"
 		},
 		"gitdoc.enabled": false
 	}
