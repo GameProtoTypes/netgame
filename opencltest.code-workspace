@@ -18,7 +18,12 @@
 			"xutility": "c",
 			"__node_handle": "c",
 			"filesystem": "c",
-			"algorithm": "c"
+			"algorithm": "c",
+			"array": "c",
+			"vector": "c",
+			"xstring": "c",
+			"iterator": "c",
+			"string_view": "c"
 		},
 		"gitdoc.enabled": false
 	}
