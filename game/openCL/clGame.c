@@ -50,6 +50,10 @@ void Print_GE_INT3(ge_int3 v)
 {
     printf("{%d,%d,%d}\n", v.x, v.y, v.z);
 }
+void Print_GE_UINT3(ge_uint3 v)
+{
+    printf("{%u,%u,%u}\n", v.x, v.y, v.z);
+}
 void Print_GE_SHORT3(ge_short3 v)
 {
     printf("{%d,%d,%d}\n", v.x, v.y, v.z);
@@ -355,15 +359,16 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
     offsetPtr3 topOPtr = search->openHeap_OPtrs[index];
     OFFSET_TO_PTR_3D(search->details, topOPtr, top);
 
+
     while (index < search->openHeapSize / 2)
     {
         int leftChild = 2 * index + 1;
         int rightChild = leftChild + 1;
 
         AStarNode* leftChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[leftChild], leftChild)
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[leftChild], leftChildNode)
         AStarNode* rightChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChild)
+        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChildNode)
 
         if ((rightChild < search->openHeapSize) && AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode))
             largerChild = rightChild;
@@ -371,6 +376,7 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
             largerChild = leftChild;
 
         AStarNode* largerChildNode;
+
         OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[largerChild], largerChildNode)
 
         if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, largerChildNode))
@@ -378,6 +384,8 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
 
         search->openHeap_OPtrs[index] = search->openHeap_OPtrs[largerChild];
         index = largerChild;
+
+        
     }
     
     search->openHeap_OPtrs[index] = topOPtr;
@@ -389,6 +397,8 @@ offsetPtr3 AStarOpenHeapRemove(AStarSearch* search)
 
     search->openHeap_OPtrs[0] = search->openHeap_OPtrs[search->openHeapSize-1];
     search->openHeapSize--;
+
+ 
     AStarOpenHeapTrickleDown(search, 0);
 
     return rootOPtr;
@@ -396,7 +406,10 @@ offsetPtr3 AStarOpenHeapRemove(AStarSearch* search)
 
 offsetPtr3 AStarRemoveFromOpen(AStarSearch* search)
 {
+
     offsetPtr3 nodeOPtr = AStarOpenHeapRemove(search);
+    
+
     AStarNode* node;
     OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
 
@@ -557,12 +570,15 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     int iterationCount = maxIterations;
     while (search->openHeapSize > 0 && iterationCount > 0)
     {
-        
+
         //find node in open with lowest f cost
         offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
-        
+
+        Print_GE_UINT3(currentOPtr);
         AStarNode* current;
         OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
+
+
 
         if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
@@ -577,6 +593,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             //form next links
             AStarNode* curNode = targetNode;
             offsetPtr3 curNodeOPtr = targetNodeOPtr;
+
             while (curNode != NULL)
             {
                 curNodeOPtr = curNode->prevOPtr;
@@ -589,6 +606,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                     p->nextOPtr = curNodeOPtr;
 
                 curNode = p;
+                        printf("E\n");
             }
 
 
