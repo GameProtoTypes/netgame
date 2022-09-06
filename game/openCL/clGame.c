@@ -9,7 +9,7 @@
 #include "perlincl.h"
 
 
-#define PEEP_ALL_ALWAYS_VISIBLE
+//#define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
 
 
@@ -1155,8 +1155,6 @@ void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
 
 
     }
-
-
 
 
     int i = 0;
