@@ -3,5 +3,25 @@
 void main()
 {
     print("Hello world\n");
-    print("This is angelscript speaking\n");
 }
+
+
+//Create All Graphics Objects Here,
+void Init()
+{
+
+
+
+
+}
+
+//Binding VBO's to OpenCL
+void BindToOpenCL()
+{
+    
+
+
+}
+
+
+

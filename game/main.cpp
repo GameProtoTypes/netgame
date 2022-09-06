@@ -599,6 +599,7 @@ int32_t main(int32_t argc, char* args[])
             std::cout << "GAMESTATE CHKSUM: " << gameNetworking.CheckSumGameState(gameState.get()) << std::endl;
         }
 
+        ImGui::Text("CLIENT_actionList Size: %d", gameNetworking.CLIENT_actionList.size());
 
         for (auto client : gameNetworking.clients)
         {

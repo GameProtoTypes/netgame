@@ -104,69 +104,64 @@
 
  void GameNetworking::CLIENT_ApplyActions()
  {
-	 bool repeat = false;
-	 do {
-		 repeat = false;
-		 //std::cout << "CLIENT_ApplyActions" << std::endl;
-		 std::vector<int32_t> removals;
-		 std::vector<ActionWrap> newList;
 
-		 std::vector<ActionWrap>& actionSack = CLIENT_actionList;
+	//std::cout << "CLIENT_ApplyActions" << std::endl;
+	std::vector<int32_t> removals;
+	std::vector<ActionWrap> newList;
 
-		 //first pass check all turns for lateness
-		 uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
-		 for (int32_t b = 0; b < actionSack.size(); b++)
-		 {
-			 if (actionSack[b].tracking.clientApplied)
-				 continue;
+	std::vector<ActionWrap>& actionSack = CLIENT_actionList;
 
-			 ClientAction* action = &actionSack[b].action;
-			 ActionTracking* actTracking = &actionSack[b].tracking;
-			 if (action->scheduledTickIdx < gameStateActions->tickIdx)
-			 {
-				 if (action->scheduledTickIdx < earliestExpiredScheduledTick)
-					 earliestExpiredScheduledTick = action->scheduledTickIdx;
-			 }
-		 }
+	//first pass check all turns for lateness
+	uint32_t earliestExpiredScheduledTick = static_cast<uint32_t>(-1);
+	for (int32_t b = 0; b < actionSack.size(); b++)
+	{
+		if (actionSack[b].tracking.clientApplied)
+			continue;
 
-		 if (earliestExpiredScheduledTick != static_cast<uint32_t>(-1))
-		 {
-			 int32_t ticksLate = gameStateActions->tickIdx - earliestExpiredScheduledTick;
+		ClientAction* action = &actionSack[b].action;
+		ActionTracking* actTracking = &actionSack[b].tracking;
+		if (action->scheduledTickIdx < gameStateActions->tickIdx)
+		{
+			if (action->scheduledTickIdx < earliestExpiredScheduledTick)
+				earliestExpiredScheduledTick = action->scheduledTickIdx;
+		}
+	}
 
-			 std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late" << std::endl;
-			 std::cout << ClientConsolePrint() << "All is Pretty Much Lost - Reconnect?" << std::endl;
-
-		 }
+	if (earliestExpiredScheduledTick != static_cast<uint32_t>(-1))
+	{
+		int32_t ticksLate = gameStateActions->tickIdx - earliestExpiredScheduledTick;
+		std::cout << ClientConsolePrint() << "Expired Action " << ticksLate << " Ticks Late, Disconnecting..." << std::endl;
+		CLIENT_HardDisconnect();
+	}
 
 
-		 //at this point game state may be reverted from above.
-		 int32_t i = 0;
-		 for (int32_t a = 0; a < actionSack.size(); a++)
-		 {
-			 if (actionSack[a].tracking.clientApplied)
-				 continue;
+	//take from the sack.
+	int32_t i = 0;
+	for (int32_t a = 0; a < actionSack.size(); a++)
+	{
+		if (actionSack[a].tracking.clientApplied)
+			continue;
 
-			 ClientAction* action = &actionSack[a].action;
-			 ActionTracking* actTracking = &actionSack[a].tracking;
-			 if (action->scheduledTickIdx == gameStateActions->tickIdx)
-			 {
+		ClientAction* action = &actionSack[a].action;
+		ActionTracking* actTracking = &actionSack[a].tracking;
+		if (action->scheduledTickIdx == gameStateActions->tickIdx)
+		{
 
-				 std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: ACS: [" << CheckSumAction(&actionSack[a]) 
-					 << "]" << std::endl;
+			std::cout << "[ACTIONTRACK]" << ClientConsolePrint() << " Using Action: ACS: [" << CheckSumAction(&actionSack[a]) 
+				<< "]" << std::endl;
 
-				 actionSack[a].tracking.clientApplied = true;
-				 gameStateActions->clientActions[i] = actionSack[a];
+			actionSack[a].tracking.clientApplied = true;
+			gameStateActions->clientActions[i] = actionSack[a];
 
-				 i++;
-			 }
-			 else
-			 {
-				 newList.push_back(actionSack[a]);
-			 }
-		 }
-		 gameStateActions->numActions = i;
-	 } while (repeat);
-
+			i++;
+		}
+		else
+		{
+			newList.push_back(actionSack[a]);
+		}
+	}
+	gameStateActions->numActions = i;
+	CLIENT_actionList = newList;
  }
 
  void GameNetworking::CLIENT_SendGamePartAck()
@@ -346,17 +341,15 @@
 	 {
 		 //"fake" disconnect to self
 		 peerInterface->CloseConnection(SLNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-
 		 HOST_HandleDisconnectByID(clientId);
 	 }
 	 else
 	 {
 		 peerInterface->CloseConnection(hostPeer, true);
-
-
 		 clients.clear();
 	 }
 
+	 CLIENT_actionList.clear();
 	 clientId = -1;
 	 connectedToHost = false;
 	 fullyConnectedToHost = false;
@@ -481,7 +474,7 @@
 	 }
 	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client
 	 {
-		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);//used?
+		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);
 
 	 }
 	 else
@@ -489,17 +482,22 @@
 		 targetTickTimeMs = MINTICKTIMEMS;
 
 	 }
-	 
 
+
+
+	 //safety clamp
+	 if (targetTickTimeMs <= 0)
+		 targetTickTimeMs = 0;
+	 else if (targetTickTimeMs >= MAXTICKTIMEMS)
+		 targetTickTimeMs = MAXTICKTIMEMS;
 
  }
  void GameNetworking::UpdateHandleMessages()
  {
-
+	 int maxPacketPerUpdate = MAXPACKETSPERUPDATE;
 	 for (this->packet = this->peerInterface->Receive();
-		 this->packet;
-		 this->peerInterface->DeallocatePacket(this->packet),
-		 this->packet = this->peerInterface->Receive())
+		 this->packet != nullptr;
+		 )
 	 {
 		 SLNet::BitStream bts(this->packet->data,
 			 this->packet->length,
@@ -816,6 +814,16 @@
 
 			 break;
 		 } // check package identifier
+	 
+
+		 this->peerInterface->DeallocatePacket(this->packet);
+		 if (maxPacketPerUpdate > 0)
+		 {
+			 this->packet = this->peerInterface->Receive();
+		 }
+		 else
+			 this->packet = nullptr;
+		 maxPacketPerUpdate--;
 	 } // package receive loop
  }
  void GameNetworking::Update()
@@ -876,6 +884,7 @@
 	}
 	
 	UpdateThrottling();
+
 
 	UpdateHandleMessages();
 

@@ -611,7 +611,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         //find node in open with lowest f cost
         offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
 
-        Print_GE_UINT3(currentOPtr);
+
         AStarNode* current;
         OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
 
@@ -2312,17 +2312,16 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
                 if (pathFindSuccess != 0)
                 {
-                    printf("--------------------------\n");
-                    AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
-                    printf("--------------------------\n");
-                    AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
-                    printf("--------------------------\n");
+                    //printf("--------------------------\n");
+                    //AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
+                    //printf("--------------------------\n");
+                    //AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
+                    //printf("--------------------------\n");
 
 
                     pathOPtr = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
-                    printf("A");
-                    AStarPrintPath(&gameState->paths, pathOPtr);
-                    printf("--------------------------\n");
+                    //AStarPrintPath(&gameState->paths, pathOPtr);
+                    //printf("--------------------------\n");
                 }
             }
 
