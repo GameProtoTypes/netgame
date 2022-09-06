@@ -52,6 +52,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -97,6 +98,10 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <MASM>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+    </MASM>
     <Midl>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
@@ -130,6 +135,10 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <MASM>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+    </MASM>
     <Midl>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
@@ -163,6 +172,10 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <MASM>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+    </MASM>
     <Midl>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
@@ -195,6 +208,10 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <MASM>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+    </MASM>
     <Midl>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
@@ -282,5 +299,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

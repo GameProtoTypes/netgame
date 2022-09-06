@@ -48,7 +48,7 @@ set(Source_Files
     "GameGPUCompute.cpp"
     "GameNetworking.cpp"
 
-
+    
 
 )
 source_group("Source Files" FILES ${Source_Files})
@@ -108,6 +108,13 @@ set(COMPILE_FILES
 add_executable(${PROJECT_NAME} ${COMPILE_FILES})
 
 
+
+
+
+
+
+
+
 ################################################################################
 # Include directories
 ################################################################################
@@ -120,8 +127,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../zlib"
-   
+    "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/source"  
 
 )
 
@@ -151,7 +158,8 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "glew32;"
     "glfw3;"
     "imgui;"
-    "SLikeNet"
+    "SLikeNet;"
+    "angelscript"
 )
 
 
@@ -195,6 +203,12 @@ add_custom_command(
         
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/angelScript
+        ${CMAKE_CURRENT_BINARY_DIR}/Debug/angelScript)
+
+add_custom_command(
+    TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_SOURCE_DIR}/TileSet.png
             ${CMAKE_CURRENT_BINARY_DIR}/Debug/TileSet.png)
@@ -206,6 +220,28 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/dynamicDefines.h
             ${CMAKE_CURRENT_SOURCE_DIR}/openCL/dynamicDefines.h)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

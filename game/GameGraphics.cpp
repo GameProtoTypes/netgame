@@ -35,8 +35,6 @@
 GameGraphics::GameGraphics(GameGPUCompute* gameCompute)
 {
     this->gameCompute = gameCompute;
-
-
 }
 
 
@@ -127,10 +125,10 @@ void GameGraphics::Init()
     printf("GLSL Version : %s\n", glslVersion);
 
 
-    std::shared_ptr<GEShader> pVertShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertShader.glsl");
-    std::shared_ptr<GEShader> pFragShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragShader.glsl");
-    std::shared_ptr<GEShader> pVertPeepShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertPeep.glsl");
-    std::shared_ptr<GEShader> pFragPeepShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragPeep.glsl");
+    std::shared_ptr<GEShader> pVertShad        = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertShader.glsl");
+    std::shared_ptr<GEShader> pFragShad        = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragShader.glsl");
+    std::shared_ptr<GEShader> pVertPeepShad    = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertPeep.glsl");
+    std::shared_ptr<GEShader> pFragPeepShad    = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragPeep.glsl");
     std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertMapTile.glsl");
     std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragMapTile.glsl");
     std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "shaders/geomMapTile.glsl");
@@ -175,16 +173,16 @@ void GameGraphics::Init()
     GL_HOST_ERROR_CHECK()
 
 
-        float quadVertices[] = {
-        // positions    
-        -1.0f,  1.0f,
-        -1.0f, -1.0f,
-         1.0f, -1.0f,
+    float quadVertices[] = {
+    // positions    
+    -1.0f,  1.0f,
+    -1.0f, -1.0f,
+        1.0f, -1.0f,
 
 
-        -1.0f,  1.0f,
-         1.0f, -1.0f,
-         1.0f,  1.0f
+    -1.0f,  1.0f,
+        1.0f, -1.0f,
+        1.0f,  1.0f
     };
 
     float quadUVs[] = {
@@ -204,7 +202,6 @@ void GameGraphics::Init()
     }
 
     //Make VAO's
-
     GL_HOST_ERROR_CHECK()
 
 
@@ -257,8 +254,8 @@ void GameGraphics::Init()
 
     GL_HOST_ERROR_CHECK()
 
-        GL_HOST_ERROR_CHECK()
-        glGenBuffers(1, &mapTile2VBO);
+    GL_HOST_ERROR_CHECK()
+    glGenBuffers(1, &mapTile2VBO);
     glBindBuffer(GL_ARRAY_BUFFER, mapTile2VBO);
     glBufferData(GL_ARRAY_BUFFER, (gameCompute->mapDim * gameCompute->mapDim) * sizeof(cl_uchar), mapStartData.get(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
@@ -398,7 +395,7 @@ void GameGraphics::Init()
 
 
 
-        glm::ivec2 dims;
+    glm::ivec2 dims;
     int chIFile;
     int desiredCh = 4;
     stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, desiredCh);
