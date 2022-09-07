@@ -1652,7 +1652,7 @@ BOOL GuiButton(Rectangle bounds, const char *text)
 {
     GuiState state = guiState;
     BOOL pressed = false;
-
+    printf("button");
     // Update control
     //--------------------------------------------------------------------
     if ((state != STATE_DISABLED) && !guiLocked)
@@ -3203,8 +3203,8 @@ int GuiTextInputBox(Rectangle bounds, const char *title, const char *message, co
         if (GuiTextBox(RAYGUI_CLITERAL(Rectangle){ textBoxBounds.x, textBoxBounds.y, textBoxBounds.width - 4 - RAYGUI_TEXTINPUTBOX_HEIGHT, textBoxBounds.height }, 
             ((*secretViewActive == 1) || textEditMode)? text : &stars[0], textMaxSize, textEditMode)) textEditMode = !textEditMode;
 
-        char str1[5] = "#44#\n";
-        char str2[5] = "#45#\n";
+        char str1[5] = "#44#\0";
+        char str2[5] = "#45#\0";
         *secretViewActive = GuiToggle(RAYGUI_CLITERAL(Rectangle){ textBoxBounds.x + textBoxBounds.width - RAYGUI_TEXTINPUTBOX_HEIGHT, textBoxBounds.y, RAYGUI_TEXTINPUTBOX_HEIGHT, RAYGUI_TEXTINPUTBOX_HEIGHT }, (*secretViewActive == 1)? &str1[0] : &str2[0], *secretViewActive);
     }
     else
@@ -4252,10 +4252,10 @@ void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint)
             TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
 #else
 
-        char str1[6] = "#121#\n";  
-        char str2[6] = "#118#\n";  
-        char str3[6] = "#120#\n";  
-        char str4[6] = "#119#\n";  
+        char str1[6] = "#121#\0";  
+        char str2[6] = "#118#\0";  
+        char str3[6] = "#120#\0";  
+        char str4[6] = "#119#\0";  
 
         GuiDrawText(isVertical ? &str1[0] : &str2[0], RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical ? bounds.width : bounds.height, isVertical ? bounds.width : bounds.height },
             TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // ICON_ARROW_UP_FILL / ICON_ARROW_LEFT_FILL

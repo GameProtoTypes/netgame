@@ -3099,20 +3099,68 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 void DrawRectangle(int x, int y, int width, int height, Color color)
 {
+//printf("drawing rectangle....\n");
+}
+ void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
+ {
+
+ }
+ Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount) // -- GuiLoadStyle()
+ {
+    Font f;
+    return f;
+ }
+ Font GetFontDefault(void)                           // -- GuiLoadStyleDefault()
+ {
+    Font f;
+    f.baseSize = 10;
+    f.glyphCount = 10;
+    f.recs = NULL;
+    f.chars = NULL;
+    return f;
+ }
+ Texture2D LoadTextureFromImage(Image image)         // -- GuiLoadStyle()
+ {
+    Texture2D tex;
+    return tex;
+ }
+ void SetShapesTexture(Texture2D tex, Rectangle rec) // -- GuiLoadStyle()
+ {
+
+ }
+ char *LoadFileText(const char *fileName)            // -- GuiLoadStyle()
+{
+    return NULL;
+}
+
+ const char *GetDirectoryPath(const char *filePath)  // -- GuiLoadStyle()
+ {
+return NULL;
+ }
+
+ Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing)   // -- GetTextWidth(), GuiTextBoxMulti()
+ {
+    return (Vector2){0.0f,0.0f};
+ }
+ void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)  // -- GuiDrawText()
+{
 
 }
 
 
-__kernel void game_post_update_single( ALL_CORE_PARAMS)
+__kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
 
-
+    GuiLoadStyleDefault();
 
     GuiEnable();
 
            DrawRectangle(0, 0, 200, 200, Fade(RED, 0.1));
+           
+       //    char str567[7] = "BUTTON\0";
+        //   GuiButton((Rectangle){0,0,100,100}, &str567[0]);
 
 
     GuiDisable();
