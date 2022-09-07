@@ -128,7 +128,7 @@ void main() {
     float shadingBase = float((gs_in[0].shadeAttr & (15u << 6)) >> 6)/15.0;
 
 
-    float shadingLowAdd = 4/15.0;
+    float shadingLowAdd = 1/15.0;
 
 
     topShadingA = shadingBase - cornerALow*shadingLowAdd; 
