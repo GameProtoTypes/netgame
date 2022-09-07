@@ -9,7 +9,7 @@
 #include "perlincl.h"
 
 
-//#define PEEP_ALL_ALWAYS_VISIBLE
+#define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
 
 
@@ -247,13 +247,10 @@ cl_uchar MapTileCoordStandInValid(ALL_CORE_PARAMS, ge_int3 mapcoord)
     }
     else
     {
-        cl_uchar ridgeType = MapHas2LowAdjacentCorners(ALL_CORE_PARAMS_PASS, mapcoord);
-        if (ridgeType == 0)
+        if(MapDataLowCornerCount(*data) > 0)
             return 1;
     }
     return 0;
-
-
 }
 
 
@@ -262,13 +259,46 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
     cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapcoord);
     MapTile tile = MapDataGetTile(*data);
     if (tile == MapTile_NONE)
-    {
-        return 1;
+    {   
+
+        if(enterDirection.z < 0)
+            return 0;
+
+
+
+        ge_int3 downCoord = mapcoord;
+        downCoord.z--;
+        cl_uint* downData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, downCoord);
+        if( MapDataGetTile(*downData) != MapTile_NONE)
+            return 1;
+
+
+
+
+
     }
-    else
+    else if(MapDataLowCornerCount(*data) == 0)//cant enter full blocks
+    {
+        return 0;
+    }
+    else if(enterDirection.z == 0)//entering partial block from the side
     {
         cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, enterDirection);
         if (ridgeType == 0)
+            return 1;
+    }
+    else if(enterDirection.z > 0)//entering partial block from below
+    {
+        ge_int3 dirNoZ = enterDirection;
+        dirNoZ.z = 0;
+        cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, dirNoZ);
+        if (ridgeType == 0)//running up continued ramp case.
+            return 1;
+
+    }
+    else if(enterDirection.z < 0)//entering partial block from above
+    {
+        if(MapDataLowCornerCount(*data) > 0)//could be a ramp 
             return 1;
     }
     return 0;
@@ -335,24 +365,31 @@ cl_uchar AStarNodeValid(AStarNode* node)
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
-    ge_int3 delta = GE_INT3_ADD(node->tileIdx, GE_INT3_NEG(GE_SHORT3_TO_INT3( prevNode->tileIdx ) ));
-    if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx), delta) ==0)
+
+    cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(prevNode->tileIdx));
+    cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
+
+    ge_int3 delta = GE_INT3_SUB(node->tileIdx, GE_SHORT3_TO_INT3( prevNode->tileIdx ));
+    if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx), delta) == 0)
         return 0;
 
-    ge_int3 downCoord = GE_INT3_ADD(GE_SHORT3_TO_INT3(node->tileIdx), staticData->directionalOffsets[5]);
-    MapTile tileDown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, downCoord);
-    if (tileDown != MapTile_NONE)
+    if(delta.z > 0)
     {
-        //it can be stood on, thats good
+        printf("UP.");
 
-        return 1;
+        if(MapDataGetTile(*fromTileData) == MapTile_NONE)
+            return 0;
+        //else could be a ramp
 
-
+    
     }
 
 
+    return 1;
 
-    return 0;
+
+
+
 }
 
 void MakeCardinalDirectionOffsets(ge_int3* offsets)
@@ -651,6 +688,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         //AStarAddToClosed(search, current);
 
 
+
         //5 neighbors
         for (int i = 0; i <= 25; i++)
         { 
@@ -663,7 +701,14 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             {
                 continue;
             }
-            
+
+
+
+
+
+
+
+
             offsetPtr3 prospectiveNodeOPtr = (offsetPtr3){prospectiveTileCoord.x,prospectiveTileCoord.y,prospectiveTileCoord.z};
             AStarNode* prospectiveNode;
             OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
@@ -672,6 +717,8 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             {
                 continue;
             }
+
+
 
 
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
@@ -1451,7 +1498,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 1, 0 }, & tiles[3], & tileCenters_Q16[3], &dummy, & tileDatas[3]);
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 1 }, & tiles[4], & tileCenters_Q16[4], &dummy, & tileDatas[4]);
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, -1 }, & tiles[5], & tileCenters_Q16[5], &dummy, & tileDatas[5]);
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, & tiles[0], & tileCenters_Q16[0],&dummy, &tileDatas[6]);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, & tiles[6], & tileCenters_Q16[6],&dummy, &tileDatas[6]);
     
     // {
     //     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3){0, 0, 0}, &tiles[6], &tileCenters_Q16[6], &dummy, &tileDatas[5]);
@@ -1594,7 +1641,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         d.z = MUL_PAD_Q16(d.z, len);
     }
 
-    if (WHOLE_Q16(len) < 1)//within range of current target
+    if (WHOLE_Q16(len) < 2)//within range of current target
     {
         if (peep->physics.drive.drivingToTarget)
         {
@@ -1631,14 +1678,17 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
    
     if (peep->physics.drive.drivingToTarget)
     {
+        Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
+
         targetVelocity.x = d.x >> 2;
         targetVelocity.y = d.y >> 2;
         targetVelocity.z = d.z >> 2;
 
+        ge_int3 error = GE_INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
 
-        peep->physics.base.vel_add_Q16.x += targetVelocity.x;
-        peep->physics.base.vel_add_Q16.y += targetVelocity.y;
-        peep->physics.base.vel_add_Q16.z += targetVelocity.z;
+        peep->physics.base.vel_add_Q16.x += error.x;
+        peep->physics.base.vel_add_Q16.y += error.y;
+        peep->physics.base.vel_add_Q16.z += error.z;
 
 
         peep->physics.base.CS_angle_rad = atan2(((float)(d.x))/(1<<16), ((float)(d.y)) / (1 << 16));
@@ -2752,7 +2802,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
     ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
     AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
-    const int spread = 500;
+    const int spread = 10;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].ptr = p;
@@ -2960,6 +3010,8 @@ __kernel void game_update(ALL_CORE_PARAMS)
         Peep* p = &gameState->peeps[globalid];
         PeepUpdate(ALL_CORE_PARAMS_PASS, p);
         PeepDraw(ALL_CORE_PARAMS_PASS, p);
+
+
     }
 
     if (globalid < MAX_PARTICLES) {
@@ -3020,10 +3072,9 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             Peep* p;
             
             CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-                CL_CHECK_NULL(p)
+            CL_CHECK_NULL(p)
                 
-                PeepPreUpdate1(p);
-
+            PeepPreUpdate1(p);
         }
     }
 
@@ -3037,22 +3088,21 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         {
             Peep* p;
             CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-                CL_CHECK_NULL(p)
+            CL_CHECK_NULL(p)
 
-                PeepPreUpdate2(p);
-
+            PeepPreUpdate2(p);
 
 
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorPtr, mapSector);
             CL_CHECK_NULL(mapSector)
 
-                global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
+            global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
             CL_CHECK_NULL(lock)
 
 
 
-                cl_uint reservation;
+            cl_uint reservation;
 
             reservation = atomic_add(lock, 1) + 1;
             barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
