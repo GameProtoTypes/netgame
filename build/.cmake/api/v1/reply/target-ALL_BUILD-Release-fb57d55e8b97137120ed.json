@@ -20,13 +20,13 @@
 			"id" : "MinerTycoon::@0c53ff3c4131f9152fd3"
 		},
 		{
-			"id" : "imgui::@6890427a1f51a3e7e1df"
-		},
-		{
 			"id" : "SLikeNet::@74d9b763750fd0e015d6"
 		},
 		{
 			"id" : "angelscript::@a0fac63bd9e437d73997"
+		},
+		{
+			"id" : "imgui::@6890427a1f51a3e7e1df"
 		},
 		{
 			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"

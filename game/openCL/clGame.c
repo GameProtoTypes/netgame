@@ -9,6 +9,11 @@
 #include "perlincl.h"
 
 
+//include raygui
+#define RAYGUI_STANDALONE
+#define RAYGUI_IMPLEMENTATION
+#include "clRayGui.h"
+
 #define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
 
@@ -606,6 +611,22 @@ void AStarPrintPath(AStarPathSteps* paths, offsetPtr startNodeOPtr)
         OFFSET_TO_PTR(paths->pathNodes, curNode->nextOPtr, curNode);
     }
 }
+cl_uchar GE_INT3_SINGLE_ENTRY(ge_int3 a)
+{
+    int s = 0;
+    if (a.x != 0)
+        s++;
+    if (a.y != 0)
+        s++;
+    if (a.z != 0)
+        s++;
+
+    if (s == 1)
+        return 1;
+    else
+        return 0;
+}
+
 
 cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile, int maxIterations)
 {
@@ -672,7 +693,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
             {
                 AStarNode* p;
                 OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, p);
-                
 
                 if(p != NULL)
                     p->nextOPtr = curNodeOPtr;
@@ -693,14 +713,62 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
         for (int i = 0; i <= 25; i++)
         { 
             ge_int3 prospectiveTileCoord;
-            prospectiveTileCoord.x = current->tileIdx.x + staticData->directionalOffsets[i].x;
-            prospectiveTileCoord.y = current->tileIdx.y + staticData->directionalOffsets[i].y;
-            prospectiveTileCoord.z = current->tileIdx.z + staticData->directionalOffsets[i].z;
+            ge_int3 dir = staticData->directionalOffsets[i];
+            prospectiveTileCoord.x = current->tileIdx.x + dir.x;
+            prospectiveTileCoord.y = current->tileIdx.y + dir.y;
+            prospectiveTileCoord.z = current->tileIdx.z + dir.z;
  
             if (MapTileCoordValid(prospectiveTileCoord)==0)
             {
                 continue;
             }
+
+
+            
+            //if lateral dyagonol, check adjacents a for traversability as well. if all traverible - diagonoal is traversible.
+            if(GE_INT3_SINGLE_ENTRY(dir) == 0 && dir.z == 0)
+            {
+
+
+                ge_int3 dirNoX = dir;
+                dirNoX.x=0;
+                ge_int3 dirNoY = dir;
+                dirNoX.y=0;
+
+
+                ge_int3 XCheckCoord;
+                ge_int3 YCheckCoord;
+
+
+                offsetPtr3 XCheckNodeOPtr = (offsetPtr3){XCheckCoord.x,XCheckCoord.y,XCheckCoord.z};
+                AStarNode* XCheckNode;
+                OFFSET_TO_PTR_3D(search->details, XCheckNodeOPtr, XCheckNode);
+                if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  XCheckNode, current) == 0))
+                {
+                    continue;
+                }
+
+                offsetPtr3 YCheckNodeOPtr = (offsetPtr3){YCheckCoord.x,YCheckCoord.y,YCheckCoord.z};
+                AStarNode* YCheckNode;
+                OFFSET_TO_PTR_3D(search->details, YCheckNodeOPtr, YCheckNode);
+                if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  YCheckNode, current) == 0))
+                {
+                    continue;
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -741,22 +809,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     
     printf("FAIL %d\n", search->openHeapSize);
     return foundDest;
-}
-
-cl_uchar GE_INT3_SINGLE_ENTRY(ge_int3 a)
-{
-    int s = 0;
-    if (a.x != 0)
-        s++;
-    if (a.y != 0)
-        s++;
-    if (a.z != 0)
-        s++;
-
-    if (s == 1)
-        return 1;
-    else
-        return 0;
 }
 
 
@@ -3045,11 +3097,25 @@ __kernel void game_update(ALL_CORE_PARAMS)
 }
 
 
+void DrawRectangle(int x, int y, int width, int height, Color color)
+{
+
+}
+
+
 __kernel void game_post_update_single( ALL_CORE_PARAMS)
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
 
+
+
+    GuiEnable();
+
+           DrawRectangle(0, 0, 200, 200, Fade(RED, 0.1));
+
+
+    GuiDisable();
 
 }
 
