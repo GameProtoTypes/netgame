@@ -55,6 +55,9 @@ public:
 
 
 
+	void AddCLSource(std::string path);
+
+
 	void AddCompileDefinition(std::string name, GPUCompileVariant val);
 
 
@@ -80,6 +83,7 @@ public:
 
 	cl_kernel preupdate_kernel;
 	cl_kernel preupdate_kernel_2;
+	cl_kernel game_updatepre1_kernel;
 	cl_kernel update_kernel;
 	cl_kernel post_update_single_kernel;
 	cl_kernel action_kernel;
@@ -99,6 +103,7 @@ public:
 
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
+	cl_event updatepre1Event;    
 	cl_event updateEvent;    
 	cl_event postupdateEvent;
 	cl_event actionEvent;
@@ -138,9 +143,9 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1;
-	int maxParticles = 1024;
-	int mapDim = 256;
+	int maxPeeps = 1024*16;
+	int maxParticles = 32;
+	int mapDim = 512;
 	int mapDepth = 32;
 	int mapTileSize = 5;
 
@@ -161,5 +166,12 @@ public:
 
 	void AquireAllGraphicsObjects();
 	void ReleaseAllGraphicsObjects();
+
+
+
+
+	std::vector<uint64_t> clSourceCHKSUMS;
+    std::vector<std::string> clSourcePaths;
+    std::vector<std::string> clSources;
 };
 

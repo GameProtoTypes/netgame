@@ -10,9 +10,9 @@
 
 
 //include raygui
-#define RAYGUI_STANDALONE
-#define RAYGUI_IMPLEMENTATION
-#include "clRayGui.h"
+// #define RAYGUI_STANDALONE
+// #define RAYGUI_IMPLEMENTATION
+// #include "clRayGui.h"
 
 #define PEEP_ALL_ALWAYS_VISIBLE
 #define PEEP_DISABLE_TILECORRECTIONS
@@ -1589,9 +1589,9 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
         if (tile != MapTile_NONE)
         {
             ge_int3 futurePos;
-            futurePos.x = peep->physics.base.pos_Q16.x + peep->physics.base.v_Q16.x;
-            futurePos.y = peep->physics.base.pos_Q16.y + peep->physics.base.v_Q16.y;
-            futurePos.z = peep->physics.base.pos_Q16.z + peep->physics.base.v_Q16.z;
+            futurePos.x = (peep->physics.base.pos_Q16.x + peep->physics.base.pos_post_Q16.z) + peep->physics.base.v_Q16.x;
+            futurePos.y = (peep->physics.base.pos_Q16.y + peep->physics.base.pos_post_Q16.y) + peep->physics.base.v_Q16.y;
+            futurePos.z = (peep->physics.base.pos_Q16.z + peep->physics.base.pos_post_Q16.z) + peep->physics.base.v_Q16.z;
 
             ge_int3 nearestPoint;
             cl_uchar insideSolidRegion;
@@ -1637,7 +1637,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             if (mag < peep->physics.shape.radius_Q16)
             {
                 cl_int dot;
-                ge_dot_product_3D_Q16(peep->physics.base.v_Q16, An, &dot);
+                ge_int3 V = GE_INT3_ADD(peep->physics.base.v_Q16 , peep->physics.base.vel_add_Q16);
+                ge_dot_product_3D_Q16( V, An, &dot);
                 ge_int3 B;//velocity to cancel
                 B.x = MUL_PAD_Q16(An.x, dot);
                 B.y = MUL_PAD_Q16(An.y, dot);
@@ -1650,7 +1651,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                 else
                     pushAmt = (peep->physics.shape.radius_Q16 - mag);
 
-
+                //corrections
                 peep->physics.base.pos_post_Q16.z += MUL_PAD_Q16(An.z, pushAmt);
                 peep->physics.base.pos_post_Q16.y += MUL_PAD_Q16(An.y, pushAmt);
                 peep->physics.base.pos_post_Q16.x += MUL_PAD_Q16(An.x, pushAmt);
@@ -1665,6 +1666,8 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                 if ((-B.x) < peep->physics.base.vel_add_Q16.x || (-B.x) > peep->physics.base.vel_add_Q16.x)
                     peep->physics.base.vel_add_Q16.x += -B.x;
                 
+
+
             }
 
         }
@@ -1730,7 +1733,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
    
     if (peep->physics.drive.drivingToTarget)
     {
-        Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
+       // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
 
         targetVelocity.x = d.x >> 2;
         targetVelocity.y = d.y >> 2;
@@ -1848,7 +1851,12 @@ void PeepAssignToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
         mapSector->lastPeepPtr = peep->ptr;
     }
 }
-void PeepPreUpdate1(Peep* peep)
+void PeepPreUpdate1(ALL_CORE_PARAMS, Peep* peep)
+{
+
+}
+
+void PeepPreUpdate2(Peep* peep)
 {
     peep->physics.base.v_Q16.z += peep->physics.base.vel_add_Q16.z;
     peep->physics.base.v_Q16.y += peep->physics.base.vel_add_Q16.y;
@@ -1857,11 +1865,10 @@ void PeepPreUpdate1(Peep* peep)
     peep->physics.base.vel_add_Q16.z = 0;
     peep->physics.base.vel_add_Q16.y = 0;
     peep->physics.base.vel_add_Q16.x = 0;
-}
 
-void PeepPreUpdate2(Peep* peep)
-{
-    
+
+
+
     peep->physics.base.pos_Q16.x += peep->physics.base.v_Q16.x;
     peep->physics.base.pos_Q16.y += peep->physics.base.v_Q16.y;
     peep->physics.base.pos_Q16.z += peep->physics.base.v_Q16.z;
@@ -2854,7 +2861,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
     ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
     AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
-    const int spread = 10;
+    const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].ptr = p;
@@ -3049,8 +3056,16 @@ void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint ptr)
     particleVBOBuffer[ptr * (PARTICLE_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = 0;
 }
 
-
-
+__kernel void game_updatepre1(ALL_CORE_PARAMS)
+{
+        // Get the index of the current element to be processed
+    int globalid = get_global_id(0);
+    int localid = get_local_id(0);
+    if (globalid < MAX_PEEPS) {
+        Peep* p = &gameState->peeps[globalid]; 
+        PeepPreUpdate2(p);
+    }
+}
 __kernel void game_update(ALL_CORE_PARAMS)
 {
     // Get the index of the current element to be processed
@@ -3059,11 +3074,9 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
     if (globalid < MAX_PEEPS) {
-        Peep* p = &gameState->peeps[globalid];
+        Peep* p = &gameState->peeps[globalid]; 
         PeepUpdate(ALL_CORE_PARAMS_PASS, p);
         PeepDraw(ALL_CORE_PARAMS_PASS, p);
-
-
     }
 
     if (globalid < MAX_PARTICLES) {
@@ -3072,7 +3085,6 @@ __kernel void game_update(ALL_CORE_PARAMS)
         ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
 
     }
-
 
     //update map view
     if (gameStateActions->mapZView != gameStateActions->mapZView_1)
@@ -3093,59 +3105,62 @@ __kernel void game_update(ALL_CORE_PARAMS)
             }
         }
     }
-    
 }
 
 
-void DrawRectangle(int x, int y, int width, int height, Color color)
-{
-//printf("drawing rectangle....\n");
-}
- void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
- {
 
- }
- Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount) // -- GuiLoadStyle()
- {
-    Font f;
-    return f;
- }
- Font GetFontDefault(void)                           // -- GuiLoadStyleDefault()
- {
-    Font f;
-    f.baseSize = 10;
-    f.glyphCount = 10;
-    f.recs = NULL;
-    f.chars = NULL;
-    return f;
- }
- Texture2D LoadTextureFromImage(Image image)         // -- GuiLoadStyle()
- {
-    Texture2D tex;
-    return tex;
- }
- void SetShapesTexture(Texture2D tex, Rectangle rec) // -- GuiLoadStyle()
- {
 
- }
- char *LoadFileText(const char *fileName)            // -- GuiLoadStyle()
-{
-    return NULL;
-}
 
- const char *GetDirectoryPath(const char *filePath)  // -- GuiLoadStyle()
- {
-return NULL;
- }
 
- Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing)   // -- GetTextWidth(), GuiTextBoxMulti()
- {
-    return (Vector2){0.0f,0.0f};
- }
- void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)  // -- GuiDrawText()
-{
+// void DrawRectangle(int x, int y, int width, int height, Color color)
+// {
+// //printf("drawing rectangle....\n");
+// }
+//  void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
+//  {
 
-}
+//  }
+//  Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount) // -- GuiLoadStyle()
+//  {
+//     Font f;
+//     return f;
+//  }
+//  Font GetFontDefault(void)                           // -- GuiLoadStyleDefault()
+//  {
+//     Font f;
+//     f.baseSize = 10;
+//     f.glyphCount = 10;
+//     f.recs = NULL;
+//     f.chars = NULL;
+//     return f;
+//  }
+//  Texture2D LoadTextureFromImage(Image image)         // -- GuiLoadStyle()
+//  {
+//     Texture2D tex;
+//     return tex;
+//  }
+//  void SetShapesTexture(Texture2D tex, Rectangle rec) // -- GuiLoadStyle()
+//  {
+
+//  }
+//  char *LoadFileText(const char *fileName)            // -- GuiLoadStyle()
+// {
+//     return NULL;
+// }
+
+//  const char *GetDirectoryPath(const char *filePath)  // -- GuiLoadStyle()
+//  {
+// return NULL;
+//  }
+
+//  Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing)   // -- GetTextWidth(), GuiTextBoxMulti()
+//  {
+//     return (Vector2){0.0f,0.0f};
+//  }
+//  void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)  // -- GuiDrawText()
+// {
+
+// }
 
 
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
@@ -3153,17 +3168,17 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
 
-    GuiLoadStyleDefault();
+    // GuiLoadStyleDefault();
 
-    GuiEnable();
+    // GuiEnable();
 
-           DrawRectangle(0, 0, 200, 200, Fade(RED, 0.1));
+    //        DrawRectangle(0, 0, 200, 200, Fade(RED, 0.1));
            
-       //    char str567[7] = "BUTTON\0";
-        //   GuiButton((Rectangle){0,0,100,100}, &str567[0]);
+    //    //    char str567[7] = "BUTTON\0";
+    //     //   GuiButton((Rectangle){0,0,100,100}, &str567[0]);
 
 
-    GuiDisable();
+    // GuiDisable();
 
 }
 
@@ -3180,22 +3195,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
     cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
     if (chunkSize == 0)
         chunkSize = 1;
-    for (cl_ulong pi = 0; pi < chunkSize; pi++)
-    {
-        if (pi + globalid * chunkSize < MAX_PEEPS) {
-            Peep* p;
-            
-            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
-            CL_CHECK_NULL(p)
-                
-            PeepPreUpdate1(p);
-        }
-    }
-
-    barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
     
-
-
     for (cl_ulong pi = 0; pi < chunkSize; pi++)
     {
         if (pi + globalid * chunkSize < MAX_PEEPS)
@@ -3204,7 +3204,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
             CL_CHECK_NULL(p)
 
-            PeepPreUpdate2(p);
+           
 
 
             global volatile MapSector* mapSector;

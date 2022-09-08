@@ -9,6 +9,16 @@
 #include <fstream>
 #include <typeinfo>
 #include <variant>
+
+#include <chrono>
+#include <filesystem>
+#include <format>
+
+
+ 
+
+
+
 #include "glew.h"
 #include "GameGraphics.h"
 
@@ -32,6 +42,7 @@ GameGPUCompute::~GameGPUCompute()
     ret = clReleaseKernel(preupdate_kernel); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(preupdate_kernel_2); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseKernel(action_kernel); CL_HOST_ERROR_CHECK(ret)
+    ret = clReleaseKernel(game_updatepre1_kernel); CL_HOST_ERROR_CHECK(ret)
 
     ret = clReleaseProgram(gameProgram); CL_HOST_ERROR_CHECK(ret)
     ret = clReleaseMemObject(staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
@@ -50,21 +61,51 @@ void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant va
     compileDefinitions.push_back({ name, val });
 }
 
+void GameGPUCompute::AddCLSource(std::string path)
+{
+    auto lwt = std::filesystem::last_write_time(path);
+    std::cout << std::format("Last Source Modified Time For {} is {}\n", path, lwt);
+
+    clSourcePaths.push_back(path);
+    uint64_t size = std::filesystem::file_size(path);
+    
+    std::ifstream stream;
+    stream.open(path, std::ios::binary);
+    uint64_t chsum = 0;
+    std::string str;
+    str.resize(size, '\0');
+    stream.read((char*)str.c_str(), size);
+    clSources.push_back(str);
+    
+
+
+    std::vector<long long> clSourceCHKSUMS;
+    std::vector<std::string> clSourcePaths;
+    std::vector<std::string> clSources;
+
+}
+
 void GameGPUCompute::RunInitCompute1()
 {
     // Load the update_kernel source code into the array source_str
-    FILE* fp;
-    char* source_str;
-    size_t source_size;
 
-    int err = fopen_s(&fp, "openCL/clGame.c", "r");
-    if (!fp || err) {
-        fprintf(stderr, "Failed to load update_kernel.\n");
-        exit(1);
+
+
+
+    
+    AddCLSource("openCL/clGame.c");
+
+
+
+    std::vector<char*> sourcePtrs;
+    std::vector<uint64_t> sourceSizes;
+    
+    for(int i = 0; i < clSources.size(); i++)
+    {
+        sourcePtrs.push_back((char*)clSources[i].c_str());
+        sourceSizes.push_back(clSources[i].size());
     }
-    source_str = (char*)malloc(GAMECOMPUTE_MAX_SOURCE_SIZE);
-    source_size = fread(source_str, 1, GAMECOMPUTE_MAX_SOURCE_SIZE, fp);
-    fclose(fp);
+
 
 
 
@@ -104,7 +145,7 @@ void GameGPUCompute::RunInitCompute1()
     printf("Building CL Programs...\n");
     // Create a gameProgram from the update_kernel source
     gameProgram = clCreateProgramWithSource(context, 1,
-        (const char**)&source_str, (const size_t*)&source_size, &ret);
+        (const char**)&sourcePtrs[0], (const size_t*)&sourceSizes[0], &ret);
     CL_HOST_ERROR_CHECK(ret)
 
         //make preprocessor defs
@@ -255,6 +296,7 @@ void GameGPUCompute::RunInitCompute2()
     // Create the OpenCL update_kernel
         preupdate_kernel = clCreateKernel(gameProgram, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
         preupdate_kernel_2 = clCreateKernel(gameProgram, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
+        game_updatepre1_kernel = clCreateKernel(gameProgram, "game_updatepre1", &ret); CL_HOST_ERROR_CHECK(ret)
         update_kernel = clCreateKernel(gameProgram, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
         action_kernel = clCreateKernel(gameProgram, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernel = clCreateKernel(gameProgram, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
@@ -271,6 +313,7 @@ void GameGPUCompute::RunInitCompute2()
 
         kernels.push_back(preupdate_kernel);
         kernels.push_back(preupdate_kernel_2);
+        kernels.push_back(game_updatepre1_kernel);
         kernels.push_back(update_kernel);
         kernels.push_back(action_kernel);
         kernels.push_back(init_kernel);
@@ -377,9 +420,12 @@ void GameGPUCompute::Stage1()
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
+    ret = clEnqueueNDRangeKernel(command_queue, game_updatepre1_kernel, 1, NULL,
+        WorkItems, NULL, 1, &preUpdateEvent2, &updatepre1Event);
+    CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
-        WorkItems, NULL, 1, &preUpdateEvent2, &updateEvent);
+        WorkItems, NULL, 1, &updatepre1Event, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
     
     ret = clFinish(command_queue);

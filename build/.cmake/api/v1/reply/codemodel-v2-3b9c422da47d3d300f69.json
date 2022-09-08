@@ -131,7 +131,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Debug-fb57d55e8b97137120ed.json",
+					"jsonFile" : "target-ALL_BUILD-Debug-df0d8416e1ed48eefea4.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -152,7 +152,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-Debug-91e34ce26ef9cb49bbfd.json",
+					"jsonFile" : "target-MinerTycoon-Debug-6e3e5761262ed925cbd2.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -316,7 +316,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-Release-fb57d55e8b97137120ed.json",
+					"jsonFile" : "target-ALL_BUILD-Release-df0d8416e1ed48eefea4.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -337,7 +337,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-Release-bf9e8255952e59a02318.json",
+					"jsonFile" : "target-MinerTycoon-Release-230f0fdaf16c4cbcfa30.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -501,7 +501,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-MinSizeRel-fb57d55e8b97137120ed.json",
+					"jsonFile" : "target-ALL_BUILD-MinSizeRel-df0d8416e1ed48eefea4.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -522,7 +522,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-MinSizeRel-9d147fa8f893d11ee231.json",
+					"jsonFile" : "target-MinerTycoon-MinSizeRel-67430ab1ef0cc2f6f455.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},
@@ -686,7 +686,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-fb57d55e8b97137120ed.json",
+					"jsonFile" : "target-ALL_BUILD-RelWithDebInfo-df0d8416e1ed48eefea4.json",
 					"name" : "ALL_BUILD",
 					"projectIndex" : 0
 				},
@@ -707,7 +707,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "MinerTycoon::@0c53ff3c4131f9152fd3",
-					"jsonFile" : "target-MinerTycoon-RelWithDebInfo-ac26d342e82610fa91e6.json",
+					"jsonFile" : "target-MinerTycoon-RelWithDebInfo-8679f11d5ef7b0413165.json",
 					"name" : "MinerTycoon",
 					"projectIndex" : 1
 				},

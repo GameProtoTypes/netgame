@@ -80,6 +80,16 @@ struct BasePhysics
 	float CS_angle_rad;
 
 }typedef BasePhysics;
+
+
+//constraint for a value to be clamped by the plane defined by p pos and d direction
+struct LinearConstraint 
+{
+	ge_int3 p_Q16;
+	ge_int3 d_Q16;
+} typedef LinearConstraint;
+
+
 struct PhysicsCircleShape
 {
 	int radius_Q16;
@@ -102,14 +112,19 @@ struct DrivePhysics
 	offsetPtr nextPathNodeOPtr;
 
 	int drivingToTarget;
-}typedef DrivePhysics;
+} typedef DrivePhysics;
+
+
 
 struct PeepPhysics
 {
 	struct BasePhysics base;
 	struct PhysicsCircleShape shape;
 	struct DrivePhysics drive;
-}typedef PeepPhysics;
+	struct LinearConstraint posConstraints[1];
+	struct LinearConstraint velConstraints[1];
+} typedef PeepPhysics;
+
 
 struct PeepCommunication {
 	int orders_channel;
