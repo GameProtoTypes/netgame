@@ -2091,7 +2091,8 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 
     for (int z = gameStateActions->mapZView; z >= 1; z--)
     {       
-        MapTile center = gameState->map.levels[z].data[x][y];
+        cl_uint* data = &gameState->map.levels[z].data[x][y];
+        MapTile center =MapDataGetTile(*data);
 
         if (center != MapTile_NONE)
             return;
@@ -2224,9 +2225,9 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 
     cl_uint finalAttr=0;
 
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT);//A
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) << 1;//B
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)<< 2;//C
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT)       ;//A
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT)  << 1;//B
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)  << 2;//C
     finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) << 3;//D
 
 
@@ -2238,17 +2239,91 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 
 
     mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
-    mapTile1OtherAttrVBO[ y * MAPDIM + x ] = RandomRange(x,0,4);
+    mapTile1OtherAttrVBO[ y * MAPDIM + x ] |= BITBANK_GET_SUBNUMBER_UINT(*data, MapTileFlags_RotBit1, 2);
     
-    if (tileUp != MapTile_NONE)
+    if (tileUp != MapTile_NONE)//view obstructed by foottile above.
     {
-        mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;//view obstructed by foottile above.
+
+        //if next to visible show it as "wall view"
+        mapTile1AttrVBO[y * MAPDIM + x ] = 0;
+        cl_uchar isWall = 0;
+        int dirOffsets[8] = {0,1,2,3,22,23,24,25}; 
+        int orthflags[4] = {0,0,0,0};
+        for(int i = 0; i < 4; i++)
+        {
+            ge_int3 offset = staticData->directionalOffsets[dirOffsets[i]];
+            ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, gameStateActions->mapZView + 1 };
+
+            if(MapTileCoordValid(mapCoord))
+            {
+            
+                cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+                MapTile tileoffup = MapDataGetTile(*dataoffup);
+                
+                if(tileoffup == MapTile_NONE)
+                {
+                    isWall = 1;
+                    mapTile1VBO[y * MAPDIM + x ] = tile;
+
+
+                    if( i <=3 )
+                        orthflags[i] = 1;
+
+                    //fade out effect
+                    
+
+
+                    if((orthflags[0] + orthflags[1] + orthflags[2] + orthflags[3]) == 0)
+                    {
+
+                        //TODO better corner effect
+                        // mapTile1AttrVBO[ y * MAPDIM + x ] |= 1<<4;
+
+                        // if(dirOffsets[i] == 22) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 0;
+                        // if(dirOffsets[i] == 23) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 1;
+                        // if(dirOffsets[i] == 24) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 2;
+                        // if(dirOffsets[i] == 25) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 3;
+                    }
+
+
+                    mapTile1AttrVBO[y * MAPDIM + x ] |= (clamp(4, 0, 15) << 6);//base shade
+                    mapTile1AttrVBO[y * MAPDIM + x ] |= (1 << 10);//corners fade to nothing
+
+
+                    
+
+                }
+            }
+        }
+
+
+
+
+        if(isWall == 0)
+            mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;
     }
     else
     {
         mapTile1VBO[y * MAPDIM + x] = tile;
     }
 }
+
+
+MapBuildTileView3Area(ALL_CORE_PARAMS, int x, int y)
+{
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y+1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y+1);
+
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y-1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y-1);
+
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y+1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y-1);
+}
+
 
 void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
 {
@@ -2304,8 +2379,8 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
 
     for (int z = zViewRestrictLevel; z >= 0; z--)
     {
-        
-        MapTile tile = gameState->map.levels[z].data[(*mapcoord_whole).x][(*mapcoord_whole).y];
+        cl_uint* data = &gameState->map.levels[z].data[(*mapcoord_whole).x][(*mapcoord_whole).y];
+        MapTile tile = MapDataGetTile(*data);
 
         if (tile != MapTile_NONE)
         {
@@ -2478,7 +2553,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             if (mapCoord.z > 0) 
             {
                 gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
-                MapBuildTileView(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                
+                MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
                 MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
@@ -2671,8 +2747,11 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
                 //}
 
 
+                cl_uint* data = &gameState->map.levels[z].data[x][y];
+                *data = tileType;
 
-                gameState->map.levels[z].data[x][y] = tileType;
+
+                BITBANK_SET_SUBNUMBER_UINT(data, MapTileFlags_RotBit1, 2, RandomRange(x*y,0,4));
 
 
                 i++;

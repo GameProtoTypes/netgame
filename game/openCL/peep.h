@@ -198,6 +198,8 @@ enum MapTileFlags {
 	MapTileFlags_LowCornerBTMRIGHT,
 	MapTileFlags_LowCornerBTMLEFT,
 
+	MapTileFlags_RotBit1,
+	MapTileFlags_RotBit2,
 
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;
@@ -239,9 +241,9 @@ enum MapTile {
 
 
 struct MapLevel {	
-	//[xxxx|xxxx|xxxx|xxxx|xxxx|xxCC|AAAA|AAAA]
-	//AA - MapTile
-	//C - Rotation
+	//[XXXX|FFFF|FFFF|FFFF|FFFF|FFFF|AAAA|AAAA]
+	//A - MapTile
+	//F - FLAGS
 	cl_uint data[MAPDIM][MAPDIM];
 } typedef MapLevel;
 

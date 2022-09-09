@@ -305,10 +305,7 @@ void GameGPUCompute::RunInitCompute2()
         init_kernel_2 = clCreateKernel(gameProgram, "game_init_single2", &ret); CL_HOST_ERROR_CHECK(ret)
 
 
-
-
         post_update_single_kernel = clCreateKernel(gameProgram, "game_post_update_single", &ret); CL_HOST_ERROR_CHECK(ret)
-
 
 
         kernels.push_back(preupdate_kernel);

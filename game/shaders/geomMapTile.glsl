@@ -126,15 +126,17 @@ void main() {
     uint cornerDLow =  (gs_in[0].shadeAttr & (1 << 3 )) >> 3;
     uint cornerXLow =  (gs_in[0].shadeAttr & (3 << 4 )) >> 4;
     float shadingBase = float((gs_in[0].shadeAttr & (15u << 6)) >> 6)/15.0;
-
+    uint lowConerBlackBit =  (gs_in[0].shadeAttr & (1 << 10));
 
     float shadingLowAdd = 1/15.0;
+    if(lowConerBlackBit != 0)
+        shadingLowAdd = shadingBase;
 
 
-    topShadingA = shadingBase - cornerALow*shadingLowAdd; 
-    topShadingB = shadingBase - cornerBLow*shadingLowAdd; 
-    topShadingC = shadingBase - cornerCLow*shadingLowAdd; 
-    topShadingD = shadingBase - cornerDLow*shadingLowAdd; 
+    topShadingA = shadingBase - float(cornerALow)*shadingLowAdd; 
+    topShadingB = shadingBase - float(cornerBLow)*shadingLowAdd; 
+    topShadingC = shadingBase - float(cornerCLow)*shadingLowAdd; 
+    topShadingD = shadingBase - float(cornerDLow)*shadingLowAdd; 
 
 
     if(cornerXLow == 0)
