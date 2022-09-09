@@ -62,7 +62,7 @@ struct PeepState_Basic
 	cl_int deathState;
 
 
-	cl_int buriedState;
+	cl_int buriedGlitchState;
 
 
 }typedef PeepState_Basic;

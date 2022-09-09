@@ -15,7 +15,7 @@
 // #include "clRayGui.h"
 
 #define PEEP_ALL_ALWAYS_VISIBLE
-#define PEEP_DISABLE_TILECORRECTIONS
+//#define PEEP_DISABLE_TILECORRECTIONS
 
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
@@ -1607,7 +1607,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
             insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
 
-            peep->stateBasic.buriedState = insideSolidRegion;
+            peep->stateBasic.buriedGlitchState = insideSolidRegion;
 
             nearestPoint = GE_INT3_MUL_Q16(nearestPoint, (ge_int3) {
                 TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
@@ -2041,22 +2041,21 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
     
 
-    if (MapTileData_TileSolid(tileData) == 1)//if curTile is solid
+    if (peep->stateBasic.buriedGlitchState != 0)
     {
         //revert to center of last good map position
         #ifndef PEEP_DISABLE_TILECORRECTIONS
 
             ge_int3 lastGoodPos;
-            MapToWorld(GE_INT3_WHOLE_ONLY_Q16(peep->lastGoodPosMap_Q16), &lastGoodPos);
-            lastGoodPos.x += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
-            lastGoodPos.y += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
-            lastGoodPos.z += MUL_PAD_Q16(TO_Q16(MAP_TILE_SIZE), TO_Q16(1) >> 1);
-
+            MapToWorld(peep->lastGoodPosMap_Q16, &lastGoodPos);
 
             peep->physics.base.pos_post_Q16.x += lastGoodPos.x - peep->physics.base.pos_Q16.x;
             peep->physics.base.pos_post_Q16.y += lastGoodPos.y - peep->physics.base.pos_Q16.y;
             peep->physics.base.pos_post_Q16.z += lastGoodPos.z - peep->physics.base.pos_Q16.z;
 
+            peep->physics.base.vel_add_Q16.x = -peep->physics.base.v_Q16.x;
+            peep->physics.base.vel_add_Q16.y = -peep->physics.base.v_Q16.y;
+            peep->physics.base.vel_add_Q16.z = -peep->physics.base.v_Q16.z;
 
         #endif
     }
@@ -2971,7 +2970,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_visible);
         gameState->peeps[p].stateBasic.health = 10;
         gameState->peeps[p].stateBasic.deathState = 0;
-        gameState->peeps[p].stateBasic.buriedState = 0;
+        gameState->peeps[p].stateBasic.buriedGlitchState = 0;
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
         gameState->peeps[p].physics.base.vel_add_Q16 = (ge_int3){ 0,0,0 };
@@ -3092,7 +3091,7 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawColor.z = 0.0f;
     }
 
-    if(peep->stateBasic.buriedState > 0)
+    if(peep->stateBasic.buriedGlitchState > 0)
     { 
        
         brightFactor = 1.0f;
@@ -3162,7 +3161,6 @@ __kernel void game_update(ALL_CORE_PARAMS)
         Particle* p = &gameState->particles[globalid];
         ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
         ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
-
     }
 
     //update map view

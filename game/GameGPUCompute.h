@@ -78,6 +78,7 @@ public:
 
 	cl_command_queue command_queue;
 	cl_program gameProgram;
+	cl_program testProgram;
 
 	cl_kernel sizetests_kernel;
 
@@ -172,6 +173,6 @@ public:
 
 	std::vector<uint64_t> clSourceCHKSUMS;
     std::vector<std::string> clSourcePaths;
-    std::vector<std::string> clSources;
+    std::vector<std::vector<char>> clSources;
 };
 
