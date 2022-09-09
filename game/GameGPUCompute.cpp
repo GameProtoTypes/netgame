@@ -63,26 +63,42 @@ void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant va
 
 void GameGPUCompute::AddCLSource(std::string path)
 {
-    auto lwt = std::filesystem::last_write_time(path);
-    std::cout << std::format("Last Source Modified Time For {} is {}\n", path, lwt);
 
-    clSourcePaths.push_back(path);
-    uint64_t size = std::filesystem::file_size(path);
-    
-    std::ifstream stream;
-    stream.open(path, std::ios::binary);
-    uint64_t chsum = 0;
-    std::string str;
-    str.resize(size, '\0');
-    stream.read((char*)str.c_str(), size);
-    clSources.push_back(str);
     
 
 
-    std::vector<long long> clSourceCHKSUMS;
-    std::vector<std::string> clSourcePaths;
-    std::vector<std::string> clSources;
+        clSourcePaths.push_back(path);
+        uint64_t size = std::filesystem::file_size(path);
+        
+        std::ifstream stream;
+        stream.open(path, std::ios::binary);
+        uint64_t chsum = 0;
+        std::vector<char> data;
+        int i = 0;
+        while(!stream.eof())
+        {
+            char byte;
+            stream.read(&byte, 1);
+            
+            data.push_back(byte);
+        }
+        printf("size: %d\n", data.size());
 
+        for(uint64_t i = 0; i < data.size(); i++)
+            chsum += data[i];
+        
+        clSources.push_back(data);
+        
+
+
+        std::ofstream dateModOUtFile(path + ".ldm", std::ios::trunc);
+        if(dateModOUtFile){
+            dateModOUtFile << chsum;
+        }
+        else
+            std::cout << "unable to write to dateModOUtFile" << std::endl;
+
+    
 }
 
 void GameGPUCompute::RunInitCompute1()
@@ -94,7 +110,7 @@ void GameGPUCompute::RunInitCompute1()
 
     
     AddCLSource("openCL/clGame.c");
-
+    //AddCLSource("openCL/test.spv");
 
 
     std::vector<char*> sourcePtrs;
@@ -102,7 +118,7 @@ void GameGPUCompute::RunInitCompute1()
     
     for(int i = 0; i < clSources.size(); i++)
     {
-        sourcePtrs.push_back((char*)clSources[i].c_str());
+        sourcePtrs.push_back((char*)&clSources[i][0]);
         sourceSizes.push_back(clSources[i].size());
     }
 
@@ -124,8 +140,16 @@ void GameGPUCompute::RunInitCompute1()
     ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
-        ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
+    ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
+
+    char platformVerInfo[256];
+    size_t sizeRet;
+    clGetPlatformInfo(platforms[0], CL_PLATFORM_VERSION,256, &platformVerInfo, &sizeRet);
+    std::cout << "CL_PLATFORM_VERSION: " << platformVerInfo << std::endl;
+
+
+
 
         // Create an OpenCL context
         std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
@@ -138,11 +162,40 @@ void GameGPUCompute::RunInitCompute1()
     };
     context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);
     if (ret != 0)
-        printf("Unable To Initialize Good-Ol OpenCL.  Check your Driviers.");
+        printf("Unable To Initialize OpenCL.  Check your Driviers.");
     
     CL_HOST_ERROR_CHECK(ret)
 
-    printf("Building CL Programs...\n");
+    // printf("Building PTX Test Program...\n");
+    // // testProgram = clCreateProgramWithIL(context, (void*)&sourcePtrs[1], sourceSizes[1], &ret);
+    // // CL_HOST_ERROR_CHECK(ret)
+    
+    // cl_int r[1];
+    // testProgram = clCreateProgramWithBinary(context, 1, &device_id, &sourceSizes[1], (const unsigned char**)&sourcePtrs[1], &r[0], &ret );
+    // CL_HOST_ERROR_CHECK(ret)
+
+    // ret = clBuildProgram(testProgram, 1, &device_id,  NULL, NULL, NULL);
+    // //CL_HOST_ERROR_CHECK(ret)
+    //  if (ret != CL_SUCCESS) {
+    //     // Determine the size of the log
+    //     size_t log_size;
+    //     clGetProgramBuildInfo(testProgram, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+
+    //     // Allocate memory for the log
+    //     char* log = (char*)malloc(log_size);
+
+    //     // Get the log
+    //     clGetProgramBuildInfo(testProgram, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+
+    //     // Print the log
+    //     printf("%s\n", log);
+
+    //     delete log;
+    // }
+
+
+
+    printf("Building Game Program\n");
     // Create a gameProgram from the update_kernel source
     gameProgram = clCreateProgramWithSource(context, 1,
         (const char**)&sourcePtrs[0], (const size_t*)&sourceSizes[0], &ret);
