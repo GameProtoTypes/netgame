@@ -95,6 +95,7 @@ public:
 
 	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
 	std::shared_ptr<GEShaderProgram> pTileShadProgram;
+	std::shared_ptr<GEShaderProgram> pGuiShadProgram;
 	
 	uint32_t peepVAO, peepQuadVBO, peepQuadUVVBO, peepInstanceVBO;
 	int peepInstanceSIZE = 0;
@@ -102,6 +103,7 @@ public:
 	uint32_t particleVAO, particleQuadVBO, particleQuadUVVBO, particleInstanceVBO;
 	int particleInstanceSIZE = 0;
 
+	uint32_t guiRectVAO, guiRectInstanceVBO;
 
 
 	uint32_t mapTile1VAO, mapTile1VBO, mapTile1AttrVBO, mapTile1OtherAttrVBO;	

@@ -30,8 +30,8 @@ __global cl_uint* mapTile1AttrVBO, \
 __global cl_uint* mapTile1OtherAttrVBO, \
 __global cl_uchar* mapTile2VBO, \
 __global cl_uint* mapTile2AttrVBO, \
-__global cl_uint* mapTile2OtherAttrVBO
-
+__global cl_uint* mapTile2OtherAttrVBO, \
+__global float* guiVBO
 
 #define ALL_CORE_PARAMS_PASS  staticData, \
 gameState, \
@@ -43,7 +43,8 @@ mapTile1AttrVBO, \
 mapTile1OtherAttrVBO, \
 mapTile2VBO, \
 mapTile2AttrVBO, \
-mapTile2OtherAttrVBO
+mapTile2OtherAttrVBO, \
+guiVBO
 
 
 
@@ -3182,17 +3183,58 @@ __kernel void game_update(ALL_CORE_PARAMS)
             }
         }
     }
+
+
+
+
+
+
+
+
+}
+
+
+void DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color)
+{
+
+
+
+
+    ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
+    uint idx = 0;
+
+
+
+
+    guiVBO[idx*5 + 0] = x+width;
+    guiVBO[idx*5 + 1] = y+height;
+
+    guiVBO[idx*5 + 2] = 0.5f;
+    guiVBO[idx*5 + 3] = 0.5f;
+    guiVBO[idx*5 + 4] = 0.5f;
+    idx=1;
+
+    guiVBO[idx*5 + 0] = x;
+    guiVBO[idx*5 + 1] = y;
+
+    guiVBO[idx*5 + 2] = 0.5f;
+    guiVBO[idx*5 + 3] = 0.5f;
+    guiVBO[idx*5 + 4] = 0.5f;
+    idx=2;
+
+    guiVBO[idx*5 + 0] = x;
+    guiVBO[idx*5 + 1] = y+height;
+
+    guiVBO[idx*5 + 2] = 0.5f;
+    guiVBO[idx*5 + 3] = 0.5f;
+    guiVBO[idx*5 + 4] = 0.5f;
+
+
 }
 
 
 
 
-
-
-// void DrawRectangle(int x, int y, int width, int height, Color color)
-// {
-// //printf("drawing rectangle....\n");
-// }
 //  void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
 //  {
 
@@ -3244,6 +3286,10 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
+
+
+    DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,1.0,0.0});
+
 
     // GuiLoadStyleDefault();
 

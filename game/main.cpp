@@ -197,6 +197,7 @@ int32_t main(int32_t argc, char* args[])
     gameCompute.AddCompileDefinition("GAME_UPDATE_WORKITEMS", gameCompute.GameUpdateWorkItems);
     gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
     gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);
+    gameCompute.AddCompileDefinition("MAX_GUI_RECTS", gameCompute.maxGuiRects);
 
     gameCompute.RunInitCompute1();
     
@@ -736,6 +737,22 @@ int32_t main(int32_t argc, char* args[])
             glDeleteVertexArrays(1, &mouseVAO);
             glDeleteBuffers(1, &mouseVBO);
         }
+
+
+        //draw gui
+
+        gameGraphics.pGuiShadProgram->Use();
+        glm::mat4 identity(1.0);
+        glm::vec3 c(1.0f, 1.0f, 1.0f);
+        gameGraphics.pGuiShadProgram->SetUniform_Mat4("WorldToScreenTransform", identity);
+        gameGraphics.pGuiShadProgram->SetUniform_Vec3("OverallColor", c);
+        gameGraphics.pGuiShadProgram->SetUniform_Mat4("LocalTransform", identity);
+
+        glBindVertexArray(gameGraphics.guiRectVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(0);
+
+
 
         if(gameStateActions->pauseState==0)
             gameStateActions->tickIdx++;

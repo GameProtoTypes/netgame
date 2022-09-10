@@ -132,7 +132,8 @@ void GameGraphics::Init()
     std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertMapTile.glsl");
     std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragMapTile.glsl");
     std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "shaders/geomMapTile.glsl");
-
+    std::shared_ptr<GEShader> pGUIVertShad        = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/guiVertShader.glsl");
+    std::shared_ptr<GEShader> pGUIFragShad        = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/guiFragShader.glsl");
 
 
     //create programs to use those shaders.
@@ -161,6 +162,13 @@ void GameGraphics::Init()
     pMapTileShadProgram->AttachShader(pFragMapTileShad);
     shaderProgramList.push_back(pMapTileShadProgram);
 
+
+    pGuiShadProgram = std::make_shared<GEShaderProgram>();
+    pGuiShadProgram->AttachShader(pGUIVertShad);
+    pGuiShadProgram->AttachShader(pGUIFragShad);
+    shaderProgramList.push_back(pGuiShadProgram);
+
+
     GL_HOST_ERROR_CHECK()
 
 
@@ -180,7 +188,7 @@ void GameGraphics::Init()
         1.0f, -1.0f,
 
 
-    -1.0f,  1.0f,
+        -1.0f,  1.0f,
         1.0f, -1.0f,
         1.0f,  1.0f
     };
@@ -286,8 +294,8 @@ void GameGraphics::Init()
 
 
 
-        //peeps
-        glGenVertexArrays(1, &peepVAO);
+    //peeps
+    glGenVertexArrays(1, &peepVAO);
     glBindVertexArray(peepVAO);
 
     glGenBuffers(1, &peepQuadVBO);
@@ -383,10 +391,40 @@ void GameGraphics::Init()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    GL_HOST_ERROR_CHECK()
 
 
+
+
+
+
+
+
+
+
+    //GUI rectangles
+    glGenVertexArrays(1, &guiRectVAO);
+    glBindVertexArray(guiRectVAO);
+ 
+
+    
+
+    glGenBuffers(1, &guiRectInstanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, guiRectInstanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2)+sizeof(glm::vec3))*gameCompute->maxGuiRects, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);//position
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);//color
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     GL_HOST_ERROR_CHECK()
+
+
+
 
 
 

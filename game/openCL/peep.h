@@ -303,6 +303,11 @@ struct PeepRenderSupport {
 }typedef PeepRenderSupport;
 
 
+struct ClientGuiState
+{
+	int guiRenderRectIdx;
+} typedef ClientGuiState;
+
 
 struct SynchronizedClientState {
 
@@ -310,7 +315,13 @@ struct SynchronizedClientState {
 	cl_uint selectedPeepsLastIdx;
 
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
+
+	ClientGuiState gui;
+
 } typedef SynchronizedClientState;
+
+
+
 
 
 struct GameState {
@@ -328,7 +339,6 @@ struct GameState {
 	
 	AStarSearch mapSearchers[1];
 	AStarPathSteps paths;
-
 
 
 

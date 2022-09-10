@@ -151,8 +151,8 @@ void GameGPUCompute::RunInitCompute1()
 
 
 
-        // Create an OpenCL context
-        std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
+    // Create an OpenCL context
+    std::cout << SDL_GL_MakeCurrent(graphics->gWindow, graphics->sdlGLContext) << std::endl;
     cl_context_properties props[] =
     {
         CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),
@@ -312,6 +312,9 @@ void GameGPUCompute::RunInitCompute2()
 
         graphics_mapTile2OtherAttrVBO_mem_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->mapTile2OtherAttrVBO, &ret);
     CL_HOST_ERROR_CHECK(ret)
+        graphics_guiVBO_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->guiRectInstanceVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
 
     graphicsObjects.push_back(graphics_peeps_mem_obj);
     graphicsObjects.push_back(graphics_particles_mem_obj);
@@ -321,7 +324,7 @@ void GameGPUCompute::RunInitCompute2()
     graphicsObjects.push_back(graphics_mapTile2VBO_mem_obj);
     graphicsObjects.push_back(graphics_mapTile2AttrVBO_mem_obj);
     graphicsObjects.push_back(graphics_mapTile2OtherAttrVBO_mem_obj);
-
+    graphicsObjects.push_back(graphics_guiVBO_obj);
 
 
     cl_ulong localMemSize;
@@ -387,6 +390,7 @@ void GameGPUCompute::RunInitCompute2()
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2OtherAttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_guiVBO_obj); CL_HOST_ERROR_CHECK(ret)
         }
         
 

@@ -139,6 +139,8 @@ public:
 	cl_mem graphics_mapTile2AttrVBO_mem_obj;
 	cl_mem graphics_mapTile2OtherAttrVBO_mem_obj;
 
+	cl_mem graphics_guiVBO_obj;
+
 	std::vector<cl_mem> graphicsObjects;
 
 
@@ -149,6 +151,7 @@ public:
 	int mapDim = 512;
 	int mapDepth = 32;
 	int mapTileSize = 5;
+    int maxGuiRects = 1024;
 
 	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;
