@@ -2138,18 +2138,18 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
             for (int y = 0; y < checksY; y++)
             {
                 Rectangle check = { bounds.x + x*RAYGUI_COLORBARALPHA_CHECKED_SIZE, bounds.y + y*RAYGUI_COLORBARALPHA_CHECKED_SIZE, RAYGUI_COLORBARALPHA_CHECKED_SIZE, RAYGUI_COLORBARALPHA_CHECKED_SIZE };
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, ((x + y)%2)? Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), 0.4f), guiAlpha) : Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.4f), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, ((x + y)%2)? Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), 0.4f), guiAlpha) : Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.4f), guiAlpha));
             }
         }
 
         DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 }, guiAlpha));
     }
-    else DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
+    else DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
 
     // Draw alpha bar: selector
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha));
     //--------------------------------------------------------------------
 
     return alpha;
@@ -2164,7 +2164,7 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
 float GuiColorBarHue(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float hue)
 {
     GuiState state = guiState;
-    Rectangle selector = { (float)bounds.x - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)bounds.y + hue/360.0f*bounds.height - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.width + GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2, (float)GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT) };
+    Rectangle selector = { (float)bounds.x - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)bounds.y + hue/360.0f*bounds.height - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT) };
 
     // Update control
     //--------------------------------------------------------------------
@@ -2212,12 +2212,12 @@ float GuiColorBarHue(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float 
         DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 4*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha));
         DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 5*(bounds.height/6)), (int)bounds.width, (int)(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 }, guiAlpha));
     }
-    else DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), guiAlpha), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
+    else DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
 
     // Draw hue bar: selector
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha));
     //--------------------------------------------------------------------
 
     return hue;
@@ -2233,7 +2233,7 @@ Color GuiColorPicker(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Color 
 {
     color = GuiColorPanel(ALL_CORE_PARAMS_PASS, bounds, NULL, color);
 
-    Rectangle boundsHue = { (float)bounds.x + bounds.width + GuiGetStyle(COLORPICKER, HUEBAR_PADDING), (float)bounds.y, (float)GuiGetStyle(COLORPICKER, HUEBAR_WIDTH), (float)bounds.height };
+    Rectangle boundsHue = { (float)bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_PADDING), (float)bounds.y, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_WIDTH), (float)bounds.height };
     //Rectangle boundsAlpha = { bounds.x, bounds.y + bounds.height + GuiGetStyle(COLORPICKER, BARS_PADDING), bounds.width, GuiGetStyle(COLORPICKER, BARS_THICK) };
 
     Vector3 hsv = ConvertRGBtoHSV(RAYGUI_CLITERAL(Vector3){ color.r/255.0f, color.g/255.0f, color.b/255.0f });
@@ -2266,7 +2266,7 @@ int GuiMessageBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const ch
     buttonBounds.width = (bounds.width - RAYGUI_MESSAGEBOX_BUTTON_PADDING*(buttonCount + 1))/buttonCount;
     buttonBounds.height = RAYGUI_MESSAGEBOX_BUTTON_HEIGHT;
 
-    Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), 1);
+    Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
 
     Rectangle textBounds = { 0 };
     textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
@@ -2278,13 +2278,13 @@ int GuiMessageBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const ch
     //--------------------------------------------------------------------
     if (GuiWindowBox(ALL_CORE_PARAMS_PASS, bounds, title)) clicked = 0;
 
-    int prevTextAlignment = GuiGetStyle(LABEL, TEXT_ALIGNMENT);
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    int prevTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
     GuiLabel(ALL_CORE_PARAMS_PASS, textBounds, message);
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, prevTextAlignment);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT, prevTextAlignment);
 
-    prevTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    prevTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
     for (int i = 0; i < buttonCount; i++)
     {
@@ -2292,7 +2292,7 @@ int GuiMessageBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const ch
         buttonBounds.x += (buttonBounds.width + RAYGUI_MESSAGEBOX_BUTTON_PADDING);
     }
 
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, prevTextAlignment);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT, prevTextAlignment);
     //--------------------------------------------------------------------
 
     return clicked;
@@ -2325,12 +2325,12 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
     buttonBounds.width = (bounds.width - RAYGUI_TEXTINPUTBOX_BUTTON_PADDING*(buttonCount + 1))/buttonCount;
     buttonBounds.height = RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT;
 
-    int messageInputHeight = (int)bounds.height - RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - GuiGetStyle(STATUSBAR, BORDER_WIDTH) - RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT - 2*RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
+    int messageInputHeight = (int)bounds.height - RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT - GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, BORDER_WIDTH) - RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT - 2*RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
 
     Rectangle textBounds = { 0 };
     if (message != NULL)
     {
-        Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), 1);
+        Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
 
         textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
         textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + messageInputHeight/4 - textSize.y/2;
@@ -2353,10 +2353,10 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
     // Draw message if available
     if (message != NULL)
     {
-        int prevTextAlignment = GuiGetStyle(LABEL, TEXT_ALIGNMENT);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+        int prevTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT);
+        GuiSetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
         GuiLabel(ALL_CORE_PARAMS_PASS, textBounds, message);
-        GuiSetStyle(LABEL, TEXT_ALIGNMENT, prevTextAlignment);
+        GuiSetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT, prevTextAlignment);
     }
 
     if (secretViewActive != NULL)
@@ -2374,7 +2374,7 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
         if (GuiTextBox(ALL_CORE_PARAMS_PASS, textBoxBounds, text, textMaxSize, textEditMode)) textEditMode = !textEditMode;
     }
 
-    int prevBtnTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
+    int prevBtnTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
     GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
     for (int i = 0; i < buttonCount; i++)
@@ -2383,7 +2383,7 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
         buttonBounds.x += (buttonBounds.width + RAYGUI_MESSAGEBOX_BUTTON_PADDING);
     }
 
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, prevBtnTextAlignment);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, prevBtnTextAlignment);
     //--------------------------------------------------------------------
 
     return btnIndex;
