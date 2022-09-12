@@ -2876,7 +2876,7 @@ void InitRayGUI(ALL_CORE_PARAMS)
 
     gui->guiStyleLoaded = false;
     gui->guiState = STATE_NORMAL;
-    gui->guiFont = 0;
+    //gui->guiFont = 0;
     gui->guiLocked = false;
     gui->guiAlpha = 1.0f;
     gui->guiIconScale = 1;

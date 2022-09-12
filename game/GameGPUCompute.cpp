@@ -207,6 +207,7 @@ void GameGPUCompute::RunInitCompute1()
 
 
     // Build the gameProgram
+    printf("Building....\n");
     ret = clBuildProgram(gameProgram, 1, &device_id,  "-I openCL", NULL, NULL);
 
     if (ret != CL_SUCCESS) {

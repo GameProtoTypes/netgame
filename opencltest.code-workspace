@@ -100,7 +100,10 @@
 			"xtr1common": "cpp",
 			"__nullptr": "cpp",
 			"__tree": "c",
-			"*.cl": "c"
+			"*.cl": "c",
+			"__bit_reference": "c",
+			"__functional_base": "c",
+			"__memory": "c"
 		},
 		"gitdoc.enabled": false
 	}

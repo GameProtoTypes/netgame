@@ -51,6 +51,8 @@
 //
 // guiIcons size is by default: 256*(16*16/32) = 2048*4 = 8192 bytes = 8 KB
 //----------------------------------------------------------------------------------
+
+
  unsigned int guiIcons[RAYGUI_ICON_MAX_ICONS*RAYGUI_ICON_DATA_ELEMENTS] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,     // ICON_NONE
     0x3ff80000, 0x2f082008, 0x2042207e, 0x40027fc2, 0x40024002, 0x40024002, 0x40024002, 0x00007ffe,     // ICON_FOLDER_FILE_OPEN
@@ -399,14 +401,14 @@ typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 //----------------------------------------------------------------------------------
 // Module specific Functions Declaration
 //----------------------------------------------------------------------------------
- int GetTextWidth(const char *text);                      // Gui get text width using default font
- Rectangle GetTextBounds(int control, Rectangle bounds);  // Get text bounds considering control bounds
- const char *GetTextIcon(const char *text, int *iconId);  // Get text icon if provided and move text cursor
+ int GetTextWidth(ALL_CORE_PARAMS, const char *text);                      // Gui get text width using default font
+ Rectangle GetTextBounds(ALL_CORE_PARAMS, int control, Rectangle bounds);  // Get text bounds considering control bounds
+ const char *GetTextIcon(ALL_CORE_PARAMS, const char *text, int *iconId);  // Get text icon if provided and move text cursor
 
  void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignment, Color tint);         // Gui draw text using default font
  void GuiDrawRectangle(ALL_CORE_PARAMS,Rectangle rec, int borderWidth, Color borderColor, Color color);   // Gui draw rectangle using default raygui style
 
- const char **GuiTextSplit(const char *text, int *count, int *textRow);       // Split controls text into multiple strings
+ const char **GuiTextSplit(ALL_CORE_PARAMS, const char *text, int *count, int *textRow);       // Split controls text into multiple strings
  Vector3 ConvertHSVtoRGB(Vector3 hsv);                    // Convert color data from HSV to RGB
  Vector3 ConvertRGBtoHSV(Vector3 rgb);                    // Convert color data from RGB to HSV
 
@@ -421,7 +423,7 @@ ClientGuiState* GetGui(ALL_CORE_PARAMS)
 
 GuiState* GetGuiState(ALL_CORE_PARAMS)
 {
-    return &GetGui(ALL_CORE_PARAMS)->guiState;
+    return &GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 }
 
 
@@ -457,7 +459,7 @@ void GuiFade(ALL_CORE_PARAMS, float alpha)
     if (alpha < 0.0f) alpha = 0.0f;
     else if (alpha > 1.0f) alpha = 1.0f;
 
-    GetGui(ALL_CORE_PARAMS)->guiAlpha = alpha;
+    GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha = alpha;
 }
 
 // Set gui state (global state)
@@ -475,10 +477,10 @@ void GuiSetFont(ALL_CORE_PARAMS, Font font)
         // NOTE: If we try to setup a font but default style has not been
         // lazily loaded before, it will be overwritten, so we need to force
         // default style loading first
-        if (!guiStyleLoaded) GuiLoadStyleDefault();
+        if (!GetGui(ALL_CORE_PARAMS_PASS)->guiStyleLoaded) GuiLoadStyleDefault(ALL_CORE_PARAMS_PASS);
 
         GetGui(ALL_CORE_PARAMS_PASS)->guiFont = font;
-        GuiSetStyle(DEFAULT, TEXT_SIZE, font.baseSize);
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_SIZE, font.baseSize);
     }
 }
 
@@ -492,21 +494,21 @@ Font GuiGetFont(ALL_CORE_PARAMS)
 void GuiSetStyle(ALL_CORE_PARAMS, int control, int property, int value)
 {
     
-    if (!guiStyleLoaded) GuiLoadStyleDefault();
-    GetGui(ALL_CORE_PARAMS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
+    if (!GetGui(ALL_CORE_PARAMS_PASS)->guiStyleLoaded) GuiLoadStyleDefault(ALL_CORE_PARAMS_PASS);
+    GetGui(ALL_CORE_PARAMS_PASS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
 
     // Default properties are propagated to all controls
     if ((control == 0) && (property < RAYGUI_MAX_PROPS_BASE))
     {
-        for (int i = 1; i < RAYGUI_MAX_CONTROLS; i++) GetGui(ALL_CORE_PARAMS)->guiStyle[i*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
+        for (int i = 1; i < RAYGUI_MAX_CONTROLS; i++) GetGui(ALL_CORE_PARAMS_PASS)->guiStyle[i*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
     }
 }
 
 // Get control style property value
 int GuiGetStyle(ALL_CORE_PARAMS, int control, int property)
 {
-    if (!guiStyleLoaded) GuiLoadStyleDefault();
-    return GetGui(ALL_CORE_PARAMS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property];
+    if (!GetGui(ALL_CORE_PARAMS_PASS)->guiStyleLoaded) GuiLoadStyleDefault(ALL_CORE_PARAMS_PASS);
+    return GetGui(ALL_CORE_PARAMS_PASS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property];
 }
 
 //----------------------------------------------------------------------------------
@@ -531,7 +533,7 @@ BOOL GuiWindowBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title)
     if (bounds.height < statusBarHeight*2.0f) bounds.height = statusBarHeight*2.0f;
 
     Rectangle windowPanel = { bounds.x, bounds.y + (float)statusBarHeight - 1, bounds.width, bounds.height - (float)statusBarHeight + 1 };
-    Rectangle closeButtonRec = { statusBar.x + statusBar.width - GuiGetStyle(STATUSBAR, BORDER_WIDTH) - 20,
+    Rectangle closeButtonRec = { statusBar.x + statusBar.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, BORDER_WIDTH) - 20,
                                  statusBar.y + statusBarHeight/2.0f - 18.0f/2.0f, 18, 18 };
 
     // Update control
@@ -545,17 +547,17 @@ BOOL GuiWindowBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title)
     GuiPanel(ALL_CORE_PARAMS_PASS, windowPanel, NULL);    // Draw window base
 
     // Draw window close button
-    int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-    int tempTextAlignment = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    int tempBorderWidth = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BORDER_WIDTH);
+    int tempTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, 1);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 #if defined(RAYGUI_NO_ICONS)
     clicked = GuiButton(ALL_CORE_PARAMS_PASS, closeButtonRec, "x");
 #else
     clicked = GuiButton(ALL_CORE_PARAMS_PASS, closeButtonRec, GuiIconText(ICON_CROSS_SMALL, NULL));
 #endif
-    GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlignment);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, tempBorderWidth);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, tempTextAlignment);
     //--------------------------------------------------------------------
 
     return clicked;
@@ -568,15 +570,15 @@ void GuiGroupBox(ALL_CORE_PARAMS,Rectangle bounds, const char *text)
         #define RAYGUI_GROUPBOX_LINE_THICK     1
     #endif
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, RAYGUI_GROUPBOX_LINE_THICK }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - 1, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y + bounds.height - 1, bounds.width, RAYGUI_GROUPBOX_LINE_THICK }, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - 1, bounds.y, RAYGUI_GROUPBOX_LINE_THICK, bounds.height }, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
-    GuiLine(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y - GuiGetStyle(DEFAULT, TEXT_SIZE)/2, bounds.width, (float)GuiGetStyle(DEFAULT, TEXT_SIZE) }, text);
+    GuiLine(ALL_CORE_PARAMS_PASS, RAYGUI_CLITERAL(Rectangle){ bounds.x, bounds.y - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2, bounds.width, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE) }, text);
     //--------------------------------------------------------------------
 }
 
@@ -590,9 +592,9 @@ void GuiLine(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
         #define RAYGUI_LINE_TEXT_PADDING  4
     #endif
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
-    Color color = Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)), guiAlpha);
+    Color color = Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED : LINE_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha);
 
     // Draw control
     //--------------------------------------------------------------------
@@ -600,7 +602,7 @@ void GuiLine(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
     else
     {
         Rectangle textBounds = { 0 };
-        textBounds.width = (float)GetTextWidth(text);
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, text);
         textBounds.height = bounds.height;
         textBounds.x = bounds.x + RAYGUI_LINE_MARGIN_TEXT;
         textBounds.y = bounds.y;
@@ -620,7 +622,7 @@ void GuiPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
         #define RAYGUI_PANEL_BORDER_WIDTH   1
     #endif
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Text will be drawn as a header bar (if provided)
     Rectangle statusBar = { bounds.x, bounds.y, bounds.width, (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT };
@@ -637,18 +639,19 @@ void GuiPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
     //--------------------------------------------------------------------
     if (text != NULL) GuiStatusBar(ALL_CORE_PARAMS_PASS, statusBar, text);  // Draw panel header as status bar
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, RAYGUI_PANEL_BORDER_WIDTH, Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED: LINE_COLOR)), guiAlpha),
-                     Fade(GetColor(GuiGetStyle(DEFAULT, (state == STATE_DISABLED)? BASE_COLOR_DISABLED : BACKGROUND_COLOR)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, RAYGUI_PANEL_BORDER_WIDTH, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BORDER_COLOR_DISABLED: LINE_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha),
+                     Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state == STATE_DISABLED)? BASE_COLOR_DISABLED : BACKGROUND_COLOR)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 }
 
 // Scroll Panel control
 Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Rectangle content, Vector2 *scroll)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
-    Vector2 scrollPos = { 0.0f, 0.0f };
-    if (scroll != NULL) scrollPos = *scroll;
+    Vector2 scrollPos = (Vector2){ 0.0f, 0.0f };
+    if (scroll != NULL) 
+        scrollPos = (*scroll);
 
     // Text will be drawn as a header bar (if provided)
     Rectangle statusBar = { bounds.x, bounds.y, bounds.width, (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT };
@@ -661,35 +664,35 @@ Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Re
         bounds.height -= (float)RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + 1;
     }
 
-    BOOL hasHorizontalScrollBar = (content.width > bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH))? true : false;
-    BOOL hasVerticalScrollBar = (content.height > bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH))? true : false;
+    BOOL hasHorizontalScrollBar = (content.width > bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH))? true : false;
+    BOOL hasVerticalScrollBar = (content.height > bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH))? true : false;
 
     // Recheck to account for the other scrollbar being visible
-    if (!hasHorizontalScrollBar) hasHorizontalScrollBar = (hasVerticalScrollBar && (content.width > (bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
-    if (!hasVerticalScrollBar) hasVerticalScrollBar = (hasHorizontalScrollBar && (content.height > (bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
+    if (!hasHorizontalScrollBar) hasHorizontalScrollBar = (hasVerticalScrollBar && (content.width > (bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
+    if (!hasVerticalScrollBar) hasVerticalScrollBar = (hasHorizontalScrollBar && (content.height > (bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH))))? true : false;
 
-    int horizontalScrollBarWidth = hasHorizontalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
-    int verticalScrollBarWidth =  hasVerticalScrollBar? GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH) : 0;
-    Rectangle horizontalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + verticalScrollBarWidth : (float)bounds.x) + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.y + bounds.height - horizontalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)bounds.width - verticalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)horizontalScrollBarWidth };
-    Rectangle verticalScrollBar = { (float)((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)bounds.x + bounds.width - verticalScrollBarWidth - GuiGetStyle(DEFAULT, BORDER_WIDTH)), (float)bounds.y + GuiGetStyle(DEFAULT, BORDER_WIDTH), (float)verticalScrollBarWidth, (float)bounds.height - horizontalScrollBarWidth - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) };
+    int horizontalScrollBarWidth = hasHorizontalScrollBar? GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH) : 0;
+    int verticalScrollBarWidth =  hasVerticalScrollBar? GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH) : 0;
+    Rectangle horizontalScrollBar = { (float)((GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + verticalScrollBarWidth : (float)bounds.x) + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), (float)bounds.y + bounds.height - horizontalScrollBarWidth - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), (float)bounds.width - verticalScrollBarWidth - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), (float)horizontalScrollBarWidth };
+    Rectangle verticalScrollBar = { (float)((GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) : (float)bounds.x + bounds.width - verticalScrollBarWidth - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH)), (float)bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), (float)verticalScrollBarWidth, (float)bounds.height - horizontalScrollBarWidth - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) };
 
     // Calculate view area (area without the scrollbars)
-    Rectangle view = (GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)?
-                RAYGUI_CLITERAL(Rectangle){ bounds.x + verticalScrollBarWidth + GuiGetStyle(DEFAULT, BORDER_WIDTH), bounds.y + GuiGetStyle(DEFAULT, BORDER_WIDTH), bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth, bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth } :
-                RAYGUI_CLITERAL(Rectangle){ bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH), bounds.y + GuiGetStyle(DEFAULT, BORDER_WIDTH), bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth, bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth };
+    Rectangle view = (GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)?
+                RAYGUI_CLITERAL(Rectangle){ bounds.x + verticalScrollBarWidth + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth, bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth } :
+                RAYGUI_CLITERAL(Rectangle){ bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth, bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth };
 
     // Clip view area to the actual content size
     if (view.width > content.width) view.width = content.width;
     if (view.height > content.height) view.height = content.height;
 
-    float horizontalMin = hasHorizontalScrollBar? ((GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    float horizontalMax = hasHorizontalScrollBar? content.width - bounds.width + (float)verticalScrollBarWidth + GuiGetStyle(DEFAULT, BORDER_WIDTH) - (((float)GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)verticalScrollBarWidth : 0) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    float horizontalMin = hasHorizontalScrollBar? ((GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) : (((float)GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)-verticalScrollBarWidth : 0) - (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
+    float horizontalMax = hasHorizontalScrollBar? content.width - bounds.width + (float)verticalScrollBarWidth + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - (((float)GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (float)verticalScrollBarWidth : 0) : (float)-GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
     float verticalMin = hasVerticalScrollBar? 0 : -1;
-    float verticalMax = hasVerticalScrollBar? content.height - bounds.height + (float)horizontalScrollBarWidth + (float)GuiGetStyle(DEFAULT, BORDER_WIDTH) : (float)-GuiGetStyle(DEFAULT, BORDER_WIDTH);
+    float verticalMax = hasVerticalScrollBar? content.height - bounds.height + (float)horizontalScrollBarWidth + (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) : (float)-GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -702,14 +705,14 @@ Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Re
 #if defined(SUPPORT_SCROLLBAR_KEY_INPUT)
             if (hasHorizontalScrollBar)
             {
-                if (IsKeyDown(KEY_RIGHT)) scrollPos.x -= GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
-                if (IsKeyDown(KEY_LEFT)) scrollPos.x += GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
+                if (IsKeyDown(KEY_RIGHT)) scrollPos.x -= GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
+                if (IsKeyDown(KEY_LEFT)) scrollPos.x += GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
             }
 
             if (hasVerticalScrollBar)
             {
-                if (IsKeyDown(KEY_DOWN)) scrollPos.y -= GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
-                if (IsKeyDown(KEY_UP)) scrollPos.y += GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
+                if (IsKeyDown(KEY_DOWN)) scrollPos.y -= GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
+                if (IsKeyDown(KEY_UP)) scrollPos.y += GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
             }
 #endif
             float wheelMove = GetMouseWheelMove(ALL_CORE_PARAMS_PASS);
@@ -731,16 +734,16 @@ Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Re
     //--------------------------------------------------------------------
     if (text != NULL) GuiStatusBar(ALL_CORE_PARAMS_PASS, statusBar, text);  // Draw panel header as status bar
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 0, BLANK, GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));        // Draw background
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 0, BLANK, GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BACKGROUND_COLOR)));        // Draw background
 
     // Save size of the scrollbar slider
-    const int slider = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);
+    const int slider = GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_SIZE);
 
     // Draw horizontal scrollbar if visible
     if (hasHorizontalScrollBar)
     {
         // Change scrollbar slider size to show the diff in size between the content width and the widget width
-        GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)/(int)content.width)*((int)bounds.width - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)));
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)/(int)content.width)*((int)bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - verticalScrollBarWidth)));
         scrollPos.x = (float)-GuiScrollBar(ALL_CORE_PARAMS_PASS, horizontalScrollBar, (int)-scrollPos.x, (int)horizontalMin, (int)horizontalMax);
     }
     else scrollPos.x = 0.0f;
@@ -749,26 +752,27 @@ Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Re
     if (hasVerticalScrollBar)
     {
         // Change scrollbar slider size to show the diff in size between the content height and the widget height
-        GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)/(int)content.height)*((int)bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)));
-        scrollPos.y = (float)-GuiScrollBar(ALL_CORE_PARAMS_PASS, verticalScrollBar, (int)-scrollPos.y, (int)verticalMin, (int)verticalMax);
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, (int)(((bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)/(int)content.height)*((int)bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) - horizontalScrollBarWidth)));
+        scrollPos.y = (float)-GuiScrollBar(ALL_CORE_PARAMS_PASS, verticalScrollBar, (int)-scrollPos.y, (int)verticalMin, (int)verticalMax);//?
     }
     else scrollPos.y = 0.0f;
 
     // Draw detail corner rectangle if both scroll bars are visible
     if (hasHorizontalScrollBar && hasVerticalScrollBar)
     {
-        Rectangle corner = { (GuiGetStyle(LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (bounds.x + GuiGetStyle(DEFAULT, BORDER_WIDTH) + 2) : (horizontalScrollBar.x + horizontalScrollBar.width + 2), verticalScrollBar.y + verticalScrollBar.height + 2, (float)horizontalScrollBarWidth - 4, (float)verticalScrollBarWidth - 4 };
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, corner, 0, BLANK, Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT + (state*3))), guiAlpha));
+        Rectangle corner = { (GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_SIDE) == SCROLLBAR_LEFT_SIDE)? (bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH) + 2) : (horizontalScrollBar.x + horizontalScrollBar.width + 2), verticalScrollBar.y + verticalScrollBar.height + 2, (float)horizontalScrollBarWidth - 4, (float)verticalScrollBarWidth - 4 };
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, corner, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
     // Draw scrollbar lines depending on current state
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(DEFAULT, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER + (state*3))), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     // Set scrollbar slider size back to the way it was before
-    GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, slider);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, slider);
     //--------------------------------------------------------------------
 
-    if (scroll != NULL) *scroll = scrollPos;
+    if (scroll != NULL) 
+        (*scroll) = scrollPos;
 
     return view;
 }
@@ -776,7 +780,7 @@ Rectangle GuiScrollPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Re
 // Label control
 void GuiLabel(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Update control
     //--------------------------------------------------------------------
@@ -785,7 +789,7 @@ void GuiLabel(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(LABEL, bounds), GuiGetStyle(LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, LABEL, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 }
 
@@ -809,12 +813,12 @@ BOOL IsMouseButtonReleased(ALL_CORE_PARAMS, int button)
 // Button control, returns true when clicked
 BOOL GuiButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 {
-    GuiState state = gameState->clientStates[gameStateActions->clientId].gui.rayGuiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     BOOL pressed = false;
    
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -834,8 +838,8 @@ BOOL GuiButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(BUTTON, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(BUTTON, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(BUTTON, BASE + (state*3))), guiAlpha));
-    //GuiDrawText(text, GetTextBounds(BUTTON, bounds), GuiGetStyle(BUTTON, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(BUTTON, TEXT + (state*3))), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BASE + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    //GuiDrawText(text, GetTextBounds(BUTTON, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //------------------------------------------------------------------
 
     return pressed;
@@ -844,16 +848,16 @@ BOOL GuiButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 // Label button control
 BOOL GuiLabelButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     BOOL pressed = false;
 
     // NOTE: We force bounds.width to be all text
-    float textWidth = MeasureTextEx(guiFont, text, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING)).x;
+    float textWidth = MeasureTextEx(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, text, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING)).x;
     if (bounds.width < textWidth) bounds.width = textWidth;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -870,7 +874,7 @@ BOOL GuiLabelButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(LABEL, bounds), GuiGetStyle(LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, LABEL, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return pressed;
@@ -879,11 +883,11 @@ BOOL GuiLabelButton(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 // Toggle Button control, returns true when active
 BOOL GuiToggle(ALL_CORE_PARAMS, Rectangle bounds, const char *text, BOOL active)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -905,13 +909,13 @@ BOOL GuiToggle(ALL_CORE_PARAMS, Rectangle bounds, const char *text, BOOL active)
     //--------------------------------------------------------------------
     if (state == STATE_NORMAL)
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TOGGLE, (active? BORDER_COLOR_PRESSED : (BORDER + state*3)))), guiAlpha), Fade(GetColor(GuiGetStyle(TOGGLE, (active? BASE_COLOR_PRESSED : (BASE + state*3)))), guiAlpha));
-        GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(TOGGLE, bounds), GuiGetStyle(TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TOGGLE, (active? TEXT_COLOR_PRESSED : (TEXT + state*3)))), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, (active? BORDER_COLOR_PRESSED : (BORDER + state*3)))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, (active? BASE_COLOR_PRESSED : (BASE + state*3)))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, TOGGLE, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, (active? TEXT_COLOR_PRESSED : (TEXT + state*3)))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     else
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TOGGLE, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(TOGGLE, BASE + state*3)), guiAlpha));
-        GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(TOGGLE, bounds), GuiGetStyle(TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(TOGGLE, TEXT + state*3)), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, BASE + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, TOGGLE, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, TEXT + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     //--------------------------------------------------------------------
 
@@ -930,7 +934,7 @@ int GuiToggleGroup(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int acti
     // Get substrings items from text (items pointers)
     int rows[RAYGUI_TOGGLEGROUP_MAX_ITEMS] = { 0 };
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, &itemCount, rows);
+    const char **items = GuiTextSplit(ALL_CORE_PARAMS_PASS, text, &itemCount, rows);
 
     int prevRow = rows[0];
 
@@ -939,14 +943,14 @@ int GuiToggleGroup(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int acti
         if (prevRow != rows[i])
         {
             bounds.x = initBoundsX;
-            bounds.y += (bounds.height + GuiGetStyle(TOGGLE, GROUP_PADDING));
+            bounds.y += (bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, GROUP_PADDING));
             prevRow = rows[i];
         }
 
         if (i == active) GuiToggle(ALL_CORE_PARAMS_PASS, bounds, items[i], true);
         else if (GuiToggle(ALL_CORE_PARAMS_PASS, bounds, items[i], false) == true) active = i;
 
-        bounds.x += (bounds.width + GuiGetStyle(TOGGLE, GROUP_PADDING));
+        bounds.x += (bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, TOGGLE, GROUP_PADDING));
     }
 
     return active;
@@ -955,29 +959,29 @@ int GuiToggleGroup(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int acti
 // Check Box control, returns true when active
 BOOL GuiCheckBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, BOOL checked)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     Rectangle textBounds = { 0 };
 
     if (text != NULL)
     {
-        textBounds.width = (float)GetTextWidth(text);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x + bounds.width + GuiGetStyle(CHECKBOX, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(CHECKBOX, TEXT_PADDING);
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, text);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
+        if (GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
         Rectangle totalBounds = {
-            (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT)? textBounds.x : bounds.x,
+            (GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT)? textBounds.x : bounds.x,
             bounds.y,
-            bounds.width + textBounds.width + GuiGetStyle(CHECKBOX, TEXT_PADDING),
+            bounds.width + textBounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_PADDING),
             bounds.height,
         };
 
@@ -994,18 +998,18 @@ BOOL GuiCheckBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, BOOL check
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(CHECKBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(CHECKBOX, BORDER + (state*3))), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     if (checked)
     {
-        Rectangle check = { bounds.x + GuiGetStyle(CHECKBOX, BORDER_WIDTH) + GuiGetStyle(CHECKBOX, CHECK_PADDING),
-                            bounds.y + GuiGetStyle(CHECKBOX, BORDER_WIDTH) + GuiGetStyle(CHECKBOX, CHECK_PADDING),
-                            bounds.width - 2*(GuiGetStyle(CHECKBOX, BORDER_WIDTH) + GuiGetStyle(CHECKBOX, CHECK_PADDING)),
-                            bounds.height - 2*(GuiGetStyle(CHECKBOX, BORDER_WIDTH) + GuiGetStyle(CHECKBOX, CHECK_PADDING)) };
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, Fade(GetColor(GuiGetStyle(CHECKBOX, TEXT + state*3)), guiAlpha));
+        Rectangle check = { bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, CHECK_PADDING),
+                            bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, CHECK_PADDING),
+                            bounds.width - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, CHECK_PADDING)),
+                            bounds.height - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, CHECK_PADDING)) };
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(ALL_CORE_PARAMS_PASS, CHECKBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return checked;
@@ -1014,23 +1018,23 @@ BOOL GuiCheckBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, BOOL check
 // Combo Box control, returns selected item index
 int GuiComboBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int active)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
-    bounds.width -= (GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH) + GuiGetStyle(COMBOBOX, COMBO_BUTTON_SPACING));
+    bounds.width -= (GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, COMBO_BUTTON_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, COMBO_BUTTON_SPACING));
 
-    Rectangle selector = { (float)bounds.x + bounds.width + GuiGetStyle(COMBOBOX, COMBO_BUTTON_SPACING),
-                           (float)bounds.y, (float)GuiGetStyle(COMBOBOX, COMBO_BUTTON_WIDTH), (float)bounds.height };
+    Rectangle selector = { (float)bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, COMBO_BUTTON_SPACING),
+                           (float)bounds.y, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, COMBO_BUTTON_WIDTH), (float)bounds.height };
 
     // Get substrings items from text (items pointers, lengths and count)
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, &itemCount, NULL);
+    const char **items = GuiTextSplit(ALL_CORE_PARAMS_PASS, text, &itemCount, NULL);
 
     if (active < 0) active = 0;
     else if (active > itemCount - 1) active = itemCount - 1;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked && (itemCount > 1))
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked && (itemCount > 1))
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1052,20 +1056,20 @@ int GuiComboBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int active)
     // Draw control
     //--------------------------------------------------------------------
     // Draw combo box main
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(COMBOBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COMBOBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(COMBOBOX, BASE + (state*3))), guiAlpha));
-    GuiDrawText(ALL_CORE_PARAMS_PASS, items[active], GetTextBounds(COMBOBOX, bounds), GuiGetStyle(COMBOBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(COMBOBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, BASE + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, items[active], GetTextBounds(ALL_CORE_PARAMS_PASS, COMBOBOX, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COMBOBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw selector using a custom button
     // NOTE: BORDER_WIDTH and TEXT_ALIGNMENT forced values
-    int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-    int tempTextAlign = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, 1);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    int tempBorderWidth = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BORDER_WIDTH);
+    int tempTextAlign = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, 1);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
     GuiButton(ALL_CORE_PARAMS_PASS, selector, TextFormat("%i/%i", active + 1, itemCount));
 
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlign);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, tempTextAlign);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, tempBorderWidth);
     //--------------------------------------------------------------------
 
     return active;
@@ -1075,16 +1079,16 @@ int GuiComboBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int active)
 // NOTE: Returns mouse click
 BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *active, BOOL editMode)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     int itemSelected = *active;
     int itemFocused = -1;
 
     // Get substrings items from text (items pointers, lengths and count)
     int itemCount = 0;
-    const char **items = GuiTextSplit(text, &itemCount, NULL);
+    const char **items = GuiTextSplit(ALL_CORE_PARAMS_PASS, text, &itemCount, NULL);
 
     Rectangle boundsOpen = bounds;
-    boundsOpen.height = (itemCount + 1)*(bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+    boundsOpen.height = (itemCount + 1)*(bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
 
     Rectangle itemBounds = bounds;
 
@@ -1092,7 +1096,7 @@ BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *ac
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && (editMode || !guiLocked) && (itemCount > 1))
+    if ((state != STATE_DISABLED) && (editMode || !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked) && (itemCount > 1))
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1113,7 +1117,7 @@ BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *ac
             for (int i = 0; i < itemCount; i++)
             {
                 // Update item rectangle y position for next item
-                itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+                itemBounds.y += (bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
 
                 if (CheckCollisionPointRec(mousePoint, itemBounds))
                 {
@@ -1148,8 +1152,8 @@ BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *ac
     //--------------------------------------------------------------------
     if (editMode) GuiPanel(ALL_CORE_PARAMS_PASS, boundsOpen, NULL);
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BASE + state*3)), guiAlpha));
-    GuiDrawText(ALL_CORE_PARAMS_PASS, items[itemSelected], GetTextBounds(DEFAULT, bounds), GuiGetStyle(DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + state*3)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BASE + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, items[itemSelected], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     if (editMode)
     {
@@ -1157,31 +1161,31 @@ BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *ac
         for (int i = 0; i < itemCount; i++)
         {
             // Update item rectangle y position for next item
-            itemBounds.y += (bounds.height + GuiGetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
+            itemBounds.y += (bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, DROPDOWN_ITEMS_SPACING));
 
             if (i == itemSelected)
             {
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BORDER_COLOR_PRESSED)), guiAlpha), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BASE_COLOR_PRESSED)), guiAlpha));
-                GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT_COLOR_PRESSED)), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+                GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
             else if (i == itemFocused)
             {
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BORDER_COLOR_FOCUSED)), guiAlpha), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, BASE_COLOR_FOCUSED)), guiAlpha));
-                GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT_COLOR_FOCUSED)), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BORDER_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, BASE_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+                GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
-            else GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT_COLOR_NORMAL)), guiAlpha));
+            else GuiDrawText(ALL_CORE_PARAMS_PASS, items[i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT_COLOR_NORMAL)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
         }
     }
 
     // Draw arrows (using icon if available)
 #if defined(RAYGUI_NO_ICONS)
-    GuiDrawText("v", RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 2, 10, 10 },
-                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawText("v", RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 2, 10, 10 },
+                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 #else
     char str[6] = "#120#\n"; 
 
-    GuiDrawText(ALL_CORE_PARAMS_PASS, &str[0], RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 6, 10, 10 },
-                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));   // ICON_ARROW_DOWN_FILL
+    GuiDrawText(ALL_CORE_PARAMS_PASS, &str[0], RAYGUI_CLITERAL(Rectangle){ bounds.x + bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, ARROW_PADDING), bounds.y + bounds.height/2 - 6, 10, 10 },
+                TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));   // ICON_ARROW_DOWN_FILL
 #endif
     //--------------------------------------------------------------------
 
@@ -1193,25 +1197,25 @@ BOOL GuiDropdownBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *ac
 // NOTE 2: Returns if KEY_ENTER pressed (useful for data validation)
 BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOOL editMode)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     BOOL pressed = false;
-    int textWidth = GetTextWidth(text);
-    Rectangle textBounds = GetTextBounds(TEXTBOX, bounds);
-    int textAlignment = editMode && textWidth >= textBounds.width ? TEXT_ALIGN_RIGHT : GuiGetStyle(TEXTBOX, TEXT_ALIGNMENT);
+    int textWidth = GetTextWidth(ALL_CORE_PARAMS_PASS, text);
+    Rectangle textBounds = GetTextBounds(ALL_CORE_PARAMS_PASS, TEXTBOX, bounds);
+    int textAlignment = editMode && textWidth >= textBounds.width ? TEXT_ALIGN_RIGHT : GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_ALIGNMENT);
 
     Rectangle cursor = {
-        bounds.x + GuiGetStyle(TEXTBOX, TEXT_PADDING) + GetTextWidth(text) + 2,
-        bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE),
+        bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_PADDING) + GetTextWidth(ALL_CORE_PARAMS_PASS, text) + 2,
+        bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE),
         4,
-        (float)GuiGetStyle(DEFAULT, TEXT_SIZE)*2
+        (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)*2
     };
 
-    if (cursor.height >= bounds.height) cursor.height = bounds.height - GuiGetStyle(TEXTBOX, BORDER_WIDTH)*2;
-    if (cursor.y < (bounds.y + GuiGetStyle(TEXTBOX, BORDER_WIDTH))) cursor.y = bounds.y + GuiGetStyle(TEXTBOX, BORDER_WIDTH);
+    if (cursor.height >= bounds.height) cursor.height = bounds.height - GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH)*2;
+    if (cursor.y < (bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH))) cursor.y = bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH);
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1227,7 +1231,7 @@ BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOO
             // Only allow keys in range [32..125]
             if ((keyCount + byteSize) < textSize)
             {
-                //float maxWidth = (bounds.width - (GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING)*2));
+                //float maxWidth = (bounds.width - (GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING)*2));
 
                 if (key >= 32)
                 {
@@ -1254,8 +1258,8 @@ BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOO
             if (IsKeyPressed(ALL_CORE_PARAMS_PASS, KEY_ENTER) || (!CheckCollisionPointRec(mousePoint, bounds) && IsMouseButtonPressed(ALL_CORE_PARAMS_PASS, MOUSE_LEFT_BUTTON))) pressed = true;
 
             // Check text alignment to position cursor properly
-            if (textAlignment == TEXT_ALIGN_CENTER) cursor.x = bounds.x + GetTextWidth(text)/2 + bounds.width/2 + 1;
-            else if (textAlignment == TEXT_ALIGN_RIGHT) cursor.x = bounds.x + bounds.width - GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING) - GuiGetStyle(TEXTBOX, BORDER_WIDTH);
+            if (textAlignment == TEXT_ALIGN_CENTER) cursor.x = bounds.x + GetTextWidth(ALL_CORE_PARAMS_PASS, text)/2 + bounds.width/2 + 1;
+            else if (textAlignment == TEXT_ALIGN_RIGHT) cursor.x = bounds.x + bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING) - GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH);
         }
         else
         {
@@ -1272,13 +1276,13 @@ BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOO
     //--------------------------------------------------------------------
     if (state == STATE_PRESSED)
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     else if (state == STATE_DISABLED)
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_DISABLED)), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
-    else GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 1, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), BLANK);
+    else GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 1, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     // in case we edit and text does not fit in the textbox show right aligned and character clipped, slower but working
     while (editMode && textWidth >= textBounds.width && *text)
@@ -1286,12 +1290,12 @@ BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOO
         int bytes = 0;
         GetCodepoint(text, &bytes);
         text += bytes;
-        textWidth = GetTextWidth(text);
+        textWidth = GetTextWidth(ALL_CORE_PARAMS_PASS, text);
     }
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, textAlignment, Fade(GetColor(GuiGetStyle(TEXTBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, textAlignment, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw cursor
-    if (editMode) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER_COLOR_PRESSED)), guiAlpha));
+    if (editMode) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return pressed;
@@ -1300,29 +1304,29 @@ BOOL GuiTextBox(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOO
 // Spinner control, returns selected value
 BOOL GuiSpinner(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value, int minValue, int maxValue, BOOL editMode)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     BOOL pressed = false;
     int tempValue = *value;
 
-    Rectangle spinner = { bounds.x + GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_SPACING), bounds.y,
-                          bounds.width - 2*(GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(SPINNER, SPIN_BUTTON_SPACING)), bounds.height };
-    Rectangle leftButtonBound = { (float)bounds.x, (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
-    Rectangle rightButtonBound = { (float)bounds.x + bounds.width - GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.y, (float)GuiGetStyle(SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
+    Rectangle spinner = { bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_SPACING), bounds.y,
+                          bounds.width - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_SPACING)), bounds.height };
+    Rectangle leftButtonBound = { (float)bounds.x, (float)bounds.y, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
+    Rectangle rightButtonBound = { (float)bounds.x + bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.y, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, SPIN_BUTTON_WIDTH), (float)bounds.height };
 
     Rectangle textBounds = { 0 };
     if (text != NULL)
     {
-        textBounds.width = (float)GetTextWidth(text);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x + bounds.width + GuiGetStyle(SPINNER, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SPINNER, TEXT_PADDING);
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, text);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
+        if (GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1356,16 +1360,16 @@ BOOL GuiSpinner(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value,
 
     // Draw value selector custom buttons
     // NOTE: BORDER_WIDTH and TEXT_ALIGNMENT forced values
-    int tempBorderWidth = GuiGetStyle(BUTTON, BORDER_WIDTH);
-    int tempTextAlign = GuiGetStyle(BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, GuiGetStyle(SPINNER, BORDER_WIDTH));
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    int tempBorderWidth = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BORDER_WIDTH);
+    int tempTextAlign = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, BORDER_WIDTH));
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, tempTextAlign);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, tempBorderWidth);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, tempTextAlign);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, tempBorderWidth);
 
     // Draw text label if provided
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(ALL_CORE_PARAMS_PASS, SPINNER, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     *value = tempValue;
@@ -1380,7 +1384,7 @@ BOOL GuiValueBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value
         #define RAYGUI_VALUEBOX_MAX_CHARS  32
     #endif
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     BOOL pressed = false;
 
     char textValue[RAYGUI_VALUEBOX_MAX_CHARS + 1] = "\0";
@@ -1389,16 +1393,16 @@ BOOL GuiValueBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value
     Rectangle textBounds = { 0 };
     if (text != NULL)
     {
-        textBounds.width = (float)GetTextWidth(text);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x + bounds.width + GuiGetStyle(VALUEBOX, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
-        if (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(VALUEBOX, TEXT_PADDING);
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, text);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
+        if (GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_LEFT) textBounds.x = bounds.x - textBounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, TEXT_PADDING);
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1413,7 +1417,7 @@ BOOL GuiValueBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value
             // Only allow keys in range [48..57]
             if (keyCount < RAYGUI_VALUEBOX_MAX_CHARS)
             {
-                if (GetTextWidth(textValue) < bounds.width)
+                if (GetTextWidth(ALL_CORE_PARAMS_PASS, textValue) < bounds.width)
                 {
                     int key = GetCharPressed(ALL_CORE_PARAMS_PASS);
                     if ((key >= 48) && (key <= 57))
@@ -1461,23 +1465,23 @@ BOOL GuiValueBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value
     // Draw control
     //--------------------------------------------------------------------
     Color baseColor = BLANK;
-    if (state == STATE_PRESSED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_PRESSED));
-    else if (state == STATE_DISABLED) baseColor = GetColor(GuiGetStyle(VALUEBOX, BASE_COLOR_DISABLED));
+    if (state == STATE_PRESSED) baseColor = GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BASE_COLOR_PRESSED));
+    else if (state == STATE_DISABLED) baseColor = GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BASE_COLOR_DISABLED));
 
     // WARNING: BLANK color does not work properly with Fade()
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(VALUEBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER + (state*3))), guiAlpha), baseColor);
-    GuiDrawText(ALL_CORE_PARAMS_PASS, textValue, GetTextBounds(VALUEBOX, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(VALUEBOX, TEXT + (state*3))), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), baseColor);
+    GuiDrawText(ALL_CORE_PARAMS_PASS, textValue, GetTextBounds(ALL_CORE_PARAMS_PASS, VALUEBOX, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw cursor
     if (editMode)
     {
         // NOTE: ValueBox internal text is always centered
-        Rectangle cursor = { bounds.x + GetTextWidth(textValue)/2 + bounds.width/2 + 2, bounds.y + 2*GuiGetStyle(VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4*GuiGetStyle(VALUEBOX, BORDER_WIDTH) };
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(VALUEBOX, BORDER_COLOR_PRESSED)), guiAlpha));
+        Rectangle cursor = { bounds.x + GetTextWidth(ALL_CORE_PARAMS_PASS, textValue)/2 + bounds.width/2 + 2, bounds.y + 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BORDER_WIDTH), 4, bounds.height - 4*GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BORDER_WIDTH) };
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, BORDER_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
     // Draw text label if provided
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(LABEL, TEXT + (state*3))), guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, textBounds, (GuiGetStyle(ALL_CORE_PARAMS_PASS, VALUEBOX, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT)? TEXT_ALIGN_LEFT : TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LABEL, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return pressed;
@@ -1486,24 +1490,24 @@ BOOL GuiValueBox(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *value
 // Text Box control with multiple lines
 BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize, BOOL editMode)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     BOOL pressed = false;
 
     Rectangle textAreaBounds = {
-        bounds.x + GuiGetStyle(TEXTBOX, BORDER_WIDTH) + GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING),
-        bounds.y + GuiGetStyle(TEXTBOX, BORDER_WIDTH) + GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING),
-        bounds.width - 2*(GuiGetStyle(TEXTBOX, BORDER_WIDTH) + GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING)),
-        bounds.height - 2*(GuiGetStyle(TEXTBOX, BORDER_WIDTH) + GuiGetStyle(TEXTBOX, TEXT_INNER_PADDING))
+        bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING),
+        bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING),
+        bounds.width - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING)),
+        bounds.height - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_INNER_PADDING))
     };
 
     // Cursor position, [x, y] values should be updated
-    Rectangle cursor = { 0, -1, 4, (float)GuiGetStyle(DEFAULT, TEXT_SIZE) + 2 };
+    Rectangle cursor = { 0, -1, 4, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE) + 2 };
 
-    float scaleFactor = (float)GuiGetStyle(DEFAULT, TEXT_SIZE)/(float)guiFont.baseSize;     // Character rectangle scaling factor
+    float scaleFactor = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/(float)GetGui(ALL_CORE_PARAMS_PASS)->guiFont.baseSize;     // Character rectangle scaling factor
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1576,13 +1580,13 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
     //--------------------------------------------------------------------
     if (state == STATE_PRESSED)
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_PRESSED)), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     else if (state == STATE_DISABLED)
     {
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_DISABLED)), guiAlpha));
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
-    else GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 1, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER + (state*3))), guiAlpha), BLANK);
+    else GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 1, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     int wrapMode = 1;      // 0-No wrap, 1-Char wrap, 2-Word wrap
     Vector2 cursorPos = { textAreaBounds.x, textAreaBounds.y };
@@ -1594,13 +1598,13 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
     for (int i = 0, codepointLength = 0; text[i] != '\0'; i += codepointLength)
     {
         int codepoint = GetCodepoint(text + i, &codepointLength);
-        int index = GetGlyphIndex(guiFont, codepoint);      // If requested codepoint is not found, we get '?' (0x3f)
-        Rectangle atlasRec = guiFont.recs[index];
-        GlyphInfo glyphInfo = guiFont.chars[index];        // Glyph measures
+        int index = GetGlyphIndex(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, codepoint);      // If requested codepoint is not found, we get '?' (0x3f)
+        Rectangle atlasRec =GetGui(ALL_CORE_PARAMS_PASS)->guiFont.recs[index];
+        GlyphInfo glyphInfo =GetGui(ALL_CORE_PARAMS_PASS)->guiFont.chars[index];        // Glyph measures
 
         if ((codepointLength == 1) && (codepoint == '\n'))
         {
-            cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_SPACING));   // Line feed
+            cursorPos.y += (GetGui(ALL_CORE_PARAMS_PASS)->guiFont.baseSize*scaleFactor + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_LINES_SPACING));   // Line feed
             cursorPos.x = textAreaBounds.x;                 // Carriage return
         }
         else
@@ -1614,7 +1618,7 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
                 // Jump line if the end of the text box area has been reached
                 if ((cursorPos.x + (glyphWidth*scaleFactor)) > (textAreaBounds.x + textAreaBounds.width))
                 {
-                    cursorPos.y += (guiFont.baseSize*scaleFactor + GuiGetStyle(TEXTBOX, TEXT_LINES_SPACING));   // Line feed
+                    cursorPos.y += (GetGui(ALL_CORE_PARAMS_PASS)->guiFont.baseSize*scaleFactor + GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT_LINES_SPACING));   // Line feed
                     cursorPos.x = textAreaBounds.x;     // Carriage return
                 }
             }
@@ -1638,14 +1642,14 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
             }
 
             // Draw current character glyph
-            DrawTextCodepoint(guiFont, codepoint, cursorPos, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), Fade(GetColor(GuiGetStyle(TEXTBOX, TEXT + (state*3))), guiAlpha));
+            DrawTextCodepoint(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, codepoint, cursorPos, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
             int glyphWidth = 0;
             if (glyphInfo.advanceX != 0) glyphWidth += glyphInfo.advanceX;
             else glyphWidth += (int)(atlasRec.width + glyphInfo.offsetX);
 
-            cursorPos.x += (glyphWidth*scaleFactor + (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
-            //if (i > lastSpacePos) lastSpaceWidth += (atlasRec.width + (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
+            cursorPos.x += (glyphWidth*scaleFactor + (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING));
+            //if (i > lastSpacePos) lastSpaceWidth += (atlasRec.width + (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING));
         }
     }
 
@@ -1653,7 +1657,7 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
     cursor.y = cursorPos.y;
 
     // Draw cursor position considering text glyphs
-    if (editMode) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(TEXTBOX, BORDER_COLOR_PRESSED)), guiAlpha));
+    if (editMode) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, cursor, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, TEXTBOX, BORDER_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return pressed;
@@ -1663,12 +1667,12 @@ BOOL GuiTextBoxMulti(ALL_CORE_PARAMS, Rectangle bounds, char *text, int textSize
 // NOTE: Other GuiSlider*() controls use this one
 float GuiSliderPro(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue, int sliderWidth)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
-    int sliderValue = (int)(((value - minValue)/(maxValue - minValue))*(bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH)));
+    int sliderValue = (int)(((value - minValue)/(maxValue - minValue))*(bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH)));
 
-    Rectangle slider = { bounds.x, bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH) + GuiGetStyle(SLIDER, SLIDER_PADDING),
-                         0, bounds.height - 2*GuiGetStyle(SLIDER, BORDER_WIDTH) - 2*GuiGetStyle(SLIDER, SLIDER_PADDING) };
+    Rectangle slider = { bounds.x, bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, SLIDER_PADDING),
+                         0, bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH) - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, SLIDER_PADDING) };
 
     if (sliderWidth > 0)        // Slider
     {
@@ -1677,13 +1681,13 @@ float GuiSliderPro(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, cons
     }
     else if (sliderWidth == 0)  // SliderBar
     {
-        slider.x += GuiGetStyle(SLIDER, BORDER_WIDTH);
+        slider.x += GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH);
         slider.width = (float)sliderValue;
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1709,44 +1713,44 @@ float GuiSliderPro(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, cons
     // Bar limits check
     if (sliderWidth > 0)        // Slider
     {
-        if (slider.x <= (bounds.x + GuiGetStyle(SLIDER, BORDER_WIDTH))) slider.x = bounds.x + GuiGetStyle(SLIDER, BORDER_WIDTH);
-        else if ((slider.x + slider.width) >= (bounds.x + bounds.width)) slider.x = bounds.x + bounds.width - slider.width - GuiGetStyle(SLIDER, BORDER_WIDTH);
+        if (slider.x <= (bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH))) slider.x = bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH);
+        else if ((slider.x + slider.width) >= (bounds.x + bounds.width)) slider.x = bounds.x + bounds.width - slider.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH);
     }
     else if (sliderWidth == 0)  // SliderBar
     {
-        if (slider.width > bounds.width) slider.width = bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH);
+        if (slider.width > bounds.width) slider.width = bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH);
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(SLIDER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(SLIDER, BORDER + (state*3))), guiAlpha), Fade(GetColor(GuiGetStyle(SLIDER, (state != STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, (state != STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw slider internal bar (depends on state)
-    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BASE_COLOR_PRESSED)), guiAlpha));
-    else if (state == STATE_FOCUSED) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_FOCUSED)), guiAlpha));
+    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    else if (state == STATE_FOCUSED) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, TEXT_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw left/right text if provided
     if (textLeft != NULL)
     {
         Rectangle textBounds = { 0 };
-        textBounds.width = (float)GetTextWidth(textLeft);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SLIDER, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, textLeft);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x - textBounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(ALL_CORE_PARAMS_PASS, textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
     if (textRight != NULL)
     {
         Rectangle textBounds = { 0 };
-        textBounds.width = (float)GetTextWidth(textRight);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x + bounds.width + GuiGetStyle(SLIDER, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, textRight);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(ALL_CORE_PARAMS_PASS, textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     //--------------------------------------------------------------------
 
@@ -1756,7 +1760,7 @@ float GuiSliderPro(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, cons
 // Slider control extended, returns selected value and has text
 float GuiSlider(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue)
 {
-    return GuiSliderPro(ALL_CORE_PARAMS_PASS, bounds, textLeft, textRight, value, minValue, maxValue, GuiGetStyle(SLIDER, SLIDER_WIDTH));
+    return GuiSliderPro(ALL_CORE_PARAMS_PASS, bounds, textLeft, textRight, value, minValue, maxValue, GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, SLIDER_WIDTH));
 }
 
 // Slider Bar control extended, returns selected value
@@ -1768,48 +1772,48 @@ float GuiSliderBar(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, cons
 // Progress Bar control extended, shows current progress value
 float GuiProgressBar(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, const char *textRight, float value, float minValue, float maxValue)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
-    Rectangle progress = { bounds.x + GuiGetStyle(PROGRESSBAR, BORDER_WIDTH),
-                           bounds.y + GuiGetStyle(PROGRESSBAR, BORDER_WIDTH) + GuiGetStyle(PROGRESSBAR, PROGRESS_PADDING), 0,
-                           bounds.height - 2*GuiGetStyle(PROGRESSBAR, BORDER_WIDTH) - 2*GuiGetStyle(PROGRESSBAR, PROGRESS_PADDING) };
+    Rectangle progress = { bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER_WIDTH),
+                           bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, PROGRESS_PADDING), 0,
+                           bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER_WIDTH) - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, PROGRESS_PADDING) };
 
     // Update control
     //--------------------------------------------------------------------
     if (value > maxValue) value = maxValue;
 
-    if (state != STATE_DISABLED) progress.width = ((float)(value/(maxValue - minValue))*(float)(bounds.width - 2*GuiGetStyle(PROGRESSBAR, BORDER_WIDTH)));
+    if (state != STATE_DISABLED) progress.width = ((float)(value/(maxValue - minValue))*(float)(bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER_WIDTH)));
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(PROGRESSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(PROGRESSBAR, BORDER + (state*3))), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BORDER + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     // Draw slider internal progress bar (depends on state)
-    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, BASE_COLOR_PRESSED)), guiAlpha));
-    else if (state == STATE_FOCUSED) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, progress, 0, BLANK, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT_COLOR_FOCUSED)), guiAlpha));
+    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, progress, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    else if (state == STATE_FOCUSED) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, progress, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, TEXT_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
     // Draw left/right text if provided
     if (textLeft != NULL)
     {
         Rectangle textBounds = { 0 };
-        textBounds.width = (float)GetTextWidth(textLeft);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x - textBounds.width - GuiGetStyle(PROGRESSBAR, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, textLeft);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x - textBounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(ALL_CORE_PARAMS_PASS, textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, textLeft, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
     if (textRight != NULL)
     {
         Rectangle textBounds = { 0 };
-        textBounds.width = (float)GetTextWidth(textRight);
-        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
-        textBounds.x = bounds.x + bounds.width + GuiGetStyle(PROGRESSBAR, TEXT_PADDING);
-        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(DEFAULT, TEXT_SIZE)/2;
+        textBounds.width = (float)GetTextWidth(ALL_CORE_PARAMS_PASS, textRight);
+        textBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE)/2;
 
-        GuiDrawText(ALL_CORE_PARAMS_PASS, textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(PROGRESSBAR, TEXT + (state*3))), guiAlpha));
+        GuiDrawText(ALL_CORE_PARAMS_PASS, textRight, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, PROGRESSBAR, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     //--------------------------------------------------------------------
 
@@ -1819,24 +1823,24 @@ float GuiProgressBar(ALL_CORE_PARAMS, Rectangle bounds, const char *textLeft, co
 // Status Bar control
 void GuiStatusBar(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(STATUSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? BORDER_COLOR_NORMAL : BORDER_COLOR_DISABLED)), guiAlpha),
-                     Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(STATUSBAR, bounds), GuiGetStyle(STATUSBAR, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(STATUSBAR, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, (state != STATE_DISABLED)? BORDER_COLOR_NORMAL : BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha),
+                     Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, STATUSBAR, bounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, STATUSBAR, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 }
 
 // Dummy rectangle control, intended for placeholding
 void GuiDummyRec(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1851,8 +1855,8 @@ void GuiDummyRec(ALL_CORE_PARAMS, Rectangle bounds, const char *text)
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 0, BLANK, Fade(GetColor(GuiGetStyle(DEFAULT, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), guiAlpha));
-    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(DEFAULT, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(BUTTON, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, (state != STATE_DISABLED)? BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+    GuiDrawText(ALL_CORE_PARAMS_PASS, text, GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, bounds), TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, (state != STATE_DISABLED)? TEXT_COLOR_NORMAL : TEXT_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //------------------------------------------------------------------
 }
 
@@ -1862,7 +1866,7 @@ int GuiListView(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *scroll
     int itemCount = 0;
     const char **items = NULL;
 
-    if (text != NULL) items = GuiTextSplit(text, &itemCount, NULL);
+    if (text != NULL) items = GuiTextSplit(ALL_CORE_PARAMS_PASS, text, &itemCount, NULL);
 
     return GuiListViewEx(ALL_CORE_PARAMS_PASS, bounds, items, itemCount, NULL, scrollIndex, active);
 }
@@ -1870,24 +1874,24 @@ int GuiListView(ALL_CORE_PARAMS, Rectangle bounds, const char *text, int *scroll
 // List View control with extended parameters
 int GuiListViewEx(ALL_CORE_PARAMS, Rectangle bounds, const char **text, int count, int *focus, int *scrollIndex, int active)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     int itemFocused = (focus == NULL)? -1 : *focus;
     int itemSelected = active;
 
     // Check if we need a scroll bar
     BOOL useScrollBar = false;
-    if ((GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING))*count > bounds.height) useScrollBar = true;
+    if ((GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING))*count > bounds.height) useScrollBar = true;
 
     // Define base item rectangle [0]
     Rectangle itemBounds = { 0 };
-    itemBounds.x = bounds.x + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING);
-    itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    itemBounds.width = bounds.width - 2*GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) - GuiGetStyle(DEFAULT, BORDER_WIDTH);
-    itemBounds.height = (float)GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT);
-    if (useScrollBar) itemBounds.width -= GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH);
+    itemBounds.x = bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING);
+    itemBounds.y = bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
+    itemBounds.width = bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING) - GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
+    itemBounds.height = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_HEIGHT);
+    if (useScrollBar) itemBounds.width -= GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH);
 
     // Get items on the list
-    int visibleItems = (int)bounds.height/(GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+    int visibleItems = (int)bounds.height/(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING));
     if (visibleItems > count) visibleItems = count;
 
     int startIndex = (scrollIndex == NULL)? 0 : *scrollIndex;
@@ -1896,7 +1900,7 @@ int GuiListViewEx(ALL_CORE_PARAMS, Rectangle bounds, const char **text, int coun
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -1920,7 +1924,7 @@ int GuiListViewEx(ALL_CORE_PARAMS, Rectangle bounds, const char **text, int coun
                 }
 
                 // Update item rectangle y position for next item
-                itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+                itemBounds.y += (GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING));
             }
 
             if (useScrollBar)
@@ -1938,69 +1942,69 @@ int GuiListViewEx(ALL_CORE_PARAMS, Rectangle bounds, const char **text, int coun
         else itemFocused = -1;
 
         // Reset item rectangle y to [0]
-        itemBounds.y = bounds.y + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(DEFAULT, BORDER_WIDTH);
+        itemBounds.y = bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING) + GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH);
     }
     //--------------------------------------------------------------------
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(DEFAULT, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER + state*3)), guiAlpha), GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));     // Draw background
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BACKGROUND_COLOR)));     // Draw background
 
     // Draw visible items
     for (int i = 0; ((i < visibleItems) && (text != NULL)); i++)
     {
         if (state == STATE_DISABLED)
         {
-            if ((startIndex + i) == itemSelected) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_DISABLED)), guiAlpha), Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_DISABLED)), guiAlpha));
+            if ((startIndex + i) == itemSelected) GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BASE_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
-            GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_DISABLED)), guiAlpha));
+            GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
         }
         else
         {
             if ((startIndex + i) == itemSelected)
             {
                 // Draw item selected
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_PRESSED)), guiAlpha), Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_PRESSED)), guiAlpha));
-                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_PRESSED)), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BASE_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_COLOR_PRESSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
             else if ((startIndex + i) == itemFocused)
             {
                 // Draw item focused
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_FOCUSED)), guiAlpha), Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_FOCUSED)), guiAlpha));
-                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_FOCUSED)), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, itemBounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BASE_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_COLOR_FOCUSED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
             else
             {
                 // Draw item normal
-                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(DEFAULT, itemBounds), GuiGetStyle(LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(LISTVIEW, TEXT_COLOR_NORMAL)), guiAlpha));
+                GuiDrawText(ALL_CORE_PARAMS_PASS, text[startIndex + i], GetTextBounds(ALL_CORE_PARAMS_PASS, DEFAULT, itemBounds), GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, TEXT_COLOR_NORMAL)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
         }
 
         // Update item rectangle y position for next item
-        itemBounds.y += (GuiGetStyle(LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(LISTVIEW, LIST_ITEMS_SPACING));
+        itemBounds.y += (GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_HEIGHT) + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, LIST_ITEMS_SPACING));
     }
 
     if (useScrollBar)
     {
         Rectangle scrollBarBounds = {
-            bounds.x + bounds.width - GuiGetStyle(LISTVIEW, BORDER_WIDTH) - GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH),
-            bounds.y + GuiGetStyle(LISTVIEW, BORDER_WIDTH), (float)GuiGetStyle(LISTVIEW, SCROLLBAR_WIDTH),
-            bounds.height - 2*GuiGetStyle(DEFAULT, BORDER_WIDTH)
+            bounds.x + bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_WIDTH) - GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH),
+            bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER_WIDTH), (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, SCROLLBAR_WIDTH),
+            bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_WIDTH)
         };
 
         // Calculate percentage of visible items and apply same percentage to scrollbar
         float percentVisible = (float)(endIndex - startIndex)/count;
         float sliderSize = bounds.height*percentVisible;
 
-        int prevSliderSize = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);   // Save default slider size
-        int prevScrollSpeed = GuiGetStyle(SCROLLBAR, SCROLL_SPEED); // Save default scroll speed
-        GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, (int)sliderSize);            // Change slider size
-        GuiSetStyle(SCROLLBAR, SCROLL_SPEED, count - visibleItems); // Change scroll speed
+        int prevSliderSize = GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_SIZE);   // Save default slider size
+        int prevScrollSpeed = GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED); // Save default scroll speed
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, (int)sliderSize);            // Change slider size
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SPEED, count - visibleItems); // Change scroll speed
 
         startIndex = GuiScrollBar(ALL_CORE_PARAMS_PASS, scrollBarBounds, startIndex, 0, count - visibleItems);
 
-        GuiSetStyle(SCROLLBAR, SCROLL_SPEED, prevScrollSpeed); // Reset scroll speed to default
-        GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, prevSliderSize); // Reset slider size to default
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SPEED, prevScrollSpeed); // Reset scroll speed to default
+        GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, prevSliderSize); // Reset slider size to default
     }
     //--------------------------------------------------------------------
 
@@ -2016,7 +2020,7 @@ Color GuiColorPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Color c
     const Color colWhite = { 255, 255, 255, 255 };
     const Color colBlack = { 0, 0, 0, 255 };
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     Vector2 pickerSelector = { 0 };
 
     Vector3 vcolor = { (float)color.r/255.0f, (float)color.g/255.0f, (float)color.b/255.0f };
@@ -2034,7 +2038,7 @@ Color GuiColorPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Color c
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -2072,19 +2076,19 @@ Color GuiColorPanel(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Color c
     //--------------------------------------------------------------------
     if (state != STATE_DISABLED)
     {
-        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(colWhite, guiAlpha), Fade(colWhite, guiAlpha), Fade(maxHueCol, guiAlpha), Fade(maxHueCol, guiAlpha));
-        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(colBlack, 0), Fade(colBlack, guiAlpha), Fade(colBlack, guiAlpha), Fade(colBlack, 0));
+        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(colWhite,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(colWhite,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(maxHueCol,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(maxHueCol,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(colBlack, 0), Fade(colBlack,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(colBlack,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(colBlack, 0));
 
         // Draw color picker: selector
-        Rectangle selector = { pickerSelector.x - GuiGetStyle(COLORPICKER, COLOR_SELECTOR_SIZE)/2, pickerSelector.y - GuiGetStyle(COLORPICKER, COLOR_SELECTOR_SIZE)/2, (float)GuiGetStyle(COLORPICKER, COLOR_SELECTOR_SIZE), (float)GuiGetStyle(COLORPICKER, COLOR_SELECTOR_SIZE) };
-        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(colWhite, guiAlpha));
+        Rectangle selector = { pickerSelector.x - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, COLOR_SELECTOR_SIZE)/2, pickerSelector.y - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, COLOR_SELECTOR_SIZE)/2, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, COLOR_SELECTOR_SIZE), (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, COLOR_SELECTOR_SIZE) };
+        GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(colWhite,GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
     else
     {
-        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), guiAlpha), Fade(Fade(colBlack, 0.6f), guiAlpha), Fade(Fade(colBlack, 0.6f), guiAlpha), Fade(Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER_COLOR_DISABLED)), 0.6f), guiAlpha));
+        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(Fade(colBlack, 0.6f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(Fade(colBlack, 0.6f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), 0.6f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
     //--------------------------------------------------------------------
 
     return color;
@@ -2098,12 +2102,12 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
         #define RAYGUI_COLORBARALPHA_CHECKED_SIZE   10
     #endif
 
-    GuiState state = guiState;
-    Rectangle selector = { (float)bounds.x + alpha*bounds.width - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.y - GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT), (float)bounds.height + GuiGetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2 };
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
+    Rectangle selector = { (float)bounds.x + alpha*bounds.width - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.y - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT), (float)bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2 };
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -2117,7 +2121,7 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
                 alpha = (mousePoint.x - bounds.x)/bounds.width;
                 if (alpha <= 0.0f) alpha = 0.0f;
                 if (alpha >= 1.0f) alpha = 1.0f;
-                //selector.x = bounds.x + (int)(((alpha - 0)/(100 - 0))*(bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH))) - selector.width/2;
+                //selector.x = bounds.x + (int)(((alpha - 0)/(100 - 0))*(bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER_WIDTH))) - selector.width/2;
             }
             else state = STATE_FOCUSED;
         }
@@ -2138,18 +2142,18 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
             for (int y = 0; y < checksY; y++)
             {
                 Rectangle check = { bounds.x + x*RAYGUI_COLORBARALPHA_CHECKED_SIZE, bounds.y + y*RAYGUI_COLORBARALPHA_CHECKED_SIZE, RAYGUI_COLORBARALPHA_CHECKED_SIZE, RAYGUI_COLORBARALPHA_CHECKED_SIZE };
-                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, ((x + y)%2)? Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), 0.4f), guiAlpha) : Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.4f), guiAlpha));
+                GuiDrawRectangle(ALL_CORE_PARAMS_PASS, check, 0, BLANK, ((x + y)%2)? Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), 0.4f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha) : Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.4f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
             }
         }
 
-        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 }, guiAlpha));
+        DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, RAYGUI_CLITERAL(Color){ 255, 255, 255, 0 }, Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color){ 0, 0, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
-    else DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
+    else DrawRectangleGradientEx(ALL_CORE_PARAMS_PASS, bounds, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     // Draw alpha bar: selector
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return alpha;
@@ -2163,12 +2167,12 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
 //      float GuiColorBarLuminance() [BLACK->WHITE]
 float GuiColorBarHue(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float hue)
 {
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     Rectangle selector = { (float)bounds.x - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW), (float)bounds.y + hue/360.0f*bounds.height - GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT)/2, (float)bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_OVERFLOW)*2, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_SELECTOR_HEIGHT) };
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -2205,19 +2209,19 @@ float GuiColorBarHue(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float 
     if (state != STATE_DISABLED)
     {
         // Draw hue bar:color bars
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y), (int)bounds.width, (int)ceilf(bounds.height/6),  Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 }, guiAlpha));
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + bounds.height/6), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 }, guiAlpha));
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 2*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 3*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 4*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha));
-        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 5*(bounds.height/6)), (int)bounds.width, (int)(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 }, guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 }, guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y), (int)bounds.width, (int)ceilf(bounds.height/6),  Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + bounds.height/6), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 255, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 2*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 3*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 255, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 4*(bounds.height/6)), (int)bounds.width, (int)ceilf(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 0, 0, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
+        DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)(bounds.y + 5*(bounds.height/6)), (int)bounds.width, (int)(bounds.height/6), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 255, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(RAYGUI_CLITERAL(Color) { 255, 0, 0, 255 },GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     }
-    else DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f), guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)), guiAlpha));
+    else DrawRectangleGradientV(ALL_CORE_PARAMS_PASS, (int)bounds.x, (int)bounds.y, (int)bounds.width, (int)bounds.height, Fade(Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BASE_COLOR_DISABLED)), 0.1f),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha), BLANK);
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), BLANK);
 
     // Draw hue bar: selector
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)), guiAlpha));
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, selector, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
     //--------------------------------------------------------------------
 
     return hue;
@@ -2234,7 +2238,7 @@ Color GuiColorPicker(ALL_CORE_PARAMS, Rectangle bounds, const char *text, Color 
     color = GuiColorPanel(ALL_CORE_PARAMS_PASS, bounds, NULL, color);
 
     Rectangle boundsHue = { (float)bounds.x + bounds.width + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_PADDING), (float)bounds.y, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, HUEBAR_WIDTH), (float)bounds.height };
-    //Rectangle boundsAlpha = { bounds.x, bounds.y + bounds.height + GuiGetStyle(COLORPICKER, BARS_PADDING), bounds.width, GuiGetStyle(COLORPICKER, BARS_THICK) };
+    //Rectangle boundsAlpha = { bounds.x, bounds.y + bounds.height + GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BARS_PADDING), bounds.width, GuiGetStyle(ALL_CORE_PARAMS_PASS, COLORPICKER, BARS_THICK) };
 
     Vector3 hsv = ConvertRGBtoHSV(RAYGUI_CLITERAL(Vector3){ color.r/255.0f, color.g/255.0f, color.b/255.0f });
     hsv.x = GuiColorBarHue(ALL_CORE_PARAMS_PASS, boundsHue, NULL, hsv.x);
@@ -2259,14 +2263,14 @@ int GuiMessageBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const ch
     int clicked = -1;    // Returns clicked button from buttons list, 0 refers to closed window button
 
     int buttonCount = 0;
-    const char **buttonsText = GuiTextSplit(buttons, &buttonCount, NULL);
+    const char **buttonsText = GuiTextSplit(ALL_CORE_PARAMS_PASS, buttons, &buttonCount, NULL);
     Rectangle buttonBounds = { 0 };
     buttonBounds.x = bounds.x + RAYGUI_MESSAGEBOX_BUTTON_PADDING;
     buttonBounds.y = bounds.y + bounds.height - RAYGUI_MESSAGEBOX_BUTTON_HEIGHT - RAYGUI_MESSAGEBOX_BUTTON_PADDING;
     buttonBounds.width = (bounds.width - RAYGUI_MESSAGEBOX_BUTTON_PADDING*(buttonCount + 1))/buttonCount;
     buttonBounds.height = RAYGUI_MESSAGEBOX_BUTTON_HEIGHT;
 
-    Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
+    Vector2 textSize = MeasureTextEx(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
 
     Rectangle textBounds = { 0 };
     textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
@@ -2318,7 +2322,7 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
     int btnIndex = -1;
 
     int buttonCount = 0;
-    const char **buttonsText = GuiTextSplit(buttons, &buttonCount, NULL);
+    const char **buttonsText = GuiTextSplit(ALL_CORE_PARAMS_PASS, buttons, &buttonCount, NULL);
     Rectangle buttonBounds = { 0 };
     buttonBounds.x = bounds.x + RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
     buttonBounds.y = bounds.y + bounds.height - RAYGUI_TEXTINPUTBOX_BUTTON_HEIGHT - RAYGUI_TEXTINPUTBOX_BUTTON_PADDING;
@@ -2330,7 +2334,7 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
     Rectangle textBounds = { 0 };
     if (message != NULL)
     {
-        Vector2 textSize = MeasureTextEx(guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
+        Vector2 textSize = MeasureTextEx(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, message, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), 1);
 
         textBounds.x = bounds.x + bounds.width/2 - textSize.x/2;
         textBounds.y = bounds.y + RAYGUI_WINDOWBOX_STATUSBAR_HEIGHT + messageInputHeight/4 - textSize.y/2;
@@ -2375,7 +2379,7 @@ int GuiTextInputBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title, const 
     }
 
     int prevBtnTextAlignment = GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, TEXT_ALIGNMENT);
-    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
 
     for (int i = 0; i < buttonCount; i++)
     {
@@ -2400,7 +2404,7 @@ Vector2 GuiGrid(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float spaci
         #define RAYGUI_GRID_ALPHA    0.15f
     #endif
 
-    GuiState state = GetGui(ALL_CORE_PARAMS)->guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS_PASS)->guiState;
     Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
     Vector2 currentCell = { -1, -1 };
 
@@ -2409,7 +2413,7 @@ Vector2 GuiGrid(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float spaci
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         if (CheckCollisionPointRec(mousePoint, bounds))
         {
@@ -2672,82 +2676,82 @@ void GuiLoadStyle(const char *fileName)
 }
 #endif
 // Load style default over global style
-void GuiLoadStyleDefault(void)
+void GuiLoadStyleDefault(ALL_CORE_PARAMS)
 {
     // We set this variable first to avoid cyclic function calls
     // when calling GuiSetStyle() and GuiGetStyle()
-    guiStyleLoaded = true;
+    GetGui(ALL_CORE_PARAMS_PASS)->guiStyleLoaded = true;
 
     // Initialize default LIGHT style property values
-    GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0x838383ff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0xc9c9c9ff);
-    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0x686868ff);
-    GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x5bb2d9ff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, 0xc9effeff);
-    GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, 0x6c9bbcff);
-    GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, 0x0492c7ff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0x97e8ffff);
-    GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0x368bafff);
-    GuiSetStyle(DEFAULT, BORDER_COLOR_DISABLED, 0xb5c1c2ff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_DISABLED, 0xe6e9e9ff);
-    GuiSetStyle(DEFAULT, TEXT_COLOR_DISABLED, 0xaeb7b8ff);
-    GuiSetStyle(DEFAULT, BORDER_WIDTH, 1);                       // WARNING: Some controls use other values
-    GuiSetStyle(DEFAULT, TEXT_PADDING, 0);                       // WARNING: Some controls use other values
-    GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER); // WARNING: Some controls use other values
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BORDER_COLOR_NORMAL, 0x838383ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BASE_COLOR_NORMAL, 0xc9c9c9ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_COLOR_NORMAL, 0x686868ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BORDER_COLOR_FOCUSED, 0x5bb2d9ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BASE_COLOR_FOCUSED, 0xc9effeff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_COLOR_FOCUSED, 0x6c9bbcff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BORDER_COLOR_PRESSED, 0x0492c7ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BASE_COLOR_PRESSED, 0x97e8ffff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_COLOR_PRESSED, 0x368bafff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BORDER_COLOR_DISABLED, 0xb5c1c2ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BASE_COLOR_DISABLED, 0xe6e9e9ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_COLOR_DISABLED, 0xaeb7b8ff);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BORDER_WIDTH, 1);                       // WARNING: Some controls use other values
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_PADDING, 0);                       // WARNING: Some controls use other values
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER); // WARNING: Some controls use other values
 
     // Initialize control-specific property values
     // NOTE: Those properties are in default list but require specific values by control type
-    GuiSetStyle(LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(BUTTON, BORDER_WIDTH, 2);
-    GuiSetStyle(SLIDER, TEXT_PADDING, 4);
-    GuiSetStyle(CHECKBOX, TEXT_PADDING, 4);
-    GuiSetStyle(CHECKBOX, TEXT_ALIGNMENT, TEXT_ALIGN_RIGHT);
-    GuiSetStyle(TEXTBOX, TEXT_PADDING, 4);
-    GuiSetStyle(TEXTBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(VALUEBOX, TEXT_PADDING, 4);
-    GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(SPINNER, TEXT_PADDING, 4);
-    GuiSetStyle(SPINNER, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    GuiSetStyle(STATUSBAR, TEXT_PADDING, 8);
-    GuiSetStyle(STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,LABEL, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,BUTTON, BORDER_WIDTH, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SLIDER, TEXT_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,CHECKBOX, TEXT_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,CHECKBOX, TEXT_ALIGNMENT, TEXT_ALIGN_RIGHT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, TEXT_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,VALUEBOX, TEXT_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SPINNER, TEXT_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SPINNER, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,STATUSBAR, TEXT_PADDING, 8);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,STATUSBAR, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
 
     // Initialize extended property values
     // NOTE: By default, extended property values are initialized to 0
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 10);                // DEFAULT, shared by all controls
-    GuiSetStyle(DEFAULT, TEXT_SPACING, 1);              // DEFAULT, shared by all controls
-    GuiSetStyle(DEFAULT, LINE_COLOR, 0x90abb5ff);       // DEFAULT specific property
-    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0xf5f5f5ff); // DEFAULT specific property
-    GuiSetStyle(TOGGLE, GROUP_PADDING, 2);
-    GuiSetStyle(SLIDER, SLIDER_WIDTH, 16);
-    GuiSetStyle(SLIDER, SLIDER_PADDING, 1);
-    GuiSetStyle(PROGRESSBAR, PROGRESS_PADDING, 1);
-    GuiSetStyle(CHECKBOX, CHECK_PADDING, 1);
-    GuiSetStyle(COMBOBOX, COMBO_BUTTON_WIDTH, 32);
-    GuiSetStyle(COMBOBOX, COMBO_BUTTON_SPACING, 2);
-    GuiSetStyle(DROPDOWNBOX, ARROW_PADDING, 16);
-    GuiSetStyle(DROPDOWNBOX, DROPDOWN_ITEMS_SPACING, 2);
-    GuiSetStyle(TEXTBOX, TEXT_LINES_SPACING, 4);
-    GuiSetStyle(TEXTBOX, TEXT_INNER_PADDING, 4);
-    GuiSetStyle(SPINNER, SPIN_BUTTON_WIDTH, 24);
-    GuiSetStyle(SPINNER, SPIN_BUTTON_SPACING, 2);
-    GuiSetStyle(SCROLLBAR, BORDER_WIDTH, 0);
-    GuiSetStyle(SCROLLBAR, ARROWS_VISIBLE, 0);
-    GuiSetStyle(SCROLLBAR, ARROWS_SIZE, 6);
-    GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING, 0);
-    GuiSetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE, 16);
-    GuiSetStyle(SCROLLBAR, SCROLL_PADDING, 0);
-    GuiSetStyle(SCROLLBAR, SCROLL_SPEED, 12);
-    GuiSetStyle(LISTVIEW, LIST_ITEMS_HEIGHT, 24);
-    GuiSetStyle(LISTVIEW, LIST_ITEMS_SPACING, 2);
-    GuiSetStyle(LISTVIEW, SCROLLBAR_WIDTH, 12);
-    GuiSetStyle(LISTVIEW, SCROLLBAR_SIDE, SCROLLBAR_RIGHT_SIDE);
-    GuiSetStyle(COLORPICKER, COLOR_SELECTOR_SIZE, 8);
-    GuiSetStyle(COLORPICKER, HUEBAR_WIDTH, 16);
-    GuiSetStyle(COLORPICKER, HUEBAR_PADDING, 8);
-    GuiSetStyle(COLORPICKER, HUEBAR_SELECTOR_HEIGHT, 8);
-    GuiSetStyle(COLORPICKER, HUEBAR_SELECTOR_OVERFLOW, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_SIZE, 10);                // DEFAULT, shared by all controls
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, TEXT_SPACING, 1);              // DEFAULT, shared by all controls
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, LINE_COLOR, 0x90abb5ff);       // DEFAULT specific property
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, BACKGROUND_COLOR, 0xf5f5f5ff); // DEFAULT specific property
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TOGGLE, GROUP_PADDING, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SLIDER, SLIDER_WIDTH, 16);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SLIDER, SLIDER_PADDING, 1);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,PROGRESSBAR, PROGRESS_PADDING, 1);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,CHECKBOX, CHECK_PADDING, 1);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COMBOBOX, COMBO_BUTTON_WIDTH, 32);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COMBOBOX, COMBO_BUTTON_SPACING, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, ARROW_PADDING, 16);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, DROPDOWN_ITEMS_SPACING, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, TEXT_LINES_SPACING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,TEXTBOX, TEXT_INNER_PADDING, 4);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SPINNER, SPIN_BUTTON_WIDTH, 24);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SPINNER, SPIN_BUTTON_SPACING, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, BORDER_WIDTH, 0);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, ARROWS_VISIBLE, 0);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, ARROWS_SIZE, 6);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_PADDING, 0);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SLIDER_SIZE, 16);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_PADDING, 0);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,SCROLLBAR, SCROLL_SPEED, 12);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,LISTVIEW, LIST_ITEMS_HEIGHT, 24);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,LISTVIEW, LIST_ITEMS_SPACING, 2);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,LISTVIEW, SCROLLBAR_WIDTH, 12);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,LISTVIEW, SCROLLBAR_SIDE, SCROLLBAR_RIGHT_SIDE);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COLORPICKER, COLOR_SELECTOR_SIZE, 8);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COLORPICKER, HUEBAR_WIDTH, 16);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COLORPICKER, HUEBAR_PADDING, 8);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COLORPICKER, HUEBAR_SELECTOR_HEIGHT, 8);
+    GuiSetStyle(ALL_CORE_PARAMS_PASS,COLORPICKER, HUEBAR_SELECTOR_OVERFLOW, 2);
 
-    guiFont = GetFontDefault();     // Initialize default font
+   GetGui(ALL_CORE_PARAMS_PASS)->guiFont = GetFontDefault();     // Initialize default font
 }
 
 // Get text with icon id prepended
@@ -2887,7 +2891,7 @@ void GuiDrawIcon(ALL_CORE_PARAMS, int iconId, int posX, int posY, int pixelSize,
 
 // Get icon bit data
 // NOTE: Bit data array grouped as unsigned int (RAYGUI_ICON_SIZE*RAYGUI_ICON_SIZE/32 elements)
-unsigned int *GuiGetIconData(int iconId)
+unsigned int *GuiGetIconData( int iconId)
 {
      unsigned int iconData[RAYGUI_ICON_DATA_ELEMENTS] = { 0 };
     memset(iconData, 0, RAYGUI_ICON_DATA_ELEMENTS*sizeof(unsigned int));
@@ -2905,13 +2909,13 @@ void GuiSetIconData(int iconId, unsigned int *data)
 }
 
 // Set icon scale (1 by default)
-void GuiSetIconScale(unsigned int scale)
+void GuiSetIconScale(ALL_CORE_PARAMS, unsigned int scale)
 {
-    guiIconScale = (scale < 1)? 1 : scale;
+    GetGui(ALL_CORE_PARAMS_PASS)->guiIconScale = (scale < 1)? 1 : scale;
 }
 
 // Set icon pixel value
-void GuiSetIconPixel(int iconId, int x, int y)
+void GuiSetIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y)
 {
     #define BIT_SET(a,b)   ((a) |= (1u<<(b)))
 
@@ -2921,7 +2925,7 @@ void GuiSetIconPixel(int iconId, int x, int y)
 }
 
 // Clear icon pixel value
-void GuiClearIconPixel(int iconId, int x, int y)
+void GuiClearIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y)
 {
     #define BIT_CLEAR(a,b) ((a) &= ~((1u)<<(b)))
 
@@ -2931,7 +2935,7 @@ void GuiClearIconPixel(int iconId, int x, int y)
 }
 
 // Check icon pixel value
-BOOL GuiCheckIconPixel(int iconId, int x, int y)
+BOOL GuiCheckIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y)
 {
     #define BIT_CHECK(a,b) ((a) & (1u<<(b)))
 
@@ -2943,7 +2947,7 @@ BOOL GuiCheckIconPixel(int iconId, int x, int y)
 // Module specific Functions Definition
 //----------------------------------------------------------------------------------
 // Gui get text width considering icon
- int GetTextWidth(const char *text)
+ int GetTextWidth(ALL_CORE_PARAMS, const char *text)
 {
     #if !defined(ICON_TEXT_PADDING)
         #define ICON_TEXT_PADDING   4
@@ -2966,10 +2970,10 @@ BOOL GuiCheckIconPixel(int iconId, int x, int y)
             }
         }
         
-        // Make sure guiFont is set, GuiGetStyle() initializes it lazynessly
-        float fontSize = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        // Make sure GetGui(ALL_CORE_PARAMS_PASS)->guiFont is set, GuiGetStyle() initializes it lazynessly
+        float fontSize = (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
         
-        size = MeasureTextEx(guiFont, text + textIconOffset, fontSize, (float)GuiGetStyle(DEFAULT, TEXT_SPACING));
+        size = MeasureTextEx(GetGui(ALL_CORE_PARAMS_PASS)->guiFont, text + textIconOffset, fontSize, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING));
         if (textIconOffset > 0) size.x += (RAYGUI_ICON_SIZE - ICON_TEXT_PADDING);
     }
 
@@ -2977,25 +2981,25 @@ BOOL GuiCheckIconPixel(int iconId, int x, int y)
 }
 
 // Get text bounds considering control bounds
- Rectangle GetTextBounds(int control, Rectangle bounds)
+ Rectangle GetTextBounds(ALL_CORE_PARAMS, int control, Rectangle bounds)
 {
     Rectangle textBounds = bounds;
 
-    textBounds.x = bounds.x + GuiGetStyle(control, BORDER_WIDTH);
-    textBounds.y = bounds.y + GuiGetStyle(control, BORDER_WIDTH);
-    textBounds.width = bounds.width - 2*GuiGetStyle(control, BORDER_WIDTH);
-    textBounds.height = bounds.height - 2*GuiGetStyle(control, BORDER_WIDTH);
+    textBounds.x = bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, control, BORDER_WIDTH);
+    textBounds.y = bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, control, BORDER_WIDTH);
+    textBounds.width = bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, control, BORDER_WIDTH);
+    textBounds.height = bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, control, BORDER_WIDTH);
 
     // Consider TEXT_PADDING properly, depends on control type and TEXT_ALIGNMENT
     switch (control)
     {
-        case COMBOBOX: bounds.width -= (GuiGetStyle(control, COMBO_BUTTON_WIDTH) + GuiGetStyle(control, COMBO_BUTTON_SPACING)); break;
+        case COMBOBOX: bounds.width -= (GuiGetStyle(ALL_CORE_PARAMS_PASS, control, COMBO_BUTTON_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, control, COMBO_BUTTON_SPACING)); break;
         case VALUEBOX: break;   // NOTE: ValueBox text value always centered, text padding applies to label
         default:
         {
-            if (GuiGetStyle(control, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT) textBounds.x -= GuiGetStyle(control, TEXT_PADDING);
-            else textBounds.x += GuiGetStyle(control, TEXT_PADDING);
-            textBounds.width -= 2 * GuiGetStyle(control, TEXT_PADDING);
+            if (GuiGetStyle(ALL_CORE_PARAMS_PASS, control, TEXT_ALIGNMENT) == TEXT_ALIGN_RIGHT) textBounds.x -= GuiGetStyle(ALL_CORE_PARAMS_PASS, control, TEXT_PADDING);
+            else textBounds.x += GuiGetStyle(ALL_CORE_PARAMS_PASS, control, TEXT_PADDING);
+            textBounds.width -= 2 * GuiGetStyle(ALL_CORE_PARAMS_PASS, control, TEXT_PADDING);
         }
         break;
     }
@@ -3008,7 +3012,7 @@ BOOL GuiCheckIconPixel(int iconId, int x, int y)
 
 // Get text icon if provided and move text cursor
 // NOTE: We support up to 999 values for iconId
- const char *GetTextIcon(const char *text, int *iconId)
+const char *GetTextIcon(ALL_CORE_PARAMS, const char *text, int *iconId)
 {
 #if !defined(RAYGUI_NO_ICONS)
     *iconId = -1;
@@ -3049,7 +3053,7 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
     if ((text != NULL) && (text[0] != '\0'))
     {
         int iconId = 0;
-        text = GetTextIcon(text, &iconId);              // Check text for icon and move cursor
+        text = GetTextIcon(ALL_CORE_PARAMS_PASS, text, &iconId);              // Check text for icon and move cursor
 
         // Get text position depending on alignment and iconId
         //---------------------------------------------------------------------------------
@@ -3057,14 +3061,14 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
 
         // NOTE: We get text size after icon has been processed
         // TODO: REVIEW: We consider text size in case of line breaks! -> MeasureTextEx() depends on raylib!
-        Vector2 textSize = MeasureTextEx(GuiGetFont(), text, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
+        Vector2 textSize = MeasureTextEx(GuiGetFont(ALL_CORE_PARAMS_PASS), text, GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING));
         //int textWidth = GetTextWidth(text);
-        //int textHeight = GuiGetStyle(DEFAULT, TEXT_SIZE);
+        //int textHeight = GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE);
 
         // If text requires an icon, add size to measure
         if (iconId >= 0)
         {
-            textSize.x += RAYGUI_ICON_SIZE*guiIconScale;
+            textSize.x += RAYGUI_ICON_SIZE*GetGui(ALL_CORE_PARAMS_PASS)->guiIconScale;
 
             // WARNING: If only icon provided, text could be pointing to EOF character: '\0'
             if ((text != NULL) && (text[0] != '\0')) textSize.x += ICON_TEXT_PADDING;
@@ -3103,11 +3107,11 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
         if (iconId >= 0)
         {
             // NOTE: We consider icon height, probably different than text size
-            GuiDrawIcon(ALL_CORE_PARAMS_PASS, iconId, (int)position.x, (int)(bounds.y + bounds.height/2 - RAYGUI_ICON_SIZE*guiIconScale/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height)), guiIconScale, tint);
-            position.x += (RAYGUI_ICON_SIZE*guiIconScale + ICON_TEXT_PADDING);
+            GuiDrawIcon(ALL_CORE_PARAMS_PASS, iconId, (int)position.x, (int)(bounds.y + bounds.height/2 - RAYGUI_ICON_SIZE*GetGui(ALL_CORE_PARAMS_PASS)->guiIconScale/2 + TEXT_VALIGN_PIXEL_OFFSET(bounds.height)), GetGui(ALL_CORE_PARAMS_PASS)->guiIconScale, tint);
+            position.x += (RAYGUI_ICON_SIZE*GetGui(ALL_CORE_PARAMS_PASS)->guiIconScale + ICON_TEXT_PADDING);
         }
 #endif
-        DrawTextEx(ALL_CORE_PARAMS_PASS, guiFont, text, position, (float)GuiGetStyle(DEFAULT, TEXT_SIZE), (float)GuiGetStyle(DEFAULT, TEXT_SPACING), tint);
+        DrawTextEx(ALL_CORE_PARAMS_PASS,GetGui(ALL_CORE_PARAMS_PASS)->guiFont, text, position, (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SIZE), (float)GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, TEXT_SPACING), tint);
         //---------------------------------------------------------------------------------
     }
 }
@@ -3133,7 +3137,7 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
 
 // Split controls text into multiple strings
 // Also check for multiple columns (required by GuiToggleGroup())
- const char **GuiTextSplit(const char *text, int *count, int *textRow)
+ const char **GuiTextSplit(ALL_CORE_PARAMS, const char *text, int *count, int *textRow)
 {
     // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
     // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
@@ -3312,13 +3316,13 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
 // Scroll bar control (used by GuiScrollPanel())
  int GuiScrollBar(ALL_CORE_PARAMS, Rectangle bounds, int value, int minValue, int maxValue)
 {
-    GuiState state = guiState;
+    GuiState state = (GetGui(ALL_CORE_PARAMS_PASS)->guiState);
 
     // Is the scrollbar horizontal or vertical?
     BOOL isVertical = (bounds.width > bounds.height) ? false : true;
 
     // The size (width or height depending on scrollbar type) of the spinner buttons
-    const int spinnerSize = GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE) ? (isVertical ? (int)bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) : (int)bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH)) : 0;
+    const int spinnerSize = GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, ARROWS_VISIBLE) ? (isVertical ? (int)bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) : (int)bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH)) : 0;
 
     // Arrow buttons [<] [>] [∧] [∨]
     Rectangle arrowUpLeft = { 0 };
@@ -3335,29 +3339,29 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
     if (value < minValue) value = minValue;
 
     const int range = maxValue - minValue;
-    int sliderSize = GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_SIZE);
+    int sliderSize = GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_SIZE);
 
     // Calculate rectangles for all of the components
-    arrowUpLeft = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
+    arrowUpLeft = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
 
     if (isVertical)
     {
-        arrowDownRight = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + bounds.height - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
-        scrollbar = RAYGUI_CLITERAL(Rectangle) { bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), arrowUpLeft.y + arrowUpLeft.height, bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING)), bounds.height - arrowUpLeft.height - arrowDownRight.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) };
+        arrowDownRight = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)bounds.y + bounds.height - spinnerSize - GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
+        scrollbar = RAYGUI_CLITERAL(Rectangle) { bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_PADDING), arrowUpLeft.y + arrowUpLeft.height, bounds.width - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_PADDING)), bounds.height - arrowUpLeft.height - arrowDownRight.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) };
         sliderSize = (sliderSize >= scrollbar.height) ? ((int)scrollbar.height - 2) : sliderSize;     // Make sure the slider won't get outside of the scrollbar
-        slider = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)scrollbar.y + (int)(((float)(value - minValue)/range)*(scrollbar.height - sliderSize)), (float)bounds.width - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)), (float)sliderSize };
+        slider = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_PADDING), (float)scrollbar.y + (int)(((float)(value - minValue)/range)*(scrollbar.height - sliderSize)), (float)bounds.width - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_PADDING)), (float)sliderSize };
     }
     else
     {
-        arrowDownRight = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + bounds.width - spinnerSize - GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
-        scrollbar = RAYGUI_CLITERAL(Rectangle) { arrowUpLeft.x + arrowUpLeft.width, bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING), bounds.width - arrowUpLeft.width - arrowDownRight.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH), bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_PADDING)) };
+        arrowDownRight = RAYGUI_CLITERAL(Rectangle) { (float)bounds.x + bounds.width - spinnerSize - GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), (float)spinnerSize, (float)spinnerSize };
+        scrollbar = RAYGUI_CLITERAL(Rectangle) { arrowUpLeft.x + arrowUpLeft.width, bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_PADDING), bounds.width - arrowUpLeft.width - arrowDownRight.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), bounds.height - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_PADDING)) };
         sliderSize = (sliderSize >= scrollbar.width) ? ((int)scrollbar.width - 2) : sliderSize;       // Make sure the slider won't get outside of the scrollbar
-        slider = RAYGUI_CLITERAL(Rectangle) { (float)scrollbar.x + (int)(((float)(value - minValue)/range)*(scrollbar.width - sliderSize)), (float)bounds.y + GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING), (float)sliderSize, (float)bounds.height - 2*(GuiGetStyle(SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(SCROLLBAR, SCROLL_SLIDER_PADDING)) };
+        slider = RAYGUI_CLITERAL(Rectangle) { (float)scrollbar.x + (int)(((float)(value - minValue)/range)*(scrollbar.width - sliderSize)), (float)bounds.y + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_PADDING), (float)sliderSize, (float)bounds.height - 2*(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) + GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SLIDER_PADDING)) };
     }
 
     // Update control
     //--------------------------------------------------------------------
-    if ((state != STATE_DISABLED) && !guiLocked)
+    if ((state != STATE_DISABLED) && !GetGui(ALL_CORE_PARAMS_PASS)->guiLocked)
     {
         Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
 
@@ -3371,8 +3375,8 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
 
             if (IsMouseButtonPressed(ALL_CORE_PARAMS_PASS, MOUSE_LEFT_BUTTON))
             {
-                if (CheckCollisionPointRec(mousePoint, arrowUpLeft)) value -= range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
-                else if (CheckCollisionPointRec(mousePoint, arrowDownRight)) value += range/GuiGetStyle(SCROLLBAR, SCROLL_SPEED);
+                if (CheckCollisionPointRec(mousePoint, arrowUpLeft)) value -= range/GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
+                else if (CheckCollisionPointRec(mousePoint, arrowDownRight)) value += range/GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, SCROLL_SPEED);
 
                 state = STATE_PRESSED;
             }
@@ -3380,12 +3384,12 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
             {
                 if (!isVertical)
                 {
-                    Rectangle scrollArea = { arrowUpLeft.x + arrowUpLeft.width, arrowUpLeft.y, scrollbar.width, bounds.height - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH) };
+                    Rectangle scrollArea = { arrowUpLeft.x + arrowUpLeft.width, arrowUpLeft.y, scrollbar.width, bounds.height - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH) };
                     if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.x - scrollArea.x - slider.width/2)*range)/(scrollArea.width - slider.width) + minValue);
                 }
                 else
                 {
-                    Rectangle scrollArea = { arrowUpLeft.x, arrowUpLeft.y+arrowUpLeft.height, bounds.width - 2*GuiGetStyle(SCROLLBAR, BORDER_WIDTH),  scrollbar.height };
+                    Rectangle scrollArea = { arrowUpLeft.x, arrowUpLeft.y+arrowUpLeft.height, bounds.width - 2*GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH),  scrollbar.height };
                     if (CheckCollisionPointRec(mousePoint, scrollArea)) value = (int)(((float)(mousePoint.y - scrollArea.y - slider.height/2)*range)/(scrollArea.height - slider.height) + minValue);
                 }
             }
@@ -3399,19 +3403,19 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
 
     // Draw control
     //--------------------------------------------------------------------
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(SCROLLBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER + state*3)), guiAlpha), Fade(GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_DISABLED)), guiAlpha));   // Draw the background
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, bounds, GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, LISTVIEW, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha), Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DEFAULT, BORDER_COLOR_DISABLED)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));   // Draw the background
 
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, scrollbar, 0, BLANK, Fade(GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL)), guiAlpha));     // Draw the scrollbar active area background
-    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BORDER + state*3)), guiAlpha));         // Draw the slider bar
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, scrollbar, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, BUTTON, BASE_COLOR_NORMAL)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));     // Draw the scrollbar active area background
+    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, slider, 0, BLANK, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SLIDER, BORDER + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));         // Draw the slider bar
 
     // Draw arrows (using icon if available)
-    if (GuiGetStyle(SCROLLBAR, ARROWS_VISIBLE))
+    if (GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, ARROWS_VISIBLE))
     {
 #if defined(RAYGUI_NO_ICONS)
         GuiDrawText(isVertical ? "^" : "<", RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical ? bounds.width : bounds.height, isVertical ? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
         GuiDrawText(isVertical ? "v" : ">", RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical ? bounds.width : bounds.height, isVertical ? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(DROPDOWNBOX, TEXT + (state*3))), guiAlpha));
+            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, DROPDOWNBOX, TEXT + (state*3))),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));
 #else
 
         char str1[6] = "#121#\0";  
@@ -3420,9 +3424,9 @@ void GuiDrawText(ALL_CORE_PARAMS, const char *text, Rectangle bounds, int alignm
         char str4[6] = "#119#\0";  
 
         GuiDrawText(ALL_CORE_PARAMS_PASS, isVertical ? &str1[0] : &str2[0], RAYGUI_CLITERAL(Rectangle){ arrowUpLeft.x, arrowUpLeft.y, isVertical ? bounds.width : bounds.height, isVertical ? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // ICON_ARROW_UP_FILL / ICON_ARROW_LEFT_FILL
+            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, TEXT + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));   // ICON_ARROW_UP_FILL / ICON_ARROW_LEFT_FILL
         GuiDrawText(ALL_CORE_PARAMS_PASS, isVertical ? &str3[0] : &str4[0], RAYGUI_CLITERAL(Rectangle){ arrowDownRight.x, arrowDownRight.y, isVertical ? bounds.width : bounds.height, isVertical ? bounds.width : bounds.height },
-            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(SCROLLBAR, TEXT + state*3)), guiAlpha));   // ICON_ARROW_DOWN_FILL / ICON_ARROW_RIGHT_FILL
+            TEXT_ALIGN_CENTER, Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS, SCROLLBAR, TEXT + state*3)),GetGui(ALL_CORE_PARAMS_PASS)->guiAlpha));   // ICON_ARROW_DOWN_FILL / ICON_ARROW_RIGHT_FILL
 #endif
     }
     //--------------------------------------------------------------------

@@ -320,25 +320,25 @@ float GuiColorBarAlpha(ALL_CORE_PARAMS, Rectangle bounds, const char *text, floa
 float GuiColorBarHue(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float value);                        // Color Bar Hue control
 
 // Styles loading functions
-void GuiLoadStyleDefault(void);
+void GuiLoadStyleDefault(ALL_CORE_PARAMS);
 #if defined(RAYGUI_FILELOADING)
 void GuiLoadStyle(const char *fileName);              // Load style file over global style variable (.rgs)
-void GuiLoadStyleDefault(void);                       // Load style default over global style
+void GuiLoadStyleDefault(ALL_CORE_PARAMS);                       // Load style default over global style
 #endif
 // Icons functionality
-const char *GuiIconText(int iconId, const char *text); // Get text with icon id prepended (if supported)
+const char *GuiIconText( int iconId, const char *text); // Get text with icon id prepended (if supported)
 
 #if !defined(RAYGUI_NO_ICONS)
 void GuiDrawIcon(ALL_CORE_PARAMS, int iconId, int posX, int posY, int pixelSize, Color color);
 
-unsigned int *GuiGetIcons(void);                      // Get full icons data pointer
-unsigned int *GuiGetIconData(int iconId);             // Get icon bit data
-void GuiSetIconData(int iconId, unsigned int *data);  // Set icon bit data
-void GuiSetIconScale(unsigned int scale);             // Set icon scale (1 by default)
+unsigned int *GuiGetIcons();                      // Get full icons data pointer
+unsigned int *GuiGetIconData( int iconId);             // Get icon bit data
+void GuiSetIconData( int iconId, unsigned int *data);  // Set icon bit data
+void GuiSetIconScale(ALL_CORE_PARAMS, unsigned int scale);             // Set icon scale (1 by default)
 
-void GuiSetIconPixel(int iconId, int x, int y);       // Set icon pixel value
-void GuiClearIconPixel(int iconId, int x, int y);     // Clear icon pixel value
-BOOL GuiCheckIconPixel(int iconId, int x, int y);     // Check icon pixel value
+void GuiSetIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y);       // Set icon pixel value
+void GuiClearIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y);     // Clear icon pixel value
+BOOL GuiCheckIconPixel(ALL_CORE_PARAMS, int iconId, int x, int y);     // Check icon pixel value
 
 #if !defined(RAYGUI_CUSTOM_ICONS)
 //----------------------------------------------------------------------------------
