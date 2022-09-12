@@ -316,10 +316,6 @@
     #define RAYGUI_ICON_SIZE             0
 #endif
 
-#define RAYGUI_MAX_CONTROLS             16      // Maximum number of standard controls
-#define RAYGUI_MAX_PROPS_BASE           16      // Maximum number of standard properties
-#define RAYGUI_MAX_PROPS_EXTENDED        8      // Maximum number of extended properties
-
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
@@ -329,13 +325,6 @@ typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 //----------------------------------------------------------------------------------
 // Global Variables Definition
 //----------------------------------------------------------------------------------
- GuiState guiState = STATE_NORMAL;    // Gui global state, if !STATE_NORMAL, forces defined state
-
- Font guiFont = { 0 };                // Gui current font (WARNING: highly coupled to raylib)
- BOOL guiLocked = false;              // Gui lock state (no inputs processed)
- float guiAlpha = 1.0f;               // Gui element transpacency on drawing
-
- unsigned int guiIconScale = 1;       // Gui icon default scale (if icons enabled)
 
 //----------------------------------------------------------------------------------
 // Style data array for all gui style properties (allocated on data segment by default)
@@ -349,9 +338,7 @@ typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 //
 // guiStyle size is by default: 16*(16 + 8) = 384*4 = 1536 bytes = 1.5 KB
 //----------------------------------------------------------------------------------
- unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)] = { 0 };
 
- BOOL guiStyleLoaded = false;         // Style loaded flag for lazy style initialization
 
 //----------------------------------------------------------------------------------
 // Standalone Mode Functions Declaration
@@ -425,44 +412,63 @@ typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 
  int GuiScrollBar(ALL_CORE_PARAMS, Rectangle bounds, int value, int minValue, int maxValue);   // Scroll bar control, used by GuiScrollPanel()
 
+
+ClientGuiState* GetGui(ALL_CORE_PARAMS)
+{
+    return &gameState->clientStates[gameStateActions->clientId].gui;
+}
+
+
+GuiState* GetGuiState(ALL_CORE_PARAMS)
+{
+    return &GetGui(ALL_CORE_PARAMS)->guiState;
+}
+
+
 //----------------------------------------------------------------------------------
 // Gui Setup Functions Definition
 //----------------------------------------------------------------------------------
 // Enable gui global state
 // NOTE: We check for STATE_DISABLED to avoid messing custom global state setups
-void GuiEnable(void) { if (guiState == STATE_DISABLED) guiState = STATE_NORMAL; }
+void GuiEnable(ALL_CORE_PARAMS) { 
+    GuiState* guiState = GetGuiState(ALL_CORE_PARAMS_PASS);
+    if (*guiState == STATE_DISABLED)
+        *guiState = STATE_NORMAL; 
+}
 
 // Disable gui global state
 // NOTE: We check for STATE_NORMAL to avoid messing custom global state setups
-void GuiDisable(void) { if (guiState == STATE_NORMAL) guiState = STATE_DISABLED; }
+void GuiDisable(ALL_CORE_PARAMS) { 
+        GuiState* guiState = GetGuiState(ALL_CORE_PARAMS_PASS);
+    if (*guiState == STATE_NORMAL) *guiState = STATE_DISABLED; }
 
 // Lock gui global state
-void GuiLock(void) { guiLocked = true; }
+void GuiLock(ALL_CORE_PARAMS) { GetGui(ALL_CORE_PARAMS_PASS)->guiLocked = true; }
 
 // Unlock gui global state
-void GuiUnlock(void) { guiLocked = false; }
+void GuiUnlock(ALL_CORE_PARAMS) { GetGui(ALL_CORE_PARAMS_PASS)->guiLocked = false; }
 
 // Check if gui is locked (global state)
-BOOL GuiIsLocked(void) { return guiLocked; }
+BOOL GuiIsLocked(ALL_CORE_PARAMS) { return GetGui(ALL_CORE_PARAMS_PASS)->guiLocked; }
 
 // Set gui controls alpha global state
-void GuiFade(float alpha)
+void GuiFade(ALL_CORE_PARAMS, float alpha)
 {
     if (alpha < 0.0f) alpha = 0.0f;
     else if (alpha > 1.0f) alpha = 1.0f;
 
-    guiAlpha = alpha;
+    GetGui(ALL_CORE_PARAMS)->guiAlpha = alpha;
 }
 
 // Set gui state (global state)
-void GuiSetState(int state) { guiState = (GuiState)state; }
+void GuiSetState(ALL_CORE_PARAMS, int state) { *GetGuiState(ALL_CORE_PARAMS_PASS) = (GuiState)state; }
 
 // Get gui state (global state)
-int GuiGetState(void) { return guiState; }
+int GuiGetState(ALL_CORE_PARAMS) { return *GetGuiState(ALL_CORE_PARAMS_PASS); }
 
 // Set custom gui font
 // NOTE: Font loading/unloading is external to raygui
-void GuiSetFont(Font font)
+void GuiSetFont(ALL_CORE_PARAMS, Font font)
 {
     if (font.texture.id > 0)
     {
@@ -471,35 +477,36 @@ void GuiSetFont(Font font)
         // default style loading first
         if (!guiStyleLoaded) GuiLoadStyleDefault();
 
-        guiFont = font;
+        GetGui(ALL_CORE_PARAMS_PASS)->guiFont = font;
         GuiSetStyle(DEFAULT, TEXT_SIZE, font.baseSize);
     }
 }
 
 // Get custom gui font
-Font GuiGetFont(void)
+Font GuiGetFont(ALL_CORE_PARAMS)
 {
-    return guiFont;
+    return GetGui(ALL_CORE_PARAMS_PASS)->guiFont;
 }
 
 // Set control style property value
-void GuiSetStyle(int control, int property, int value)
+void GuiSetStyle(ALL_CORE_PARAMS, int control, int property, int value)
 {
+    
     if (!guiStyleLoaded) GuiLoadStyleDefault();
-    guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
+    GetGui(ALL_CORE_PARAMS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
 
     // Default properties are propagated to all controls
     if ((control == 0) && (property < RAYGUI_MAX_PROPS_BASE))
     {
-        for (int i = 1; i < RAYGUI_MAX_CONTROLS; i++) guiStyle[i*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
+        for (int i = 1; i < RAYGUI_MAX_CONTROLS; i++) GetGui(ALL_CORE_PARAMS)->guiStyle[i*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property] = value;
     }
 }
 
 // Get control style property value
-int GuiGetStyle(int control, int property)
+int GuiGetStyle(ALL_CORE_PARAMS, int control, int property)
 {
     if (!guiStyleLoaded) GuiLoadStyleDefault();
-    return guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property];
+    return GetGui(ALL_CORE_PARAMS)->guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property];
 }
 
 //----------------------------------------------------------------------------------
@@ -2393,7 +2400,7 @@ Vector2 GuiGrid(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float spaci
         #define RAYGUI_GRID_ALPHA    0.15f
     #endif
 
-    GuiState state = guiState;
+    GuiState state = GetGui(ALL_CORE_PARAMS)->guiState;
     Vector2 mousePoint = GetMousePosition(ALL_CORE_PARAMS_PASS);
     Vector2 currentCell = { -1, -1 };
 
@@ -2428,14 +2435,14 @@ Vector2 GuiGrid(ALL_CORE_PARAMS, Rectangle bounds, const char *text, float spaci
                 for (int i = 0; i < linesV; i++)
                 {
                     Rectangle lineV = { bounds.x + spacing*i/subdivs, bounds.y, 1, bounds.height };
-                    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, lineV, 0, BLANK, ((i%subdivs) == 0) ? Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA*4) : Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA));
+                    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, lineV, 0, BLANK, ((i%subdivs) == 0) ? Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA*4) : Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA));
                 }
 
                 // Draw horizontal grid lines
                 for (int i = 0; i < linesH; i++)
                 {
                     Rectangle lineH = { bounds.x, bounds.y + spacing*i/subdivs, bounds.width, 1 };
-                    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, lineH, 0, BLANK, ((i%subdivs) == 0) ? Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA*4) : Fade(GetColor(GuiGetStyle(DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA));
+                    GuiDrawRectangle(ALL_CORE_PARAMS_PASS, lineH, 0, BLANK, ((i%subdivs) == 0) ? Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA*4) : Fade(GetColor(GuiGetStyle(ALL_CORE_PARAMS_PASS,DEFAULT, LINE_COLOR)), RAYGUI_GRID_ALPHA));
                 }
             }
         } break;

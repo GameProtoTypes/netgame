@@ -265,22 +265,22 @@ void DrawRectangleGradientEx(ALL_CORE_PARAMS, Rectangle rec, Color col1, Color c
 
 
 // Global gui state control functions
-void GuiEnable(void);                                         // Enable gui controls (global state)
-void GuiDisable(void);                                        // Disable gui controls (global state)
-void GuiLock(void);                                           // Lock gui controls (global state)
-void GuiUnlock(void);                                         // Unlock gui controls (global state)
-BOOL GuiIsLocked(void);                                       // Check if gui is locked (global state)
-void GuiFade(float alpha);                                    // Set gui controls alpha (global state), alpha goes from 0.0f to 1.0f
-void GuiSetState(int state);                                  // Set gui state (global state)
-int GuiGetState(void);                                        // Get gui state (global state)
+void GuiEnable(ALL_CORE_PARAMS);                                         // Enable gui controls (global state)
+void GuiDisable(ALL_CORE_PARAMS);                                        // Disable gui controls (global state)
+void GuiLock(ALL_CORE_PARAMS);                                           // Lock gui controls (global state)
+void GuiUnlock(ALL_CORE_PARAMS);                                         // Unlock gui controls (global state)
+BOOL GuiIsLocked(ALL_CORE_PARAMS);                                       // Check if gui is locked (global state)
+void GuiFade(ALL_CORE_PARAMS, float alpha);                                    // Set gui controls alpha (global state), alpha goes from 0.0f to 1.0f
+void GuiSetState(ALL_CORE_PARAMS, int state);                                  // Set gui state (global state)
+int GuiGetState(ALL_CORE_PARAMS);                                        // Get gui state (global state)
 
 // Font set/get functions
-void GuiSetFont(Font font);                                   // Set gui custom font (global state)
-Font GuiGetFont(void);                                        // Get gui custom font (global state)
+void GuiSetFont(ALL_CORE_PARAMS, Font font);                                   // Set gui custom font (global state)
+Font GuiGetFont(ALL_CORE_PARAMS);                                        // Get gui custom font (global state)
 
 // Style set/get functions
-void GuiSetStyle(int control, int property, int value);       // Set one style property
-int GuiGetStyle(int control, int property);                   // Get one style property
+void GuiSetStyle(ALL_CORE_PARAMS, int control, int property, int value);       // Set one style property
+int GuiGetStyle(ALL_CORE_PARAMS, int control, int property);                   // Get one style property
 
 // Container/separator controls, useful for controls organization
 BOOL GuiWindowBox(ALL_CORE_PARAMS, Rectangle bounds, const char *title);                                       // Window Box control, shows a window that can be closed

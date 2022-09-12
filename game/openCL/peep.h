@@ -308,9 +308,16 @@ struct ClientGuiState
 	int guiRenderRectIdx;
 
 
-	//GuiState rayGuiState;
+	unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)];
 
+ 	BOOL guiStyleLoaded ;         // Style loaded flag for lazy style initialization
+	GuiState guiState ;    // Gui global state, if !STATE_NORMAL, forces defined state
 
+	Font guiFont ;                // Gui current font (WARNING: highly coupled to raylib)
+	BOOL guiLocked ;              // Gui lock state (no inputs processed)
+	float guiAlpha ;               // Gui element transpacency on drawing
+
+	unsigned int guiIconScale;       // Gui icon default scale (if icons enabled)
 
 } typedef ClientGuiState;
 
