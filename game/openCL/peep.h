@@ -308,7 +308,7 @@ struct ClientGuiState
 	int guiRenderRectIdx;
 
 
-	GuiState rayGuiState;
+	//GuiState rayGuiState;
 
 
 
