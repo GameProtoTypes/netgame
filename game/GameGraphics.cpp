@@ -37,6 +37,8 @@ GameGraphics::GameGraphics(GameGPUCompute* gameCompute)
     this->gameCompute = gameCompute;
 }
 
+//__declspec(dllexport) DWORD NvOptimusEnablement = 0;
+//__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 
 void GameGraphics::Init()
 {
@@ -413,9 +415,9 @@ void GameGraphics::Init()
     glBindBuffer(GL_ARRAY_BUFFER, guiRectInstanceVBO);
     glBufferData(GL_ARRAY_BUFFER, (sizeof(glm::vec2)+sizeof(glm::vec3))*gameCompute->maxGuiRects, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);//position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, (sizeof(glm::vec2)+sizeof(glm::vec3)), (void*)0);//position
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);//color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, (sizeof(glm::vec2)+sizeof(glm::vec3)), (void*)0);//color
 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

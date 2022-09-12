@@ -133,19 +133,19 @@ void GameGPUCompute::RunInitCompute1()
 
     ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
     printf("num cl platforms: %d\n", ret_num_platforms);
-
+    const int pfidx = 0;
 
     cl_platform_id* platforms = new cl_platform_id[ret_num_platforms];
 
     ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
+    ret = clGetDeviceIDs(platforms[pfidx], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
     CL_HOST_ERROR_CHECK(ret)
 
     char platformVerInfo[256];
     size_t sizeRet;
-    clGetPlatformInfo(platforms[0], CL_PLATFORM_VERSION,256, &platformVerInfo, &sizeRet);
+    clGetPlatformInfo(platforms[pfidx], CL_PLATFORM_VERSION,256, &platformVerInfo, &sizeRet);
     std::cout << "CL_PLATFORM_VERSION: " << platformVerInfo << std::endl;
 
 
@@ -157,7 +157,7 @@ void GameGPUCompute::RunInitCompute1()
     {
         CL_GL_CONTEXT_KHR, (cl_context_properties)(graphics->sdlGLContext),
         CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-        CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0],
+        CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[pfidx],
         0
     };
     context = clCreateContext(props, 1, &device_id, NULL, NULL, &ret);

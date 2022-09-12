@@ -748,8 +748,11 @@ int32_t main(int32_t argc, char* args[])
         gameGraphics.pGuiShadProgram->SetUniform_Vec3("OverallColor", c);
         gameGraphics.pGuiShadProgram->SetUniform_Mat4("LocalTransform", identity);
 
+
+
+
         glBindVertexArray(gameGraphics.guiRectVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, gameCompute.maxGuiRects*6);
         glBindVertexArray(0);
 
 

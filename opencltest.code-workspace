@@ -99,7 +99,8 @@
 			"xstddef": "cpp",
 			"xtr1common": "cpp",
 			"__nullptr": "cpp",
-			"__tree": "c"
+			"__tree": "c",
+			"*.cl": "c"
 		},
 		"gitdoc.enabled": false
 	}

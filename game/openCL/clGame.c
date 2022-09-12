@@ -4,15 +4,18 @@
 #include "cpugpuvectortypes.h"
 #include "cl_type_glue.h"
 #include "fixedpoint_opencl.h"
+
+
+// #define RAYGUI_STANDALONE
+// #define RAYGUI_IMPLEMENTATION
+// #include "clRayGUI_types.h"
+
+
 #include "peep.h"
 #include "randomcl.h"
 #include "perlincl.h"
 
 
-//include raygui
-// #define RAYGUI_STANDALONE
-// #define RAYGUI_IMPLEMENTATION
-// #include "clRayGui.h"
 
 #define PEEP_ALL_ALWAYS_VISIBLE
 //#define PEEP_DISABLE_TILECORRECTIONS
@@ -45,6 +48,16 @@ mapTile2VBO, \
 mapTile2AttrVBO, \
 mapTile2OtherAttrVBO, \
 guiVBO
+
+
+// #include "clRayGUI.h"
+
+// #include "clRayGUI_IMP.h"
+
+
+
+
+
 
 
 
@@ -3194,46 +3207,75 @@ __kernel void game_update(ALL_CORE_PARAMS)
 }
 
 
-void DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color)
-{
+// void DrawRectangle(ALL_CORE_PARAMS, int x, int y, int width, int height, Color color)
+// {
+//     ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
+//     uint idx = gui->guiRenderRectIdx;
+
+//     guiVBO[idx*5 + 0] = x+width;
+//     guiVBO[idx*5 + 1] = y+height;
+
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
+
+//     guiVBO[idx*5 + 0] = x;
+//     guiVBO[idx*5 + 1] = y;
+
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
+
+//     guiVBO[idx*5 + 0] = x;
+//     guiVBO[idx*5 + 1] = y+height;
+
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
 
 
 
+//     guiVBO[idx*5 + 0] = x+width;
+//     guiVBO[idx*5 + 1] = y+height;
 
-    ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
-    uint idx = 0;
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
 
+//     guiVBO[idx*5 + 0] = x+width;
+//     guiVBO[idx*5 + 1] = y;
 
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
 
+//     guiVBO[idx*5 + 0] = x;
+//     guiVBO[idx*5 + 1] = y;
 
-    guiVBO[idx*5 + 0] = x+width;
-    guiVBO[idx*5 + 1] = y+height;
-
-    guiVBO[idx*5 + 2] = 0.5f;
-    guiVBO[idx*5 + 3] = 0.5f;
-    guiVBO[idx*5 + 4] = 0.5f;
-    idx=1;
-
-    guiVBO[idx*5 + 0] = x;
-    guiVBO[idx*5 + 1] = y;
-
-    guiVBO[idx*5 + 2] = 0.5f;
-    guiVBO[idx*5 + 3] = 0.5f;
-    guiVBO[idx*5 + 4] = 0.5f;
-    idx=2;
-
-    guiVBO[idx*5 + 0] = x;
-    guiVBO[idx*5 + 1] = y+height;
-
-    guiVBO[idx*5 + 2] = 0.5f;
-    guiVBO[idx*5 + 3] = 0.5f;
-    guiVBO[idx*5 + 4] = 0.5f;
-
-
-}
+//     guiVBO[idx*5 + 2] = color.r;
+//     guiVBO[idx*5 + 3] = color.g;
+//     guiVBO[idx*5 + 4] = color.b;
+//     idx++;
 
 
 
+//     gui->guiRenderRectIdx = idx;
+// }
+
+
+//  Font GetFontDefault(void)
+//  {
+//     Font dummy;
+//     dummy.recs = NULL;
+//     dummy.chars = NULL;
+//     return dummy;
+
+//  }
 
 //  void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
 //  {
@@ -3286,10 +3328,17 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
+    
+    if(gameStateActions->tickIdx == 10)
+    {
 
+        //DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,0.0,0.0});
+       // DrawRectangle(ALL_CORE_PARAMS_PASS, 0.5f, 0.0f, 0.2f, 0.2f, (float3){0.0,1.0,0.0});
 
-    DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,1.0,0.0});
+    }
 
+    //char txt[13] = "hello button\0";
+    //GuiButton(ALL_CORE_PARAMS_PASS, (Rectangle){0,0,100,100} , &txt[0]);    
 
     // GuiLoadStyleDefault();
 

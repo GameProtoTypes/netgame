@@ -306,6 +306,12 @@ struct PeepRenderSupport {
 struct ClientGuiState
 {
 	int guiRenderRectIdx;
+
+
+	GuiState rayGuiState;
+
+
+
 } typedef ClientGuiState;
 
 
