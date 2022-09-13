@@ -309,7 +309,7 @@ enum GuiStatePassType
 	GuiStatePassType_Synced
 } typedef GuiStatePassType;
 
-struct ClientGuiState
+struct SyncedGui
 {
 	int guiRenderRectIdx;
 
@@ -324,7 +324,7 @@ struct ClientGuiState
 
 	GuiStatePassType passType;
 
-} typedef ClientGuiState;
+} typedef SyncedGui;
 
 
 struct SynchronizedClientState {
@@ -334,7 +334,7 @@ struct SynchronizedClientState {
 
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 
-	ClientGuiState gui;
+	SyncedGui gui;
 
 } typedef SynchronizedClientState;
 
