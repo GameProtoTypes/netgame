@@ -416,75 +416,23 @@ int32_t main(int32_t argc, char* args[])
 
 
         std::vector<ActionWrap> clientActions;
-        if (rclientst->mousePrimaryReleased)
+        if (rclientst->mousePrimaryReleased || rclientst->mousePrimaryPressed || rclientst->mouseSecondaryReleased || rclientst->mouseSecondaryPressed)
         {
-            if (!rclientst->waitingMapAction)
-            {
-                
-                ActionWrap actionWrap;
-                ActionWrapInit(&actionWrap);
-                actionWrap.tracking.clientId = gameNetworking.clientId;
-                float endx = glm::max(worldMouseBegin.x, worldMouseEnd.x);
-                float endy = glm::min(worldMouseBegin.y, worldMouseEnd.y);
-                float startx = glm::min(worldMouseBegin.x, worldMouseEnd.x);
-                float starty = glm::max(worldMouseBegin.y, worldMouseEnd.y);
-
-                actionWrap.action.actionCode = ClientActionCode_DoSelect;
-                actionWrap.action.intParameters[CAC_DoSelect_Param_StartX_Q16] = cl_int(startx * (1 << 16));
-                actionWrap.action.intParameters[CAC_DoSelect_Param_StartY_Q16] = cl_int(starty * (1 << 16));
-                actionWrap.action.intParameters[CAC_DoSelect_Param_EndX_Q16] = cl_int(endx * (1 << 16));
-                actionWrap.action.intParameters[CAC_DoSelect_Param_EndY_Q16] = cl_int(endy * (1 << 16));
-                actionWrap.action.intParameters[CAC_DoSelect_Param_ZMapView] = gameStateActions->mapZView;
-
-
-                clientActions.push_back(actionWrap);
-
-                gameNetworking.actionStateDirty = true;
-            }
-            else
-            {
-               
-                if (rclientst->waitingDelete)
-                {
-                    ActionWrap actionWrap;
-                    ActionWrapInit(&actionWrap);
-                    actionWrap.tracking.clientId = gameNetworking.clientId;
-
-                    actionWrap.action.actionCode = ClientActionCode_CommandTileDelete;
-                    actionWrap.action.intParameters[CAC_CommandTileDelete_Param_X_Q16] = cl_int(worldMouseEnd.x * (1 << 16));
-                    actionWrap.action.intParameters[CAC_CommandTileDelete_Param_Y_Q16] = cl_int(worldMouseEnd.y * (1 << 16));
-                    
-                    //rclientst->waitingDelete = false;
-                    clientActions.push_back(actionWrap);
-
-                    gameNetworking.actionStateDirty = true;
-                    
-                }
-
-                //rclientst->waitingMapAction = false;
-
-            }
-        }
-
-            
-        if (rclientst->mouseSecondaryReleased)
-        {
-
             ActionWrap actionWrap;
             ActionWrapInit(&actionWrap);
             actionWrap.tracking.clientId = gameNetworking.clientId;
-            actionWrap.action.actionCode = ClientActionCode_CommandToLocation;
-            actionWrap.action.intParameters[CAC_CommandToLocation_Param_X_Q16] = cl_int(worldMouseEnd.x * (1 << 16));
-            actionWrap.action.intParameters[CAC_CommandToLocation_Param_Y_Q16] = cl_int(worldMouseEnd.y * (1 << 16));
+
+            actionWrap.action.actionCode = ClientActionCode_MouseStateChange;
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_X] = int(GUI_PXPERSCREEN_F*(float(mousex) / gameGraphics.SCREEN_WIDTH));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_WIDTH));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16] = int(worldMouseEnd.x*(1<<16));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16] = int(worldMouseEnd.y*(1<<16));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = rclientst->mousePrimaryPressed | (rclientst->mouseSecondaryPressed << 1) ;
 
             clientActions.push_back(actionWrap);
 
             gameNetworking.actionStateDirty = true;
         }
-
-       
-
-
 
 
         GSCS(B)

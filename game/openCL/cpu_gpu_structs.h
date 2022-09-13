@@ -15,40 +15,28 @@ struct SIZETESTSDATA {
 
 
 enum ClientActionCode {
-	ClientActionCode_DoSelect,
-	ClientActionCode_CommandToLocation,
-	ClientActionCode_CommandTileDelete,
-	ClientActionCode_SetZView,
+	ClientActionCode_MouseStateChange,
+	ClientActionCode_KeyStateChange,
 	ClientActionCode_NONE = 255
 } typedef ClientActionCode;
 
-enum ClientActionCode_DoSelect_IntParams {
-	CAC_DoSelect_Param_StartX_Q16,
-	CAC_DoSelect_Param_StartY_Q16,
-	CAC_DoSelect_Param_EndX_Q16,
-	CAC_DoSelect_Param_EndY_Q16,
-	CAC_DoSelect_Param_ZMapView,
+enum ClientActionCode_MouseStateChange_IntParams {
+	CAC_MouseStateChange_Param_GUI_X,
+	CAC_MouseStateChange_Param_GUI_Y,
+	CAC_MouseStateChange_Param_WORLD_X_Q16,
+	CAC_MouseStateChange_Param_WORLD_Y_Q16,
+	CAC_MouseStateChange_Param_BUTTON_BITS,
 	CAC_MAX//Move to largest enum as appropriate
 };
 
-enum ClientActionCode_CommandToLocation_IntParams {
-	CAC_CommandToLocation_Param_X_Q16,
-	CAC_CommandToLocation_Param_Y_Q16
+enum ClientActionCode_KeyStateChange_IntParams {
+	CAC_KeyStateChange_Param_KEY,
+	CAC_KeyStateChange_Param_STATE
 };
 
-enum ClientActionCode_CommandTileDelete_IntParams {
-	CAC_CommandTileDelete_Param_X_Q16,
-	CAC_CommandTileDelete_Param_Y_Q16
-};
-enum ClientActionCode_SetZView_IntParams {
-	CAC_CommandTileDelete_Param_ZViewIdx
-};
 
 struct ClientAction {
-
-	//cl_uint submittedTickIdx;//the client tickidx when the action was created
 	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
-
 
 	ClientActionCode actionCode;
 	int intParameters[CAC_MAX];//MAX of ClientActionCode_******_IntParams enums

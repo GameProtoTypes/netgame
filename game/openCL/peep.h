@@ -334,6 +334,14 @@ struct SynchronizedClientState {
 
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 
+
+	ge_int2 mouseGUIBegin;
+	ge_int2 mouseGUIEnd;
+	ge_int2 mouseWorldBegin_Q16;
+	ge_int2 mouseWorldEnd_Q16;
+
+
+
 	SyncedGui gui;
 
 } typedef SynchronizedClientState;

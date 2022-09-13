@@ -2593,11 +2593,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     }
 
 
-
-
-    
     GUI_RESET(ALL_CORE_PARAMS_PASS, GuiStatePassType_Interaction);
-
 
 
     if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
@@ -2605,9 +2601,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         
     }
         
-
-
-
 
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions; a++)
@@ -2617,6 +2610,78 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         cl_uchar cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
+        printf("Got an action\n");
+        if (clientAction->actionCode == ClientActionCode_MouseStateChange)
+        {
+            int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+            if(buttons & 1)
+            {
+                client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+                client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+                client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+            }
+            else
+            {
+
+                client->mouseGUIEnd.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+                client->mouseGUIEnd.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+                client->mouseWorldEnd_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                client->mouseWorldEnd_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+                
+
+
+
+                if(1)//if not on the gui...
+                {
+                    client->selectedPeepsLastIdx = OFFSET_NULL;
+                    for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
+                    {
+                        Peep* p = &gameState->peeps[pi];
+
+                        if (p->stateBasic.faction == actionTracking->clientId)
+                        if ((p->physics.base.pos_Q16.x > client->mouseWorldBegin_Q16.x)
+                        && (p->physics.base.pos_Q16.x < client->mouseWorldEnd_Q16.x))
+                        {
+
+                            if ((p->physics.base.pos_Q16.y < client->mouseWorldEnd_Q16.y)
+                                && (p->physics.base.pos_Q16.y > client->mouseWorldBegin_Q16.y))
+                            {
+                                if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, gameStateActions->mapZView))
+                                {
+
+                                    if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                                    {
+                                        gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
+                                        p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
+                                        p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
+                                    }
+                                    else
+                                    {
+                                        p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
+                                        p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
+                                    }
+                                    client->selectedPeepsLastIdx = pi;
+
+                                    PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+
+            }
+
+
+        }
+
+
+
+
+
+/*
         if (clientAction->actionCode == ClientActionCode_DoSelect)
         {
             client->selectedPeepsLastIdx = OFFSET_NULL;
@@ -2750,8 +2815,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             }
 
         }
-
-
+    
+   */ 
     }
 
     gameStateActions->numActions = 0;
