@@ -2381,8 +2381,206 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
 }
 
 
+
+
+
+
+
+
+void GUI_Text(ALL_CORE_PARAMS, const cl_char* text)
+{
+    
+
+}
+
+
+SyncedGui* GetGuiState(ALL_CORE_PARAMS)
+{
+    return &gameState->clientStates[0].gui;
+}
+
+
+void GUI_DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
+{
+
+
+
+    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    if(gui->passType != GuiStatePassType_Interaction)
+        return;//no rendering
+
+    uint idx = gui->guiRenderRectIdx;
+
+    //map [0,1] to [-1,1]
+    x*= 2.0f;
+    y*= -2.0f;
+    x+=-1.0f;
+    y+=+1.0f;
+
+
+    width *= 2.0f;
+    height*= -2.0f;
+
+    const int stride = 7;
+
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y+height;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y+height;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y+height;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    gui->guiRenderRectIdx = idx;
+ }
+
+cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
+{
+    if((pos.x >= boundStart.x) && (pos.x < boundEnd.x) && (pos.y >= boundStart.y) && (pos.y < boundEnd.y) )
+    {
+        return 1;
+    }
+    return 0;
+}
+
+
+#define GUIID ALL_CORE_PARAMS_PASS, __LINE__
+
+cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
+{
+    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    cl_uchar ret = 0;
+
+    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
+    {
+        gui->hotWidget = id;
+
+        if(gui->mouseState == 1)
+            gui->activeWidget = id;
+        
+        else if(gui->mouseState == 0)
+        {
+            if(gui->activeWidget == id)
+                ret = 1;
+            gui->activeWidget = -1;
+
+        }
+    }
+    else{
+        
+        gui->hotWidget = -1;
+        if(gui->mouseState == 0)
+            gui->activeWidget = -1;
+    }
+
+    float3 color = (float3){0.0,0.0,1.0};
+
+    if(gui->hotWidget == id)
+        color = (float3){1.0,1.0,1.0};
+
+    if(gui->activeWidget == id){
+        color = (float3){1.0,0.0,0.0};
+
+    }
+
+
+
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+
+    return ret;
+}
+
+
+void GUI_RESET(ALL_CORE_PARAMS, GuiStatePassType passType)
+{
+    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+
+    
+    if(passType == GuiStatePassType_Interaction)
+    {
+        gui->mouseLoc = gameStateActions->mouseLoc;
+        gui->mouseState = gameStateActions->mouseState;
+
+
+        //clear just drawn rectangles
+        const int stride = 7;
+        for(int idx = gui->guiRenderRectIdx*stride; idx >=0; idx--)
+        {
+            guiVBO[idx] = 0;
+        }
+        gui->guiRenderRectIdx = 0;
+    }
+    else
+    {
+
+    }
+}
+
+
+
+
+
+
+
+
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
+
+
     cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
@@ -2393,6 +2591,20 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
     }
+
+
+
+
+    
+    GUI_RESET(ALL_CORE_PARAMS_PASS, GuiStatePassType_Interaction);
+
+
+
+    if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
+    {
+        
+    }
+        
 
 
 
@@ -2829,7 +3041,7 @@ void StartupTests()
 
 void InitRayGUI(ALL_CORE_PARAMS)
 {
-    ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
+    SyncedGui* gui = &gameState->clientStates[gameStateActions->clientId].gui;
 
 }
 
@@ -3180,207 +3392,12 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
 
-
-
-
-
-void GUI_Text(ALL_CORE_PARAMS, const cl_char* text)
-{
-    
-
-}
-
-
-ClientGuiState* GetGuiState(ALL_CORE_PARAMS)
-{
-    return &gameState->clientStates[0].gui;
-}
-
-
-void GUI_DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
-{
-
-
-
-    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
-    if(gui->passType != GuiStatePassType_Interaction)
-        return;//no rendering
-
-    uint idx = gui->guiRenderRectIdx;
-
-    //map [0,1] to [-1,1]
-    x*= 2.0f;
-    y*= -2.0f;
-    x+=-1.0f;
-    y+=+1.0f;
-
-
-    width *= 2.0f;
-    height*= -2.0f;
-
-    const int stride = 7;
-
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y+height;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVEnd.x;
-    guiVBO[idx*stride + 6] = UVEnd.y;
-    idx++;
-
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVStart.x;
-    guiVBO[idx*stride + 6] = UVStart.y;
-    idx++;
-
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y+height;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVStart.x;
-    guiVBO[idx*stride + 6] = UVEnd.y;
-    idx++;
-
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y+height;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVEnd.x;
-    guiVBO[idx*stride + 6] = UVEnd.y;
-    idx++;
-
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVEnd.x;
-    guiVBO[idx*stride + 6] = UVStart.y;
-    idx++;
-
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y;
-
-    guiVBO[idx*stride + 2] = color.x;
-    guiVBO[idx*stride + 3] = color.y;
-    guiVBO[idx*stride + 4] = color.z;
-    guiVBO[idx*stride + 5] = UVStart.x;
-    guiVBO[idx*stride + 6] = UVStart.y;
-    idx++;
-
-    gui->guiRenderRectIdx = idx;
- }
-
-
-
-
-cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
-{
-    if((pos.x >= boundStart.x) && (pos.x < boundEnd.x) && (pos.y >= boundStart.y) && (pos.y < boundEnd.y) )
-    {
-        return 1;
-    }
-    return 0;
-}
-
-
-#define GUIID ALL_CORE_PARAMS_PASS, __LINE__
-
-cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
-{
-    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
-    cl_uchar ret = 0;
-
-    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
-    {
-        gui->hotWidget = id;
-
-        if(gui->mouseState == 1)
-            gui->activeWidget = id;
-    }
-
-    float3 color = (float3){0.0,0.0,1.0};
-
-    if(gui->hotWidget == id)
-        color = (float3){1.0,1.0,1.0};
-
-    if(gui->activeWidget == id){
-        color = (float3){1.0,0.0,0.0};
-        ret = 1;
-    }
-
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
-
-
-    return ret;
-}
-
-
-void GUI_RESET(ALL_CORE_PARAMS)
-{
-    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
-    gui->mouseLoc = gameStateActions->mouseLoc;
-    gui->mouseState = gameStateActions->mouseState;
-
-
-    //clear just drawn rectangles
-    const int stride = 7;
-    for(int idx = gui->guiRenderRectIdx*stride; idx >=0; idx--)
-    {
-        guiVBO[idx] = 0;
-    }
-
-    gui->guiRenderRectIdx = 0;
-
-
-
-
-
-
-    if(gui->mouseState == 0)
-    {
-        gui->hotWidget = -1;
-        gui->activeWidget = -1;
-    }
-
-}
-
-
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
     
-    if(gameStateActions->tickIdx >= 10)
-    {
-        GUI_RESET(ALL_CORE_PARAMS_PASS);
 
-
-
-        //GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,0.0,0.0}, (float2){0.0,0.0}, (float2){1.0,1.0});
-        
-        
-
-        for(int i = 0; i < 100; i++)
-        {
-            GUI_BUTTON(GUIID+i ,(ge_int2){(i%100)*10 ,i*10}, (ge_int2){10,   10});
-        }
-            
-
-    }
 }
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
