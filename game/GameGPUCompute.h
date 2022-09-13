@@ -78,6 +78,8 @@ public:
 
 	cl_command_queue command_queue;
 	cl_program gameProgram;
+	cl_program rayGuiHeader;
+	cl_program fullProgram;
 	cl_program testProgram;
 
 	cl_kernel sizetests_kernel;

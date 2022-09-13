@@ -110,7 +110,6 @@ void GameGPUCompute::RunInitCompute1()
 
     
     AddCLSource("openCL/clGame.c");
-    //AddCLSource("openCL/test.spv");
 
 
     std::vector<char*> sourcePtrs;
@@ -166,40 +165,15 @@ void GameGPUCompute::RunInitCompute1()
     
     CL_HOST_ERROR_CHECK(ret)
 
-    // printf("Building PTX Test Program...\n");
-    // // testProgram = clCreateProgramWithIL(context, (void*)&sourcePtrs[1], sourceSizes[1], &ret);
-    // // CL_HOST_ERROR_CHECK(ret)
-    
-    // cl_int r[1];
-    // testProgram = clCreateProgramWithBinary(context, 1, &device_id, &sourceSizes[1], (const unsigned char**)&sourcePtrs[1], &r[0], &ret );
-    // CL_HOST_ERROR_CHECK(ret)
-
-    // ret = clBuildProgram(testProgram, 1, &device_id,  NULL, NULL, NULL);
-    // //CL_HOST_ERROR_CHECK(ret)
-    //  if (ret != CL_SUCCESS) {
-    //     // Determine the size of the log
-    //     size_t log_size;
-    //     clGetProgramBuildInfo(testProgram, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
-
-    //     // Allocate memory for the log
-    //     char* log = (char*)malloc(log_size);
-
-    //     // Get the log
-    //     clGetProgramBuildInfo(testProgram, device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-
-    //     // Print the log
-    //     printf("%s\n", log);
-
-    //     delete log;
-    // }
 
 
 
-    printf("Building Game Program\n");
+    printf("Building FULL Game Program\n");
     // Create a gameProgram from the update_kernel source
-    gameProgram = clCreateProgramWithSource(context, 1,
+    gameProgram = clCreateProgramWithSource(context, sourceSizes.size(),
         (const char**)&sourcePtrs[0], (const size_t*)&sourceSizes[0], &ret);
     CL_HOST_ERROR_CHECK(ret)
+
 
         //make preprocessor defs
         //std::string defs = buildPreProcessorString();
@@ -207,6 +181,10 @@ void GameGPUCompute::RunInitCompute1()
 
 
     // Build the gameProgram
+
+
+
+
     printf("Building....\n");
     ret = clBuildProgram(gameProgram, 1, &device_id,  "-I openCL", NULL, NULL);
 

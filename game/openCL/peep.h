@@ -3,7 +3,7 @@
 
 #include "cl_type_glue.h"
 #include "dynamicDefines.h"
-#include "sizeTests.h"
+
 
 #include "cpugpuvectortypes.h"
 
@@ -303,21 +303,26 @@ struct PeepRenderSupport {
 }typedef PeepRenderSupport;
 
 
+enum GuiStatePassType
+{
+	GuiStatePassType_Interaction,
+	GuiStatePassType_Synced
+} typedef GuiStatePassType;
+
 struct ClientGuiState
 {
 	int guiRenderRectIdx;
 
+	ge_int2 mouseLoc;
+	int mouseState;
 
-	unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)];
+	int hotWidget;
+	int activeWidget;
 
- 	BOOL guiStyleLoaded ;         // Style loaded flag for lazy style initialization
-	GuiState guiState ;    // Gui global state, if !STATE_NORMAL, forces defined state
+	ge_int2 curBoundStart;
+	ge_int2 curBoundEnd;
 
-	Font guiFont ;                // Gui current font (WARNING: highly coupled to raylib)
-	BOOL guiLocked ;              // Gui lock state (no inputs processed)
-	float guiAlpha ;               // Gui element transpacency on drawing
-
-	unsigned int guiIconScale;       // Gui icon default scale (if icons enabled)
+	GuiStatePassType passType;
 
 } typedef ClientGuiState;
 

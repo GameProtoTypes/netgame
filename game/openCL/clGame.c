@@ -1,20 +1,12 @@
 
 
+#include "clCommon.h"
 
-#include "cpugpuvectortypes.h"
-#include "cl_type_glue.h"
-#include "fixedpoint_opencl.h"
 
 
 #define RAYGUI_STANDALONE
 #define RAYGUI_IMPLEMENTATION
-#include "clRayGUI_defines.h"
-#include "clRayGUI_types.h"
 
-
-#include "peep.h"
-#include "randomcl.h"
-#include "perlincl.h"
 
 
 
@@ -22,37 +14,7 @@
 //#define PEEP_DISABLE_TILECORRECTIONS
 
 
-#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
 
-#define ALL_CORE_PARAMS  __global StaticData* staticData, \
-__global GameState* gameState,\
-__global GameStateActions* gameStateActions, \
-__global float* peepVBOBuffer, \
-__global float* particleVBOBuffer, \
-__global cl_uchar* mapTile1VBO, \
-__global cl_uint* mapTile1AttrVBO, \
-__global cl_uint* mapTile1OtherAttrVBO, \
-__global cl_uchar* mapTile2VBO, \
-__global cl_uint* mapTile2AttrVBO, \
-__global cl_uint* mapTile2OtherAttrVBO, \
-__global float* guiVBO
-
-#define ALL_CORE_PARAMS_PASS  staticData, \
-gameState, \
-gameStateActions, \
-peepVBOBuffer, \
-particleVBOBuffer, \
-mapTile1VBO, \
-mapTile1AttrVBO, \
-mapTile1OtherAttrVBO, \
-mapTile2VBO, \
-mapTile2AttrVBO, \
-mapTile2OtherAttrVBO, \
-guiVBO
-
-
-#include "clRayGUI.h"
-#include "clRayGUI_IMP.h"
 
 
 
@@ -2868,18 +2830,7 @@ void StartupTests()
 void InitRayGUI(ALL_CORE_PARAMS)
 {
     ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
-    
-    for(int i = 0; i < RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED); i++)
-    {
-        gui->guiStyle[i] = 0;
-    }
 
-    gui->guiStyleLoaded = false;
-    gui->guiState = STATE_NORMAL;
-    //gui->guiFont = 0;
-    gui->guiLocked = false;
-    gui->guiAlpha = 1.0f;
-    gui->guiIconScale = 1;
 }
 
 
@@ -3225,132 +3176,187 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
 
+}
 
 
 
 
+
+
+
+void GUI_Text(ALL_CORE_PARAMS, const cl_char* text)
+{
+    
 
 }
 
 
-void DrawRectangle(ALL_CORE_PARAMS, int x, int y, int width, int height, Color color)
+ClientGuiState* GetGuiState(ALL_CORE_PARAMS)
 {
-    ClientGuiState* gui = &gameState->clientStates[gameStateActions->clientId].gui;
+    return &gameState->clientStates[0].gui;
+}
+
+
+void GUI_DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
+{
+
+
+
+    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    if(gui->passType != GuiStatePassType_Interaction)
+        return;//no rendering
+
     uint idx = gui->guiRenderRectIdx;
 
-    guiVBO[idx*5 + 0] = x+width;
-    guiVBO[idx*5 + 1] = y+height;
+    //map [0,1] to [-1,1]
+    x*= 2.0f;
+    y*= -2.0f;
+    x+=-1.0f;
+    y+=+1.0f;
 
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+
+    width *= 2.0f;
+    height*= -2.0f;
+
+    const int stride = 7;
+
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y+height;
+
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*5 + 0] = x;
-    guiVBO[idx*5 + 1] = y;
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y;
 
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*5 + 0] = x;
-    guiVBO[idx*5 + 1] = y+height;
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y+height;
 
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y+height;
 
-
-    guiVBO[idx*5 + 0] = x+width;
-    guiVBO[idx*5 + 1] = y+height;
-
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*5 + 0] = x+width;
-    guiVBO[idx*5 + 1] = y;
+    guiVBO[idx*stride + 0] = x+width;
+    guiVBO[idx*stride + 1] = y;
 
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*5 + 0] = x;
-    guiVBO[idx*5 + 1] = y;
+    guiVBO[idx*stride + 0] = x;
+    guiVBO[idx*stride + 1] = y;
 
-    guiVBO[idx*5 + 2] = color.r;
-    guiVBO[idx*5 + 3] = color.g;
-    guiVBO[idx*5 + 4] = color.b;
+    guiVBO[idx*stride + 2] = color.x;
+    guiVBO[idx*stride + 3] = color.y;
+    guiVBO[idx*stride + 4] = color.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-
-
-     gui->guiRenderRectIdx = idx;
+    gui->guiRenderRectIdx = idx;
  }
 
 
- Font GetFontDefault(void)
- {
-    Font dummy;
-    dummy.recs = NULL;
-    dummy.chars = NULL;
-    return dummy;
-
- }
-
-//  void DrawRectangleGradientEx(Rectangle rec, Color col1, Color col2, Color col3, Color col4)
-//  {
-
-//  }
-//  Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount) // -- GuiLoadStyle()
-//  {
-//     Font f;
-//     return f;
-//  }
-//  Font GetFontDefault(void)                           // -- GuiLoadStyleDefault()
-//  {
-//     Font f;
-//     f.baseSize = 10;
-//     f.glyphCount = 10;
-//     f.recs = NULL;
-//     f.chars = NULL;
-//     return f;
-//  }
-//  Texture2D LoadTextureFromImage(Image image)         // -- GuiLoadStyle()
-//  {
-//     Texture2D tex;
-//     return tex;
-//  }
-//  void SetShapesTexture(Texture2D tex, Rectangle rec) // -- GuiLoadStyle()
-//  {
-
-//  }
-//  char *LoadFileText(const char *fileName)            // -- GuiLoadStyle()
-// {
-//     return NULL;
-// }
-
-//  const char *GetDirectoryPath(const char *filePath)  // -- GuiLoadStyle()
-//  {
-// return NULL;
-//  }
-
-//  Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing)   // -- GetTextWidth(), GuiTextBoxMulti()
-//  {
-//     return (Vector2){0.0f,0.0f};
-//  }
-//  void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)  // -- GuiDrawText()
-// {
-
-// }
 
 
+cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
+{
+    if((pos.x >= boundStart.x) && (pos.x < boundEnd.x) && (pos.y >= boundStart.y) && (pos.y < boundEnd.y) )
+    {
+        return 1;
+    }
+    return 0;
+}
 
+
+#define GUIID ALL_CORE_PARAMS_PASS, __LINE__
+
+cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
+{
+    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    cl_uchar ret = 0;
+
+    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
+    {
+        gui->hotWidget = id;
+
+        if(gui->mouseState == 1)
+            gui->activeWidget = id;
+    }
+
+    float3 color = (float3){0.0,0.0,1.0};
+
+    if(gui->hotWidget == id)
+        color = (float3){1.0,1.0,1.0};
+
+    if(gui->activeWidget == id){
+        color = (float3){1.0,0.0,0.0};
+        ret = 1;
+    }
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+
+
+    return ret;
+}
+
+
+void GUI_RESET(ALL_CORE_PARAMS)
+{
+    ClientGuiState* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    gui->mouseLoc = gameStateActions->mouseLoc;
+    gui->mouseState = gameStateActions->mouseState;
+
+
+    //clear just drawn rectangles
+    const int stride = 7;
+    for(int idx = gui->guiRenderRectIdx*stride; idx >=0; idx--)
+    {
+        guiVBO[idx] = 0;
+    }
+
+    gui->guiRenderRectIdx = 0;
+
+
+
+
+
+
+    if(gui->mouseState == 0)
+    {
+        gui->hotWidget = -1;
+        gui->activeWidget = -1;
+    }
+
+}
 
 
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
@@ -3358,29 +3364,23 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
     gameStateActions->mapZView_1 = gameStateActions->mapZView;
     
-    if(gameStateActions->tickIdx == 10)
+    if(gameStateActions->tickIdx >= 10)
     {
+        GUI_RESET(ALL_CORE_PARAMS_PASS);
 
-        //DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,0.0,0.0});
-       // DrawRectangle(ALL_CORE_PARAMS_PASS, 0.5f, 0.0f, 0.2f, 0.2f, (float3){0.0,1.0,0.0});
+
+
+        //GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, -0.5f, 0.0f, 0.2f, 0.2f, (float3){1.0,0.0,0.0}, (float2){0.0,0.0}, (float2){1.0,1.0});
+        
+        
+
+        for(int i = 0; i < 100; i++)
+        {
+            GUI_BUTTON(GUIID+i ,(ge_int2){(i%100)*10 ,i*10}, (ge_int2){10,   10});
+        }
+            
 
     }
-
-    char txt[13] = "hello button\0";
-    GuiButton(ALL_CORE_PARAMS_PASS, (Rectangle){0,0,100,100} , &txt[0]);    
-
-    // GuiLoadStyleDefault();
-
-    // GuiEnable();
-
-    //        DrawRectangle(0, 0, 200, 200, Fade(RED, 0.1));
-           
-    //    //    char str567[7] = "BUTTON\0";
-    //     //   GuiButton((Rectangle){0,0,100,100}, &str567[0]);
-
-
-    // GuiDisable();
-
 }
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {

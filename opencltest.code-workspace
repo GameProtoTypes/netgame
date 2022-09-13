@@ -103,7 +103,9 @@
 			"*.cl": "c",
 			"__bit_reference": "c",
 			"__functional_base": "c",
-			"__memory": "c"
+			"__memory": "c",
+			"__hash_table": "c",
+			"__split_buffer": "c"
 		},
 		"gitdoc.enabled": false
 	}

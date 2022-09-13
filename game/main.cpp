@@ -496,12 +496,21 @@ int32_t main(int32_t argc, char* args[])
 
         GSCS(C)
 
-
+        
 
         ImGui::Begin("View");
         ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, gameCompute.mapDepth-1);
         gameStateActions->mapZView = rclientst->viewZIdx;
+
+
+
         ImGui::End();
+
+        gameStateActions->mouseLoc.x = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLoc.y = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
+        gameStateActions->mouseState = rclientst->mousePrimaryDown;
+
+
 
         ImGui::Begin("Commands");
         if (rclientst->waitingDelete )

@@ -81,7 +81,6 @@ struct GameStateActions {
 	ActionWrap clientActions[32];
 	cl_int numActions;
 
-
 	cl_uint tickIdx;
 	int32_t pauseState;
 
@@ -90,6 +89,9 @@ struct GameStateActions {
 	cl_uint clientId;
 	cl_int mapZView;
 	cl_int mapZView_1;
+
+	ge_int2 mouseLoc;
+	cl_int mouseState;
 
 
 	cl_int dummyVars[32];
@@ -100,3 +102,5 @@ struct GameStateActions {
 
 
 
+#define GUI_PXPERSCREEN (1000)
+#define GUI_PXPERSCREEN_F (1000.0f)
