@@ -2394,18 +2394,16 @@ void GUI_Text(ALL_CORE_PARAMS, const cl_char* text)
 }
 
 
-SyncedGui* GetGuiState(ALL_CORE_PARAMS)
+SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 {
-    return &gameState->clientStates[0].gui;
+    return &gameState->clientStates[clientId].gui;
 }
 
 
-void GUI_DrawRectangle(ALL_CORE_PARAMS, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
+void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
 {
 
 
-
-    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
     if(gui->passType != GuiStatePassType_Interaction)
         return;//no rendering
 
@@ -2496,11 +2494,11 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 }
 
 
-#define GUIID ALL_CORE_PARAMS_PASS, __LINE__
+#define GUIID ALL_CORE_PARAMS_PASS, gui, __LINE__
 
-cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
+cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size)
 {
-    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+
     cl_uchar ret = 0;
 
     if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
@@ -2517,9 +2515,10 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
             gui->activeWidget = -1;
 
         }
+        gui->mouseOnGUI = 1;
     }
     else{
-        
+        gui->mouseOnGUI = 0;
         gui->hotWidget = -1;
         if(gui->mouseState == 0)
             gui->activeWidget = -1;
@@ -2538,17 +2537,20 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, int id, ge_int2 pos, ge_int2 size)
 
 
 
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
     size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
 
     return ret;
 }
 
 
-void GUI_RESET(ALL_CORE_PARAMS, GuiStatePassType passType)
+cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
 {
-    SyncedGui* gui = GetGuiState(ALL_CORE_PARAMS_PASS);
+    return gui->mouseOnGUI;
+}
 
+void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, GuiStatePassType passType)
+{
     
     if(passType == GuiStatePassType_Interaction)
     {
@@ -2572,11 +2574,6 @@ void GUI_RESET(ALL_CORE_PARAMS, GuiStatePassType passType)
 
 
 
-
-
-
-
-
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
@@ -2593,14 +2590,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     }
 
 
-    GUI_RESET(ALL_CORE_PARAMS_PASS, GuiStatePassType_Interaction);
 
-
-    if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
-    {
-        
-    }
-        
 
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions; a++)
@@ -2610,29 +2600,51 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         cl_uchar cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
+        SyncedGui* gui = &gameState->clientStates[cliId].gui;
+        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, GuiStatePassType_Interaction);
+
+        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
+        {
+            
+        }
+        
+
+
+
         printf("Got an action\n");
+        
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {
+            
             int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
-            if(buttons & 1)
+            //end selection
+            if(buttons == 1 && GUI_MOUSE_ON_GUI(gui) == 0)
             {
                 client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
                 client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
                 client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                 client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
             }
-            else
+            else if(buttons == (1<<2))
             {
-
                 client->mouseGUIEnd.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
                 client->mouseGUIEnd.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
                 client->mouseWorldEnd_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                 client->mouseWorldEnd_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
                 
 
+                //sort the selection box
+                int nex = max(client->mouseWorldEnd_Q16.x, client->mouseWorldBegin_Q16.x);
+                int ney  = max(client->mouseWorldEnd_Q16.y, client->mouseWorldBegin_Q16.y);
+
+                int nsx  = min(client->mouseWorldEnd_Q16.x, client->mouseWorldBegin_Q16.x);
+                int nsy  = min(client->mouseWorldEnd_Q16.y, client->mouseWorldBegin_Q16.y);
+                client->mouseWorldEnd_Q16.x = nex;
+                client->mouseWorldEnd_Q16.y = ney;
+                client->mouseWorldBegin_Q16.x = nsx;
+                client->mouseWorldBegin_Q16.y = nsy;
 
 
-                if(1)//if not on the gui...
                 {
                     client->selectedPeepsLastIdx = OFFSET_NULL;
                     for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
@@ -2675,52 +2687,82 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             }
 
 
-        }
+            //command to location
+            if(buttons == (1<<3) && GUI_MOUSE_ON_GUI(gui) == 0)
+            {
+                cl_uint curPeepIdx = client->selectedPeepsLastIdx;
+                ge_int3 mapcoord;
+                ge_int2 world2D;
+                cl_uchar pathFindSuccess;
 
+                offsetPtr pathOPtr;
+                if (curPeepIdx != OFFSET_NULL)
+                {
+                    //Do an AStarSearch
+                    Peep* curPeep = &gameState->peeps[curPeepIdx];
+                    world2D.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                    world2D.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+                    int occluded;
+
+                    GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
+                    AStarSearchInstantiate(&gameState->mapSearchers[0]);
+                    ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
+                    mapcoord.z++;
+                    ge_int3 end = mapcoord;
+                    Print_GE_INT3(start);
+                    Print_GE_INT3(end);
+                    pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+                    if (pathFindSuccess != 0)
+                    {
+                        //printf("--------------------------\n");
+                        //AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
+                        //printf("--------------------------\n");
+                        //AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
+                        //printf("--------------------------\n");
+
+
+                        pathOPtr = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
+                        //AStarPrintPath(&gameState->paths, pathOPtr);
+                        //printf("--------------------------\n");
+                    }
+                }
+
+                while (curPeepIdx != OFFSET_NULL)
+                {
+                    Peep* curPeep = &gameState->peeps[curPeepIdx];
+
+                    if (pathFindSuccess != 0)
+                    {
+                        curPeep->physics.drive.nextPathNodeOPtr = pathOPtr;
+
+                        AStarPathNode* nxtPathNode;
+                        OFFSET_TO_PTR(gameState->paths.pathNodes, curPeep->physics.drive.nextPathNodeOPtr, nxtPathNode);
+
+
+                        ge_int3 worldloc;
+                        MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
+                        curPeep->physics.drive.target_x_Q16 = worldloc.x;
+                        curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                        curPeep->physics.drive.target_z_Q16 = worldloc.z;
+                        curPeep->physics.drive.drivingToTarget = 1;
+
+                        //restrict comms to new channel
+                        curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
+                        curPeep->comms.message_TargetReached = 0;
+                        curPeep->comms.message_TargetReached_pending = 0;
+                    }
+                    curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
+                }
+
+
+            }
+        }
 
 
 
 
 /*
-        if (clientAction->actionCode == ClientActionCode_DoSelect)
-        {
-            client->selectedPeepsLastIdx = OFFSET_NULL;
-            for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
-            {
-                Peep* p = &gameState->peeps[pi];
 
-                if (p->stateBasic.faction == actionTracking->clientId)
-                    if ((p->physics.base.pos_Q16.x > clientAction->intParameters[CAC_DoSelect_Param_StartX_Q16])
-                        && (p->physics.base.pos_Q16.x < clientAction->intParameters[CAC_DoSelect_Param_EndX_Q16]))
-                    {
-
-                        if ((p->physics.base.pos_Q16.y < clientAction->intParameters[CAC_DoSelect_Param_StartY_Q16])
-                            && (p->physics.base.pos_Q16.y > clientAction->intParameters[CAC_DoSelect_Param_EndY_Q16]))
-                        {
-                            
-                            if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, clientAction->intParameters[CAC_DoSelect_Param_ZMapView]))
-                            {
-
-                                if (client->selectedPeepsLastIdx != OFFSET_NULL)
-                                {
-                                    gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
-                                    p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
-                                    p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
-                                }
-                                else
-                                {
-                                    p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
-                                    p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
-                                }
-                                client->selectedPeepsLastIdx = pi;
-
-                                PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
-                            }
-
-                        }
-                    }
-            }
-        }
         else if (clientAction->actionCode == ClientActionCode_CommandToLocation)
         {
             

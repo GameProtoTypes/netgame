@@ -318,6 +318,7 @@ struct SyncedGui
 
 	int hotWidget;
 	int activeWidget;
+	cl_uchar mouseOnGUI;
 
 	ge_int2 curBoundStart;
 	ge_int2 curBoundEnd;
@@ -326,6 +327,12 @@ struct SyncedGui
 
 } typedef SyncedGui;
 
+
+enum EditorTools
+{
+	EditorTools_Delete,
+	EditorTools_Create
+} typedef EditorTools;
 
 struct SynchronizedClientState {
 
@@ -340,6 +347,7 @@ struct SynchronizedClientState {
 	ge_int2 mouseWorldBegin_Q16;
 	ge_int2 mouseWorldEnd_Q16;
 
+	EditorTools curTool;
 
 
 	SyncedGui gui;

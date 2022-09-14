@@ -367,8 +367,6 @@ int32_t main(int32_t argc, char* args[])
             
         }
         
-          
-
 
         //render
         static float viewScale = 0.002f;
@@ -427,7 +425,7 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_WIDTH));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16] = int(worldMouseEnd.x*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16] = int(worldMouseEnd.y*(1<<16));
-            actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = rclientst->mousePrimaryPressed | (rclientst->mouseSecondaryPressed << 1) ;
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = (rclientst->mouseSecondaryReleased << 3) | (rclientst->mousePrimaryReleased << 2)  | (rclientst->mouseSecondaryPressed << 1) | rclientst->mousePrimaryPressed;
 
             clientActions.push_back(actionWrap);
 
@@ -482,9 +480,6 @@ int32_t main(int32_t argc, char* args[])
 
 
         ImGui::End();
-
-
-
 
 
         if (gameStateActions->pauseState == 0)
