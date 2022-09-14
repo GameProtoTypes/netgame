@@ -274,6 +274,7 @@ int32_t main(int32_t argc, char* args[])
         rclientst->mousePrimaryReleased = 0;
         rclientst->mouseSecondaryPressed = 0;
         rclientst->mouseSecondaryReleased = 0;
+
         //Handle events on queue
         while (SDL_PollEvent(&e) != 0)
         {
@@ -411,7 +412,12 @@ int32_t main(int32_t argc, char* args[])
         glm::vec4 worldMouseEnd = glm::inverse(view) * mouseScreenCoords;
         glm::vec4 worldMouseBegin = glm::inverse(view) * mouseBeginScreenCoords;
 
-
+        int buttonBits = (rclientst->mouseSecondaryReleased << MouseButtonBits_SecondaryReleased) | 
+            (rclientst->mousePrimaryReleased << MouseButtonBits_PrimaryReleased)  |
+             (rclientst->mouseSecondaryPressed <<MouseButtonBits_SecondaryPressed) | 
+             (rclientst->mousePrimaryPressed << MouseButtonBits_PrimaryPressed) |
+             (rclientst->mousePrimaryDown << MouseButtonBits_PrimaryDown) |
+             (rclientst->mouseSecondaryDown << MouseButtonBits_SecondaryDown);
 
         std::vector<ActionWrap> clientActions;
         if (rclientst->mousePrimaryReleased || rclientst->mousePrimaryPressed || rclientst->mouseSecondaryReleased || rclientst->mouseSecondaryPressed)
@@ -425,7 +431,7 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_WIDTH));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16] = int(worldMouseEnd.x*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16] = int(worldMouseEnd.y*(1<<16));
-            actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = (rclientst->mouseSecondaryReleased << 3) | (rclientst->mousePrimaryReleased << 2)  | (rclientst->mouseSecondaryPressed << 1) | rclientst->mousePrimaryPressed;
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = buttonBits;
 
             clientActions.push_back(actionWrap);
 
@@ -454,7 +460,7 @@ int32_t main(int32_t argc, char* args[])
 
         gameStateActions->mouseLoc.x = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
         gameStateActions->mouseLoc.y = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
-        gameStateActions->mouseState = rclientst->mousePrimaryDown;
+        gameStateActions->mouseState = buttonBits;
 
 
 

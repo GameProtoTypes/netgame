@@ -2500,15 +2500,14 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
 {
 
     cl_uchar ret = 0;
-
     if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
     {
         gui->hotWidget = id;
 
-        if(gui->mouseState == 1)
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
             gui->activeWidget = id;
         
-        else if(gui->mouseState == 0)
+        else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) == 0)
         {
             if(gui->activeWidget == id)
                 ret = 1;
@@ -2520,7 +2519,7 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
     else{
         gui->mouseOnGUI = 0;
         gui->hotWidget = -1;
-        if(gui->mouseState == 0)
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) == 0)
             gui->activeWidget = -1;
     }
 
@@ -2549,15 +2548,11 @@ cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
     return gui->mouseOnGUI;
 }
 
-void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, GuiStatePassType passType)
+void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
 {
     
     if(passType == GuiStatePassType_Interaction)
     {
-        gui->mouseLoc = gameStateActions->mouseLoc;
-        gui->mouseState = gameStateActions->mouseState;
-
-
         //clear just drawn rectangles
         const int stride = 7;
         for(int idx = gui->guiRenderRectIdx*stride; idx >=0; idx--)
@@ -2570,6 +2565,12 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, GuiStatePassType passType)
     {
 
     }
+
+    gui->mouseLoc = mouseLoc;
+    gui->mouseState = mouseState;
+
+
+
 }
 
 
@@ -2603,11 +2604,27 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
         SyncedGui* gui = &gameState->clientStates[cliId].gui;
+        
         GuiStatePassType guiPass = GuiStatePassType_Synced;
-        if(a == gameStateActions->clientId)
-            guiPass = GuiStatePassType_Interaction;
+        ge_int2 mouseLoc;
+        int mouseState;
 
-        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, guiPass);
+        if(a == gameStateActions->clientId)
+        {
+            guiPass = GuiStatePassType_Interaction;
+            mouseLoc = gameStateActions->mouseLoc;
+            mouseState = gameStateActions->mouseState;
+        }
+        else
+        {
+            guiPass = GuiStatePassType_Synced;
+            mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+            mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+            mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+        }
+
+
+        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass);
 
         if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
         {
@@ -2632,7 +2649,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
             //end selection
-            if(buttons == 1 /*&& GUI_MOUSE_ON_GUI(gui) == 0*/)
+            if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed) && GUI_MOUSE_ON_GUI(gui) == 0)
             {
                 printf("primary press\n");
                 client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
@@ -2640,7 +2657,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                 client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
             }
-            else if(buttons == (1<<2))
+            else if(BITGET(buttons, MouseButtonBits_PrimaryReleased))
             {
                 printf("primary release\n");
                 
@@ -2707,7 +2724,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
             //command to location
-            if(buttons == (1<<3) /*&& GUI_MOUSE_ON_GUI(gui) == 0*/)
+            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && GUI_MOUSE_ON_GUI(gui) == 0)
             {
                 cl_uint curPeepIdx = client->selectedPeepsLastIdx;
                 ge_int3 mapcoord;

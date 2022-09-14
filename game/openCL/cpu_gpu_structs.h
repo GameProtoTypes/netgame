@@ -87,7 +87,14 @@ struct GameStateActions {
 }typedef GameStateActions;
 
 
-
+enum MouseButtonBits {
+	MouseButtonBits_PrimaryPressed,
+	MouseButtonBits_SecondaryPressed,
+	MouseButtonBits_PrimaryReleased,
+	MouseButtonBits_SecondaryReleased,
+	MouseButtonBits_PrimaryDown,
+	MouseButtonBits_SecondaryDown
+} typedef MouseButtonBits;
 
 
 #define GUI_PXPERSCREEN (1000)
