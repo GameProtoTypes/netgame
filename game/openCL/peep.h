@@ -349,7 +349,9 @@ struct SynchronizedClientState {
 
 	EditorTools curTool;
 
+	int mapZView;
 
+	
 	SyncedGui gui;
 
 } typedef SynchronizedClientState;

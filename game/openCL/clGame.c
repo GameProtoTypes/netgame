@@ -2482,7 +2482,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     idx++;
 
     gui->guiRenderRectIdx = idx;
- }
+}
 
 cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 {
@@ -2592,34 +2592,49 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
+
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions; a++)
     {
+
         ClientAction* clientAction = &gameStateActions->clientActions[a].action;
         ActionTracking* actionTracking = &gameStateActions->clientActions[a].tracking;
         cl_uchar cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
         SyncedGui* gui = &gameState->clientStates[cliId].gui;
-        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, GuiStatePassType_Interaction);
+        GuiStatePassType guiPass = GuiStatePassType_Synced;
+        if(a == gameStateActions->clientId)
+            guiPass = GuiStatePassType_Interaction;
+
+        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, guiPass);
 
         if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
         {
-            
+            printf("Client %d, pushed the button.\n", cliId);
         }
-        
+        client->mapZView = MAPDEPTH;
 
 
 
-        printf("Got an action\n");
         
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {
             
+            printf("Got an action\n");
             int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+            printf("Buttons: %d\n", buttons);
+
+
+            printf("world mouse:"); 
+            PrintQ16(clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16]);
+            PrintQ16(clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16]);
+
+
             //end selection
-            if(buttons == 1 && GUI_MOUSE_ON_GUI(gui) == 0)
+            if(buttons == 1 /*&& GUI_MOUSE_ON_GUI(gui) == 0*/)
             {
+                printf("primary press\n");
                 client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
                 client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
                 client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
@@ -2627,6 +2642,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             }
             else if(buttons == (1<<2))
             {
+                printf("primary release\n");
+                
+
                 client->mouseGUIEnd.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
                 client->mouseGUIEnd.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
                 client->mouseWorldEnd_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
@@ -2659,7 +2677,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                             if ((p->physics.base.pos_Q16.y < client->mouseWorldEnd_Q16.y)
                                 && (p->physics.base.pos_Q16.y > client->mouseWorldBegin_Q16.y))
                             {
-                                if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, gameStateActions->mapZView))
+                                if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, client->mapZView))
                                 {
 
                                     if (client->selectedPeepsLastIdx != OFFSET_NULL)
@@ -2676,6 +2694,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                     client->selectedPeepsLastIdx = pi;
 
                                     PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
+                                    printf("ClientID: %d, selected unit\n", cliId);
                                 }
 
                             }
@@ -2688,7 +2707,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
             //command to location
-            if(buttons == (1<<3) && GUI_MOUSE_ON_GUI(gui) == 0)
+            if(buttons == (1<<3) /*&& GUI_MOUSE_ON_GUI(gui) == 0*/)
             {
                 cl_uint curPeepIdx = client->selectedPeepsLastIdx;
                 ge_int3 mapcoord;
@@ -2704,7 +2723,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     world2D.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
                     int occluded;
 
-                    GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
+                    GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, client->mapZView);
                     AStarSearchInstantiate(&gameState->mapSearchers[0]);
                     ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
                     mapcoord.z++;
