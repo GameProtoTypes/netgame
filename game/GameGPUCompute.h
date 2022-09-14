@@ -150,7 +150,7 @@ public:
 
 	int maxPeeps = 1024*1;
 	int maxParticles = 32;
-	int mapDim = 512;
+	int mapDim = 64;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;

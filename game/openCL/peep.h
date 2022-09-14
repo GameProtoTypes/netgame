@@ -305,7 +305,7 @@ struct PeepRenderSupport {
 
 enum GuiStatePassType
 {
-	GuiStatePassType_Interaction,
+	GuiStatePassType_NoLogic,
 	GuiStatePassType_Synced
 } typedef GuiStatePassType;
 
@@ -376,7 +376,7 @@ struct GameState {
 	AStarSearch mapSearchers[1];
 	AStarPathSteps paths;
 
-
+	SyncedGui fakeGui;
 
 } typedef GameState;
 

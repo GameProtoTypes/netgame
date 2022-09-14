@@ -424,8 +424,6 @@
 	 }
 	 
 
-
-
 	 safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
 	 int32_t distToMin = thisClient->hostTickOffset - minOffset;
 	 int32_t distToMax = thisClient->hostTickOffset - maxOffset;
@@ -441,41 +439,24 @@
 	 
 	 float pFactor = 4.0f;
 	 
-	 if (clients.size() > 1 && fullyConnectedToHost)
+	 if (clients.size() >= 1 && fullyConnectedToHost)
 	 {
-
-
-	     //slow down for fastest if server-hybrid, slow down for slowest if client.
-
 		 if (serverRunning)
 		 {
-			 tickPIDError -= safetyOffset;
+			 tickPIDError -= safetyOffset;//slow down for fastest if server-hybrid,
 		 }
 		 else
 		 {
-			 tickPIDError += safetyOffset;
+			 tickPIDError += safetyOffset;//slow down for slowest if client.
 		 }
 
 		targetTickTimeMs = GOODTICKTIMEMS + pFactor * (tickPIDError);//A
-
-
-
 
 
 		if (targetTickTimeMs >= MAXTICKTIMEMS)
 		{
 			targetTickTimeMs = MAXTICKTIMEMS;
 		}
-		else if (targetTickTimeMs <= 0)//allow fastest speed up from very delayed clients.
-		{
- 			targetTickTimeMs = 0;
-
-		}
-	 }
-	 else if (serverRunning && !fullyConnectedToHost && clients.size() >= 1)//Server only with at least a client
-	 {
-		 targetTickTimeMs = MINTICKTIMEMS + pFactor * (tickPIDError);
-
 	 }
 	 else
 	 {

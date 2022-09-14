@@ -2403,10 +2403,6 @@ SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
 {
 
-
-    if(gui->passType != GuiStatePassType_Interaction)
-        return;//no rendering
-
     uint idx = gui->guiRenderRectIdx;
 
     //map [0,1] to [-1,1]
@@ -2530,15 +2526,14 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
 
     if(gui->activeWidget == id){
         color = (float3){1.0,0.0,0.0};
-
     }
 
-
-
-
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
-
+    if(gui->passType == GuiStatePassType_NoLogic)
+    {
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+        size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    }
+    
     return ret;
 }
 
@@ -2550,28 +2545,30 @@ cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
 
 void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
 {
-    
-    if(passType == GuiStatePassType_Interaction)
+    gui->passType = passType;
+    if(passType == GuiStatePassType_NoLogic)
     {
         //clear just drawn rectangles
         const int stride = 7;
-        for(int idx = gui->guiRenderRectIdx*stride; idx >=0; idx--)
+        for(int idx = (gui->guiRenderRectIdx-1)*stride; idx >=0; idx--)
         {
             guiVBO[idx] = 0;
         }
-        gui->guiRenderRectIdx = 0;
+
     }
     else
     {
 
     }
-
+    gui->guiRenderRectIdx = 0;
     gui->mouseLoc = mouseLoc;
     gui->mouseState = mouseState;
 
 
 
 }
+
+
 
 
 
@@ -2592,15 +2589,20 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
-
-
     //apply turns
-    for (int32_t a = 0; a < gameStateActions->numActions; a++)
+    for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
     {
+        int b = a;
+        cl_uchar fakePass = 0;
+        if(a == gameStateActions->numActions)
+        {
+            b = gameStateActions->clientId;//local client
+            fakePass = 1;
+        }
 
-        ClientAction* clientAction = &gameStateActions->clientActions[a].action;
-        ActionTracking* actionTracking = &gameStateActions->clientActions[a].tracking;
-        cl_uchar cliId = actionTracking->clientId;
+        ClientAction* clientAction = &gameStateActions->clientActions[b].action;
+        ActionTracking* actionTracking = &gameStateActions->clientActions[b].tracking;
+        int cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
 
         SyncedGui* gui = &gameState->clientStates[cliId].gui;
@@ -2609,11 +2611,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         ge_int2 mouseLoc;
         int mouseState;
 
-        if(a == gameStateActions->clientId)
+        if(fakePass)
         {
-            guiPass = GuiStatePassType_Interaction;
+            guiPass = GuiStatePassType_NoLogic;
             mouseLoc = gameStateActions->mouseLoc;
             mouseState = gameStateActions->mouseState;
+            clientAction= NULL;
+            actionTracking=NULL;
+            cliId = -1;
+            gui = &gameState->fakeGui;
         }
         else
         {
@@ -2628,17 +2634,20 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
         {
-            printf("Client %d, pushed the button.\n", cliId);
+            printf("Client %d, pushed the button. fake: %d\n", cliId, fakePass);
+            GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 100}) ;
         }
+        
+
+        if(fakePass)
+            continue;
+
         client->mapZView = MAPDEPTH;
 
-
-
-        
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {
             
-            printf("Got an action\n");
+            printf("Got an action From Client: %d\n", cliId);
             int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
             printf("Buttons: %d\n", buttons);
 
