@@ -64,11 +64,11 @@ void ActionWrapInit(ActionWrap* actionWrap)
 
 int32_t random(int32_t min, int32_t max) { return rand() % (max - min + 1) + min; }
 
-void WaitTickTime(uint64_t timerStartMs, int32_t targetTimeMs, int64_t* frameTimeMS)
+void WaitTickTime(uint64_t timerStartMs, float targetTimeMs, float* frameTimeMS)
 {
     *frameTimeMS = SDL_GetTicks64() - timerStartMs;
-    int32_t sleepTime = glm::clamp(int32_t(targetTimeMs - *frameTimeMS), 0, targetTimeMs);
-    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+    float sleepTime = glm::clamp((targetTimeMs - *frameTimeMS), 0.0f, targetTimeMs);
+    std::this_thread::sleep_for(std::chrono::microseconds((long long)(sleepTime*1000.0f)));
 }
 
 const char* AngelScriptPrintPrefix = "ANGEL SCRIPT: ";
@@ -425,6 +425,7 @@ int32_t main(int32_t argc, char* args[])
             ActionWrap actionWrap;
             ActionWrapInit(&actionWrap);
             actionWrap.tracking.clientId = gameNetworking.clientId;
+            actionWrap.tracking.sentTickIdx = gameStateActions->tickIdx;
 
             actionWrap.action.actionCode = ClientActionCode_MouseStateChange;
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_X] = int(GUI_PXPERSCREEN_F*(float(mousex) / gameGraphics.SCREEN_WIDTH));
@@ -542,7 +543,7 @@ int32_t main(int32_t argc, char* args[])
             sprintf_s(buffer, "HELLOOOO %d", gameStateActions->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
-        ImGui::Text("FrameTime: %d, TargetTickTime: %d, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
+        ImGui::Text("FrameTime: %f, TargetTickTime: %f, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
                 
         if (gameNetworking.gameStateTransferPercent > 0.0f)
         {

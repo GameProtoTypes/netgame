@@ -2498,30 +2498,22 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
     cl_uchar ret = 0;
     if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
     {
-        gui->hotWidget = id;
+        gui->hoverWidget = id;
 
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
             gui->activeWidget = id;
         
-        else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) == 0)
+        else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
-            if(gui->activeWidget == id)
-                ret = 1;
-            gui->activeWidget = -1;
-
+            ret = 1;
         }
         gui->mouseOnGUI = 1;
     }
-    else{
-        gui->mouseOnGUI = 0;
-        gui->hotWidget = -1;
-        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) == 0)
-            gui->activeWidget = -1;
-    }
+
 
     float3 color = (float3){0.0,0.0,1.0};
 
-    if(gui->hotWidget == id)
+    if(gui->hoverWidget == id)
         color = (float3){1.0,1.0,1.0};
 
     if(gui->activeWidget == id){
@@ -2563,8 +2555,10 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     gui->guiRenderRectIdx = 0;
     gui->mouseLoc = mouseLoc;
     gui->mouseState = mouseState;
+    gui->mouseOnGUI = 0;
 
-
+    gui->hoverWidget = -1;
+    gui->activeWidget = -1;
 
 }
 
@@ -2634,10 +2628,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
         {
-            printf("Client %d, pushed the button. fake: %d\n", cliId, fakePass);
-            GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 100}) ;
+            printf("delete mode.");
+            client->curTool = EditorTools_Delete;
         }
-        
+        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 100}) == 1)
+        {
+            printf("create mode.");
+            client->curTool = EditorTools_Create;
+        }
 
         if(fakePass)
             continue;
@@ -2801,109 +2799,43 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
             }
-        }
-
-
-
-
-/*
-
-        else if (clientAction->actionCode == ClientActionCode_CommandToLocation)
-        {
-            
-            cl_uint curPeepIdx = client->selectedPeepsLastIdx;
-            ge_int3 mapcoord;
-            ge_int2 world2D;
-            cl_uchar pathFindSuccess;
-
-            offsetPtr pathOPtr;
-            if (curPeepIdx != OFFSET_NULL)
+            //delete
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && GUI_MOUSE_ON_GUI(gui) == 0 && client->curTool == EditorTools_Delete)
             {
-                //Do an AStarSearch
-                Peep* curPeep = &gameState->peeps[curPeepIdx];
-                world2D.x = clientAction->intParameters[CAC_CommandToLocation_Param_X_Q16];
-                world2D.y = clientAction->intParameters[CAC_CommandToLocation_Param_Y_Q16];
+                printf("Got the command\n");
+
+                ge_int2 world2DMouse;
+                world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                world2DMouse.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+
+                ge_int3 mapCoord;
                 int occluded;
-
-                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, gameStateActions->mapZView);
-                AStarSearchInstantiate(&gameState->mapSearchers[0]);
-                ge_int3 start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
-                mapcoord.z++;
-                ge_int3 end = mapcoord;
-                Print_GE_INT3(start);
-                Print_GE_INT3(end);
-                pathFindSuccess = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
-                if (pathFindSuccess != 0)
-                {
-                    //printf("--------------------------\n");
-                    //AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
-                    //printf("--------------------------\n");
-                    //AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
-                    //printf("--------------------------\n");
-
-
-                    pathOPtr = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
-                    //AStarPrintPath(&gameState->paths, pathOPtr);
-                    //printf("--------------------------\n");
-                }
-            }
-
-            while (curPeepIdx != OFFSET_NULL)
-            {
-                Peep* curPeep = &gameState->peeps[curPeepIdx];
-
-                if (pathFindSuccess != 0)
-                {
-                    curPeep->physics.drive.nextPathNodeOPtr = pathOPtr;
-
-                    AStarPathNode* nxtPathNode;
-                    OFFSET_TO_PTR(gameState->paths.pathNodes, curPeep->physics.drive.nextPathNodeOPtr, nxtPathNode);
-
-
-                    ge_int3 worldloc;
-                    MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
-                    curPeep->physics.drive.target_x_Q16 = worldloc.x;
-                    curPeep->physics.drive.target_y_Q16 = worldloc.y;
-                    curPeep->physics.drive.target_z_Q16 = worldloc.z;
-                    curPeep->physics.drive.drivingToTarget = 1;
-
-                    //restrict comms to new channel
-                    curPeep->comms.orders_channel = RandomRange(client->selectedPeepsLastIdx, 0, 10000);
-                    curPeep->comms.message_TargetReached = 0;
-                    curPeep->comms.message_TargetReached_pending = 0;
-                }
-                curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
-            }
-        }
-        else if (clientAction->actionCode == ClientActionCode_CommandTileDelete)
-        {
-            printf("Got the command\n");
-
-            ge_int2 world2DMouse;
-            world2DMouse.x = clientAction->intParameters[CAC_CommandTileDelete_Param_X_Q16];
-            world2DMouse.y = clientAction->intParameters[CAC_CommandTileDelete_Param_Y_Q16];
-
-            ge_int3 mapCoord;
-            int occluded;
-            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
-            
-            printf("delete coord: ");
-            Print_GE_INT3(mapCoord);
-            if (mapCoord.z > 0) 
-            {
-                gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
+                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
                 
-                MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
-                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
-                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
-                MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+                printf("delete coord: ");
+                Print_GE_INT3(mapCoord);
+                if (mapCoord.z > 0) 
+                {
+                    gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
+                    
+                    MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+                }
+
             }
+    
+
 
         }
-    
-   */ 
+
+
+
+       
+   
     }
 
     gameStateActions->numActions = 0;

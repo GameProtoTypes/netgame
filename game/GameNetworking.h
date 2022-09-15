@@ -35,7 +35,7 @@
 #define MAX_USER_MESSAGE_LENGTH 255
 
 
-#define MINTICKTIMEMS (16)
+#define MINTICKTIMEMS (16.0)
 #define GOODTICKTIMEMS (MINTICKTIMEMS*2)
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
@@ -229,11 +229,11 @@ public:
 	uint32_t lastFreezeTick = 0;
 	int32_t snapshotFreq = 200;
 
-	int32_t targetTickTimeMs = GOODTICKTIMEMS;
+	float targetTickTimeMs = GOODTICKTIMEMS;
 	float integralAccumulatorTickPID = 0.0f;
 	float tickPIDError = 0.0f;
 
-	int64_t lastFrameTimeMs = MINTICKTIMEMS;
+	float lastFrameTimeMs = MINTICKTIMEMS;
 
 	uint32_t clientGUID;
 };

@@ -148,7 +148,7 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1024*1;
+	int maxPeeps = 1024*16;
 	int maxParticles = 32;
 	int mapDim = 64;
 	int mapDepth = 32;
@@ -172,7 +172,6 @@ public:
 
 	void AquireAllGraphicsObjects();
 	void ReleaseAllGraphicsObjects();
-
 
 
 

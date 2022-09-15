@@ -38,6 +38,8 @@ enum ClientActionCode_KeyStateChange_IntParams {
 struct ClientAction {
 	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
 
+
+
 	ClientActionCode actionCode;
 	int intParameters[CAC_MAX];//MAX of ClientActionCode_******_IntParams enums
 
@@ -53,6 +55,7 @@ struct ActionTracking {
 	cl_int ticksLate;//action could not be applied on client at scheduled tickId;
 	bool finalActionVerified;
 	bool clientApplied;
+	cl_uint sentTickIdx;//when the action was sent by client
 
 } typedef ActionTracking;
 

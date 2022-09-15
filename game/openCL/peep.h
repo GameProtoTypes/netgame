@@ -316,7 +316,8 @@ struct SyncedGui
 	ge_int2 mouseLoc;
 	int mouseState;
 
-	int hotWidget;
+	int lastWidget;
+	int hoverWidget;
 	int activeWidget;
 	cl_uchar mouseOnGUI;
 
@@ -330,6 +331,7 @@ struct SyncedGui
 
 enum EditorTools
 {
+	EditorTools_None,
 	EditorTools_Delete,
 	EditorTools_Create
 } typedef EditorTools;

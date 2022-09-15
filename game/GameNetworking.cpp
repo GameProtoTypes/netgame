@@ -13,7 +13,7 @@
 #include <functional>
 #include <string>
 
-
+#include <cmath>
 
  void GameNetworking::Init()
 {
@@ -398,16 +398,16 @@
 		 targetTickTimeMs = GOODTICKTIMEMS;
 		 return;
 	 }
-	 if (clients.size() == 1 && fullyConnectedToHost)//case for client/server hybrid with no extra clients.
+	 if (clients.size() == 1 && fullyConnectedToHost && serverRunning)//case for client/server hybrid with no extra clients.
 	 {
 		 targetTickTimeMs = GOODTICKTIMEMS;
 		 return;
 	 }
 
 	 //get stats on client swarm and slow down 
-	 int32_t maxOffset = -9999;
-	 int32_t minOffset = 9999;
-	 int32_t safetyOffset = 10;
+	 float maxOffset = -9999.0;
+	 float minOffset = 9999.0;
+	 float safetyOffset = 5.0;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {
@@ -422,41 +422,48 @@
 		 if (client->hostTickOffset < minOffset)
 			 minOffset = client->hostTickOffset;
 	 }
-	 
+	 if(clients.size() == 1 && !serverRunning)
+	 {
+		maxOffset = 0.0f;
+		minOffset = 0.0f;
+	 }
 
-	 safetyOffset += thisClient->avgHostPing / MINTICKTIMEMS;
-	 int32_t distToMin = thisClient->hostTickOffset - minOffset;
-	 int32_t distToMax = thisClient->hostTickOffset - maxOffset;
 
-	 int32_t distToCompare;
+	 float distToMin = thisClient->hostTickOffset - minOffset;
+	 float distToMax = thisClient->hostTickOffset - maxOffset;
+
+
 	 if (serverRunning)
-		 distToCompare = distToMax;
+		 tickPIDError = 0;
 	 else
-		 distToCompare = distToMin;
+		 tickPIDError = thisClient->hostTickOffset;
 
-	 tickPIDError = distToCompare;
+
 
 	 
 	 float pFactor = 4.0f;
 	 
 	 if (clients.size() >= 1 && fullyConnectedToHost)
 	 {
+
 		 if (serverRunning)
 		 {
-			 tickPIDError -= safetyOffset;//slow down for fastest if server-hybrid,
+		//	 tickPIDError -= safetyOffset;//server stay ahead
 		 }
 		 else
 		 {
-			 tickPIDError += safetyOffset;//slow down for slowest if client.
+
+			float offset = 2.0f*thisClient->avgHostPing/GOODTICKTIMEMS;
+			if(offset < safetyOffset)
+				offset = safetyOffset;
+
+			 tickPIDError += offset;//client stay behind
+
+			 
 		 }
 
 		targetTickTimeMs = GOODTICKTIMEMS + pFactor * (tickPIDError);//A
 
-
-		if (targetTickTimeMs >= MAXTICKTIMEMS)
-		{
-			targetTickTimeMs = MAXTICKTIMEMS;
-		}
 	 }
 	 else
 	 {
@@ -464,11 +471,9 @@
 
 	 }
 
-
-
 	 //safety clamp
-	 if (targetTickTimeMs <= 0)
-		 targetTickTimeMs = 0;
+	 if (targetTickTimeMs <= 0.0f)
+		 targetTickTimeMs = 0.0f;
 	 else if (targetTickTimeMs >= MAXTICKTIMEMS)
 		 targetTickTimeMs = MAXTICKTIMEMS;
 
@@ -659,12 +664,14 @@
 						 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
 
-						 if (gameStateActions->tickIdx > HOST_lastActionScheduleTickIdx)//ignore actions if client is in catchup. and enforce actions all on different ticks
-						 {
-							 actionWrap.action.scheduledTickIdx = gameStateActions->tickIdx + 0;
-							 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
+						 //if (gameStateActions->tickIdx > HOST_lastActionScheduleTickIdx)
+						 //{
+							 actionWrap.action.scheduledTickIdx = gameStateActions->tickIdx;
+							 
+						//	 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
 							 actions.push_back(actionWrap);
-						 }
+						 //}
+
 					 }
 				 }
 				 //all clients have given input
