@@ -552,7 +552,7 @@ std::string GameGPUCompute::GameStateString(int tickIdx)
 {
     return std::format("gamestate_tick_{}_.bin",gameStateActions->tickIdx);
 }
-void GameGPUCompute::SaveGameStateDiff()
+void GameGPUCompute::SaveGameStateDiff(std::vector<char>* data)
 {
     ReadFullGameState();
     std::ofstream myfile;
@@ -566,28 +566,40 @@ void GameGPUCompute::SaveGameStateDiff()
     }
     
     myfile.close();
-
-    std::string command = std::format(".\\windows_binaries\\hdiffz.exe gamestatebase.bin {} diff_tick_{}.diff", GameStateString(gameStateActions->tickIdx), gameStateActions->tickIdx);
+    std::string diffFileName = std::format("diff_tick_{}.diff", gameStateActions->tickIdx);
+    std::string command = std::format(".\\windows_binaries\\hdiffz.exe -f -s-512 gamestatebase.bin {} {}", GameStateString(gameStateActions->tickIdx), diffFileName);
     std::system(command.c_str());
+
+
+    std::filesystem::remove(GameStateString(gameStateActions->tickIdx));
+
+
+    std::ifstream diffFile;
+    diffFile.open(diffFileName, std::ifstream::binary);
+    diffFile.seekg(0, diffFile.end);
+    int fileSize = diffFile.tellg();
+    diffFile.seekg(0, diffFile.beg);
+    
+    data->resize(fileSize);
+    diffFile.read(data->data(),fileSize);
+    
+
+
 }
 
-void GameGPUCompute::LoadGameStateFromDiff(int tickidx)
+
+void GameGPUCompute::LoadGameStateFromDiff(std::string diffFileName, std::string resultGameStateFileName)
 {
 
-    std::string command = std::format(".\\windows_binaries\\hpatchz.exe gamestatebase.bin diff_tick_{}.diff {}", tickidx, GameStateString(tickidx));
+    std::string command = std::format(".\\windows_binaries\\hpatchz.exe -f gamestatebase.bin {} {}", diffFileName, resultGameStateFileName);
     std::system(command.c_str());
 
-
-
-
-
-
-
     std::ifstream myfile;
-    myfile.open(GameStateString(tickidx), std::ifstream::binary);
+    myfile.open(resultGameStateFileName, std::ifstream::binary);
     if (!myfile.is_open())
         std::cout << "Error Reading File!" << std::endl;
     else {
+        
         std::cout << "Reading " << structSizes.gameStateStructureSize << " bytes" << std::endl;
         myfile.read(reinterpret_cast<char*>(gameState.get()->data), structSizes.gameStateStructureSize);
     
@@ -599,11 +611,28 @@ void GameGPUCompute::LoadGameStateFromDiff(int tickidx)
     }
     myfile.close();
 
+    std::filesystem::remove(resultGameStateFileName);
+
     WriteFullGameState();
+}
+void GameGPUCompute::LoadGameStateFromDiff(int tickidx)
+{
+    LoadGameStateFromDiff(std::format("diff_tick_{}.diff", tickidx), GameStateString(tickidx));
+}
+
+void GameGPUCompute::LoadGameStateFromDiff(std::vector<char>* diffdata, int id)
+{
+    std::ofstream diffFile;
+
+    std::string diffFileName = std::format("netgame_{}.gamediff", id);
+    diffFile.open(diffFileName, std::ofstream::binary | std::ofstream::trunc | std::ofstream::ate);
+    diffFile.write(diffdata->data(), diffdata->size());
+    diffFile.close();
+
+    LoadGameStateFromDiff(diffFileName, std::format("netgame_{}.bin", id));
 
 
 }
-
 
 
 

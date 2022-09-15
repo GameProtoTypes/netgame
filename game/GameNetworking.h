@@ -40,7 +40,7 @@
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
-#define MAXPACKETSPERUPDATE (200)
+#define MAXPACKETSPERUPDATE (20)
 
 #define REALLYBIGPING (10000)
 #define TRANSFERCHUNKSIZE (1024*1024)
@@ -210,8 +210,8 @@ public:
 	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;
 
-	std::shared_ptr<GameState_Pointer> CLIENT_gameStateTransfer;
-	std::shared_ptr<GameState_Pointer> HOST_gameStateTransfer;
+	std::vector<char> CLIENT_gameStateTransfer;
+	std::vector<char>  HOST_gameStateTransfer;
 	
 
 	std::vector<ActionWrap> CLIENT_actionList;

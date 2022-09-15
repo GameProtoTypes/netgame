@@ -580,7 +580,8 @@ int32_t main(int32_t argc, char* args[])
         }
         if(ImGui::Button("Save Diff"))
         {
-            gameCompute.SaveGameStateDiff();
+            std::vector<char> data;
+            gameCompute.SaveGameStateDiff(&data);
         }
         static int loadtickIdx = 0;
         ImGui::InputInt("Load Tick",&loadtickIdx);

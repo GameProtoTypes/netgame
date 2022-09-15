@@ -32,8 +32,6 @@
 	
 
 
-	CLIENT_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->structSizes.gameStateStructureSize);
-	HOST_gameStateTransfer = std::make_shared<GameState_Pointer>(gameCompute->structSizes.gameStateStructureSize);
 
 
 
@@ -192,7 +190,9 @@
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_SYNCDATA1));
 	 bs.Write(static_cast<int32_t>(cliIdx));
 	 bs.Write(reinterpret_cast<char*>(gameStateActions.get()), sizeof(GameStateActions));
-	 bs.Write(CheckSumGameState(HOST_gameStateTransfer.get()));
+	 bs.Write(static_cast<int32_t>(HOST_gameStateTransfer.size()));
+
+	std::cout << "[HOST] Diff Size is " << HOST_gameStateTransfer.size() << std::endl;
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, clientAddr, false);
 
@@ -207,20 +207,18 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_GAMEDATA_PART));
 
-	 uint64_t gameStateSize = gameCompute->structSizes.gameStateStructureSize;
+	 uint64_t diffSize = HOST_gameStateTransfer.size();
 	 uint32_t chunkSize = TRANSFERCHUNKSIZE;
 	 uint64_t n = HOST_nextTransferOffset[client->cliId] + chunkSize;
-	 if (n >= gameStateSize)
-		 chunkSize -= n - gameStateSize +1;
+	 if (n >= diffSize)
+		 chunkSize -= n - diffSize ;
 
 	 bs.Write(chunkSize);
 	 
 	 SLNet::DataCompressor compressor;
-	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateTransfer.get()->data) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
+	 compressor.Compress(reinterpret_cast<unsigned char*>(HOST_gameStateTransfer.data()) + HOST_nextTransferOffset[client->cliId], chunkSize, &bs);
 
 	 HOST_nextTransferOffset[client->cliId] += chunkSize;
-
-
 
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
@@ -552,9 +550,13 @@
 
 				 clients.back().downloadingState = 1;
 
-				 gameCompute->ReadFullGameState();
 
-				 memcpy(HOST_gameStateTransfer.get()->data, gameState.get()->data, gameCompute->structSizes.gameStateStructureSize);
+				//compute game delta - and initialize transfer				
+				gameCompute->SaveGameStateDiff(&HOST_gameStateTransfer);
+
+
+
+
 
 				 std::cout << "Pausing." << std::endl;
 				 
@@ -572,7 +574,11 @@
 
 				 bts.Read(reinterpret_cast<char*>(gameStateActions.get()), sizeof(GameStateActions));
 				 gameStateActions->pauseState = 1;
-				 bts.Read(transferFullCheckSum);
+				 
+				 int diffSize;
+				 bts.Read(diffSize);
+				 std::cout << "[CLIENT] Diff Size is " << diffSize << std::endl;
+				 CLIENT_gameStateTransfer.resize(diffSize);
 
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
 
@@ -583,7 +589,7 @@
 				 bts.Read(chunkSize);
 
 				 SLNet::DataCompressor compressor;
-				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(CLIENT_gameStateTransfer.get()->data) + CLIENT_nextTransferOffset);
+				 compressor.Decompress(&bts, reinterpret_cast<unsigned char*>(&CLIENT_gameStateTransfer[0]) + CLIENT_nextTransferOffset);
 				 
 
 
@@ -594,22 +600,24 @@
 
 				 if (chunkSize < TRANSFERCHUNKSIZE)
 				 {
-					 uint64_t recievedCS = CheckSumGameState(CLIENT_gameStateTransfer.get());
+					//  uint64_t recievedCS = CheckSumGameState(CLIENT_gameStateTransfer.get());
 
-					 if (transferFullCheckSum != recievedCS)
-					 {
-						 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!" << std::endl;
-						 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << recievedCS << std::endl;
+					//  if (transferFullCheckSum != recievedCS)
+					//  {
+					// 	 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART received CHECKSUM MISSMATCH!" << std::endl;
+					// 	 std::cout << "Correct SUM: " << transferFullCheckSum << ", CHECKSUM: " << recievedCS << std::endl;
 
-						 assert(0);
-					 }
-					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, sending acknologement." << std::endl;
-					 memcpy(gameState.get()->data, CLIENT_gameStateTransfer.get()->data, gameCompute->structSizes.gameStateStructureSize);
-					 gameCompute->WriteFullGameState();
+					// 	 assert(0);
+					//  }
+					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, applying diff and sending acknologement." << std::endl;
+					 
+					 gameCompute->LoadGameStateFromDiff(&CLIENT_gameStateTransfer, gameStateActions->tickIdx);//todo make the name server name or something
+					 
+
 					 
 					 gameStateActions->pauseState = 0;
 					 gameStateActions->clientId = clientId;
-					 std::cout << "[CLIENT] GSCS: " << recievedCS << std::endl;
+
 
 
 
@@ -839,7 +847,7 @@
 		std::cout << "Snapshot Taken" << std::endl;
 
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
-			reinterpret_cast<void*>(gameState.get()), gameCompute->gameStateSize);
+			reinterpret_cast<void*>(gameState.get()), gameCompute->diffSize);
 		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameStateActions.get()),
 			reinterpret_cast<void*>(gameStateActions.get()), sizeof(GameStateActions));
 

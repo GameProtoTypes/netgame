@@ -74,8 +74,10 @@ public:
 
 	std::string GameStateString(int tickIdx);
 	void SaveGameStateBase();
-	void SaveGameStateDiff();
+	void SaveGameStateDiff(std::vector<char>* data);
 	void LoadGameStateFromDiff(int tickidx);
+	void LoadGameStateFromDiff(std::string diffFileName, std::string resultGameStateFileName);
+	void LoadGameStateFromDiff(std::vector<char>* data,  int id);
 
 	cl_context context;
 
