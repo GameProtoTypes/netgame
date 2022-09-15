@@ -608,18 +608,22 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 {
     if (MapTileCoordValid(startTile) == 0)
     {
+        printf("AStarSearchRoutine: Start MapCoord Not Valid.\n");
         return 0;
     }
     if (MapTileCoordValid(destTile) == 0)
     {
+        printf("AStarSearchRoutine: Dest MapCoord Not Valid.\n");
         return 0;
     }
     if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, startTile) == 0)
     {
+        printf("AStarSearchRoutine: Start Stand In Invalid.\n");
         return 0;
     }
     if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, destTile)==0)
     {
+        printf("AStarSearchRoutine: Dest Stand In Invalid.\n");
         return 0;
     }
 
@@ -641,7 +645,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     int iterationCount = maxIterations;
     while (search->openHeapSize > 0 && iterationCount > 0)
     {
-
         //find node in open with lowest f cost
         offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
 
@@ -732,21 +735,6 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
                     continue;
                 }
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2398,7 +2386,12 @@ SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 {
     return &gameState->clientStates[clientId].gui;
 }
-
+int GrabGuiId(SyncedGui* gui)
+{
+    int id =  gui->nextId;;
+    gui->nextId++;
+    return id;
+}
 
 void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
 {
@@ -2490,18 +2483,22 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 }
 
 
-#define GUIID ALL_CORE_PARAMS_PASS, gui, __LINE__
+#define GUIID ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
+#define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size
 
-cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size)
+cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
 {
-
     cl_uchar ret = 0;
+    *down = 0;
     if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
     {
         gui->hoverWidget = id;
 
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+        {
             gui->activeWidget = id;
+            *down = 1;
+        }
         
         else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
@@ -2509,7 +2506,6 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
         }
         gui->mouseOnGUI = 1;
     }
-
 
     float3 color = (float3){0.0,0.0,1.0};
 
@@ -2525,8 +2521,44 @@ cl_uchar GUI_BUTTON(ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int
         GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
         size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
     }
-    
     return ret;
+}
+
+cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
+{
+
+    ge_int2 posHandle;
+    ge_int2 sizeHandle;
+
+    sizeHandle.y = size.y;
+    sizeHandle.x = size.x/10;
+
+    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
+    {
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+        {
+            float perc = ((float)(gui->mouseLoc.x - pos.x - sizeHandle.x/2))/size.x;
+            int d = perc*(max-min);
+            (*value) = clamp(min + d, min, max);
+        }
+    }
+
+
+    posHandle.y = pos.y;
+    posHandle.x = pos.x + (size.x*(*value)/(max-min));
+
+    posHandle.x = clamp(posHandle.x, pos.x, pos.x + size.x - sizeHandle.x);
+
+    if(gui->passType == GuiStatePassType_NoLogic)
+    {
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+        size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    }
+
+    int down;
+    GUI_BUTTON(GUIID, posHandle, sizeHandle, &down);
+
+
 }
 
 
@@ -2546,13 +2578,17 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
         {
             guiVBO[idx] = 0;
         }
-
     }
     else
     {
 
     }
     gui->guiRenderRectIdx = 0;
+    gui->nextId = 0;
+
+
+    gui->mouseDelta = GE_INT2_SUB(mouseLoc, gui->mouseLoc);
+
     gui->mouseLoc = mouseLoc;
     gui->mouseState = mouseState;
     gui->mouseOnGUI = 0;
@@ -2626,21 +2662,25 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass);
 
-        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 100}) == 1)
+        int downDummy;
+        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 50},&downDummy) == 1)
         {
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
-        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 100}) == 1)
+        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 50},&downDummy) == 1)
         {
             printf("create mode.");
             client->curTool = EditorTools_Create;
         }
 
+        GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
+
+        gameStateActions->mapZView = client->mapZView;
+
         if(fakePass)
             continue;
 
-        client->mapZView = MAPDEPTH;
 
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {

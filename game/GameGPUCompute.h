@@ -72,6 +72,11 @@ public:
 
 	void WriteGameStateB();
 
+	std::string GameStateString(int tickIdx);
+	void SaveGameStateBase();
+	void SaveGameStateDiff();
+	void LoadGameStateFromDiff(int tickidx);
+
 	cl_context context;
 
 	cl_device_id device_id = NULL;
@@ -148,9 +153,9 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1024*16;
+	int maxPeeps = 1024*32;
 	int maxParticles = 32;
-	int mapDim = 64;
+	int mapDim = 512;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;

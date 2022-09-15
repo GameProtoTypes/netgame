@@ -1,6 +1,6 @@
 #include "GameGPUCompute.h"
 
-
+#include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -426,7 +426,6 @@ void GameGPUCompute::Stage1()
     if (gameStateActions->pauseState != 0)
         return;
 
-
     AquireAllGraphicsObjects();
 
     ret = clFinish(command_queue);
@@ -531,6 +530,84 @@ void GameGPUCompute::WriteGameStateB()
         sizeof(GameStateActions), gameStateActions.get(), 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
 }
+
+
+void GameGPUCompute::SaveGameStateBase()
+{
+    ReadFullGameState();
+    std::ofstream myfile;
+    myfile.open("gamestatebase.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
+    if (!myfile.is_open())
+        std::cout << "Error Saving File!" << std::endl;
+    else
+    {
+        myfile.write(reinterpret_cast<char*>(gameState.get()->data), structSizes.gameStateStructureSize);
+    }
+    
+    myfile.close();
+}
+
+
+std::string GameGPUCompute::GameStateString(int tickIdx)
+{
+    return std::format("gamestate_tick_{}_.bin",gameStateActions->tickIdx);
+}
+void GameGPUCompute::SaveGameStateDiff()
+{
+    ReadFullGameState();
+    std::ofstream myfile;
+
+    myfile.open(GameStateString(gameStateActions->tickIdx), std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
+    if (!myfile.is_open())
+        std::cout << "Error Saving File!" << std::endl;
+    else
+    {
+        myfile.write(reinterpret_cast<char*>(gameState.get()->data), structSizes.gameStateStructureSize);
+    }
+    
+    myfile.close();
+
+    std::string command = std::format(".\\windows_binaries\\hdiffz.exe gamestatebase.bin {} diff_tick_{}.diff", GameStateString(gameStateActions->tickIdx), gameStateActions->tickIdx);
+    std::system(command.c_str());
+}
+
+void GameGPUCompute::LoadGameStateFromDiff(int tickidx)
+{
+
+    std::string command = std::format(".\\windows_binaries\\hpatchz.exe gamestatebase.bin diff_tick_{}.diff {}", tickidx, GameStateString(tickidx));
+    std::system(command.c_str());
+
+
+
+
+
+
+
+    std::ifstream myfile;
+    myfile.open(GameStateString(tickidx), std::ifstream::binary);
+    if (!myfile.is_open())
+        std::cout << "Error Reading File!" << std::endl;
+    else {
+        std::cout << "Reading " << structSizes.gameStateStructureSize << " bytes" << std::endl;
+        myfile.read(reinterpret_cast<char*>(gameState.get()->data), structSizes.gameStateStructureSize);
+    
+        if (myfile)
+            std::cout << "all characters read successfully.";
+        else
+            std::cout << "error: only " << myfile.gcount() << " could be read";
+    
+    }
+    myfile.close();
+
+    WriteFullGameState();
+
+
+}
+
+
+
+
+
 
 std::string GameGPUCompute::buildPreProcessorString()
 {

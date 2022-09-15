@@ -576,7 +576,6 @@
 
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_SYNCDATA1 received" << std::endl;
 
-
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_GAMEDATA_PART)
 			 {

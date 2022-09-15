@@ -312,14 +312,17 @@ enum GuiStatePassType
 struct SyncedGui
 {
 	int guiRenderRectIdx;
+	int nextId;
 
 	ge_int2 mouseLoc;
+	ge_int2 mouseDelta;
 	int mouseState;
 
 	int lastWidget;
 	int hoverWidget;
 	int activeWidget;
 	cl_uchar mouseOnGUI;
+
 
 	ge_int2 curBoundStart;
 	ge_int2 curBoundEnd;

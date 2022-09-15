@@ -209,6 +209,8 @@ int32_t main(int32_t argc, char* args[])
 
     gameCompute.RunInitCompute2();
 
+    //at this point gamestate is at baseline for the game options.
+    gameCompute.SaveGameStateBase();
 
 
 
@@ -451,13 +453,10 @@ int32_t main(int32_t argc, char* args[])
 
         
 
-        ImGui::Begin("View");
-        ImGui::SliderInt("Map Depth Level", &rclientst->viewZIdx, 0, gameCompute.mapDepth-1);
-        gameStateActions->mapZView = rclientst->viewZIdx;
 
 
 
-        ImGui::End();
+
 
         gameStateActions->mouseLoc.x = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
         gameStateActions->mouseLoc.y = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
@@ -465,28 +464,6 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        ImGui::Begin("Commands");
-        if (rclientst->waitingDelete )
-        {
-            if(ImGui::Button("[Delete Tile]"))
-            {
-                rclientst->waitingDelete = false;
-                rclientst->waitingMapAction = false;
-            }
-        }
-        else 
-        {
-            if(ImGui::Button("Delete Tile"))
-            {
-                rclientst->waitingDelete = true; 
-                rclientst->waitingMapAction = true;
-            }
-        }
-        
-
-
-
-        ImGui::End();
 
 
         if (gameStateActions->pauseState == 0)
@@ -568,7 +545,8 @@ int32_t main(int32_t argc, char* args[])
         }
                 
         if (ImGui::Button("Save GameState To File"))
-        {   gameCompute.ReadFullGameState();
+        {   
+            gameCompute.ReadFullGameState();
             std::ofstream myfile;
             myfile.open("gamestate.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
             if (!myfile.is_open())
@@ -599,9 +577,17 @@ int32_t main(int32_t argc, char* args[])
             myfile.close();
 
             gameCompute.WriteFullGameState();
-    
         }
-
+        if(ImGui::Button("Save Diff"))
+        {
+            gameCompute.SaveGameStateDiff();
+        }
+        static int loadtickIdx = 0;
+        ImGui::InputInt("Load Tick",&loadtickIdx);
+        if(ImGui::Button("Load Diff ^"))
+        {
+            gameCompute.LoadGameStateFromDiff(loadtickIdx);
+        }
 
         ImGui::End();
         glm::vec4 worldMouseCoords = glm::inverse(view) * mouseScreenCoords;
