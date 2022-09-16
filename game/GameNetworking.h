@@ -40,6 +40,7 @@
 #define SLOWTICKTIMEMS (MINTICKTIMEMS*4)
 #define MAXTICKTIMEMS (MINTICKTIMEMS*10)
 
+
 #define MAXPACKETSPERUPDATE (20)
 
 #define REALLYBIGPING (10000)
@@ -77,7 +78,12 @@ public:
 
 		MESSAGE_ENUM_CLIENT_SYNC_COMPLETE,
 
+		MESSAGE_ENUM_HOST_PAUSE_ALL,
+		MESSAGE_ENUM_CLIENT_CONFIRMPAUSED,
 
+
+
+		MESSAGE_ENUM_HOST_RESUME_ALL,
 
 
 		MESSAGE_ENUM_CLIENT_ROUTINE_TICKSYNC,
@@ -121,6 +127,12 @@ public:
 	void HOST_HandleDisconnectByCLientGUID(uint32_t clientGUID);
 	void HOST_HandleDisconnectByID(int32_t clientID);
 
+	void HOST_SendPauseAll_ToClients();
+	void HOST_SendResumeAll_ToClients();
+
+	void CLIENT_SendRequestPause_ToHost(){}
+	void CLIENT_SendRequestUnPause_ToHost(){}
+
 	void StartServer(int32_t port);
 	
 	void StopServer()
@@ -134,8 +146,7 @@ public:
 	void SendTickSyncToHost();
 	void SendTickSyncToClients();
 
-
-	uint64_t CheckSumGameState(GameState_Pointer* state);
+	int HOST_FastClientSafetyTickForwardTimeCast();
 	uint64_t CheckSumAction(ActionWrap* state);
 
 
@@ -184,6 +195,8 @@ public:
 	std::vector<clientMeta> clients;
 	int32_t nextCliIdx = 0;	
 	int32_t clientId = -1;
+
+	std::deque<int> clientTicksToSpare;
 
 	clientMeta* GetClientMetaDataFromCliId(uint8_t cliId);
 

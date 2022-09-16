@@ -86,8 +86,6 @@
 	 }
  }
 
-
-
  inline void GameNetworking::CLIENT_SENDInitialData_ToHost()
  {
 	 SLNet::BitStream bs;
@@ -99,6 +97,31 @@
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
  }
 
+ int GameNetworking::HOST_FastClientSafetyTickForwardTimeCast()
+ {
+	return 0;
+	 //calculate good safety tick time buffer if a client is running too fast..
+	 int maxTickOffset = -100000;
+	 int maxPing = -100000;
+	 for (int i = 0; i < clients.size(); i++)
+	 {
+		 if (clients[i].hostTickOffset > maxTickOffset && clients[i].avgHostPing > 1)
+		 {
+			 maxTickOffset = clients[i].hostTickOffset;
+		 }
+		 if (clients[i].avgHostPing > maxPing)
+		 {
+			 maxPing = clients[i].avgHostPing;
+		 }
+	 }
+
+	 if (maxTickOffset > -5)
+	 {
+		 return +5;
+	 }
+	 else
+		return 0;
+ }
 
  void GameNetworking::CLIENT_ApplyActions()
  {
@@ -224,6 +247,42 @@
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
  }
 
+
+	void GameNetworking::HOST_SendPauseAll_ToClients()
+	{
+		for (auto client : clients)
+	 	{
+			SLNet::BitStream bs;
+			bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+			bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_PAUSE_ALL));
+
+
+			this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
+	 	}
+
+
+	}
+	void GameNetworking::HOST_SendResumeAll_ToClients()
+	{
+		for (auto client : clients)
+	 	{
+			SLNet::BitStream bs;
+			bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
+			bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_HOST_RESUME_ALL));
+
+
+			this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client.rakGuid, false);
+	 	}
+
+	}
+
+
+
+
+
+
+
+
  void GameNetworking::StartServer(int32_t port)
  {	
 	std::cout << "GameNetworking, Starting Server.." << std::endl;
@@ -271,17 +330,6 @@
 
 		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
 	 }
- }
-
- inline uint64_t GameNetworking::CheckSumGameState(GameState_Pointer* state)
- {
-	 uint64_t sum = 0;
-	 uint8_t* bytePtr = reinterpret_cast<uint8_t*>(state->data);
-	 for (uint64_t i = 0; i < gameCompute->structSizes.gameStateStructureSize; i++)
-	 {
-		 sum += bytePtr[i];
-	 }
-	 return sum;
  }
 
  uint64_t GameNetworking::CheckSumAction(ActionWrap* state)
@@ -405,7 +453,7 @@
 	 //get stats on client swarm and slow down 
 	 float maxOffset = -9999.0;
 	 float minOffset = 9999.0;
-	 float safetyOffset = 5.0;
+	 float safetyOffset = 0.0f;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {
@@ -439,7 +487,7 @@
 
 
 	 
-	 float pFactor = 4.0f;
+	 float pFactor = 1.0f;
 	 
 	 if (clients.size() >= 1 && fullyConnectedToHost)
 	 {
@@ -541,7 +589,9 @@
 				 bts.Read(clientGUID);
 
 				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
+				 std::cout << "[HOST ]Pausing. Sending Pause command to existing clients." << std::endl;
 
+				 HOST_SendPauseAll_ToClients();
 
 				 AddClientInternal(clientGUID, systemGUID);
 				 
@@ -558,7 +608,7 @@
 
 
 
-				 std::cout << "Pausing." << std::endl;
+
 				 
 
 				 HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
@@ -639,20 +689,23 @@
 			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_SYNC_COMPLETE)
 			 {
-				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim." << std::endl;
-				 std::cout << "un-pausing." << std::endl;
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_SYNC_COMPLETE received, Resuming sim" << std::endl;
+				std::cout << "[HOST] Sending resume to all clients" << std::endl;
 
-				 uint32_t clientGUID;
-				 bts.Read(clientGUID);
 
-				 clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
-				 client->downloadingState = 0;
-				 gameStateActions->pauseState = 0;
-				 HOST_snapshotLocked = false;
 
-				 HOST_nextTransferOffset[client->cliId] = 0;
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
 
-				 std::cout << "[HOST] GSCS: " << CheckSumGameState(gameState.get()) << std::endl;
+				clientMeta* client = GetClientMetaDataFromCliGUID(clientGUID);
+				client->downloadingState = 0;
+				gameStateActions->pauseState = 0;
+				HOST_snapshotLocked = false;
+
+				HOST_nextTransferOffset[client->cliId] = 0;
+
+				HOST_SendResumeAll_ToClients();
+
 			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_ACTIONUPDATE)
 			 {
@@ -671,13 +724,13 @@
 						 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
 
-						 //if (gameStateActions->tickIdx > HOST_lastActionScheduleTickIdx)
-						 //{
+						 if (gameStateActions->tickIdx >= HOST_lastActionScheduleTickIdx)
+						 {
 							 actionWrap.action.scheduledTickIdx = gameStateActions->tickIdx;
 							 
-						//	 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
+							 HOST_lastActionScheduleTickIdx = actionWrap.action.scheduledTickIdx;
 							 actions.push_back(actionWrap);
-						 //}
+						 }
 
 					 }
 				 }
@@ -705,8 +758,11 @@
 					 ActionWrap actionWrap;
 					 bts.Read(reinterpret_cast<char*>(&actionWrap), sizeof(ActionWrap));
 
-					 std::cout << ClientConsolePrint() << "Adding action scheduled for tick " << actionWrap.action.scheduledTickIdx << std::endl;
+					 int ticksToSpare = actionWrap.action.scheduledTickIdx - gameStateActions->tickIdx;
+					 std::cout << ClientConsolePrint() << "Adding action scheduled for tick " <<
+					  actionWrap.action.scheduledTickIdx << ", "<<ticksToSpare<< " Tick Left." << std::endl;
 
+					 clientTicksToSpare.push_back(ticksToSpare);
 					 //add action to the current snapshot postactions
 					 CLIENT_actionList.push_back(actionWrap);
 				 }
@@ -723,6 +779,16 @@
 					 //no longer connected.  clean up nessecary stuff.	 
 					 ClientDisconnectRoutines();
 				 }
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_PAUSE_ALL)
+			 {
+				std::cout << ClientConsolePrint() << " Recieved MESSAGE_ENUM_HOST_PAUSE_ALL. Pausing.." << std::endl;
+				gameStateActions->pauseState = 1;	
+			 }
+			 else if (msgtype == MESSAGE_ENUM_HOST_RESUME_ALL)
+			 {
+				std::cout << ClientConsolePrint() << " Recieved MESSAGE_ENUM_HOST_RESUME_ALL. Resuming.." << std::endl;
+				gameStateActions->pauseState = 0;	
 			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_DISCONNECT_NOTIFY)
 			 {

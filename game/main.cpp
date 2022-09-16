@@ -469,12 +469,21 @@ int32_t main(int32_t argc, char* args[])
         if (gameStateActions->pauseState == 0)
         {
             if (ImGui::Button("PAUSE"))
+            {
                 gameStateActions->pauseState = 1;
+                if(gameNetworking.serverRunning)
+                    gameNetworking.HOST_SendPauseAll_ToClients();
+            }
+
         }
         else
         {
             if (ImGui::Button("RESUME"))
+            {
                 gameStateActions->pauseState = 0;
+                if(gameNetworking.serverRunning)
+                    gameNetworking.HOST_SendResumeAll_ToClients();
+            }
         }
         ImGui::Begin("Network");
         static int32_t port = 50010;
@@ -532,9 +541,15 @@ int32_t main(int32_t argc, char* args[])
 
         if (ImGui::Button("Print CHECKSUM"))
         {
-            gameCompute.ReadFullGameState();
-            std::cout << "GAMESTATE CHKSUM: " << gameNetworking.CheckSumGameState(gameState.get()) << std::endl;
+            printf("todo - never.\n");
         }
+
+        if(ImGui::Button("Show Action Ticks To Spare"))
+        {
+            for(auto t : gameNetworking.clientTicksToSpare)
+                printf("%d\n", t);
+        }
+
 
         ImGui::Text("CLIENT_actionList Size: %d", gameNetworking.CLIENT_actionList.size());
 
