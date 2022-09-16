@@ -431,7 +431,7 @@ int32_t main(int32_t argc, char* args[])
 
             actionWrap.action.actionCode = ClientActionCode_MouseStateChange;
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_X] = int(GUI_PXPERSCREEN_F*(float(mousex) / gameGraphics.SCREEN_WIDTH));
-            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_WIDTH));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_HEIGHT));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16] = int(worldMouseEnd.x*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16] = int(worldMouseEnd.y*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = buttonBits;

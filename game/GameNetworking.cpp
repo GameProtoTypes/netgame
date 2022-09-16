@@ -344,9 +344,9 @@
 	 else
 	 {
 		 peerInterface->CloseConnection(hostPeer, true);
-		 clients.clear();
+		 
 	 }
-
+	 clients.clear();
 	 CLIENT_actionList.clear();
 	 clientId = -1;
 	 connectedToHost = false;

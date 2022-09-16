@@ -577,7 +577,7 @@ void GameGPUCompute::SaveGameStateDiff(std::vector<char>* data)
     std::ifstream diffFile;
     diffFile.open(diffFileName, std::ifstream::binary);
     diffFile.seekg(0, diffFile.end);
-    int fileSize = diffFile.tellg();
+    unsigned int fileSize = diffFile.tellg();
     diffFile.seekg(0, diffFile.beg);
     
     data->resize(fileSize);

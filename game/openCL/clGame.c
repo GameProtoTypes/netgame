@@ -18,7 +18,10 @@
 
 
 
-
+SynchronizedClientState* ThisClient(ALL_CORE_PARAMS)
+{
+    return &gameState->clientStates[gameStateActions->clientId];
+}
 
 
 
@@ -1983,9 +1986,9 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 
     //update visibility
-    if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (gameStateActions->mapZView_1 != gameStateActions->mapZView))
+    if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
     {
-        if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, gameStateActions->mapZView))
+        if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
         {     
             BITSET(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
         }
@@ -2052,7 +2055,7 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
 
-    for (int z = gameStateActions->mapZView; z >= 1; z--)
+    for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView; z >= 1; z--)
     {       
         cl_uint* data = &gameState->map.levels[z].data[x][y];
         MapTile center =MapDataGetTile(*data);
@@ -2147,13 +2150,13 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 
 void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 {
-    ge_int3 coord = (ge_int3){x,y,gameStateActions->mapZView };
+    ge_int3 coord = (ge_int3){x,y,ThisClient(ALL_CORE_PARAMS_PASS)->mapZView };
     cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
     MapTile tile = MapDataGetTile(*data);
     MapTile tileUp;
-    if (gameStateActions->mapZView < MAPDEPTH-1)
+    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView < MAPDEPTH-1)
     {
-        coord.z = gameStateActions->mapZView + 1;
+        coord.z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1;
         cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
 
 
@@ -2215,7 +2218,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
         for(int i = 0; i < 4; i++)
         {
             ge_int3 offset = staticData->directionalOffsets[dirOffsets[i]];
-            ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, gameStateActions->mapZView + 1 };
+            ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1 };
 
             if(MapTileCoordValid(mapCoord))
             {
@@ -2348,11 +2351,11 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
         if (tile != MapTile_NONE)
         {
             (*mapcoord_whole).z = z;
-            if (z == gameStateActions->mapZView-1)
+            if (z == ThisClient(ALL_CORE_PARAMS_PASS)->mapZView-1)
             {
                 *occluded = 1;
             }
-            else if (z == gameStateActions->mapZView)
+            else if (z == ThisClient(ALL_CORE_PARAMS_PASS)->mapZView)
             {
                 *occluded = 1;
             }
@@ -2541,6 +2544,7 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
             int d = perc*(max-min);
             (*value) = clamp(min + d, min, max);
         }
+        gui->mouseOnGUI = 1;
     }
 
 
@@ -2626,7 +2630,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         cl_uchar fakePass = 0;
         if(a == gameStateActions->numActions)
         {
-            b = gameStateActions->clientId;//local client
+            b = 0;//'local' client
             fakePass = 1;
         }
 
@@ -2634,14 +2638,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         ActionTracking* actionTracking = &gameStateActions->clientActions[b].tracking;
         int cliId = actionTracking->clientId;
         SynchronizedClientState* client = &gameState->clientStates[cliId];
-
         SyncedGui* gui = &gameState->clientStates[cliId].gui;
         
+
+
         GuiStatePassType guiPass = GuiStatePassType_Synced;
         ge_int2 mouseLoc;
         int mouseState;
 
-        if(fakePass)
+        if(fakePass)//redirect pointer above so they reflect the local client only.
         {
             guiPass = GuiStatePassType_NoLogic;
             mouseLoc = gameStateActions->mouseLoc;
@@ -2650,6 +2655,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             actionTracking=NULL;
             cliId = -1;
             gui = &gameState->fakeGui;
+            client = ThisClient(ALL_CORE_PARAMS_PASS);
         }
         else
         {
@@ -2657,6 +2663,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
             mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
             mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+
+
         }
 
 
@@ -2674,9 +2682,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             client->curTool = EditorTools_Create;
         }
 
+
         GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
 
-        gameStateActions->mapZView = client->mapZView;
+
+        
 
         if(fakePass)
             continue;
@@ -2769,9 +2779,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             }
 
-
+            printf("mouseongui: %d", GUI_MOUSE_ON_GUI(gui));
             //command to location
-            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && GUI_MOUSE_ON_GUI(gui) == 0)
+            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0))
             {
                 cl_uint curPeepIdx = client->selectedPeepsLastIdx;
                 ge_int3 mapcoord;
@@ -2840,9 +2850,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             }
             //delete
-            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && GUI_MOUSE_ON_GUI(gui) == 0 && client->curTool == EditorTools_Delete)
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && client->curTool == EditorTools_Delete)
             {
-                printf("Got the command\n");
+                printf("mouseongui: %d", GUI_MOUSE_ON_GUI(gui));
 
                 ge_int2 world2DMouse;
                 world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
@@ -2850,7 +2860,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 ge_int3 mapCoord;
                 int occluded;
-                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, gameStateActions->mapZView+1);
+                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
                 
                 printf("delete coord: ");
                 Print_GE_INT3(mapCoord);
@@ -3191,8 +3201,8 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     gameState->numClients = 1;
     gameStateActions->pauseState = 0;
-    gameStateActions->mapZView = MAPDEPTH-1;
-    gameStateActions->mapZView_1 = 0;
+    ThisClient(ALL_CORE_PARAMS_PASS)->mapZView = MAPDEPTH-1;
+    ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = 0;
 
     for (int secx = 0; secx < SQRT_MAXSECTORS; secx++)
     {
@@ -3491,7 +3501,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
     }
 
     //update map view
-    if (gameStateActions->mapZView != gameStateActions->mapZView_1)
+    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
         cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
         if (chunkSize == 0)
@@ -3519,7 +3529,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
 
-    gameStateActions->mapZView_1 = gameStateActions->mapZView;
+    ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
     
 
 }

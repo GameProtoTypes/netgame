@@ -352,10 +352,10 @@ struct SynchronizedClientState {
 	ge_int2 mouseWorldBegin_Q16;
 	ge_int2 mouseWorldEnd_Q16;
 
-	EditorTools curTool;
-
 	int mapZView;
+	int mapZView_1;
 
+	EditorTools curTool;
 	
 	SyncedGui gui;
 

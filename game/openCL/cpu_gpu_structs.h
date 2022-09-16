@@ -78,8 +78,7 @@ struct GameStateActions {
 
 	//ClientSide only stuff that is processed in cl but not strictly gamestate and driven by host.
 	cl_uint clientId;
-	cl_int mapZView;
-	cl_int mapZView_1;
+
 
 	ge_int2 mouseLoc;
 	cl_int mouseState;
