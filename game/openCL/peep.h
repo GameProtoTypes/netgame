@@ -309,18 +309,29 @@ enum GuiStatePassType
 	GuiStatePassType_Synced
 } typedef GuiStatePassType;
 
+#define SYNCGUI_MAX_WIDGETS (512)
 struct SyncedGui
 {
 	int guiRenderRectIdx;
 	int nextId;
 
+	ge_int2 mouseLocBegin;
 	ge_int2 mouseLoc;
-	ge_int2 mouseDelta;
+	ge_int2 mouseFrameDelta;
 	int mouseState;
 
-	int lastWidget;
+	int fakeDummyInt;
+
+	cl_uchar ignoreAll;//1 when mouse button pushed off-gui and then goes on gui while button(s) held
+	cl_uchar dragOff;//1 when gui held and then mouse dragged off.
+	cl_uchar draggedOff;//1 when gui held and then mouse dragged off and released.
+
+	cl_uchar mouseDragging;
+
+	int lastActiveWidget;
 	int hoverWidget;
 	int activeWidget;
+
 	cl_uchar mouseOnGUI;
 
 
@@ -328,6 +339,9 @@ struct SyncedGui
 	ge_int2 curBoundEnd;
 
 	GuiStatePassType passType;
+
+	int fakeInts[SYNCGUI_MAX_WIDGETS];
+	int nextFakeIntIdx;
 
 } typedef SyncedGui;
 
@@ -347,8 +361,11 @@ struct SynchronizedClientState {
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 
 
-	ge_int2 mouseGUIBegin;
+	ge_int2 mouseGUIBegin; cl_uchar mouseOnGUiBegin;
 	ge_int2 mouseGUIEnd;
+
+	
+
 	ge_int2 mouseWorldBegin_Q16;
 	ge_int2 mouseWorldEnd_Q16;
 

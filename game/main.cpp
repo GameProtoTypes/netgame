@@ -540,8 +540,8 @@ int32_t main(int32_t argc, char* args[])
 
         for (auto client : gameNetworking.clients)
         {
-            ImGui::Text("CliId: %d, GUID %u, RakGUID: %u, HostTickOffset: %d, Ping: %d", client.cliId, client.clientGUID,
-                SLNet::RakNetGUID::ToUint32(client.rakGuid), client.hostTickOffset, client.avgHostPing);
+            ImGui::Text("CliId: %d, HostTickOffset: %d, Ping: %d, GUID %u, RakGUID: %u", client.cliId,  client.hostTickOffset, client.avgHostPing, client.clientGUID,
+                SLNet::RakNetGUID::ToUint32(client.rakGuid));
         }
                 
         if (ImGui::Button("Save GameState To File"))

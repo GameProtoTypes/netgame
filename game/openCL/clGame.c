@@ -2398,6 +2398,11 @@ int GrabGuiId(SyncedGui* gui)
 
 void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
 {
+    if(gui->passType == GuiStatePassType_Synced)
+    {
+        return;
+    }
+
 
     uint idx = gui->guiRenderRectIdx;
 
@@ -2488,12 +2493,39 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 
 #define GUIID ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
 #define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size
+#define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
+
+int* GetGuiFakeInt(SyncedGui* gui)
+{
+    int* param = &gui->fakeInts[gui->nextFakeIntIdx];
+    gui->nextFakeIntIdx++;
+
+    if(gui->nextFakeIntIdx >= SYNCGUI_MAX_WIDGETS)
+        printf("GUI_OUT_OF_WIDGETS\n");
+    
+    return param;
+}
+
+int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
+{
+    if(gui->passType == GuiStatePassType_Synced)
+    {
+        return param;
+    }
+    else
+    {
+        return GetGuiFakeInt(gui);
+    }
+}
+
+
 
 cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
 {
+
     cl_uchar ret = 0;
     *down = 0;
-    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
+    if((GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
         gui->hoverWidget = id;
 
@@ -2519,16 +2551,16 @@ cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
         color = (float3){1.0,0.0,0.0};
     }
 
-    if(gui->passType == GuiStatePassType_NoLogic)
-    {
-        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-        size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
-    }
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    
     return ret;
 }
 
 cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 {
+
 
     ge_int2 posHandle;
     ge_int2 sizeHandle;
@@ -2536,28 +2568,27 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
     sizeHandle.y = size.y;
     sizeHandle.x = size.x/10;
 
-    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc))
+    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
     {
-        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
         {
-            float perc = ((float)(gui->mouseLoc.x - pos.x - sizeHandle.x/2))/size.x;
+            float perc = ((float)(gui->mouseLoc.x - pos.x))/size.x;
             int d = perc*(max-min);
-            (*value) = clamp(min + d, min, max);
+            (*value) = clamp(min + d, min, max-1);
         }
         gui->mouseOnGUI = 1;
     }
 
 
     posHandle.y = pos.y;
-    posHandle.x = pos.x + (size.x*(*value)/(max-min));
+    posHandle.x = pos.x + (size.x*((*value)-1)/(max-min));
 
     posHandle.x = clamp(posHandle.x, pos.x, pos.x + size.x - sizeHandle.x);
 
-    if(gui->passType == GuiStatePassType_NoLogic)
-    {
-        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-        size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
-    }
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
+    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    
 
     int down;
     GUI_BUTTON(GUIID, posHandle, sizeHandle, &down);
@@ -2571,6 +2602,7 @@ cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
     return gui->mouseOnGUI;
 }
 
+//call before gui path
 void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
 {
     gui->passType = passType;
@@ -2589,20 +2621,62 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     }
     gui->guiRenderRectIdx = 0;
     gui->nextId = 0;
+    gui->nextFakeIntIdx = 0;
 
-
-    gui->mouseDelta = GE_INT2_SUB(mouseLoc, gui->mouseLoc);
+    gui->mouseFrameDelta = GE_INT2_SUB(mouseLoc, gui->mouseLoc);
 
     gui->mouseLoc = mouseLoc;
     gui->mouseState = mouseState;
-    gui->mouseOnGUI = 0;
 
+
+    gui->lastActiveWidget = gui->activeWidget;
     gui->hoverWidget = -1;
     gui->activeWidget = -1;
 
+    gui->draggedOff = 0;
+   
+
+    if(BITGET(mouseState, MouseButtonBits_PrimaryPressed) || BITGET(mouseState, MouseButtonBits_SecondaryPressed))
+    {
+        gui->mouseLocBegin = mouseLoc;
+        gui->mouseDragging = 1;
+
+    }
+    else if(BITGET(mouseState, MouseButtonBits_PrimaryReleased) || BITGET(mouseState, MouseButtonBits_SecondaryReleased))
+    {
+        gui->ignoreAll = 0;  
+        gui->mouseDragging = 0;  
+    }
+
 }
 
+//call after gui path
+void GUI_RESET_POST(ALL_CORE_PARAMS, SyncedGui* gui)
+{
 
+    if(BITGET(gui->mouseState, MouseButtonBits_PrimaryPressed) || BITGET(gui->mouseState, MouseButtonBits_SecondaryPressed))
+    {
+        if(gui->mouseOnGUI == 0)
+        {
+            gui->ignoreAll = 1;
+        }
+        else
+        {
+            gui->dragOff = 1;
+        }
+    }
+    else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) || BITGET(gui->mouseState, MouseButtonBits_SecondaryReleased))
+    {
+        if(gui->dragOff)
+        {
+            gui->dragOff = 0;
+            gui->draggedOff = 1;
+        }
+    }
+
+
+    gui->mouseOnGUI = 0;
+}
 
 
 
@@ -2615,7 +2689,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     while (curPeepIdx != OFFSET_NULL)
     {
         Peep* p = &gameState->peeps[curPeepIdx];
-
         gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
         curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
@@ -2663,8 +2736,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
             mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
             mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
-
-
         }
 
 
@@ -2686,7 +2757,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
 
 
+        if(fakePass == 0)
+            printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
+
+        //selection box
         
+        
+        GUI_RESET_POST(ALL_CORE_PARAMS_PASS,  gui);
 
         if(fakePass)
             continue;
@@ -2695,36 +2772,40 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {
             
-            printf("Got an action From Client: %d\n", cliId);
+            printf("Processing Action From Client: %d\n", cliId);
             int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
-            printf("Buttons: %d\n", buttons);
 
 
-            printf("world mouse:"); 
-            PrintQ16(clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16]);
-            PrintQ16(clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16]);
-
-
+            Print_GE_INT2(mouseLoc);
+            
             //end selection
-            if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed) && GUI_MOUSE_ON_GUI(gui) == 0)
+            if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed))
             {
-                printf("primary press\n");
-                client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
-                client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
-                client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
-                client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
-            }
-            else if(BITGET(buttons, MouseButtonBits_PrimaryReleased))
-            {
-                printf("primary release\n");
-                
 
+                if(GUI_MOUSE_ON_GUI(gui) == 0)
+                {
+                    printf("Starting Drag Selection..\n");
+                    client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+                    client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+                    client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                    client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+
+                    client->mouseOnGUiBegin = 0;
+                }
+                else
+                {
+                    client->mouseOnGUiBegin = 1;
+                }
+            }
+            else if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (gui->draggedOff == 0))
+            {
+                printf("Ending Drag Selection..\n");
+                
                 client->mouseGUIEnd.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
                 client->mouseGUIEnd.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
                 client->mouseWorldEnd_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                 client->mouseWorldEnd_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
                 
-
                 //sort the selection box
                 int nex = max(client->mouseWorldEnd_Q16.x, client->mouseWorldBegin_Q16.x);
                 int ney  = max(client->mouseWorldEnd_Q16.y, client->mouseWorldBegin_Q16.y);
@@ -2779,9 +2860,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             }
 
-            printf("mouseongui: %d", GUI_MOUSE_ON_GUI(gui));
+            
             //command to location
-            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0))
+            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0))
             {
                 cl_uint curPeepIdx = client->selectedPeepsLastIdx;
                 ge_int3 mapcoord;
@@ -2850,7 +2931,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             }
             //delete
-            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && client->curTool == EditorTools_Delete)
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0) && client->curTool == EditorTools_Delete)
             {
                 printf("mouseongui: %d", GUI_MOUSE_ON_GUI(gui));
 
@@ -3324,10 +3405,9 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
 
-        if (gameState->peeps[p].physics.base.pos_Q16.x > 0)
-            gameState->peeps[p].stateBasic.faction = 0;
-        else
-            gameState->peeps[p].stateBasic.faction = 1;
+
+        gameState->peeps[p].stateBasic.faction = RandomRange(p,0,4);
+
 
 
         for (int i = 0; i < MAX_CLIENTS; i++)

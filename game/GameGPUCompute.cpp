@@ -582,7 +582,8 @@ void GameGPUCompute::SaveGameStateDiff(std::vector<char>* data)
     
     data->resize(fileSize);
     diffFile.read(data->data(),fileSize);
-    
+    diffFile.close();
+    std::filesystem::remove(diffFileName);
 
 
 }
@@ -630,6 +631,9 @@ void GameGPUCompute::LoadGameStateFromDiff(std::vector<char>* diffdata, int id)
     diffFile.close();
 
     LoadGameStateFromDiff(diffFileName, std::format("netgame_{}.bin", id));
+
+    std::filesystem::remove(diffFileName);
+
 
 
 }
