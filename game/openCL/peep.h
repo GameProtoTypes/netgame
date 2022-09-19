@@ -310,6 +310,7 @@ enum GuiStatePassType
 } typedef GuiStatePassType;
 
 #define SYNCGUI_MAX_WIDGETS (512)
+#define SYNCGUI_MAX_DEPTH (8)
 struct SyncedGui
 {
 	int guiRenderRectIdx;
@@ -333,6 +334,11 @@ struct SyncedGui
 	int activeWidget;
 
 	cl_uchar mouseOnGUI;
+
+	ge_int2 widgetOffsetStack[SYNCGUI_MAX_DEPTH];
+	int wOSidx;
+
+	ge_int4 clip;
 
 
 	ge_int2 curBoundStart;
@@ -365,7 +371,6 @@ struct SynchronizedClientState {
 	ge_int2 mouseGUIEnd;
 
 	
-
 	ge_int2 mouseWorldBegin_Q16;
 	ge_int2 mouseWorldEnd_Q16;
 

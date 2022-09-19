@@ -278,8 +278,9 @@ int32_t main(int32_t argc, char* args[])
         rclientst->mouseSecondaryReleased = 0;
 
         //Handle events on queue
-        while (SDL_PollEvent(&e) != 0)
+        while (SDL_PollEvent(&e) != 0)//build sdl from source and fix window dragging freezing the host....  or have clients sense it?
         {
+
             ImGui_ImplSDL2_ProcessEvent(&e);
 
             //User requests quit

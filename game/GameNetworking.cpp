@@ -584,37 +584,29 @@
 			 }
 			 else if (msgtype == MESSAGE_ENUM_CLIENT_INITIALDATA)
 			 {
-
-				 uint32_t clientGUID;
-				 bts.Read(clientGUID);
-
-				 std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
-				 std::cout << "[HOST ]Pausing. Sending Pause command to existing clients." << std::endl;
-
-				 HOST_SendPauseAll_ToClients();
-
-				 AddClientInternal(clientGUID, systemGUID);
-				 
-				 if(clientGUID == this->clientGUID)
+				uint32_t clientGUID;
+				bts.Read(clientGUID);
+				AddClientInternal(clientGUID, systemGUID);
+				
+				if(clientGUID == this->clientGUID)
 					connectedToHost = true;//for hybrid
+					
+				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
+				std::cout << "[HOST] Sending Pause command to existing clients." << std::endl;
 
-				 clients.back().downloadingState = 1;
+				HOST_SendPauseAll_ToClients();
 
+
+
+				clients.back().downloadingState = 1;
 
 				//compute game delta - and initialize transfer				
 				gameCompute->SaveGameStateDiff(&HOST_gameStateTransfer);
 
+				HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
+				gameStateActions->pauseState = 1;
 
-
-
-
-
-				 
-
-				 HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
-				 gameStateActions->pauseState = 1;
-
-				 HOST_SendGamePart_ToClient(clients.back().clientGUID);
+				HOST_SendGamePart_ToClient(clients.back().clientGUID);
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			 {

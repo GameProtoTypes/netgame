@@ -2396,7 +2396,7 @@ int GrabGuiId(SyncedGui* gui)
     return id;
 }
 
-void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float width, float height, float3 color, float2 UVStart, float2 UVEnd)
+void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width, int height, float3 color, float2 UVStart, float2 UVEnd)
 {
     if(gui->passType == GuiStatePassType_Synced)
     {
@@ -2406,20 +2406,58 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
 
     uint idx = gui->guiRenderRectIdx;
 
+
+    //clip
+    ge_int2 clipEnd;
+    clipEnd.x = gui->clip.x + gui->clip.z;
+    clipEnd.y = gui->clip.y + gui->clip.w;
+
+    if(x < gui->clip.x)
+    {
+        width = width - (gui->clip.x - x);
+        x = gui->clip.x;
+    }
+    
+    if(y < gui->clip.y)
+    {
+        height = height - (gui->clip.y - y);
+        y = gui->clip.y;
+    }
+    
+    if(x + width > clipEnd.x)
+    {
+
+        width = clipEnd.x - x;
+    }
+    if(y + height > clipEnd.y)
+    {
+
+        height = clipEnd.y - y;
+    }
+
+
+    //map to [0,1]
+    float xf = x/GUI_PXPERSCREEN_F;
+    float yf = y/GUI_PXPERSCREEN_F;
+    float widthf = width/GUI_PXPERSCREEN_F;
+    float heightf = height/GUI_PXPERSCREEN_F;
+
+
     //map [0,1] to [-1,1]
-    x*= 2.0f;
-    y*= -2.0f;
-    x+=-1.0f;
-    y+=+1.0f;
+    xf*= 2.0f;
+    yf*= -2.0f;
+    xf+=-1.0f;
+    yf+=1.0f;
+
+    widthf *= 2.0f;
+    heightf*= -2.0f;
 
 
-    width *= 2.0f;
-    height*= -2.0f;
 
     const int stride = 7;
 
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y+height;
+    guiVBO[idx*stride + 0] = xf+widthf;
+    guiVBO[idx*stride + 1] = yf+heightf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2428,8 +2466,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y;
+    guiVBO[idx*stride + 0] = xf;
+    guiVBO[idx*stride + 1] = yf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2438,8 +2476,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y+height;
+    guiVBO[idx*stride + 0] = xf;
+    guiVBO[idx*stride + 1] = yf+heightf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2448,8 +2486,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y+height;
+    guiVBO[idx*stride + 0] = xf+widthf;
+    guiVBO[idx*stride + 1] = yf+heightf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2458,8 +2496,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = x+width;
-    guiVBO[idx*stride + 1] = y;
+    guiVBO[idx*stride + 0] = xf+widthf;
+    guiVBO[idx*stride + 1] = yf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2468,8 +2506,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, float x, float y, float 
     guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = x;
-    guiVBO[idx*stride + 1] = y;
+    guiVBO[idx*stride + 0] = xf;
+    guiVBO[idx*stride + 1] = yf;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -2520,8 +2558,57 @@ int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
 
 
 
+void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
+{
+    gui->wOSidx++;
+    if(gui->wOSidx >= SYNCGUI_MAX_DEPTH)
+        printf("ERROR: GUI_PushOffset Overflow (SYNCGUI_MAX_DEPTH)");
+
+    gui->widgetOffsetStack[gui->wOSidx] = offset;
+}
+
+#define GUI_GETOFFSET() GUI_GetOffset(gui)
+ge_int2 GUI_GetOffset(SyncedGui* gui)
+{
+    ge_int2 sum = (ge_int2){0,0};
+    for(int i = 0; i <= gui->wOSidx; i++)
+    {
+        sum = GE_INT2_ADD(sum, gui->widgetOffsetStack[gui->wOSidx]);
+    }
+    return sum;
+}
+
+void GUI_PopOffset(SyncedGui* gui)
+{
+    gui->wOSidx--;
+    if(gui->wOSidx < -1)
+        printf("ERROR: GUI PopOffset Call Missmatch.");
+}
+
+void GUI_SetClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
+{
+    startPos = GE_INT2_ADD(startPos, GUI_GETOFFSET());
+
+    gui->clip.x = startPos.x;
+    gui->clip.y = startPos.y;
+    gui->clip.z = size.x;
+    gui->clip.w = size.y;
+}
+
+void GUI_ReleaseClip(SyncedGui* gui)
+{
+    gui->clip = (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
+}
+
+
+
+
+
+
 cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
 {
+    pos = GE_INT2_ADD(pos, GUI_GETOFFSET());
+
 
     cl_uchar ret = 0;
     *down = 0;
@@ -2552,15 +2639,15 @@ cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
     }
 
 
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    size.x, size.y, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
     
     return ret;
 }
 
 cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 {
-
+    pos = GE_INT2_ADD(pos, GUI_GETOFFSET());
 
     ge_int2 posHandle;
     ge_int2 sizeHandle;
@@ -2586,8 +2673,8 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
     posHandle.x = clamp(posHandle.x, pos.x, pos.x + size.x - sizeHandle.x);
 
 
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x/GUI_PXPERSCREEN_F, pos.y/GUI_PXPERSCREEN_F, 
-    size.x/GUI_PXPERSCREEN_F, size.y/GUI_PXPERSCREEN_F, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    size.x, size.y, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
     
 
     int down;
@@ -2595,6 +2682,23 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 
 
 }
+
+
+
+
+void GUI_Begin_ScrollArea(GUIID_DEF, ge_int2 scroll_offset)
+{
+    GUI_PushOffset(gui, scroll_offset);
+}
+
+
+
+void  GUI_End_ScrollArea(SyncedGui* gui)
+{
+    GUI_PopOffset(gui);
+}
+
+
 
 
 cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
@@ -2634,7 +2738,9 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     gui->activeWidget = -1;
 
     gui->draggedOff = 0;
+    gui->wOSidx = -1;
    
+    GUI_ReleaseClip( gui);
 
     if(BITGET(mouseState, MouseButtonBits_PrimaryPressed) || BITGET(mouseState, MouseButtonBits_SecondaryPressed))
     {
@@ -2754,7 +2860,20 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
 
+
+
         GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
+
+
+        GUI_Begin_ScrollArea(GUIID, (ge_int2){0,0},(ge_int2){0,0},(ge_int2){0,0});
+
+            GUI_SetClip(gui, (ge_int2){10,220}, (ge_int2){50,50});
+
+            GUI_BUTTON(GUIID, (ge_int2){0 ,200}, (ge_int2){50, 50},&downDummy);
+
+        GUI_End_ScrollArea(gui);
+
+
 
 
         if(fakePass == 0)
