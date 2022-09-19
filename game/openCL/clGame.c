@@ -2406,6 +2406,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width,
 
     uint idx = gui->guiRenderRectIdx;
 
+    float2 UVSize = UVEnd - UVStart;
 
     //clip
     ge_int2 clipEnd;
@@ -2415,6 +2416,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width,
     if(x < gui->clip.x)
     {
         width = width - (gui->clip.x - x);
+
         x = gui->clip.x;
     }
     
@@ -2434,6 +2436,12 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width,
 
         height = clipEnd.y - y;
     }
+
+    //early out if not rendered
+    if(width <= 0)
+        return;
+    if(height <= 0)
+        return;
 
 
     //map to [0,1]
@@ -2828,7 +2836,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         if(fakePass)//redirect pointer above so they reflect the local client only.
         {
             guiPass = GuiStatePassType_NoLogic;
-            mouseLoc = gameStateActions->mouseLoc;
+            mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
             mouseState = gameStateActions->mouseState;
             clientAction= NULL;
             actionTracking=NULL;

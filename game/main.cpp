@@ -459,8 +459,8 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        gameStateActions->mouseLoc.x = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
-        gameStateActions->mouseLoc.y = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLocy = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
         gameStateActions->mouseState = buttonBits;
 
 
