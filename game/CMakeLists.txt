@@ -81,7 +81,7 @@ set(OPENCL_Header_Files
     "openCL/PeepFuncs.h"
     "openCL/cpu_gpu_structs.h"
 
-    "openCL/cpugpuvectortypes.h"
+    "openCL/gpuvectortypes.h"
     "openCL/fixedpoint_opencl.h"
     "openCL/perlincl.h"
     "openCL/randomcl.h"

@@ -5,7 +5,7 @@
 #include "dynamicDefines.h"
 
 
-#include "cpugpuvectortypes.h"
+#include "gpuvectortypes.h"
 
 #define MAX_TRACKNODES (1024*8)
 
@@ -133,7 +133,7 @@ struct PeepCommunication {
 }typedef PeepCommunication;
 
 
-#pragma pack(push, 4)
+
 struct Peep {
 	offsetPtr ptr;
 

@@ -1,6 +1,6 @@
 
 
-#include "cpugpuvectortypes.h"
+#include "gpuvectortypes.h"
 #include "cl_type_glue.h"
 
 #include "cpu_gpu_structs.h"

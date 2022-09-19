@@ -1,6 +1,6 @@
 #pragma once
 #include "cl_type_glue.h"
-#include "cpugpuvectortypes.h"
+#include "gpuvectortypes.h"
 
 
 
@@ -810,7 +810,7 @@ inline ge_int3 GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(ge_int3 v, ge_int3 axis)
     a_par_b.y = MUL_PAD_Q16(s, b.y);
     a_par_b.z = MUL_PAD_Q16(s, b.z);
 
-    ge_int3 a_orth_b = GE_INT3_SUB(a, a_par_b);
+    ge_int3 a_orth_b = INT3_SUB(a, a_par_b);
     int a_orth_b_mag = ge_length_v3_Q16(a_orth_b);
 
     ge_int3 w = GE_INT3_CROSS_PRODUCT_Q16(b, a_orth_b);
@@ -961,7 +961,7 @@ void fixedPointTests()
     Print_GE_INT3_Q16(B);
    // Print_GE_INT3_Q16(GE_INT3_CROSS_PRODUCT_Q16(A, B));
 
-    //Print_GE_INT3_Q16(GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(B, GE_INT3_NEG(A)));
+    //Print_GE_INT3_Q16(GE_VECTOR3_ROTATE_ABOUT_AXIS_POS90_Q16(B, INT3_NEG(A)));
 
     //Print_GE_INT3_Q16(GE_INT3_NORMALIZE_Q16( B));
    // GE_INT3_NORMALIZE_Q16

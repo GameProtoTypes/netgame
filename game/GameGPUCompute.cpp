@@ -411,13 +411,19 @@ void GameGPUCompute::RunInitCompute2()
             WorkItemsInitMulti, NULL, 1, &initMultiEvent, &initMultiEvent2);
         CL_HOST_ERROR_CHECK(ret)
 
+
+
         ret = clEnqueueNDRangeKernel(command_queue, init_kernel_2, 1, NULL,
             SingleKernelWorkItems, NULL, 1, &initMultiEvent2, &init2Event);
         CL_HOST_ERROR_CHECK(ret)
 
+    clWaitForEvents(1, &init2Event);    
+
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
         
     ReleaseAllGraphicsObjects();
-    clWaitForEvents(1, &init2Event);
+    
     ReadFullGameState();
 }
 
@@ -493,6 +499,9 @@ void GameGPUCompute::Stage1()
 
 void GameGPUCompute::ReadFullGameState()
 {
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+
     // Read the memory buffer C on the device to the local variable C
      ret = clEnqueueReadBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
          structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, &readEvent);

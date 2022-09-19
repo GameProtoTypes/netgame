@@ -114,19 +114,19 @@ cl_uchar MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
     offsets[4] = (ge_int3){ 0, 0, 1 };
     offsets[5] = (ge_int3){ 0, 0, -1 };*/
 
-    if (GE_VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[0]))
+    if (VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[0]))
     {
         return 2 - (BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT) + BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT));
     }
-    else if (GE_VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[1]))
+    else if (VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[1]))
     {
         return 2 - (BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) + BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT));
     }
-    else if (GE_VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[2]))
+    else if (VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[2]))
     {
         return 2 - (BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) + BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT));
     }
-    else if (GE_VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[3]))
+    else if (VECTOR3_EQUAL(enterDir, staticData->directionalOffsets[3]))
     {
         return 2 - (BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) + BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT));
     }
@@ -345,16 +345,16 @@ cl_uchar MapTileCoordValid(ge_int3 mapcoord)
 }
 cl_uchar AStarNodeValid(AStarNode* node)
 {
-    return MapTileCoordValid(GE_SHORT3_TO_INT3(node->tileIdx));
+    return MapTileCoordValid(SHORT3_TO_INT3(node->tileIdx));
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
 {  
 
-    cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(prevNode->tileIdx));
-    cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx));
+    cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(prevNode->tileIdx));
+    cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx));
 
-    ge_int3 delta = GE_INT3_SUB(node->tileIdx, GE_SHORT3_TO_INT3( prevNode->tileIdx ));
-    if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, GE_SHORT3_TO_INT3(node->tileIdx), delta) == 0)
+    ge_int3 delta = INT3_SUB(node->tileIdx, SHORT3_TO_INT3( prevNode->tileIdx ));
+    if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx), delta) == 0)
         return 0;
 
     if(delta.z > 0)
@@ -657,7 +657,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
 
 
-        if (GE_VECTOR3_EQUAL(current->tileIdx, destTile) )
+        if (VECTOR3_EQUAL(current->tileIdx, destTile) )
         {
             printf("Goal Found\n");
             search->endNodeOPtr = targetNodeOPtr;
@@ -783,7 +783,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 // Ret 0: [2,0,1],[1,-1,1],[2,3,4],[0,0,0] etc
 cl_uchar GE_INT3_WHACHAMACOLIT1_ENTRY(ge_int3 a)
 {
-    if (GE_INT3_ZERO(a))
+    if (INT3_ZERO(a))
         return 0;
 
     int n = a.x + a.y + a.z;
@@ -863,7 +863,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathStep
             startNodeOPtr = index;
 
 
-        ge_int3 holdTileCoord = GE_SHORT3_TO_INT3(  curNode->tileIdx  );
+        ge_int3 holdTileCoord = SHORT3_TO_INT3(  curNode->tileIdx  );
 
         //put location at center of tile
         ge_int3 tileCenter = GE_INT3_TO_Q16(holdTileCoord);
@@ -880,7 +880,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathStep
         }
         pNP = pN;
 
-        if (!GE_VECTOR3_EQUAL(curNode->nextOPtr, OFFSET_NULL_3D)) 
+        if (!VECTOR3_EQUAL(curNode->nextOPtr, OFFSET_NULL_3D)) 
         {
             //iterate until joint in path.
             ge_int3 delta;
@@ -890,7 +890,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathStep
                 OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
 
                 if (n2 != NULL) {
-                    delta = GE_INT3_ADD(n2->tileIdx, GE_INT3_NEG(holdTileCoord));
+                    delta = INT3_ADD(n2->tileIdx, INT3_NEG(holdTileCoord));
                 }
                 else
                     delta = (ge_int3){ 0,0,0 };
@@ -981,7 +981,7 @@ ge_int3 Triangle3D_ToBaryCentric(Triangle3DHeavy* triangle, ge_int3 point)
 {
     ge_int3 U = triangle->u_Q16;
     ge_int3 V = triangle->v_Q16;
-    ge_int3 W = GE_INT3_SUB(point, triangle->base.verts_Q16[0]);
+    ge_int3 W = INT3_SUB(point, triangle->base.verts_Q16[0]);
 
 
     long d00 = GE_INT3_DOT_PRODUCT_Q16(U , U );
@@ -1023,7 +1023,7 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     //Print_GE_INT3_Q16(N_n);
 
 
-    ge_int3 W = GE_INT3_SUB(point_Q16, P1);
+    ge_int3 W = INT3_SUB(point_Q16, P1);
 
     //printf("W: ");
     //Print_GE_INT3_Q16(W);
@@ -1032,8 +1032,8 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     int dot = GE_INT3_DOT_PRODUCT_Q16(W, N_n);
     //printf("dot: ");
     //PrintQ16(dot);
-    ge_int3 term2 = GE_INT3_SCALAR_MUL_Q16(dot, GE_INT3_NEG(N_n));
-    P_prime = GE_INT3_ADD(point_Q16, term2);
+    ge_int3 term2 = GE_INT3_SCALAR_MUL_Q16(dot, INT3_NEG(N_n));
+    P_prime = INT3_ADD(point_Q16, term2);
 
 
     //Triangle2DHeavy_ProjectedPoint(triangle, point_Q16, &P_prime_bary, &P_prime);
@@ -1048,18 +1048,18 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
 
     if (onSurface == 1)
     {
-        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, P_prime));
+        *dist_Q16 = ge_length_v3_Q16(INT3_SUB(point_Q16, P_prime));
 
         return P_prime;
     }
 
-    ge_int3 P1_P_prime = GE_INT3_SUB(P_prime, P1);
-    ge_int3 P2_P_prime = GE_INT3_SUB(P_prime, P2);
-    ge_int3 P3_P_prime = GE_INT3_SUB(P_prime, P3);
+    ge_int3 P1_P_prime = INT3_SUB(P_prime, P1);
+    ge_int3 P2_P_prime = INT3_SUB(P_prime, P2);
+    ge_int3 P3_P_prime = INT3_SUB(P_prime, P3);
 
-    ge_int3 R1 = GE_INT3_SUB(P1, P2);
-    ge_int3 R2 = GE_INT3_SUB(P2, P3);
-    ge_int3 R3 = GE_INT3_SUB(P3, P1);
+    ge_int3 R1 = INT3_SUB(P1, P2);
+    ge_int3 R2 = INT3_SUB(P2, P3);
+    ge_int3 R3 = INT3_SUB(P3, P1);
 
     int R1_mag;
     ge_int3 R1_N = GE_INT3_NORMALIZE_Q16(R1, &R1_mag);
@@ -1085,9 +1085,9 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
 
 
     //p_prime projected to 3 edges
-    ge_int3 P_prime_C1 = GE_INT3_SUB(P_prime, D1R3);
-    ge_int3 P_prime_C2 = GE_INT3_SUB(P_prime, D2R1);
-    ge_int3 P_prime_C3 = GE_INT3_SUB(P_prime, D3R2);
+    ge_int3 P_prime_C1 = INT3_SUB(P_prime, D1R3);
+    ge_int3 P_prime_C2 = INT3_SUB(P_prime, D2R1);
+    ge_int3 P_prime_C3 = INT3_SUB(P_prime, D3R2);
 
 
     //clamp C points to edge limits
@@ -1109,31 +1109,31 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
     ge_int3 J2 = GE_INT3_SCALAR_MUL_Q16(CD2, R1_N);
     ge_int3 J3 = GE_INT3_SCALAR_MUL_Q16(CD3, R2_N);
 
-    ge_int3 L1 = GE_INT3_ADD(J1, P_prime_C1);
-    ge_int3 L2 = GE_INT3_ADD(J2, P_prime_C2);
-    ge_int3 L3 = GE_INT3_ADD(J3, P_prime_C3);
+    ge_int3 L1 = INT3_ADD(J1, P_prime_C1);
+    ge_int3 L2 = INT3_ADD(J2, P_prime_C2);
+    ge_int3 L3 = INT3_ADD(J3, P_prime_C3);
 
     //get closest L to P_prime
-    int L1D = ge_length_v3_Q16( GE_INT3_SUB(L1, P_prime) );
-    int L2D = ge_length_v3_Q16( GE_INT3_SUB(L2, P_prime) );
-    int L3D = ge_length_v3_Q16( GE_INT3_SUB(L3, P_prime) );
+    int L1D = ge_length_v3_Q16( INT3_SUB(L1, P_prime) );
+    int L2D = ge_length_v3_Q16( INT3_SUB(L2, P_prime) );
+    int L3D = ge_length_v3_Q16( INT3_SUB(L3, P_prime) );
 
 
     if (L1D < L2D && L1D < L2D)
     {
-        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L1));
+        *dist_Q16 = ge_length_v3_Q16(INT3_SUB(point_Q16, L1));
 
         return L1;
     }
     else if (L2D < L1D && L2D < L3D)
     {
-        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L2));
+        *dist_Q16 = ge_length_v3_Q16(INT3_SUB(point_Q16, L2));
 
         return L2;
     }
     else
     {
-        *dist_Q16 = ge_length_v3_Q16(GE_INT3_SUB(point_Q16, L3));
+        *dist_Q16 = ge_length_v3_Q16(INT3_SUB(point_Q16, L3));
 
         return L3;
     }
@@ -1144,8 +1144,8 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
 
 void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
 {
-    triangle->u_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
-    triangle->v_Q16 = GE_INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
+    triangle->u_Q16 = INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
+    triangle->v_Q16 = INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
 
 
     triangle->normal_Q16 =  GE_INT3_CROSS_PRODUCT_Q16(triangle->u_Q16, triangle->v_Q16);
@@ -1297,7 +1297,7 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 {
 
     //calculate force based on penetration distance with otherPeep.
-    ge_int3 d_Q16 = GE_INT3_ADD(otherPeep->physics.base.pos_Q16, GE_INT3_NEG(peep->physics.base.pos_Q16));
+    ge_int3 d_Q16 = INT3_ADD(otherPeep->physics.base.pos_Q16, INT3_NEG(peep->physics.base.pos_Q16));
     cl_int combined_r_Q16 = peep->physics.shape.radius_Q16 + otherPeep->physics.shape.radius_Q16;
     cl_int len_Q16;
 
@@ -1353,7 +1353,7 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
         return;
 
 
-    cl_int dist_Q16 = ge_length_v3_Q16(GE_INT3_ADD(peep->physics.base.pos_Q16, -otherPeep->physics.base.pos_Q16));
+    cl_int dist_Q16 = ge_length_v3_Q16(INT3_ADD(peep->physics.base.pos_Q16, -otherPeep->physics.base.pos_Q16));
 
     if (dist_Q16 < peep->minDistPeep_Q16)
     {
@@ -1367,12 +1367,14 @@ void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 
 void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
 {
+
     ge_int3 b = { TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) ,TO_Q16(MAP_TILE_SIZE) };
     ge_int3 map_coords_Q16 = DIV_v3_Q16(world_Q16, b);
+
     map_coords_Q16.x += (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f
     map_coords_Q16.y += (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f.
-
     *out_map_tilecoords_Q16 = map_coords_Q16;
+
 }
 
 void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
@@ -1488,7 +1490,7 @@ cl_uchar MapTileConvexHull_PointInside(ConvexHull* hull, ge_int3 point)
         {
             ge_int3 vert = hull->triangles[i].base.verts_Q16[v];
             
-            ge_int3 point_vert = GE_INT3_SUB(point, vert);
+            ge_int3 point_vert = INT3_SUB(point, vert);
             //int mag;
             //ge_int3 point_vert_normalized = GE_INT3_NORMALIZE_Q16(point_vert, &mag);
 
@@ -1564,7 +1566,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             cl_uchar insideSolidRegion;
   
             MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
-            ge_int3 peepPosLocalToHull_Q16 = GE_INT3_SUB(futurePos, tileCenters_Q16[i]);
+            ge_int3 peepPosLocalToHull_Q16 = INT3_SUB(futurePos, tileCenters_Q16[i]);
 
             peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {
                 TO_Q16(MAP_TILE_SIZE), TO_Q16(MAP_TILE_SIZE)
@@ -1581,7 +1583,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
                     , TO_Q16(MAP_TILE_SIZE)
             });
 
-            nearestPoint = GE_INT3_ADD(nearestPoint, tileCenters_Q16[i]);
+            nearestPoint = INT3_ADD(nearestPoint, tileCenters_Q16[i]);
         
 
             ge_int3 A;
@@ -1591,7 +1593,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 
             //make A vector always point to outside the shape
             if(insideSolidRegion==1){
-               A = GE_INT3_NEG(A);
+               A = INT3_NEG(A);
                //printf("inside region!");
             }
 
@@ -1604,7 +1606,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
             if (mag < peep->physics.shape.radius_Q16)
             {
                 cl_int dot;
-                ge_int3 V = GE_INT3_ADD(peep->physics.base.v_Q16 , peep->physics.base.vel_add_Q16);
+                ge_int3 V = INT3_ADD(peep->physics.base.v_Q16 , peep->physics.base.vel_add_Q16);
                 ge_dot_product_3D_Q16( V, An, &dot);
                 ge_int3 B;//velocity to cancel
                 B.x = MUL_PAD_Q16(An.x, dot);
@@ -1706,7 +1708,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         targetVelocity.y = d.y >> 2;
         targetVelocity.z = d.z >> 2;
 
-        ge_int3 error = GE_INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
+        ge_int3 error = INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
 
         peep->physics.base.vel_add_Q16.x += error.x;
         peep->physics.base.vel_add_Q16.y += error.y;
@@ -1986,7 +1988,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 
     //update visibility
-    if (!GE_VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
+    if (!VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
     {
         if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
         {     
@@ -2581,7 +2583,7 @@ ge_int2 GUI_GetOffset(SyncedGui* gui)
     ge_int2 sum = (ge_int2){0,0};
     for(int i = 0; i <= gui->wOSidx; i++)
     {
-        sum = GE_INT2_ADD(sum, gui->widgetOffsetStack[gui->wOSidx]);
+        sum = INT2_ADD(sum, gui->widgetOffsetStack[gui->wOSidx]);
     }
     return sum;
 }
@@ -2595,7 +2597,7 @@ void GUI_PopOffset(SyncedGui* gui)
 
 void GUI_SetClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
 {
-    startPos = GE_INT2_ADD(startPos, GUI_GETOFFSET());
+    startPos = INT2_ADD(startPos, GUI_GETOFFSET());
 
     gui->clip.x = startPos.x;
     gui->clip.y = startPos.y;
@@ -2615,12 +2617,12 @@ void GUI_ReleaseClip(SyncedGui* gui)
 
 cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
 {
-    pos = GE_INT2_ADD(pos, GUI_GETOFFSET());
+    pos = INT2_ADD(pos, GUI_GETOFFSET());
 
 
     cl_uchar ret = 0;
     *down = 0;
-    if((GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
+    if((GUI_BoundsCheck(pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
         gui->hoverWidget = id;
 
@@ -2655,7 +2657,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
 
 cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 {
-    pos = GE_INT2_ADD(pos, GUI_GETOFFSET());
+    pos = INT2_ADD(pos, GUI_GETOFFSET());
 
     ge_int2 posHandle;
     ge_int2 sizeHandle;
@@ -2663,7 +2665,7 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
     sizeHandle.y = size.y;
     sizeHandle.x = size.x/10;
 
-    if(GUI_BoundsCheck(pos, GE_INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
+    if(GUI_BoundsCheck(pos, INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
     {
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
         {
@@ -2735,7 +2737,7 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     gui->nextId = 0;
     gui->nextFakeIntIdx = 0;
 
-    gui->mouseFrameDelta = GE_INT2_SUB(mouseLoc, gui->mouseLoc);
+    gui->mouseFrameDelta = INT2_SUB(mouseLoc, gui->mouseLoc);
 
     gui->mouseLoc = mouseLoc;
     gui->mouseState = mouseState;
@@ -3130,25 +3132,25 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     //offsets[24] = (ge_int3){ 1, -1, 0 };
     //offsets[25] = (ge_int3){ -1, -1, 0 };
 
-    cl_uint* data22 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[22]));
+    cl_uint* data22 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[22]));
     MapTile tile22 = MapDataGetTile(*data22);
     if (tile22 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
     }
-    cl_uint* data24 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[24]));
+    cl_uint* data24 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[24]));
     MapTile tile24 = MapDataGetTile(*data24);
     if (tile24 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
     }
-    cl_uint* data23 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[23]));
+    cl_uint* data23 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[23]));
     MapTile tile23 = MapDataGetTile(*data23);
     if (tile23 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
     }
-    cl_uint* data25 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[25]));
+    cl_uint* data25 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[25]));
     MapTile tile25 = MapDataGetTile(*data25);
     if (tile25 == MapTile_NONE)
     {
@@ -3171,28 +3173,28 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
 
 
 
-    cl_uint* data0 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[0]));
+    cl_uint* data0 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[0]));
     MapTile tile0 = MapDataGetTile(*data0);
     if (tile0 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
     }
-    cl_uint* data1 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[1]));
+    cl_uint* data1 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[1]));
     MapTile tile1 = MapDataGetTile(*data1);
     if (tile1 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
         BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
     }
-    cl_uint* data2 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[2]));
+    cl_uint* data2 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[2]));
     MapTile tile2 = MapDataGetTile(*data2);
     if (tile2 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
         BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
     }
-    cl_uint* data3 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, GE_INT3_ADD(mapCoordWhole, staticData->directionalOffsets[3]));
+    cl_uint* data3 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[3]));
     MapTile tile3 = MapDataGetTile(*data3);
     if (tile3 == MapTile_NONE)
     {
@@ -3302,7 +3304,7 @@ void MapCreate2(ALL_CORE_PARAMS, int x, int y)
 void StartupTests()
 {
   printf("StartupTests Tests------------------------------------------------------:\n");
-  if(0){
+  if(1){
   printf("Speed Tests:\n");
 
     int s = 0;
@@ -3316,12 +3318,12 @@ void StartupTests()
     }
 
   }
-  if(0)
+  if(1)
   {
     fixedPointTests();
   }
 
-  if(0)
+  if(1)
   {
 
     printf("Triangle Tests\n");
@@ -3343,7 +3345,7 @@ void StartupTests()
   }
 
 
-  if(0)
+  if(1)
   {
     printf("Convex Hull Tests:\n");
 
@@ -3484,10 +3486,12 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
     ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
     AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
+    printf("initializing peeps..\n");
     const int spread = 500;
     for (cl_uint p = 0; p < MAX_PEEPS; p++)
     {
         gameState->peeps[p].ptr = p;
+
         gameState->peeps[p].physics.base.pos_Q16.x = RandomRange(p, -spread << 16, spread << 16);
         gameState->peeps[p].physics.base.pos_Q16.y = RandomRange(p + 1, -spread << 16, spread << 16);
 
@@ -3505,7 +3509,9 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
         ge_int3 worldCoord;
         MapToWorld(mapcoord, &worldCoord);
+                
         gameState->peeps[p].physics.base.pos_Q16.z = worldCoord.z;
+
         WorldToMap(gameState->peeps[p].physics.base.pos_Q16, &gameState->peeps[p].posMap_Q16);
         gameState->peeps[p].lastGoodPosMap_Q16 = gameState->peeps[p].posMap_Q16;
 
@@ -3535,7 +3541,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
         gameState->peeps[p].stateBasic.faction = RandomRange(p,0,4);
 
-
+                printf("d\n");
 
         for (int i = 0; i < MAX_CLIENTS; i++)
         {

@@ -155,7 +155,7 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1024*16;
+	int maxPeeps = 1024*1;
 	int maxParticles = 32;
 	int mapDim = 256;
 	int mapDepth = 32;
