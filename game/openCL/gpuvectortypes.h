@@ -10,7 +10,6 @@ typedef uint4 ge_uint4;
 typedef short3 ge_short3;
 
 
-
 typedef unsigned int offsetPtr;
 typedef ge_uint2 offsetPtr2;
 typedef ge_uint3 offsetPtr3;
@@ -18,22 +17,22 @@ typedef ge_uint3 offsetPtr3;
 #define INT2_ZERO(a) (a.x == 0 && a.y == 0 ).
 #define INT3_ZERO(a) (a.x == 0 && a.y == 0 && a.z == 0 )
 
-#define INT2_ADD(a,b) ((ge_int2){a.x+b.x,a.y+b.y})
-#define INT3_ADD(a,b) ((ge_int3){a.x+b.x,a.y+b.y,a.z+b.z})
-#define INT4_ADD(a,b) ((ge_int4){a.x+b.x,a.y+b.y,a.z+b.z, a.w+b.w})
+#define INT2_ADD(a,b) (a+b)
+#define INT3_ADD(a,b) (a+b)
+#define INT4_ADD(a,b) (a+b)
 
-#define INT2_SUB(a,b) ((ge_int2){a.x-b.x,a.y-b.y})
-#define INT3_SUB(a,b) ((ge_int3){a.x-b.x,a.y-b.y,a.z-b.z})
-#define INT4_SUB(a,b) ((ge_int4){a.x-b.x,a.y-b.y,a.z-b.z, a.w-b.w})
+#define INT2_SUB(a,b) (a-b)
+#define INT3_SUB(a,b) (a-b)
+#define INT4_SUB(a,b) (a-b)
 
 
 
-#define INT2_NEG(a) ((ge_int2){-a.x, -a.y            })
-#define INT3_NEG(a) ((ge_int3){-a.x, -a.y, -a.z      })
-#define INT4_NEG(a) ((ge_int4){-a.x, -a.y, -a.z, -a.w})
+#define INT2_NEG(a) (-a)
+#define INT3_NEG(a) (-a)
+#define INT4_NEG(a) (-a)
 
-#define INT3_LFTSHIFT(a,s) ((ge_int3){a.x<<s,a.y<<s,a.z<<s})
-#define INT4_LFTSHIFT(a,s) ((ge_int4){a.x<<s,a.y<<s,a.z<<s,a.w<<s})
+#define INT3_LFTSHIFT(a,s) (a<<s)
+#define INT4_LFTSHIFT(a,s) (a<<s)
 
 
 #define VECTOR2_EQUAL(a,b) ((a.x == b.x) && (a.y == b.y))
@@ -41,7 +40,7 @@ typedef ge_uint3 offsetPtr3;
 
 
 
-#define SHORT3_TO_INT3(a) ((ge_int3){a.x, a.y, a.z})
+#define SHORT3_TO_INT3(a) ((ge_int3)(a.x, a.y, a.z))
 
 
 
