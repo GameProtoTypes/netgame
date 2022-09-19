@@ -353,7 +353,7 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* 
     cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(prevNode->tileIdx));
     cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx));
 
-    ge_int3 delta = INT3_SUB(node->tileIdx, SHORT3_TO_INT3( prevNode->tileIdx ));
+    ge_int3 delta = INT3_SUB(SHORT3_TO_INT3(node->tileIdx), SHORT3_TO_INT3( prevNode->tileIdx ));
     if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx), delta) == 0)
         return 0;
 
@@ -657,7 +657,7 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
 
 
 
-        if (VECTOR3_EQUAL(current->tileIdx, destTile) )
+        if (VECTOR3_EQUAL(SHORT3_TO_INT3( current->tileIdx ), destTile) )
         {
             printf("Goal Found\n");
             search->endNodeOPtr = targetNodeOPtr;
@@ -890,7 +890,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathStep
                 OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
 
                 if (n2 != NULL) {
-                    delta = INT3_ADD(n2->tileIdx, INT3_NEG(holdTileCoord));
+                    delta = INT3_ADD(SHORT3_TO_INT3(n2->tileIdx), INT3_NEG(holdTileCoord));
                 }
                 else
                     delta = (ge_int3){ 0,0,0 };

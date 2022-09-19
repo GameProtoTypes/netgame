@@ -29,10 +29,10 @@
 
 #define IS_ZERO_V2(a) ((a.x==0) && (a.y==0))
 
-#define GE_INT3_TO_Q16(ge)((ge_int3){TO_Q16(ge.x),TO_Q16(ge.y),TO_Q16(ge.z)})
+#define GE_INT3_TO_Q16(ge)(ge<<16)
 
-#define GE_INT3_WHOLE_Q16(ge)((ge_int3){WHOLE_Q16(ge.x),WHOLE_Q16(ge.y),WHOLE_Q16(ge.z)})
-#define GE_INT3_WHOLE_ONLY_Q16(ge)((ge_int3){WHOLE_ONLY_Q16(ge.x),WHOLE_ONLY_Q16(ge.y),WHOLE_ONLY_Q16(ge.z)})
+#define GE_INT3_WHOLE_Q16(ge)(ge>>16)
+#define GE_INT3_WHOLE_ONLY_Q16(ge)((ge>>16)<<16)
 
 
 
