@@ -298,6 +298,7 @@
  inline void GameNetworking::SendTickSyncToHost()
  {
 	 int32_t ping = peerInterface->GetAveragePing(hostPeer);
+
 	 if (ping <= 0) ping = REALLYBIGPING;
 
 	 SLNet::BitStream bs;
@@ -330,6 +331,8 @@
 
 		 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, client->rakGuid, false);
 	 }
+
+
  }
 
  uint64_t GameNetworking::CheckSumAction(ActionWrap* state)
@@ -453,7 +456,7 @@
 	 //get stats on client swarm and slow down 
 	 float maxOffset = -9999.0;
 	 float minOffset = 9999.0;
-	 float safetyOffset = 0.0f;
+	 float safetyOffset = 10.0f;
 
 	 for (int i = 0; i < clients.size(); i++)
 	 {
@@ -499,11 +502,32 @@
 		 else
 		 {
 
-			float offset = 2.0f*thisClient->avgHostPing/GOODTICKTIMEMS;
-			if(offset < safetyOffset)
-				offset = safetyOffset;
+			float offset = 1.0f*thisClient->avgHostPing/GOODTICKTIMEMS;
 
-			 tickPIDError += offset;//client stay behind
+
+			//base safetyOffset from last 50 delay measurements
+			// if(clientTicksToSpare.size() == 50)
+			// {
+			// 	int lowest = 10000;
+			// 	for(int i = 0; i < 50; i++)
+			// 	{
+			// 		int t = clientTicksToSpare[clientTicksToSpare.size()- 1 - i];
+			// 		if(t < lowest)
+			// 			lowest = t;
+					
+
+			// 	}
+
+			// 	safetyOffset = lowest;
+
+			// }
+			
+
+
+
+			offset += safetyOffset;
+
+			tickPIDError += offset;//client stay behind
 
 			 
 		 }
@@ -537,6 +561,8 @@
 
 
 		 SLNet::RakNetGUID systemGUID = this->packet->guid;
+
+		 tickConnectionWatchDog = TIMEOUT_TICKS;
 
 		 // Check the packet identifier
 		 switch (this->packet->data[0])
@@ -819,7 +845,6 @@
 					 meta->avgHostPing = ping;
 					 meta->hostTickOffset = offset;
 					 meta->ticksSinceLastCommunication = 0;
-
 				 }
 				 else
 				 {
@@ -842,7 +867,8 @@
 				 }
 				 if (!serverRunning)
 					 clients = clientList;
-
+				
+				 //std::cout << "[CLIENT] Recieved routine tick sync" << std::endl;
 			 }
 			 break;
 		 case ID_REMOTE_CONNECTION_LOST:
@@ -882,36 +908,30 @@
  void GameNetworking::Update()
 {
 
-	if(connectedToHost && fullyConnectedToHost)
-		SendTickSyncToHost();
-
-	if (serverRunning)
-		SendTickSyncToClients();
-
-
-
-
-	if (gameStateActions->tickIdx % snapshotFreq == 0 && !HOST_snapshotLocked)
+	tickSyncCounter++;
+	if(tickSyncCounter >= TICKSYNC_TICKS)
 	{
-		/*
-		while (CLIENT_snapshotStorageQueue.size() > 1)
-		{
-			CLIENT_snapshotStorageQueue.erase(CLIENT_snapshotStorageQueue.begin());
-		}
-		snapshotWrap wrap;
-		wrap.gameState = std::make_shared<GameState>();
-		wrap.gameStateActions = std::make_shared<GameStateActions>();
-		CLIENT_snapshotStorageQueue.push_back(wrap);
-		std::cout << "Snapshot Taken" << std::endl;
+		if(connectedToHost && fullyConnectedToHost)
+			SendTickSyncToHost();
 
-		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameState.get()),
-			reinterpret_cast<void*>(gameState.get()), gameCompute->diffSize);
-		memcpy(reinterpret_cast<void*>(CLIENT_snapshotStorageQueue.back().gameStateActions.get()),
-			reinterpret_cast<void*>(gameStateActions.get()), sizeof(GameStateActions));
+		if (serverRunning)
+			SendTickSyncToClients();
 
-		//CLIENT_snapshotStorageQueue.back().checksum = CheckSumGameState(CLIENT_snapshotStorageQueue.back().gameState.get());
-		*/
+		tickSyncCounter = 0;
 	}
+
+
+	if(fullyConnectedToHost)
+	{
+		tickConnectionWatchDog--;
+		if (tickConnectionWatchDog <= 0)
+		{
+			std::cout << "[CLIENT] watchDog Timeout." << std::endl;
+			CLIENT_HardDisconnect();
+		}
+	}
+
+
 	if (serverRunning)
 	{
 		//check if running actions are accounted for.
@@ -927,7 +947,7 @@
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{
-			if (clients[i].ticksSinceLastCommunication > 200)
+			if (clients[i].ticksSinceLastCommunication > TIMEOUT_TICKS)
 			{
 				std::cout << "[HOST] Timeout from clientGUID: " << clients[i].clientGUID
 					<< " Timeout: " << clients[i].ticksSinceLastCommunication << std::endl;
@@ -979,8 +999,8 @@
 	{
 		clients.erase(std::next(clients.begin(), removeIdx));
 	}
-	else
-		assert(0);
+	//else
+		//assert(0);
 
 }
 

@@ -46,7 +46,9 @@
 #define REALLYBIGPING (10000)
 #define TRANSFERCHUNKSIZE (1024*1024)
 
-#define CLIENT_TIMEOUT_TICKS (25)
+
+#define TICKSYNC_TICKS (1)
+#define TIMEOUT_TICKS (TICKSYNC_TICKS*50)
 
 
 #define MAX_CLIENTS (1024)
@@ -249,5 +251,8 @@ public:
 	float lastFrameTimeMs = MINTICKTIMEMS;
 
 	uint32_t clientGUID;
+
+	int tickConnectionWatchDog = TIMEOUT_TICKS;
+	int tickSyncCounter = 0;
 };
 

@@ -51,7 +51,7 @@ enum PeepState_BitFlags
 	PeepState_BitFlags_visible
 };
 
-#pragma pack(push, 4)
+
 struct PeepState_Basic
 {
 	cl_uint bitflags0;
@@ -65,8 +65,15 @@ struct PeepState_Basic
 	cl_int buriedGlitchState;
 
 
+
+	
+	offsetPtr aStarSearchPtr;
+
+
+
 }typedef PeepState_Basic;
-#pragma pack(pop)
+
+
 
 
 struct BasePhysics
@@ -271,6 +278,17 @@ struct AStarNode {
 
 } typedef AStarNode;
 
+enum AStarPathFindingProgress
+{
+	AStarPathFindingProgress_Ready,
+	AStarPathFindingProgress_Searching,
+	AStarPathFindingProgress_Finished,
+	AStarPathFindingProgress_Failed 
+
+
+} typedef AStarPathFindingProgress;
+
+
 #define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarSearch {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
@@ -283,9 +301,17 @@ struct AStarSearch {
 	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
 	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
 	
+	AStarPathFindingProgress state;
+
+	offsetPtr pathOPtr;
+
 } typedef AStarSearch;
 
 
+struct AStarFuture
+{
+	offsetPtr searchPtr;//ongoing search
+} typedef AStarFuture;
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarPathSteps
@@ -401,6 +427,7 @@ struct GameState {
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 	AStarSearch mapSearchers[1];
+
 	AStarPathSteps paths;
 
 	SyncedGui fakeGui;

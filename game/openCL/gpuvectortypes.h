@@ -14,7 +14,7 @@ typedef unsigned int offsetPtr;
 typedef ge_uint2 offsetPtr2;
 typedef ge_uint3 offsetPtr3;
 
-#define INT2_ZERO(a) (a.x == 0 && a.y == 0 ).
+#define INT2_ZERO(a) (a.x == 0 && a.y == 0 )
 #define INT3_ZERO(a) (a.x == 0 && a.y == 0 && a.z == 0 )
 
 #define INT2_ADD(a,b) (a+b)
