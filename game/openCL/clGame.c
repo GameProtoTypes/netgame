@@ -10,7 +10,7 @@
 
 
 
-#define PEEP_ALL_ALWAYS_VISIBLE
+//#define PEEP_ALL_ALWAYS_VISIBLE
 //#define PEEP_DISABLE_TILECORRECTIONS
 
 
@@ -380,7 +380,7 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* 
 
     if(delta.z > 0)
     {
-        printf("UP.");
+
 
         if(MapDataGetTile(*fromTileData) == MapTile_NONE)
             return 0;
@@ -1971,19 +1971,27 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
     
     //search up to z level 0
     ge_int3 offset, tilePWorldCen, tileMapCoordWhole;
-    MapTile ctile;
+    MapTile tile;
     cl_int tileData;
     offset.x = 0;
     offset.y = 0;
     offset.z = 0;
-    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &ctile, &tilePWorldCen, &tileMapCoordWhole, &tileData);
+    PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, offset, &tile, &tilePWorldCen, &tileMapCoordWhole, &tileData);
+    tile = MapDataGetTile(tileData);
+    cl_uchar firstTileOK = 0;
+    if((MapDataLowCornerCount(tileData) > 0)  || tile == MapTile_NONE)
+        firstTileOK = 1;
 
+    tileMapCoordWhole.z++;
+    tileData = gameState->map.levels[tileMapCoordWhole.z].data[tileMapCoordWhole.x][tileMapCoordWhole.y];
+    tile = MapDataGetTile(tileData);
 
-    while (ctile == MapTile_NONE && tileMapCoordWhole.z < MAPDEPTH)
+    while (firstTileOK && (tile == MapTile_NONE) && tileMapCoordWhole.z < MAPDEPTH)
     {
         tileMapCoordWhole.z++;
 
-        ctile = gameState->map.levels[tileMapCoordWhole.z].data[tileMapCoordWhole.x][tileMapCoordWhole.y];
+        tileData = gameState->map.levels[tileMapCoordWhole.z].data[tileMapCoordWhole.x][tileMapCoordWhole.y];
+        tile = MapDataGetTile(tileData);
     }
     //printf("%d\n", tileMapCoordWhole.z);
 
@@ -3101,34 +3109,39 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     Print_GE_INT3(start);
                     Print_GE_INT3(end);
 
-                    pathFindProgress = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
-                    if (pathFindProgress != AStarPathFindingProgress_Failed)
+                    if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
                     {
+                        pathFindProgress = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
+                        if (pathFindProgress != AStarPathFindingProgress_Failed)
+                        {
 
-                        //the search has started....
-                        
-
-
-                        //printf("--------------------------\n");
-                        //AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
-                        //printf("--------------------------\n");
-                        //AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
-                        //printf("--------------------------\n");
+                            //the search has started....
+                            
 
 
-                        //pathOPtr = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
-                        //AStarPrintPath(&gameState->paths, pathOPtr);
-                        //printf("--------------------------\n");
+                            //printf("--------------------------\n");
+                            //AStarPrintSearchPathFrom(&gameState->mapSearchers[0], start);
+                            //printf("--------------------------\n");
+                            //AStarPrintSearchPathTo(&gameState->mapSearchers[0], end);
+                            //printf("--------------------------\n");
+
+
+                            //pathOPtr = AStarFormPathSteps(ALL_CORE_PARAMS_PASS , &gameState->mapSearchers[0], &gameState->paths);
+                            //AStarPrintPath(&gameState->paths, pathOPtr);
+                            //printf("--------------------------\n");
+                        }
+
+                        while (curPeepIdx != OFFSET_NULL)
+                        {
+                            Peep* curPeep = &gameState->peeps[curPeepIdx];
+
+                            curPeep->stateBasic.aStarSearchPtr = 0;
+                            curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
+                        }
                     }
-
-                    while (curPeepIdx != OFFSET_NULL)
-                    {
-                        Peep* curPeep = &gameState->peeps[curPeepIdx];
-
-                        curPeep->stateBasic.aStarSearchPtr = 0;
-                        curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
+                    else{
+                        printf("path finder busy..\n");
                     }
-                    
                 }
 
 
@@ -3836,7 +3849,15 @@ __kernel void game_update(ALL_CORE_PARAMS)
                 cl_ulong y = xyzIdx / MAPDIM;
                 cl_ulong x = xyzIdx % MAPDIM;
 
+                if(x > MAPDIM)
+                    printf("X>MAPDIM\n");
+                if(y > MAPDIM)
+                    printf("Y>MAPDIM\n");
+                if(z > MAPDEPTH)
+                    printf("Z>MAPDEPTH\n");
 
+
+                
 
                 AStarSearchInstantiateParrallel(search,x,y,z);
             }
