@@ -1997,8 +1997,7 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
 
     if (tileMapCoordWhole.z == MAPDEPTH)
     {
-        //hit the sky
-
+        //hit the sky 
         if (maptilecoords.z <= mapZViewLevel+1)
             return 1;
         else
@@ -2055,9 +2054,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             {
                 if (curPeep != peep) {
                     PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, curPeep);
-
                 }
-
                 
                 OFFSET_TO_PTR(gameState->peeps, curPeep->prevSectorPeepPtr, curPeep);
 
@@ -2327,7 +2324,26 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
                 if(tileoffup == MapTile_NONE)
                 {
                     isWall = 1;
-                    mapTile1VBO[y * MAPDIM + x ] = tile;
+
+                    //test against mouse world coord
+                    // ge_int3 mouseMapCoord;
+                    // int occluded;
+                    // ge_int3 mouseWorld_Q16 = (ge_int3){gameStateActions->mouseLocWorldx_Q16, gameStateActions->mouseLocWorldy_Q16, mapCoord.z};
+                   
+                    // WorldToMap(mouseWorld_Q16, &mouseMapCoord);
+                    // mouseMapCoord = GE_INT3_WHOLE_ONLY_Q16(mouseMapCoord);
+                    
+                    // if(VECTOR3_EQUAL(mouseMapCoord , mapCoord))
+                    // {
+                    //     mapTile1VBO[y * MAPDIM + x ] = tile;
+                        
+                    // }
+                    // else
+                    // {
+                        mapTile1VBO[y * MAPDIM + x ] = tileUp;
+                    //}
+
+
 
 
                     if( i <=3 )
@@ -2469,6 +2485,23 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
     *occluded = 1;
 }
 
+
+
+
+
+
+
+
+
+void GUI_INIT_STYLE(ALL_CORE_PARAMS)
+{
+    gameState->guiStyle.BUTTON_COLOR = (float3)(0.5,0.5,0.5);
+    gameState->guiStyle.BUTTON_COLOR_HOVER = (float3)(0.7,0.7,0.7);
+    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.7,0.0,0.0);
+
+    gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2,0.2,0.2);
+
+}
 
 
 
@@ -2639,6 +2672,7 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 #define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
 
+
 int* GetGuiFakeInt(SyncedGui* gui)
 {
     int* param = &gui->fakeInts[gui->nextFakeIntIdx];
@@ -2711,7 +2745,7 @@ void GUI_ReleaseClip(SyncedGui* gui)
 
 
 
-cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
+cl_uchar GUI_BUTTON(GUIID_DEF,  int* down)
 {
     pos = INT2_ADD(pos, GUI_GETOFFSET());
 
@@ -2735,13 +2769,13 @@ cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
         gui->mouseOnGUI = 1;
     }
 
-    float3 color = (float3){0.0,0.0,1.0};
+    float3 color = gameState->guiStyle.BUTTON_COLOR;
 
     if(gui->hoverWidget == id)
-        color = (float3){1.0,1.0,1.0};
+        color =  gameState->guiStyle.BUTTON_COLOR_HOVER;
 
     if(gui->activeWidget == id){
-        color = (float3){1.0,0.0,0.0};
+        color = gameState->guiStyle.BUTTON_COLOR_ACTIVE;
     }
 
 
@@ -2750,6 +2784,12 @@ cl_uchar GUI_BUTTON(GUIID_DEF, int* down)
     
     return ret;
 }
+
+
+
+
+
+
 
 cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 {
@@ -2780,7 +2820,7 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, (float3){0.5,0.5,0.5}, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, (float2){0.0,0.0}, (float2){0.0,0.0} );
     
 
     int down;
@@ -2961,7 +3001,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
         if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 50},&downDummy) == 1)
         {
-            printf("create mode.");
+            printf("create mode");
             client->curTool = EditorTools_Create;
         }
 
@@ -3392,7 +3432,7 @@ void MapCreate2(ALL_CORE_PARAMS, int x, int y)
 void StartupTests()
 {
   printf("StartupTests Tests------------------------------------------------------:\n");
-  if(1){
+  if(0){
   printf("Speed Tests:\n");
 
     int s = 0;
@@ -3406,12 +3446,12 @@ void StartupTests()
     }
 
   }
-  if(1)
+  if(0)
   {
     fixedPointTests();
   }
 
-  if(1)
+  if(0)
   {
 
     printf("Triangle Tests\n");
@@ -3433,7 +3473,7 @@ void StartupTests()
   }
 
 
-  if(1)
+  if(0)
   {
     printf("Convex Hull Tests:\n");
 
@@ -3491,12 +3531,14 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Initializing StaticData Buffers..\n");
     MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
 
+    printf("Initializing GUI..\n");
+    GUI_INIT_STYLE(ALL_CORE_PARAMS_PASS);
 
 
-
+    printf("Startup Tests..\n");
     StartupTests();
 
-
+    printf("Initializing GUI 2..\n");
     InitRayGUI(ALL_CORE_PARAMS_PASS);
 
 
@@ -3633,7 +3675,6 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
         gameState->peeps[p].stateBasic.faction = RandomRange(p,0,4);
 
-                printf("d\n");
 
         for (int i = 0; i < MAX_CLIENTS; i++)
         {

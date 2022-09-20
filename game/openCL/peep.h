@@ -335,6 +335,19 @@ enum GuiStatePassType
 	GuiStatePassType_Synced
 } typedef GuiStatePassType;
 
+
+struct GuiStyle
+{
+	float3 BUTTON_COLOR;
+	float3 BUTTON_COLOR_HOVER;
+	float3 BUTTON_COLOR_ACTIVE;
+
+	float3 SLIDER_COLOR_BACKGROUND;
+
+}typedef GuiStyle;
+
+
+
 #define SYNCGUI_MAX_WIDGETS (512)
 #define SYNCGUI_MAX_DEPTH (8)
 struct SyncedGui
@@ -375,8 +388,8 @@ struct SyncedGui
 	int fakeInts[SYNCGUI_MAX_WIDGETS];
 	int nextFakeIntIdx;
 
-} typedef SyncedGui;
 
+} typedef SyncedGui;
 
 enum EditorTools
 {
@@ -426,11 +439,12 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch mapSearchers[1];
+	AStarSearch mapSearchers[2];
 
 	AStarPathSteps paths;
 
 	SyncedGui fakeGui;
+	GuiStyle guiStyle;
 
 } typedef GameState;
 

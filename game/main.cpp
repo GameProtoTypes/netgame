@@ -452,15 +452,12 @@ int32_t main(int32_t argc, char* args[])
 
         GSCS(C)
 
-        
-
-
-
-
-
 
         gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
         gameStateActions->mouseLocy = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
+
+        gameStateActions->mouseLocWorldx_Q16 = int(worldMouseEnd.x*(1<<16));
+        gameStateActions->mouseLocWorldy_Q16 = int(worldMouseEnd.y*(1<<16));
         gameStateActions->mouseState = buttonBits;
 
 

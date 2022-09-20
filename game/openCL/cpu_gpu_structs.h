@@ -81,6 +81,8 @@ struct GameStateActions {
 
 	cl_int mouseLocx;
 	cl_int mouseLocy;
+	cl_int mouseLocWorldx_Q16;
+	cl_int mouseLocWorldy_Q16;
 	cl_int mouseState;
 
 
