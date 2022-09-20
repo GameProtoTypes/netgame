@@ -290,7 +290,7 @@ enum AStarPathFindingProgress
 
 
 #define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
-struct AStarSearch {
+struct AStarSearch_BFS {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
 	offsetPtr3 openHeap_OPtrs[ASTARHEAPSIZE];
@@ -305,13 +305,33 @@ struct AStarSearch {
 
 	offsetPtr pathOPtr;
 
-} typedef AStarSearch;
+} typedef AStarSearch_BFS;
 
-
-struct AStarFuture
+struct AStarNode_IDA
 {
-	offsetPtr searchPtr;//ongoing search
-} typedef AStarFuture;
+	ge_short3 tileLoc;
+	bool searchedSuccessors[26];
+} typedef AStarNode_IDA;
+
+#define ASTARSEARCH_IDA_PATHMAXSIZE ((MAPDIM*2))
+struct AStarSearch_IDA {
+
+	ge_short3 startLoc;
+	ge_short3 endLoc;
+
+	AStarNode_IDA path[ASTARSEARCH_IDA_PATHMAXSIZE];
+	int pathEndIdx;
+
+	int bound;
+	int t;
+
+	AStarPathFindingProgress state;
+	offsetPtr pathOPtr;
+
+} typedef AStarSearch_IDA;
+
+
+
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 struct AStarPathSteps
@@ -439,7 +459,7 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch mapSearchers[2];
+	AStarSearch_BFS mapSearchers[2];
 
 	AStarPathSteps paths;
 

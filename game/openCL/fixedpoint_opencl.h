@@ -2,7 +2,7 @@
 #include "cl_type_glue.h"
 #include "gpuvectortypes.h"
 
-
+#define INT_MAX (2147483647)
 
 
 #define GE_TO_CL_INT2(ge)((cl_int2)(ge.x,ge.y))

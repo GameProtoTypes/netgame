@@ -308,7 +308,7 @@ void AStarInitPathNode(AStarPathNode* node)
 }
 
 
-void AStarSearchInstantiate(AStarSearch* search)
+void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
 {
     for (int x = 0; x < MAPDIM; x++)
     {
@@ -335,7 +335,7 @@ void AStarSearchInstantiate(AStarSearch* search)
     search->endNodeOPtr = OFFSET_NULL_3D;
     search->openHeapSize = 0;
 }
-void AStarSearchInstantiateParrallel(AStarSearch* search, int x, int y, int z)
+void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, int x, int y, int z)
 {
 
     AStarNode* node = &search->details[x][y][z];
@@ -429,13 +429,13 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
     offsets[24] = (ge_int3){ 1, -1, 0 };
     offsets[25] = (ge_int3){ -1, -1, 0 };
 }
-int AStarOpenHeapKey(AStarSearch* search, AStarNode* node)
+int AStarOpenHeapKey(AStarSearch_BFS* search, AStarNode* node)
 {
     //f
     return node->g_Q16 + node->h_Q16;
 }
 
-void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
+void AStarOpenHeapTrickleDown(AStarSearch_BFS* search, cl_int index)
 {
     cl_int largerChild;
     AStarNode* top;
@@ -474,7 +474,7 @@ void AStarOpenHeapTrickleDown(AStarSearch* search, cl_int index)
     search->openHeap_OPtrs[index] = topOPtr;
 }
 
-offsetPtr3 AStarOpenHeapRemove(AStarSearch* search)
+offsetPtr3 AStarOpenHeapRemove(AStarSearch_BFS* search)
 {
     offsetPtr3 rootOPtr = search->openHeap_OPtrs[0];
 
@@ -487,7 +487,7 @@ offsetPtr3 AStarOpenHeapRemove(AStarSearch* search)
     return rootOPtr;
 }
 
-offsetPtr3 AStarRemoveFromOpen(AStarSearch* search)
+offsetPtr3 AStarRemoveFromOpen(AStarSearch_BFS* search)
 {
 
     offsetPtr3 nodeOPtr = AStarOpenHeapRemove(search);
@@ -499,22 +499,22 @@ offsetPtr3 AStarRemoveFromOpen(AStarSearch* search)
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
     return nodeOPtr;
 }
-void AStarAddToClosed( AStarSearch* search, AStarNode* node)
+void AStarAddToClosed( AStarSearch_BFS* search, AStarNode* node)
 {
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
-cl_uchar AStarNodeInClosed(AStarSearch* search, AStarNode* node)
+cl_uchar AStarNodeInClosed(AStarSearch_BFS* search, AStarNode* node)
 {
     return search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
-cl_uchar AStarNodeInOpen(AStarSearch* search, AStarNode* node)
+cl_uchar AStarNodeInOpen(AStarSearch_BFS* search, AStarNode* node)
 {
     return search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
 
-void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
+void AStarOpenHeapTrickleUp(AStarSearch_BFS* search, cl_int index)
 {
     cl_int prev = (index - 1) / 2;
     offsetPtr3 bottomOPtr = search->openHeap_OPtrs[index];
@@ -536,7 +536,7 @@ void AStarOpenHeapTrickleUp(AStarSearch* search, cl_int index)
 }
 
 
-void AStarOpenHeapInsert(AStarSearch* search, offsetPtr3 nodeOPtr)
+void AStarOpenHeapInsert(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
 {
     search->openHeap_OPtrs[search->openHeapSize] = nodeOPtr;
     AStarOpenHeapTrickleUp(search, search->openHeapSize);
@@ -546,7 +546,7 @@ void AStarOpenHeapInsert(AStarSearch* search, offsetPtr3 nodeOPtr)
 
 
 }
-void AStarAddToOpen(AStarSearch* search, offsetPtr3 nodeOPtr)
+void AStarAddToOpen(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
 {
     AStarOpenHeapInsert(search, nodeOPtr);
 
@@ -561,16 +561,19 @@ void AStarAddToOpen(AStarSearch* search, offsetPtr3 nodeOPtr)
 
 
 
-void AStarRemoveFromClosed(AStarSearch* search, AStarNode* node)
+void AStarRemoveFromClosed(AStarSearch_BFS* search, AStarNode* node)
 {
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
 }
 
-cl_int AStarNodeDistanceHuristic(AStarSearch* search, AStarNode* nodeA, AStarNode* nodeB)
+cl_int AStarNodeDistanceHuristic(AStarSearch_BFS* search, AStarNode* nodeA, AStarNode* nodeB)
 {
     return TO_Q16(abs(nodeA->tileIdx.x - nodeB->tileIdx.x) + abs(nodeA->tileIdx.y - nodeB->tileIdx.y) + abs(nodeA->tileIdx.z - nodeB->tileIdx.z));
 }
-
+cl_int AStarNodeDistanceHuristic_IDA(AStarSearch_IDA* search, ge_short3 locA, ge_short3 locB)
+{
+    return TO_Q16(abs(locA.x - locB.x) + abs(locA.y - locB.y) + abs(locA.z - locB.z));
+}
 void AStarPrintNodeStats(AStarNode* node)
 {
     printf("Node: Loc: ");
@@ -582,7 +585,7 @@ void AStarPrintPathNodeStats(AStarPathNode* node)
     printf("Node: Loc: ");
     Print_GE_INT3_Q16(node->mapCoord_Q16);
 }
-void AStarPrintSearchPathTo(AStarSearch* search, ge_int3 destTile)
+void AStarPrintSearchPathTo(AStarSearch_BFS* search, ge_int3 destTile)
 {
     AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
     while (curNode != NULL)
@@ -591,7 +594,7 @@ void AStarPrintSearchPathTo(AStarSearch* search, ge_int3 destTile)
         OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, curNode);
     }
 }
-void AStarPrintSearchPathFrom(AStarSearch* search, ge_int3 startTile)
+void AStarPrintSearchPathFrom(AStarSearch_BFS* search, ge_int3 startTile)
 {
     AStarNode* curNode = &search->details[startTile.x][startTile.y][startTile.z];
     while (curNode != NULL)
@@ -661,7 +664,7 @@ cl_uchar GE_INT3_WHACHAMACOLIT1_ENTRY(ge_int3 a)
 }
 
 
-offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathSteps* steps)
+offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPathSteps* steps)
 {
     //grab a unused Node from pathNodes, and start building the list .
     offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
@@ -769,7 +772,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch* search, AStarPathStep
 }
 
 
-AStarPathFindingProgress AStarSearchContinue(ALL_CORE_PARAMS, AStarSearch* search, int iterations)
+AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_BFS* search, int iterations)
 {
     AStarNode* startNode;
     AStarNode* targetNode;
@@ -918,26 +921,26 @@ AStarPathFindingProgress AStarSearchContinue(ALL_CORE_PARAMS, AStarSearch* searc
 
 }
 
-cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startTile, ge_int3 destTile, int startIterations)
+cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, AStarSearch_BFS* search, ge_int3 startTile, ge_int3 destTile, int startIterations)
 {
     if (MapTileCoordValid(startTile) == 0)
     {
-        printf("AStarSearchRoutine: Start MapCoord Not Valid.\n");
+        printf("AStarSearch_BFS_Routine: Start MapCoord Not Valid.\n");
         return 0;
     }
     if (MapTileCoordValid(destTile) == 0)
     {
-        printf("AStarSearchRoutine: Dest MapCoord Not Valid.\n");
+        printf("AStarSearch_BFS_Routine: Dest MapCoord Not Valid.\n");
         return 0;
     }
     if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, startTile) == 0)
     {
-        printf("AStarSearchRoutine: Start Stand In Invalid.\n");
+        printf("AStarSearch_BFS_Routine: Start Stand In Invalid.\n");
         return 0;
     }
     if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, destTile)==0)
     {
-        printf("AStarSearchRoutine: Dest Stand In Invalid.\n");
+        printf("AStarSearch_BFS_Routine: Dest Stand In Invalid.\n");
         return 0;
     }
 
@@ -956,9 +959,164 @@ cl_uchar AStarSearchRoutine(ALL_CORE_PARAMS, AStarSearch* search, ge_int3 startT
     AStarAddToOpen(search, search->startNodeOPtr );
 
 
-    return AStarSearchContinue(ALL_CORE_PARAMS_PASS, search, startIterations);
+    return AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, startIterations);
+}
+bool AStarSearch_IDA_Node_In_Path(AStarSearch_IDA* search, AStarNode_IDA* node)
+{
+    for(int i = 0; i < search->pathEndIdx; i++)
+    {
+        if(VECTOR3_EQUAL(search->path[i].tileLoc, node->tileLoc))
+            return true;
+    }
+    return false;
+}
+bool AStarSearch_IDA_Loc_In_Path(AStarSearch_IDA* search, ge_short3 loc)
+{
+    for(int i = 0; i < search->pathEndIdx; i++)
+    {
+        if(VECTOR3_EQUAL(search->path[i].tileLoc, loc))
+            return true;
+    }
+    return false;
+}
+void AStarSearch_IDA_InitNode(AStarSearch_IDA* search, AStarNode_IDA* node)
+{
+    node->tileLoc = (ge_short3)(-1,-1,-1);
+    for(int i = 0; i < 26; i++)
+        node->searchedSuccessors[i] = false;
 }
 
+ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStarNode_IDA* node, int g)
+{
+
+    int minCost = INT_MAX;
+    int minCosti = 0;
+    for (int i = 0; i <= 25; i++)
+    { 
+        ge_short3 prospectiveTileCoord;
+        ge_int3 dir = staticData->directionalOffsets[i];
+        prospectiveTileCoord.x = node->tileLoc.x + dir.x;
+        prospectiveTileCoord.y = node->tileLoc.y + dir.y;
+        prospectiveTileCoord.z = node->tileLoc.z + dir.z;
+
+        if (MapTileCoordValid(SHORT3_TO_INT3( prospectiveTileCoord))==0)
+        {
+            continue;
+        }
+
+        int cost = g + AStarNodeDistanceHuristic_IDA(search, prospectiveTileCoord, search->endLoc);
+        if(cost < minCost)
+        {
+            minCost = cost;
+            minCosti = i;
+        }
+    }
+
+    node->searchedSuccessors[minCosti] = true;
+    return  node->tileLoc + INT3_TO_SHORT3( staticData->directionalOffsets[minCosti] );
+}
+
+int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
+{
+
+    //loop
+    while(true)
+    {
+        AStarNode_IDA* node = &search->path[search->pathEndIdx];
+        int f = g + AStarNodeDistanceHuristic_IDA(search, node->tileLoc, search->endLoc);
+        if(f > search->bound)
+            return f;
+
+        if(VECTOR3_EQUAL(node->tileLoc, search->endLoc))
+            return 0;//found
+
+        int min = INT_MAX;
+
+
+        //choose successor
+        ge_short3 sLoc = AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS_PASS, search,  node,  g);
+
+        if(!AStarSearch_IDA_Loc_In_Path(search, sLoc))
+        {
+            search->pathEndIdx++;
+            AStarSearch_IDA_InitNode(search, &search->path[search->pathEndIdx]);
+            search->path[search->pathEndIdx].tileLoc = (sLoc);
+            
+
+
+        }
+
+            //     if succ not in path then
+            //     path.push(succ)
+            //     t := search(path, g + cost(node, succ), bound)
+            //     if t = FOUND then return FOUND
+            //     if t < min then min := t
+            //     path.pop()
+            // end if
+
+
+        //endloop
+    }
+    return 0;
+}
+
+
+AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, AStarSearch_IDA* search, int iterations)
+{
+    search->t = AStarSearch_IDA_Search(ALL_CORE_PARAMS_PASS, search, 0);
+    if(search->t == 0)
+    {
+        //path found
+        search->state = AStarPathFindingProgress_Finished;
+        printf("AStarSearch_IDA_Continue Path Found\n");
+    }
+    if(search->t == 10000)
+    {
+        //not found
+        search->state = AStarPathFindingProgress_Failed;
+        printf("AStarSearch_IDA_Continue Path Failed\n");
+    }
+    search->bound = search->t ;
+}
+
+
+
+
+cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_short3 startTile, ge_short3 destTile, int startIterations)
+{
+    if (MapTileCoordValid(SHORT3_TO_INT3( startTile )) == 0)
+    {
+        printf("AStarSearch_IDA_Routine: Start MapCoord Not Valid.\n");
+        return 0;
+    }
+    if (MapTileCoordValid(SHORT3_TO_INT3(destTile)) == 0)
+    {
+        printf("AStarSearch_IDA_Routine: Dest MapCoord Not Valid.\n");
+        return 0;
+    }
+    if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(startTile)) == 0)
+    {
+        printf("AStarSearch_IDA_Routine: Start Stand In Invalid.\n");
+        return 0;
+    }
+    if (MapTileCoordStandInValid(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(destTile))==0)
+    {
+        printf("AStarSearch_IDA_Routine: Dest Stand In Invalid.\n");
+        return 0;
+    }
+
+    printf("starting search\n");
+    search->state = AStarPathFindingProgress_Searching;
+
+
+    search->bound = AStarNodeDistanceHuristic_IDA(search, startTile, destTile);
+    search->path[0].tileLoc = startTile;
+    search->pathEndIdx=0;
+    search->startLoc = startTile;
+    search->endLoc = destTile;
+
+    return AStarSearch_IDA_Continue(ALL_CORE_PARAMS_PASS, search, startIterations);
+}
 
 
 
@@ -1775,7 +1933,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
     if(peep->stateBasic.aStarSearchPtr != OFFSET_NULL)
     {
-        AStarSearch* search;
+        AStarSearch_BFS* search;
         OFFSET_TO_PTR(gameState->mapSearchers, peep->stateBasic.aStarSearchPtr, search);
 
 
@@ -3135,7 +3293,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 offsetPtr pathOPtr;
                 if (curPeepIdx != OFFSET_NULL)
                 {
-                    //Do an AStarSearch
+                    //Do an AStarSearch_BFS
                     Peep* curPeep = &gameState->peeps[curPeepIdx];
                     world2D.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                     world2D.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
@@ -3151,7 +3309,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                     if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
                     {
-                        pathFindProgress = AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
+                        pathFindProgress = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
                         if (pathFindProgress != AStarPathFindingProgress_Failed)
                         {
 
@@ -3593,7 +3751,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
     printf("AStarTests:\n");
     //printf("AStarTests1:\n");
-    //AStarSearchInstantiate(&gameState->mapSearchers[0]);
+    //AStarSearch_BFS_Instantiate(&gameState->mapSearchers[0]);
     ////test AStarHeap
     //for (int x = 0; x < MAPDIM; x++)
     //{
@@ -3614,10 +3772,10 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
     printf("AStarTests2:\n");
     //test AStar
-    AStarSearchInstantiate(&gameState->mapSearchers[0]);
+    AStarSearch_BFS_Instantiate(&gameState->mapSearchers[0]);
     ge_int3 start = (ge_int3){ 0,0,MAPDEPTH - 2 };
     ge_int3 end = (ge_int3){ MAPDIM - 1,MAPDIM - 1,1 };
-    AStarSearchRoutine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
+    AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, CL_INTMAX);
 
     printf("initializing peeps..\n");
     const int spread = 500;
@@ -3870,7 +4028,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
 
-    AStarSearch* search = &gameState->mapSearchers[0];
+    AStarSearch_BFS* search = &gameState->mapSearchers[0];
 
     if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished)
     {
@@ -3900,7 +4058,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
                 
 
-                AStarSearchInstantiateParrallel(search,x,y,z);
+                AStarSearch_BFS_InstantiateParrallel(search,x,y,z);
             }
         }
     }
@@ -3916,10 +4074,10 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     
 
     //update AStarPath Searchers
-    AStarSearch* search = &gameState->mapSearchers[0];
+    AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if(search->state == AStarPathFindingProgress_Searching)
     {
-        AStarSearchContinue(ALL_CORE_PARAMS_PASS, search, 100);
+        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
     }
     else if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished )
     {

@@ -41,7 +41,7 @@ typedef ge_uint3 offsetPtr3;
 
 
 #define SHORT3_TO_INT3(a) ((ge_int3)(a.x, a.y, a.z))
-
+#define INT3_TO_SHORT3(a)  ((ge_short3)(a.x, a.y, a.z))
 
 
 
