@@ -8,8 +8,8 @@
 #define RAYGUI_IMPLEMENTATION
 
 
-
-
+#define FLATMAP
+//#define NO_ZSHADING
 //#define PEEP_ALL_ALWAYS_VISIBLE
 //#define PEEP_DISABLE_TILECORRECTIONS
 
@@ -830,7 +830,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
 
         //5 neighbors
-        for (int i = 0; i <= 25; i++)
+        for (int i = 0; i <= 3; i++)
         { 
             ge_int3 prospectiveTileCoord;
             ge_int3 dir = staticData->directionalOffsets[i];
@@ -1018,6 +1018,8 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch
 
 int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
 {
+    int pathRootsStack[ASTARSEARCH_IDA_PATHMAXSIZE];
+    int rootStackIdx=0;
 
     //loop
     while(true)
@@ -1025,7 +1027,7 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
         AStarNode_IDA* node = &search->path[search->pathEndIdx];
         int f = g + AStarNodeDistanceHuristic_IDA(search, node->tileLoc, search->endLoc);
         if(f > search->bound)
-            return f;
+            return f;//
 
         if(VECTOR3_EQUAL(node->tileLoc, search->endLoc))
             return 0;//found
@@ -1038,11 +1040,13 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
 
         if(!AStarSearch_IDA_Loc_In_Path(search, sLoc))
         {
+            //Push
             search->pathEndIdx++;
             AStarSearch_IDA_InitNode(search, &search->path[search->pathEndIdx]);
             search->path[search->pathEndIdx].tileLoc = (sLoc);
             
 
+            
 
         }
 
@@ -2297,6 +2301,7 @@ void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
 
 
 
+
 void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 {
     if ((x < 1) || (x >= MAPDIM - 1) || (y < 1) || (y >= MAPDIM - 1))
@@ -2308,8 +2313,10 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
 
-    for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView; z >= 1; z--)
+    for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView+1; z >= 0; z--)
     {       
+        if(z >= MAPDEPTH) continue;
+
         cl_uint* data = &gameState->map.levels[z].data[x][y];
         MapTile center =MapDataGetTile(*data);
 
@@ -2433,14 +2440,16 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
         tile = MapDataGetTile(*data);
         if (tile == MapTile_NONE) {
             coord.z--;
-            vz++;
+            #ifndef NO_ZSHADING
+                vz++;
+            #endif
         }
     }
 
     //quick hack for the top level transitions
-    int m = 1;
-    if (vz == 0)
-        m = 2;
+    // int m = 1;
+    // if (vz == 0)
+    //     m = ;
 
     cl_uint finalAttr=0;
 
@@ -2454,7 +2463,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
     finalAttr |= (2-xlev) << 4;//X
 
 
-    finalAttr |= (clamp(15-vz, 0, 15) << 6);
+    finalAttr |= (clamp(15-vz-1, 0, 15) << 6);
 
 
     mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
@@ -2524,7 +2533,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
                     }
 
 
-                    mapTile1AttrVBO[y * MAPDIM + x ] |= (clamp(4, 0, 15) << 6);//base shade
+                    mapTile1AttrVBO[y * MAPDIM + x ] |= (clamp(15-vz, 0, 15) << 6);//base shade
                     mapTile1AttrVBO[y * MAPDIM + x ] |= (1 << 10);//corners fade to nothing
 
 
@@ -3154,10 +3163,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         int downDummy;
         if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 50},&downDummy) == 1)
         {
+            client->curTool = EditorTools_None;
+        }
+        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 50},&downDummy) == 1)
+        {
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
-        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 50},&downDummy) == 1)
+        if(GUI_BUTTON(GUIID, (ge_int2){100 ,0}, (ge_int2){50, 50},&downDummy) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3283,7 +3296,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             
             //command to location
-            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0))
+            if(BITGET(buttons, MouseButtonBits_SecondaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) 
+            && (gui->draggedOff == 0))
             {
                 cl_uint curPeepIdx = client->selectedPeepsLastIdx;
                 ge_int3 mapcoord;
@@ -3346,19 +3360,19 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             }
             
             //delete
-            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0) && client->curTool == EditorTools_Delete)
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) 
+            && (gui->draggedOff == 0) && client->curTool == EditorTools_Delete)
             {
-                printf("mouseongui: %d", GUI_MOUSE_ON_GUI(gui));
-
                 ge_int2 world2DMouse;
                 world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                 world2DMouse.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+
+
 
                 ge_int3 mapCoord;
                 int occluded;
                 GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
                 
-                printf("delete coord: ");
                 Print_GE_INT3(mapCoord);
                 if (mapCoord.z > 0) 
                 {
@@ -3373,8 +3387,35 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 }
 
             }
-    
 
+            //create
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0) && client->curTool == EditorTools_Create)
+            {
+                ge_int2 world2DMouse;
+                world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                world2DMouse.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+
+                ge_int3 mapCoord;
+                int occluded;
+                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
+                
+
+                Print_GE_INT3(mapCoord);
+                if (mapCoord.z > 0 && mapCoord.z < MAPDEPTH-1) 
+                {
+                    cl_uint* tileData = &gameState->map.levels[mapCoord.z+1].data[mapCoord.x][mapCoord.y]; 
+                    if(MapDataGetTile(*tileData) == MapTile_NONE)
+                        *tileData = MapTile_Sand;
+                    
+                    MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+                }
+
+            }
 
         }
 
@@ -3504,6 +3545,10 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
     int i = 0;
 
             cl_int perlin_z_Q16 = cl_perlin_2d_Q16(TO_Q16(x), TO_Q16(y), TO_Q16(1) >> 6, 8, 0) ;
+
+            #ifdef FLATMAP
+            perlin_z_Q16 = TO_Q16(1) >> 1;
+            #endif
 
            
             for (int z = 0; z < MAPDEPTH; z++)

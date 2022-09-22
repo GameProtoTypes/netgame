@@ -942,8 +942,6 @@
 		{
 			if(clients[i].downloadingState == 0)
 				clients[i].ticksSinceLastCommunication++;
-
-			
 		}		
 		for (int i = 0; i < clients.size(); i++)
 		{

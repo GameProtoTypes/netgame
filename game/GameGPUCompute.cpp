@@ -561,7 +561,7 @@ std::string GameGPUCompute::GameStateString(int tickIdx)
 {
     return std::format("gamestate_tick_{}_.bin",gameStateActions->tickIdx);
 }
-void GameGPUCompute::SaveGameStateDiff(std::vector<char>* data)
+void GameGPUCompute::SaveGameStateDiff(std::vector<char>* data, bool deleteFile)
 {
     ReadFullGameState();
     std::ofstream myfile;
