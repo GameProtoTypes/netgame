@@ -1032,7 +1032,7 @@ void AStarSearch_IDA_InitNode(AStarSearch_IDA* search, AStarNode_IDA* node)
         node->searchedSuccessors[i] = false;
 }
 
-ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStarNode_IDA* node, int g)
+ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStarNode_IDA* node, int* hCost)
 {
 
     int minCost = INT_MAX;
@@ -1050,7 +1050,7 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch
             continue;
         }
 
-        int cost = g + AStarNodeDistanceHuristic_IDA(search, prospectiveTileCoord, search->endLoc);
+        int cost = AStarNodeDistanceHuristic_IDA(search, prospectiveTileCoord, search->endLoc);
         if(cost < minCost)
         {
             minCost = cost;
@@ -1058,31 +1058,54 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch
         }
     }
 
+    *hCost = minCost;
     node->searchedSuccessors[minCosti] = true;
     return  node->tileLoc + INT3_TO_SHORT3( staticData->directionalOffsets[minCosti] );
 }
 
-int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
+int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search)
 {
     int pathRootsStack[ASTARSEARCH_IDA_PATHMAXSIZE];
     int rootStackIdx=0;
 
-    //loop
+    
+
+
     while(true)
     {
         AStarNode_IDA* node = &search->path[search->pathEndIdx];
-        int f = g + AStarNodeDistanceHuristic_IDA(search, node->tileLoc, search->endLoc);
+        int h = AStarNodeDistanceHuristic_IDA(search, node->tileLoc, search->endLoc);
+        int f = node->gCost + h;
+        
+        
         if(f > search->bound)
-            return f;//
+        {
+            //cost is too much - pop.
+            search->pathEndIdx--; 
+            if(search->pathEndIdx <=0) 
+                return;
+            
+
+            continue;
+        }
+            
 
         if(VECTOR3_EQUAL(node->tileLoc, search->endLoc))
+        {
+            printf("AStarSearch_IDA_Search Found Goal\n");
             return 0;//found
+        }
+            
 
         int min = INT_MAX;
 
 
         //choose successor
-        ge_short3 sLoc = AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS_PASS, search,  node,  g);
+        int hcost;
+        ge_short3 sLoc = AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS_PASS, search,  node, &hcost);
+
+        int costDiff = h - hcost;//cost of transition
+        
 
         if(!AStarSearch_IDA_Loc_In_Path(search, sLoc))
         {
@@ -1090,19 +1113,11 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search, int g)
             search->pathEndIdx++;
             AStarSearch_IDA_InitNode(search, &search->path[search->pathEndIdx]);
             search->path[search->pathEndIdx].tileLoc = (sLoc);
-            
-
-            
+            search->path[search->pathEndIdx].gCost = node->gCost + costDiff;
 
         }
 
-            //     if succ not in path then
-            //     path.push(succ)
-            //     t := search(path, g + cost(node, succ), bound)
-            //     if t = FOUND then return FOUND
-            //     if t < min then min := t
-            //     path.pop()
-            // end if
+
 
 
         //endloop
@@ -1155,7 +1170,7 @@ cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_sh
         return 0;
     }
 
-    printf("starting search\n");
+    printf("AStarSearch_IDA_Routine: starting search\n");
     search->state = AStarPathFindingProgress_Searching;
 
 
@@ -3416,10 +3431,10 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                     if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
                     {
-                        pathFindProgress = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
+                        pathFindProgress = AStarSearch_IDA_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], start, end, 1);
                         if (pathFindProgress != AStarPathFindingProgress_Failed)
                         {
-
+                            Printf("Starting Search for selected peeps..\n");
                             //the search has started....
                             
 
@@ -4306,7 +4321,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
             float2 worldCoordsNextFloat = (float2)(FIXED2FLTQ16(worldCoordNext_Q16.x),FIXED2FLTQ16(worldCoordNext_Q16.y));
 
          
-            LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, (float3)(RandomRange(pathIdx,0, 1000)/1000.0f, RandomRange(pathIdx+1,0, 1000)/1000.0f, 1.0f));
+            LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, (float3)(RandomRange(pathIdx, 0, 1000)/1000.0f, RandomRange(pathIdx+1, 0, 1000)/1000.0f, 1.0f));
 
 
             OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, node)

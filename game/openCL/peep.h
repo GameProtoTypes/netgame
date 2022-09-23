@@ -318,6 +318,8 @@ struct AStarNode_IDA
 {
 	ge_short3 tileLoc;
 	bool searchedSuccessors[26];
+	int gCost;
+
 } typedef AStarNode_IDA;
 
 #define ASTARSEARCH_IDA_PATHMAXSIZE ((MAPDIM*2))
@@ -472,7 +474,7 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch_BFS mapSearchers[2];
+	AStarSearch_IDA mapSearchers[100];
 
 	AStarPathSteps paths;
 
