@@ -9,6 +9,7 @@
 
 
 #define FLATMAP
+#define ALL_EXPLORED
 //#define NO_ZSHADING
 //#define PEEP_ALL_ALWAYS_VISIBLE
 //#define PEEP_DISABLE_TILECORRECTIONS
@@ -555,7 +556,24 @@ void AStarAddToOpen(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
 
-
+offsetPtr AStarPathStepsNextFreePathNode(AStarPathSteps* list)
+{
+    offsetPtr ptr = list->nextListIdx;
+    while (list->pathNodes[ptr].nextOPtr != OFFSET_NULL)
+    {
+        ptr++;
+        if (ptr >= ASTARPATHSTEPSSIZE)
+            ptr = 0;
+        
+        if(ptr == list->nextListIdx)
+        {
+            printf("No More Path Nodes Available.\n");
+            return OFFSET_NULL;
+        }
+    }
+    list->nextListIdx = ptr+1;
+    return ptr;
+}
 
 
 
@@ -614,6 +632,20 @@ void AStarPrintPath(AStarPathSteps* paths, offsetPtr startNodeOPtr)
         OFFSET_TO_PTR(paths->pathNodes, curNode->nextOPtr, curNode);
     }
 }
+
+cl_uchar GE_INT3_ENTRY_COUNT(ge_int3 a)
+{
+    int s = 0;
+    if (a.x != 0)
+        s++;
+    if (a.y != 0)
+        s++;
+    if (a.z != 0)
+        s++;
+
+    return s;
+}
+
 cl_uchar GE_INT3_SINGLE_ENTRY(ge_int3 a)
 {
     int s = 0;
@@ -704,34 +736,40 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
 
         if (!VECTOR3_EQUAL(curNode->nextOPtr, OFFSET_NULL_3D)) 
         {
-            //iterate until joint in path.
-            ge_int3 delta;
-            AStarNode* n2 = curNode;
-            do
-            {
-                OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
 
-                if (n2 != NULL) {
-                    delta = INT3_ADD(SHORT3_TO_INT3(n2->tileIdx), INT3_NEG(holdTileCoord));
+            OFFSET_TO_PTR_3D(search->details, curNode->nextOPtr, curNode);
+
+            if(0)
+            {
+                //iterate until joint in path.
+                ge_int3 delta;
+                AStarNode* n2 = curNode;
+                do
+                {
+                    OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
+
+                    if (n2 != NULL) {
+                        delta = INT3_ADD(SHORT3_TO_INT3(n2->tileIdx), INT3_NEG(holdTileCoord));
+                    }
+                    else
+                        delta = (ge_int3){ 0,0,0 };
+
+                } while ((n2 != NULL) && (GE_INT3_WHACHAMACOLIT1_ENTRY(delta) == 1));
+
+                if (n2 != NULL) 
+                {
+                    AStarNode* n2Prev;
+                    OFFSET_TO_PTR_3D(search->details, n2->prevOPtr, n2Prev);
+
+                    if (curNode != n2Prev)
+                        curNode = n2Prev;
+                    else
+                        curNode = n2;
                 }
                 else
-                    delta = (ge_int3){ 0,0,0 };
-
-            } while ((n2 != NULL) && (GE_INT3_WHACHAMACOLIT1_ENTRY(delta) == 1));
-
-            if (n2 != NULL) 
-            {
-                AStarNode* n2Prev;
-                OFFSET_TO_PTR_3D(search->details, n2->prevOPtr, n2Prev);
-
-                if (curNode != n2Prev)
-                    curNode = n2Prev;
-                else
-                    curNode = n2;
-            }
-            else
-            {
-                OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, curNode);
+                {
+                    OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, curNode);
+                }
             }
         }
         else
@@ -767,6 +805,14 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
         
     }
 
+    steps->pathStarts[steps->nextPathStartIdx] = startNodeOPtr;
+    steps->nextPathStartIdx++;
+
+    if(steps->nextPathStartIdx >= ASTAR_MAX_PATHS)
+    {
+        steps->nextPathStartIdx = ASTAR_MAX_PATHS-1;
+        printf("Max Paths Reached!\n");
+    }
 
     return startNodeOPtr;
 }
@@ -846,7 +892,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
             
             //if lateral dyagonol, check adjacents a for traversability as well. if all traverible - diagonoal is traversible.
-            if(GE_INT3_SINGLE_ENTRY(dir) == 0 && dir.z == 0)
+            if(GE_INT3_ENTRY_COUNT(dir) == 2 && dir.z == 0)
             {
 
 
@@ -1125,18 +1171,7 @@ cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_sh
 
 
 
-int AStarPathStepsNextFreePathNode(AStarPathSteps* list)
-{
-    int ptr = list->nextListIdx;
-    while (list->pathNodes[ptr].nextOPtr != OFFSET_NULL)
-    {
-        ptr++;
-        if (ptr >= ASTARPATHSTEPSSIZE)
-            ptr = 0;
-    }
-    list->nextListIdx = ptr+1;
-    return ptr;
-}
+
 
 //get the last path node from a node in a path
 offsetPtr AStarPathNode_LastPathNode(AStarPathSteps* steps, offsetPtr pathNodeOPtr)
@@ -2313,6 +2348,8 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
     MapTile tile = MapTile_NONE;
     mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
 
+
+    int shadowIntensity;
     for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView+1; z >= 0; z--)
     {       
         if(z >= MAPDEPTH) continue;
@@ -2395,6 +2432,9 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 
 
         mapTile2VBO[y * MAPDIM + x] = tile;
+        
+        cl_uint finalAttr = (clamp(15-0, 0, 15) << 6);
+        mapTile2AttrVBO[ y * MAPDIM + x ] = finalAttr;
     }
 
 
@@ -2446,10 +2486,14 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
         }
     }
 
-    //quick hack for the top level transitions
-    // int m = 1;
-    // if (vz == 0)
-    //     m = ;
+
+
+    if(BITGET(*data, MapTileFlags_Explored) == 0)
+    {
+        mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;//or "Haze"
+        return;
+    }
+
 
     cl_uint finalAttr=0;
 
@@ -2508,6 +2552,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
                     // else
                     // {
                         mapTile1VBO[y * MAPDIM + x ] = tileUp;
+                        
                     //}
 
 
@@ -2996,7 +3041,55 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 
 }
 
+void LINES_DrawLine(ALL_CORE_PARAMS, float2 screenPosStart, float2 screenPosEnd, float3 color)
+{
 
+    linesVBO[gameState->debugLinesIdx*5 + 0] = screenPosStart.x;
+    linesVBO[gameState->debugLinesIdx*5 + 1] = screenPosStart.y;
+
+    linesVBO[gameState->debugLinesIdx*5 + 2] = color.x;
+    linesVBO[gameState->debugLinesIdx*5 + 3] = color.y;
+    linesVBO[gameState->debugLinesIdx*5 + 4] = color.z;
+
+    
+    linesVBO[gameState->debugLinesIdx*5 + 5] = screenPosEnd.x;
+    linesVBO[gameState->debugLinesIdx*5 + 6] = screenPosEnd.y;
+
+    linesVBO[gameState->debugLinesIdx*5 + 7] = color.x;
+    linesVBO[gameState->debugLinesIdx*5 + 8] = color.y;
+    linesVBO[gameState->debugLinesIdx*5 + 9] = color.z;
+
+    gameState->debugLinesIdx+=10;
+}
+
+float4 Matrix_Float4_Times_Vec4(float mat[4][4], float4 vec)
+{
+    float4 res;
+    res.x = mat[0][0] * vec.x + mat[0][1] * vec.y + mat[0][2] * vec.z + mat[0][3] * vec.w;
+    res.y = mat[1][0] * vec.x + mat[1][1] * vec.y + mat[1][2] * vec.z + mat[1][3] * vec.w;
+    res.z = mat[2][0] * vec.x + mat[2][1] * vec.y + mat[2][2] * vec.z + mat[2][3] * vec.w;
+    res.w = mat[3][0] * vec.x + mat[3][1] * vec.y + mat[3][2] * vec.z + mat[3][3] * vec.w;
+    return res;
+}
+
+void LINES_DrawLineWorld(ALL_CORE_PARAMS, float2 worldPosStart, float2 worldPosEnd, float3 color)
+{
+    float4 worldPosStart4 = (float4)(worldPosStart.x, worldPosStart.y, 0.0f, 1.0f);
+    float4 screenPosStart4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix, worldPosStart4);
+    float2 screenPosStart2 = (float2)(screenPosStart4.x, screenPosStart4.y);
+
+    float4 worldPosEnd4 = (float4)(worldPosEnd.x, worldPosEnd.y, 0.0f, 1.0f);
+    float4 screenPosEnd4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix, worldPosEnd4);
+    float2 screenPosEnd2 = (float2)(screenPosEnd4.x, screenPosEnd4.y);
+
+    // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[0][0], gameStateActions->viewMatrix[0][1], gameStateActions->viewMatrix[0][2], gameStateActions->viewMatrix[0][3]);
+    // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[1][0], gameStateActions->viewMatrix[1][1], gameStateActions->viewMatrix[1][2], gameStateActions->viewMatrix[1][3]);
+    // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[2][0], gameStateActions->viewMatrix[2][1], gameStateActions->viewMatrix[2][2], gameStateActions->viewMatrix[2][3]);
+    // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[3][0], gameStateActions->viewMatrix[3][1], gameStateActions->viewMatrix[3][2], gameStateActions->viewMatrix[3][3]);
+    // printf("---------------------\n");
+   // gameStateActions->
+    LINES_DrawLine(ALL_CORE_PARAMS_PASS,  screenPosStart2, screenPosEnd2,  color);
+}
 
 
 void GUI_Begin_ScrollArea(GUIID_DEF, ge_int2 scroll_offset)
@@ -3405,8 +3498,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 {
                     cl_uint* tileData = &gameState->map.levels[mapCoord.z+1].data[mapCoord.x][mapCoord.y]; 
                     if(MapDataGetTile(*tileData) == MapTile_NONE)
+                    {
                         *tileData = MapTile_Sand;
+                        BITSET(*tileData, MapTileFlags_Explored);
+                    }
                     
+
+
                     MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
                     MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
                     MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
@@ -3534,7 +3632,9 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     if(MapDataLowCornerCount(*tileData) == 4)
         MapDataSetTile(tileData, MapTile_NONE);
 
-    
+    #ifdef ALL_EXPLORED
+        BITSET(*tileData, MapTileFlags_Explored);
+    #endif
 
 }
 
@@ -3611,7 +3711,9 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
 
                 cl_uint* data = &gameState->map.levels[z].data[x][y];
                 *data = tileType;
-
+                #ifdef ALL_EXPLORED
+                BITSET(*data, MapTileFlags_Explored);
+                #endif
 
                 BITBANK_SET_SUBNUMBER_UINT(data, MapTileFlags_RotBit1, 2, RandomRange(x*y,0,4));
 
@@ -3723,6 +3825,35 @@ void InitRayGUI(ALL_CORE_PARAMS)
 
 
 
+void MapExplorerSpawn(ALL_CORE_PARAMS, MapExplorerAgent* agent)
+{
+    ge_int3 randomTileLoc;
+    randomTileLoc.x = RandomRange((int)agent, 0, MAPDIM);
+    randomTileLoc.y = RandomRange((int)agent, 0, MAPDIM);
+    randomTileLoc.z = RandomRange((int)agent, 0, MAPDEPTH);
+
+
+    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, randomTileLoc);
+    if(MapDataGetTile(*data) == MapTile_NONE && BITGET(*data, MapTileFlags_Explored))
+    {
+        
+    }
+}
+
+void AStarPathStepsInit(ALL_CORE_PARAMS, AStarPathSteps* steps)
+{
+    for (int i = 0; i < ASTARPATHSTEPSSIZE; i++)
+    {
+        AStarInitPathNode(&gameState->paths.pathNodes[i]);
+    }
+
+    //paths initialize
+    gameState->paths.nextListIdx = 0;
+    for(int i = 0; i < ASTAR_MAX_PATHS; i++)
+        gameState->paths.pathStarts[i] = OFFSET_NULL;
+
+}
+
 
 __kernel void game_init_single(ALL_CORE_PARAMS)
 {
@@ -3763,10 +3894,6 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Sectors Initialized.\n");
 
 
-
-
-
- 
 }
 
 __kernel void game_init_multi(ALL_CORE_PARAMS)
@@ -3786,11 +3913,7 @@ __kernel void game_init_multi2(ALL_CORE_PARAMS)
 }
 __kernel void game_init_single2(ALL_CORE_PARAMS)
 {
-    for (int i = 0; i < ASTARPATHSTEPSSIZE; i++)
-    {
-        AStarInitPathNode(&gameState->paths.pathNodes[i]);
-    }
-    gameState->paths.nextListIdx = 0;
+    AStarPathStepsInit(ALL_CORE_PARAMS_PASS, &gameState->paths);
 
 
 
@@ -3919,6 +4042,17 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
 
 }
+
+
+
+void UpdateMapExplorer(ALL_CORE_PARAMS,  MapExplorerAgent* agent)
+{
+
+
+
+}
+
+
 void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
 {
     float3 drawColor;
@@ -4029,7 +4163,12 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
         Peep* p = &gameState->peeps[globalid]; 
         PeepPreUpdate2(p);
     }
+
+    //reset some things
+    gameState->debugLinesIdx = 0;
 }
+
+
 __kernel void game_update(ALL_CORE_PARAMS)
 {
     // Get the index of the current element to be processed
@@ -4069,10 +4208,16 @@ __kernel void game_update(ALL_CORE_PARAMS)
         }
     }
 
+    //update map explorers
+    MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
+    UpdateMapExplorer(ALL_CORE_PARAMS_PASS, explorer);
+
+    
 
 
 
 
+    //update searches
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
 
     if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished)
@@ -4126,17 +4271,54 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     }
     else if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished )
     {
-    
-        search->state = AStarPathFindingProgress_Ready;
-        for(int i = 0; i < ASTARHEAPSIZE; i++)
-        {
-            search->openHeap_OPtrs[i] = OFFSET_NULL_3D;
-        }
+
     }
 
 
 
 
+
+    //draw debug lines on paths
+    AStarPathSteps* paths = &gameState->paths;
+    
+    //get a path
+    int pathIdx = 0;
+
+    offsetPtr pathStartOPtr = paths->pathStarts[pathIdx];
+    while(pathStartOPtr != OFFSET_NULL)
+    {
+        AStarPathNode* node;
+        OFFSET_TO_PTR(paths->pathNodes, pathStartOPtr, node)
+
+        while(node->nextOPtr != OFFSET_NULL)
+        {
+            AStarPathNode* nodeNext;
+            OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, nodeNext);
+
+            ge_int3 worldCoord_Q16;
+            MapToWorld(( node->mapCoord_Q16 ), &worldCoord_Q16);
+
+            ge_int3 worldCoordNext_Q16;
+            MapToWorld(( nodeNext->mapCoord_Q16 ), &worldCoordNext_Q16);
+
+            
+            float2 worldCoordsFloat = (float2)(FIXED2FLTQ16(worldCoord_Q16.x),FIXED2FLTQ16(worldCoord_Q16.y));
+            float2 worldCoordsNextFloat = (float2)(FIXED2FLTQ16(worldCoordNext_Q16.x),FIXED2FLTQ16(worldCoordNext_Q16.y));
+
+         
+            LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, (float3)(RandomRange(pathIdx,0, 1000)/1000.0f, RandomRange(pathIdx+1,0, 1000)/1000.0f, 1.0f));
+
+
+            OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, node)
+        }
+
+        pathIdx++;
+        if(pathIdx >= ASTAR_MAX_PATHS)
+            pathIdx = 0;
+
+        pathStartOPtr = paths->pathStarts[pathIdx];
+
+    }
 
 }
 

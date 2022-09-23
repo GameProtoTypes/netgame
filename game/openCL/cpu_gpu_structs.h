@@ -85,6 +85,7 @@ struct GameStateActions {
 	cl_int mouseLocWorldy_Q16;
 	cl_int mouseState;
 
+	float viewMatrix[4][4];
 
 	cl_int dummyVars[32];
 

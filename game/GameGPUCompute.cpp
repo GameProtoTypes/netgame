@@ -293,7 +293,8 @@ void GameGPUCompute::RunInitCompute2()
     CL_HOST_ERROR_CHECK(ret)
         graphics_guiVBO_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->guiRectInstanceVBO, &ret);
     CL_HOST_ERROR_CHECK(ret)
-
+        graphics_linesVBO_obj = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, graphics->linesVBO, &ret);
+    CL_HOST_ERROR_CHECK(ret)
 
     graphicsObjects.push_back(graphics_peeps_mem_obj);
     graphicsObjects.push_back(graphics_particles_mem_obj);
@@ -304,6 +305,7 @@ void GameGPUCompute::RunInitCompute2()
     graphicsObjects.push_back(graphics_mapTile2AttrVBO_mem_obj);
     graphicsObjects.push_back(graphics_mapTile2OtherAttrVBO_mem_obj);
     graphicsObjects.push_back(graphics_guiVBO_obj);
+    graphicsObjects.push_back(graphics_linesVBO_obj);
 
 
     cl_ulong localMemSize;
@@ -370,6 +372,7 @@ void GameGPUCompute::RunInitCompute2()
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2OtherAttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_guiVBO_obj); CL_HOST_ERROR_CHECK(ret)
+            ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_linesVBO_obj); CL_HOST_ERROR_CHECK(ret)
         }
         
 

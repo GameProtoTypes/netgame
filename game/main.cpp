@@ -459,9 +459,9 @@ int32_t main(int32_t argc, char* args[])
         gameStateActions->mouseLocWorldx_Q16 = int(worldMouseEnd.x*(1<<16));
         gameStateActions->mouseLocWorldy_Q16 = int(worldMouseEnd.y*(1<<16));
         gameStateActions->mouseState = buttonBits;
-
-
-
+        for(int x = 0; x < 4; x++)
+            for(int y = 0; y < 4; y++)
+                gameStateActions->viewMatrix[x][y] = view[y][x];
 
 
         if (gameStateActions->pauseState == 0)
@@ -714,6 +714,11 @@ int32_t main(int32_t argc, char* args[])
         glDrawArrays(GL_TRIANGLES, 0, gameCompute.maxGuiRects*6);
         glBindVertexArray(0);
 
+
+        //draw lines 
+        glBindVertexArray(gameGraphics.linesVAO);
+        glDrawArrays(GL_LINES, 0, gameCompute.maxLines);
+        glBindVertexArray(0);
 
 
         if(gameStateActions->pauseState==0)

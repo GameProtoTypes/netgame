@@ -431,6 +431,26 @@ void GameGraphics::Init()
 
 
 
+    //debug lines
+
+    glGenVertexArrays(1, &linesVAO);
+    glBindVertexArray(linesVAO);
+ 
+
+    glGenBuffers(1, &linesVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
+    const int strideLines = sizeof(glm::vec2)+sizeof(glm::vec3);
+    glBufferData(GL_ARRAY_BUFFER, strideLines*gameCompute->maxLines, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, strideLines, (void*)0);//position
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideLines, (void*)sizeof(glm::vec2));//color
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    GL_HOST_ERROR_CHECK()
+
 
 
 

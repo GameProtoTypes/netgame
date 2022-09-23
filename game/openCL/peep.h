@@ -195,6 +195,11 @@ struct  ConvexHull{
 
 
 
+struct MapExplorerAgent
+{
+	ge_short3 tileLoc;
+} typedef MapExplorerAgent;
+
 
 enum MapTileFlags {
 	MapTileFlags_claimed = 10,
@@ -207,6 +212,8 @@ enum MapTileFlags {
 
 	MapTileFlags_RotBit1,
 	MapTileFlags_RotBit2,
+
+	MapTileFlags_Explored,
 
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;
@@ -334,10 +341,14 @@ struct AStarSearch_IDA {
 
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
+#define ASTAR_MAX_PATHS (1024)
 struct AStarPathSteps
 {
 	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
 	int nextListIdx;
+
+	offsetPtr pathStarts[ASTAR_MAX_PATHS];
+	int nextPathStartIdx;
 
 }typedef AStarPathSteps;
 
@@ -455,6 +466,8 @@ struct GameState {
 	Peep peeps[MAX_PEEPS];
 	
 	Particle particles[MAX_PARTICLES];
+
+	MapExplorerAgent explorerAgents[GAME_UPDATE_WORKITEMS];
 	
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
@@ -465,6 +478,8 @@ struct GameState {
 
 	SyncedGui fakeGui;
 	GuiStyle guiStyle;
+
+	cl_uint debugLinesIdx;
 
 } typedef GameState;
 

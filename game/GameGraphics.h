@@ -105,6 +105,8 @@ public:
 
 	uint32_t guiRectVAO, guiRectInstanceVBO;
 
+	uint32_t linesVAO, linesVBO;
+
 
 	uint32_t mapTile1VAO, mapTile1VBO, mapTile1AttrVBO, mapTile1OtherAttrVBO;	
 	uint32_t mapTile2VAO, mapTile2VBO, mapTile2AttrVBO, mapTile2OtherAttrVBO;

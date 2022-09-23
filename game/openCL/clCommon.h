@@ -29,7 +29,8 @@ __global cl_uint* mapTile1OtherAttrVBO, \
 __global cl_uchar* mapTile2VBO, \
 __global cl_uint* mapTile2AttrVBO, \
 __global cl_uint* mapTile2OtherAttrVBO, \
-__global float* guiVBO
+__global float* guiVBO, \
+__global float* linesVBO
 
 #define ALL_CORE_PARAMS_PASS  staticData, \
 gameState, \
@@ -42,7 +43,8 @@ mapTile1OtherAttrVBO, \
 mapTile2VBO, \
 mapTile2AttrVBO, \
 mapTile2OtherAttrVBO, \
-guiVBO
+guiVBO, \
+linesVBO
 
 
 
