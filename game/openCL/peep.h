@@ -336,7 +336,6 @@ struct AStarSearch_IDA {
 
 	AStarPathFindingProgress state;
 	offsetPtr pathOPtr;
-
 } typedef AStarSearch_IDA;
 
 
@@ -474,7 +473,7 @@ struct GameState {
 	Map map;
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
-	AStarSearch_IDA mapSearchers[100];
+	AStarSearch_BFS mapSearchers[1];
 
 	AStarPathSteps paths;
 
