@@ -215,6 +215,8 @@ enum MapTileFlags {
 
 	MapTileFlags_Explored,
 
+	
+
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;
 

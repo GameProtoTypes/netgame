@@ -927,7 +927,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
         //printf("current GCost: "); PrintQ16(current->g_Q16);
 
-        //AStarAddToClosed(search, current);//visited
+        AStarAddToClosed(search, current);//visited
         if (VECTOR3_EQUAL(SHORT3_TO_INT3( current->tileIdx ), search->endNodeOPtr) )
         {
             printf("AStarSearch_BFS_Continue AStarPathFindingProgress_Finished\n");
@@ -1016,7 +1016,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
             AStarNode* prospectiveNode;
             OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
 
-            if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0))
+            if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0) || (AStarNodeInClosed(search, prospectiveNode)))
             {
                 continue;
             }
@@ -1026,7 +1026,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
            // PrintQ16(totalMoveCost); PrintQ16(current->g_Q16); PrintQ16(prospectiveNode->g_Q16);
-            if ((totalMoveCost < prospectiveNode->g_Q16) || prospectiveNode->g_Q16 == 0)
+            if (((totalMoveCost < prospectiveNode->g_Q16) || AStarNodeInOpen(search, prospectiveNode) == 0) )
             {
 
                 prospectiveNode->g_Q16 = totalMoveCost;
@@ -3509,6 +3509,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
                     {
                         Peep* p = &gameState->peeps[pi];
+                        p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
+                        p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
+
 
                         if (p->stateBasic.faction == actionTracking->clientId)
                         if ((p->physics.base.pos_Q16.x > client->mouseWorldBegin_Q16.x)
@@ -3525,11 +3528,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                     {
                                         gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
                                         p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
-                                        p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
-                                    }
-                                    else
-                                    {
-                                        p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
                                         p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
                                     }
                                     client->selectedPeepsLastIdx = pi;
