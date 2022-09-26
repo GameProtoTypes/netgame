@@ -335,6 +335,9 @@ void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
     search->startNodeOPtr = OFFSET_NULL_3D;
     search->endNodeOPtr = OFFSET_NULL_3D;
     search->openHeapSize = 0;
+    search->pathOPtr = OFFSET_NULL;
+
+    search->state = AStarPathFindingProgress_Ready;
 }
 void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, cl_ulong idx, int x, int y, int z)
 {
@@ -353,6 +356,7 @@ void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, cl_ulong idx,
     search->startNodeOPtr = OFFSET_NULL_3D;
     search->endNodeOPtr = OFFSET_NULL_3D;
     search->openHeapSize = 0;
+    search->pathOPtr = OFFSET_NULL;
 
     search->state = AStarPathFindingProgress_Ready;
 }
@@ -562,13 +566,13 @@ void AStarAddToOpen(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
 offsetPtr AStarPathStepsNextFreePathNode(AStarPathSteps* list)
 {
     offsetPtr ptr = list->nextListIdx;
-    while (list->pathNodes[ptr].nextOPtr != OFFSET_NULL)
+    while ((list->pathNodes[ptr].nextOPtr != OFFSET_NULL))
     {
         ptr++;
         if (ptr >= ASTARPATHSTEPSSIZE)
             ptr = 0;
         
-        if(ptr == list->nextListIdx)
+        if(ptr == list->nextListIdx)//wrap around
         {
             printf("No More Path Nodes Available.\n");
             return OFFSET_NULL;
@@ -705,6 +709,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
     offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
     AStarNode* curNode;
     OFFSET_TO_PTR_3D(search->details, curNodeOPtr, curNode);
+    CL_CHECK_NULL(curNode);
 
     offsetPtr startNodeOPtr = OFFSET_NULL;
     AStarPathNode* pNP = NULL;
@@ -909,10 +914,10 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
     OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr,targetNode);
 
 
-    printf("AStarSearch_BFS_Continue..\n");
+    //printf("AStarSearch_BFS_Continue..openHeapSize: %d\n", search->openHeapSize);
     while (search->openHeapSize > 0 && iterations > 0)
     {
-        printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
+        //printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
         //find node in open with lowest f cost
         offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
 
@@ -920,15 +925,18 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
         AStarNode* current;
         OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
 
-       // AStarAddToClosed(search, current);//visited
+        //printf("current GCost: "); PrintQ16(current->g_Q16);
 
+        //AStarAddToClosed(search, current);//visited
         if (VECTOR3_EQUAL(SHORT3_TO_INT3( current->tileIdx ), search->endNodeOPtr) )
         {
-            printf("AStarSearch_BFS_Continue Goal Found\n");
+            printf("AStarSearch_BFS_Continue AStarPathFindingProgress_Finished\n");
             search->state = AStarPathFindingProgress_Finished;
             
             AStarNode* endNode;
             OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, endNode);
+            CL_CHECK_NULL(endNode);
+
             endNode->nextOPtr = OFFSET_NULL_3D;
             startNode->prevOPtr = OFFSET_NULL_3D;
 
@@ -976,34 +984,33 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
             
             //if lateral dyagonol, check adjacents a for traversability as well. if all traverible - diagonoal is traversible.
-            if(GE_INT3_ENTRY_COUNT(dir) == 2 && dir.z == 0)
-            {
-                ge_int3 dirNoX = dir;
-                dirNoX.x=0;
-                ge_int3 dirNoY = dir;
-                dirNoX.y=0;
+            // if(GE_INT3_ENTRY_COUNT(dir) == 2 && dir.z == 0)
+            // {
+            //     ge_int3 dirNoX = dir;
+            //     dirNoX.x=0;
+            //     ge_int3 dirNoY = dir;
+            //     dirNoX.y=0;
+
+            //     ge_int3 XCheckCoord;
+            //     ge_int3 YCheckCoord;
 
 
-                ge_int3 XCheckCoord;
-                ge_int3 YCheckCoord;
+            //     offsetPtr3 XCheckNodeOPtr = (offsetPtr3){XCheckCoord.x,XCheckCoord.y,XCheckCoord.z};
+            //     AStarNode* XCheckNode;
+            //     OFFSET_TO_PTR_3D(search->details, XCheckNodeOPtr, XCheckNode);
+            //     if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  XCheckNode, current) == 0))
+            //     {
+            //         continue;
+            //     }
 
-
-                offsetPtr3 XCheckNodeOPtr = (offsetPtr3){XCheckCoord.x,XCheckCoord.y,XCheckCoord.z};
-                AStarNode* XCheckNode;
-                OFFSET_TO_PTR_3D(search->details, XCheckNodeOPtr, XCheckNode);
-                if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  XCheckNode, current) == 0))
-                {
-                    continue;
-                }
-
-                offsetPtr3 YCheckNodeOPtr = (offsetPtr3){YCheckCoord.x,YCheckCoord.y,YCheckCoord.z};
-                AStarNode* YCheckNode;
-                OFFSET_TO_PTR_3D(search->details, YCheckNodeOPtr, YCheckNode);
-                if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  YCheckNode, current) == 0))
-                {
-                    continue;
-                }
-            }
+            //     offsetPtr3 YCheckNodeOPtr = (offsetPtr3){YCheckCoord.x,YCheckCoord.y,YCheckCoord.z};
+            //     AStarNode* YCheckNode;
+            //     OFFSET_TO_PTR_3D(search->details, YCheckNodeOPtr, YCheckNode);
+            //     if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  YCheckNode, current) == 0))
+            //     {
+            //         continue;
+            //     }
+            // }
 
             offsetPtr3 prospectiveNodeOPtr = (offsetPtr3){prospectiveTileCoord.x,prospectiveTileCoord.y,prospectiveTileCoord.z};
             AStarNode* prospectiveNode;
@@ -1018,7 +1025,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
 
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
-
+           // PrintQ16(totalMoveCost); PrintQ16(current->g_Q16); PrintQ16(prospectiveNode->g_Q16);
             if ((totalMoveCost < prospectiveNode->g_Q16) || prospectiveNode->g_Q16 == 0)
             {
 
@@ -1027,7 +1034,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
                 
                 prospectiveNode->prevOPtr = currentOPtr;
 
-               // printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
+                //printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
                 AStarAddToOpen(search, prospectiveNodeOPtr);
             }
         }
@@ -1038,7 +1045,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
     
     if(search->openHeapSize > 0)
     {
-        printf("AStarPathFindingProgress_Searching");
+        printf("AStarPathFindingProgress_Searching, openHeap Size: %d\n", search->openHeapSize);
         search->state = AStarPathFindingProgress_Searching;
         return search->state;
 
@@ -2077,8 +2084,6 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
                     peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
                     peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
                     peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
-
-
                 }
             }
         }
@@ -2110,44 +2115,43 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 {
 
 
+
+    //if search is done - start the peep on path
     if(peep->stateBasic.aStarSearchPtr != OFFSET_NULL)
     {
-        AStarSearch_BFS* search;
-        OFFSET_TO_PTR(gameState->mapSearchers, peep->stateBasic.aStarSearchPtr, search);
-
-
+        AStarSearch_BFS* search = &gameState->mapSearchers[0];
         if(search->state == AStarPathFindingProgress_Finished)
         {
-           // AStarPrintPath(&gameState->paths, pathOPtr);
-            peep->stateBasic.aStarSearchPtr = OFFSET_NULL;
-
-            //start the drive
             peep->physics.drive.nextPathNodeOPtr = search->pathOPtr;
-
-            AStarPathNode* nxtPathNode;
-            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.nextPathNodeOPtr, nxtPathNode);
-
-
-            ge_int3 worldloc;
-            MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
-            peep->physics.drive.target_x_Q16 = worldloc.x;
-            peep->physics.drive.target_y_Q16 = worldloc.y;
-            peep->physics.drive.target_z_Q16 = worldloc.z;
-            peep->physics.drive.drivingToTarget = 1;
-
-            //restrict comms to new channel
-            peep->comms.orders_channel = RandomRange(worldloc.x, 0, 10000);
-            peep->comms.message_TargetReached = 0;
-            peep->comms.message_TargetReached_pending = 0;
-
-
+            peep->stateBasic.aStarSearchPtr = OFFSET_NULL;
         }
-        else if(search->state == AStarPathFindingProgress_Failed)
-        {
+        
+    }
+
+
+    if(peep->physics.drive.nextPathNodeOPtr != OFFSET_NULL)
+    {
+
+
+        //drive to the next path node
+        AStarPathNode* nxtPathNode;
+        OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.nextPathNodeOPtr, nxtPathNode);
+
+
+        ge_int3 worldloc;
+        MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
+        peep->physics.drive.target_x_Q16 = worldloc.x;
+        peep->physics.drive.target_y_Q16 = worldloc.y;
+        peep->physics.drive.target_z_Q16 = worldloc.z;
+        peep->physics.drive.drivingToTarget = 1;
+
+        //restrict comms to new channel
+        peep->comms.orders_channel = RandomRange(worldloc.x, 0, 10000);
+        peep->comms.message_TargetReached = 0;
+        peep->comms.message_TargetReached_pending = 0;
 
 
 
-        }
 
 
 
@@ -2254,7 +2258,7 @@ void PeepPreUpdate1(ALL_CORE_PARAMS, Peep* peep)
 
 }
 
-void PeepPreUpdate2(Peep* peep)
+void PeepPreUpdate2(ALL_CORE_PARAMS, Peep* peep)
 {
     peep->physics.base.v_Q16.z += peep->physics.base.vel_add_Q16.z;
     peep->physics.base.v_Q16.y += peep->physics.base.vel_add_Q16.y;
@@ -2294,6 +2298,8 @@ void PeepPreUpdate2(Peep* peep)
         peep->comms.message_TargetReached = peep->comms.message_TargetReached_pending;
         peep->comms.message_TargetReached--;//message fade
     }
+
+
 
 
 }
@@ -3188,6 +3194,7 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 void LINES_DrawLine(ALL_CORE_PARAMS, float2 screenPosStart, float2 screenPosEnd, float3 color)
 {
 
+
     linesVBO[gameState->debugLinesIdx*5 + 0] = screenPosStart.x;
     linesVBO[gameState->debugLinesIdx*5 + 1] = screenPosStart.y;
 
@@ -3204,6 +3211,8 @@ void LINES_DrawLine(ALL_CORE_PARAMS, float2 screenPosStart, float2 screenPosEnd,
     linesVBO[gameState->debugLinesIdx*5 + 9] = color.z;
 
     gameState->debugLinesIdx+=10;
+    if(gameState->debugLinesIdx >= MAX_LINES)
+        printf("out of debug line space!\n");
 }
 void LINES_ClearAll(ALL_CORE_PARAMS)
 {
@@ -3356,7 +3365,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
     }
-
 
 
     //apply turns
@@ -3565,6 +3573,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     Print_GE_INT3(start);
                     Print_GE_INT3(end);
 
+                    //AStarSearch_BFS_Instantiate(&gameState->mapSearchers[0]);
+
+
                     if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
                     {
                         printf("Starting Search for selected peeps..\n");
@@ -3579,7 +3590,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         }
                     }
                     else{
-                        printf("path finder busy..\n");
+                        printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
                     }
                 }
 
@@ -4134,6 +4145,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
+        gameState->peeps[p].physics.drive.nextPathNodeOPtr = OFFSET_NULL;
 
 
         gameState->peeps[p].stateBasic.faction = RandomRange(p,0,4);
@@ -4293,16 +4305,21 @@ void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint ptr)
 
 __kernel void game_updatepre1(ALL_CORE_PARAMS)
 {
-        // Get the index of the current element to be processed
+    // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
     if (globalid < MAX_PEEPS) {
         Peep* p = &gameState->peeps[globalid]; 
-        PeepPreUpdate2(p);
+        PeepPreUpdate2(ALL_CORE_PARAMS_PASS, p);
     }
 
     //reset some things
     LINES_ClearAll(ALL_CORE_PARAMS_PASS);
+
+
+    
+
+    
 }
 
 
@@ -4329,13 +4346,11 @@ __kernel void game_update(ALL_CORE_PARAMS)
     if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
         cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
-        if (chunkSize == 0)
-            chunkSize = 1;
 
-
-        for (cl_ulong i = 0; i < chunkSize; i++)
+        for (cl_ulong i = 0; i < chunkSize+1; i++)
         {
-            cl_ulong xyIdx = i + globalid * chunkSize;
+            cl_ulong xyIdx = globalid+GAME_UPDATE_WORKITEMS*i;
+
             
             if (xyIdx < (MAPDIM * MAPDIM))
             {
@@ -4349,29 +4364,38 @@ __kernel void game_update(ALL_CORE_PARAMS)
     MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
     UpdateMapExplorer(ALL_CORE_PARAMS_PASS, explorer);
 
+
     
 
+}
+__kernel void game_update2(ALL_CORE_PARAMS)
+{
+    // Get the index of the current element to be processed
+    int globalid = get_global_id(0);
+    int localid = get_local_id(0);
 
-    //update searches
+
+
+
+    //reset searches
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
-
     if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished)
     {
-        cl_ulong chunkSize = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
-            if (chunkSize == 0)
-                chunkSize = 1;
-
-        for (cl_ulong i = 0; i < chunkSize; i++)
+        cl_ulong chunks = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
+    
+        for (cl_ulong i = 0; i < chunks+1; i++)
         {
-            cl_ulong xyzIdx = i + globalid * chunkSize;
+            cl_long xyzIdx = globalid+GAME_UPDATE_WORKITEMS*i;
             
             if (xyzIdx < (MAPDIM * MAPDIM* MAPDEPTH))
             {
 
-                cl_ulong z = xyzIdx / (MAPDIM * MAPDIM);
-                xyzIdx -= (z * MAPDIM * MAPDIM);
-                cl_ulong y = xyzIdx / MAPDIM;
-                cl_ulong x = xyzIdx % MAPDIM;
+                cl_long z = xyzIdx % MAPDEPTH;
+                cl_long y = (xyzIdx / MAPDEPTH) % MAPDIM;
+                cl_long x = xyzIdx / (MAPDIM * MAPDEPTH); 
+
+
+
 
                 if(x > MAPDIM)
                     printf("X>MAPDIM\n");
@@ -4381,15 +4405,21 @@ __kernel void game_update(ALL_CORE_PARAMS)
                     printf("Z>MAPDEPTH\n");
 
               
-                AStarSearch_BFS_InstantiateParrallel(search,xyzIdx, x,y,z);
+                AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
             }
         }
     }
 
-
+    // if(globalid == 0)
+    // {
+    //     AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    //     if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished)
+    //     {
+    //         AStarSearch_BFS_Instantiate(search);
+    //     }
+    // }
 
 }
-
 
 
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
@@ -4399,6 +4429,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     
 
     //update AStarPath Searchers
+    
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if(search->state == AStarPathFindingProgress_Searching)
     {
@@ -4423,10 +4454,11 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
         AStarPathNode* node;
         OFFSET_TO_PTR(paths->pathNodes, pathStartOPtr, node)
 
-        while(node->nextOPtr != OFFSET_NULL)
+        while(node != NULL && node->nextOPtr != OFFSET_NULL)
         {
             AStarPathNode* nodeNext;
             OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, nodeNext);
+            CL_CHECK_NULL(nodeNext);
 
             ge_int3 worldCoord_Q16;
             MapToWorld(( node->mapCoord_Q16 ), &worldCoord_Q16);
@@ -4450,8 +4482,11 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
             pathIdx = 0;
 
         pathStartOPtr = paths->pathStarts[pathIdx];
-
     }
+
+
+
+
 
 }
 
@@ -4466,15 +4501,15 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
    
 
     cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    if (chunkSize == 0)
-        chunkSize = 1;
+
     
-    for (cl_ulong pi = 0; pi < chunkSize; pi++)
+    for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
     {
-        if (pi + globalid * chunkSize < MAX_PEEPS)
+        cl_ulong idx = globalid+WARPSIZE*pi;
+        if (idx < MAX_PEEPS)
         {
             Peep* p;
-            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, pi + globalid * chunkSize, p)
+            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, idx, p)
             CL_CHECK_NULL(p)
 
            
@@ -4519,15 +4554,15 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
 
     cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-    if (chunkSize == 0)
-        chunkSize = 1;
 
-    for (cl_ulong pi = 0; pi < chunkSize; pi++)
+
+    for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
     {
-        if (pi + globalid * chunkSize < MAX_PEEPS)
+        cl_long idx = globalid + pi * WARPSIZE;
+        if (idx < MAX_PEEPS)
         {
 
-            Peep* p = &gameState->peeps[pi + globalid * chunkSize];
+            Peep* p = &gameState->peeps[idx];
 
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingPtr, mapSector);

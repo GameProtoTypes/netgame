@@ -198,7 +198,7 @@ int32_t main(int32_t argc, char* args[])
     gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
     gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);
     gameCompute.AddCompileDefinition("MAX_GUI_RECTS", gameCompute.maxGuiRects);
-
+    gameCompute.AddCompileDefinition("MAX_LINES", gameCompute.maxLines);
     gameCompute.RunInitCompute1();
     
     std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>(gameCompute.structSizes.gameStateStructureSize);

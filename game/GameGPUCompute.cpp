@@ -335,6 +335,7 @@ void GameGPUCompute::RunInitCompute2()
         preupdate_kernel_2 = clCreateKernel(gameProgram, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
         game_updatepre1_kernel = clCreateKernel(gameProgram, "game_updatepre1", &ret); CL_HOST_ERROR_CHECK(ret)
         update_kernel = clCreateKernel(gameProgram, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
+        update2_kernel = clCreateKernel(gameProgram, "game_update2", &ret); CL_HOST_ERROR_CHECK(ret)
         action_kernel = clCreateKernel(gameProgram, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernel = clCreateKernel(gameProgram, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernal_multi = clCreateKernel(gameProgram, "game_init_multi", &ret); CL_HOST_ERROR_CHECK(ret)
@@ -349,6 +350,7 @@ void GameGPUCompute::RunInitCompute2()
         kernels.push_back(preupdate_kernel_2);
         kernels.push_back(game_updatepre1_kernel);
         kernels.push_back(update_kernel);
+        kernels.push_back(update2_kernel);
         kernels.push_back(action_kernel);
         kernels.push_back(init_kernel);
         kernels.push_back(init_kernal_multi);
@@ -472,8 +474,18 @@ void GameGPUCompute::Stage1()
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
+
+    ret = clEnqueueNDRangeKernel(command_queue, update2_kernel, 1, NULL,
+        WorkItems, NULL, 1, &updateEvent, &update2Event);
+    CL_HOST_ERROR_CHECK(ret)
+    
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+
+
+
     ret = clEnqueueNDRangeKernel(command_queue, post_update_single_kernel, 1, NULL,
-        SingleKernelWorkItems, NULL, 1, &updateEvent, &postupdateEvent);
+        SingleKernelWorkItems, NULL, 1, &update2Event, &postupdateEvent);
     CL_HOST_ERROR_CHECK(ret)
 
 

@@ -1,4 +1,11 @@
 {
     "C_Cpp.errorSquiggles": "Disabled",
-    "cmake.configureOnOpen": true
+    "cmake.configureOnOpen": true,
+    "search.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/Debug": true,
+        "**/.DS_Store": true
+      }
 }

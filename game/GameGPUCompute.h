@@ -95,6 +95,7 @@ public:
 	cl_kernel preupdate_kernel_2;
 	cl_kernel game_updatepre1_kernel;
 	cl_kernel update_kernel;
+	cl_kernel update2_kernel;
 	cl_kernel post_update_single_kernel;
 	cl_kernel action_kernel;
 	cl_kernel init_kernel;
@@ -114,7 +115,8 @@ public:
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updatepre1Event;    
-	cl_event updateEvent;    
+	cl_event updateEvent;  
+	cl_event update2Event;      
 	cl_event postupdateEvent;
 	cl_event actionEvent;
 	cl_event readEvent;
@@ -162,7 +164,7 @@ public:
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;
-	int maxLines = 1024*4;
+	int maxLines = 1024*64;
 
 	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;

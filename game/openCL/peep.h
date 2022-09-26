@@ -290,7 +290,9 @@ enum AStarPathFindingProgress
 	AStarPathFindingProgress_Ready,
 	AStarPathFindingProgress_Searching,
 	AStarPathFindingProgress_Finished,
-	AStarPathFindingProgress_Failed 
+	AStarPathFindingProgress_Failed,
+
+	AStarPathFindingProgress_Initializing
 
 
 } typedef AStarPathFindingProgress;
@@ -481,6 +483,8 @@ struct GameState {
 	GuiStyle guiStyle;
 
 	cl_uint debugLinesIdx;
+
+
 
 } typedef GameState;
 
