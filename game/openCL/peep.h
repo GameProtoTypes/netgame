@@ -215,7 +215,7 @@ enum MapTileFlags {
 
 	MapTileFlags_Explored,
 
-	
+
 
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;
@@ -292,9 +292,7 @@ enum AStarPathFindingProgress
 	AStarPathFindingProgress_Ready,
 	AStarPathFindingProgress_Searching,
 	AStarPathFindingProgress_Finished,
-	AStarPathFindingProgress_Failed,
-
-	AStarPathFindingProgress_Initializing
+	AStarPathFindingProgress_Failed
 
 
 } typedef AStarPathFindingProgress;
