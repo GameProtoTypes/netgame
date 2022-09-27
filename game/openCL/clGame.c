@@ -2301,13 +2301,14 @@ void PeepPreUpdate2(ALL_CORE_PARAMS, Peep* peep)
 
 
     //peep comms
+    /*
     if (peep->comms.message_TargetReached_pending)
     {
         peep->physics.drive.drivingToTarget = 0;
         peep->comms.message_TargetReached = peep->comms.message_TargetReached_pending;
         peep->comms.message_TargetReached--;//message fade
     }
-
+    */
 
 
 
@@ -3583,25 +3584,40 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     //AStarSearch_BFS_Instantiate(&gameState->mapSearchers[0]);
 
 
-                    if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
-                    {
-                        printf("Starting Search for selected peeps..\n");
-                        AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], (start), (end), 0);
+                    ge_int3 worldloc;
+                    MapToWorld(GE_INT3_TO_Q16(end), &worldloc);
 
-                        if(prog == AStarPathFindingProgress_Searching)
+
+                    //if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
+                    //{
+                        //printf("Starting Search for selected peeps..\n");
+                       // AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], (start), (end), 0);
+
+                        //if(prog == AStarPathFindingProgress_Searching)
                         { 
                             while (curPeepIdx != OFFSET_NULL)
                             {
                                 Peep* curPeep = &gameState->peeps[curPeepIdx];
 
-                                curPeep->stateBasic.aStarSearchPtr = 0;
+                                //tmp
+                                //curPeep->stateBasic.aStarSearchPtr = 0;
+
+                                //tmp
+                                curPeep->physics.drive.target_x_Q16 = worldloc.x;
+                                curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                                curPeep->physics.drive.target_z_Q16 = worldloc.z;
+                                curPeep->physics.drive.drivingToTarget = 1;
+
+
+
                                 curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
+
                             }
                         }
-                    }
-                    else{
-                        printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
-                    }
+                    //}
+                    //else{
+                    //    printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
+                    //}
                 }
 
 
