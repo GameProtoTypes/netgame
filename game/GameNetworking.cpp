@@ -490,7 +490,7 @@
 
 
 	 
-	 float pFactor = 1.0f;
+	 float pFactor = 4.0f;
 	 
 	 if (clients.size() >= 1 && fullyConnectedToHost)
 	 {
@@ -504,26 +504,7 @@
 
 			float offset = 1.0f*thisClient->avgHostPing/GOODTICKTIMEMS;
 
-
-			//base safetyOffset from last 50 delay measurements
-			// if(clientTicksToSpare.size() == 50)
-			// {
-			// 	int lowest = 10000;
-			// 	for(int i = 0; i < 50; i++)
-			// 	{
-			// 		int t = clientTicksToSpare[clientTicksToSpare.size()- 1 - i];
-			// 		if(t < lowest)
-			// 			lowest = t;
-					
-
-			// 	}
-
-			// 	safetyOffset = lowest;
-
-			// }
-			
-
-
+		
 
 			offset += safetyOffset;
 

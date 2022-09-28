@@ -325,7 +325,7 @@ void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
                 node->tileIdx = (ge_short3){x,y,z};
 
                 search->closedMap[x][y][z] = 0;
-                search->openMap[x][x][x] = 0;
+                search->openMap[x][y][z] = 0;
             }
         }  
     }
@@ -350,7 +350,7 @@ void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, cl_ulong idx,
     node->tileIdx = (ge_short3){x,y,z};
 
     search->closedMap[x][y][z] = 0;
-    search->openMap[x][x][x] = 0;
+    search->openMap[x][y][z] = 0;
 
 
 
@@ -3152,7 +3152,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF,  int* down)
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    size.x, size.y, color, (float2){0.0,0.0}, (float2){1.0,1.0} );
     
     return ret;
 }
@@ -3588,25 +3588,25 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     MapToWorld(GE_INT3_TO_Q16(end), &worldloc);
 
 
-                    //if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
-                    //{
-                        //printf("Starting Search for selected peeps..\n");
-                       // AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], (start), (end), 0);
+                    if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
+                    {
+                        printf("Starting Search for selected peeps..\n");
+                        AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], (start), (end), 0);
 
-                        //if(prog == AStarPathFindingProgress_Searching)
+                        if(prog == AStarPathFindingProgress_Searching)
                         { 
                             while (curPeepIdx != OFFSET_NULL)
                             {
                                 Peep* curPeep = &gameState->peeps[curPeepIdx];
 
                                 //tmp
-                                //curPeep->stateBasic.aStarSearchPtr = 0;
+                                curPeep->stateBasic.aStarSearchPtr = 0;
 
                                 //tmp
-                                curPeep->physics.drive.target_x_Q16 = worldloc.x;
-                                curPeep->physics.drive.target_y_Q16 = worldloc.y;
-                                curPeep->physics.drive.target_z_Q16 = worldloc.z;
-                                curPeep->physics.drive.drivingToTarget = 1;
+                                //curPeep->physics.drive.target_x_Q16 = worldloc.x;
+                                //curPeep->physics.drive.target_y_Q16 = worldloc.y;
+                                //curPeep->physics.drive.target_z_Q16 = worldloc.z;
+                                //curPeep->physics.drive.drivingToTarget = 1;
 
 
 
@@ -3614,10 +3614,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                             }
                         }
-                    //}
-                    //else{
-                    //    printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
-                    //}
+                    }
+                    else
+                    {
+                        printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
+                    }
                 }
 
 
@@ -4404,48 +4405,39 @@ __kernel void game_update2(ALL_CORE_PARAMS)
 
 
     //reset searches
-    // AStarSearch_BFS* search = &gameState->mapSearchers[0];
-    // if((search->state == AStarPathFindingProgress_Failed) || (search->state == AStarPathFindingProgress_Finished))
-    // {
-    //     cl_ulong chunks = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
+    AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    if((search->state == AStarPathFindingProgress_Failed) || (search->state == AStarPathFindingProgress_Finished))
+    {
+        cl_ulong chunks = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
     
-    //     for (cl_ulong i = 0; i < chunks+1; i++)
-    //     {
-    //         cl_long xyzIdx = globalid+GAME_UPDATE_WORKITEMS*i;
+        for (cl_ulong i = 0; i < chunks+1; i++)
+        {
+            cl_long xyzIdx = globalid+GAME_UPDATE_WORKITEMS*i;
             
-    //         if (xyzIdx < (MAPDIM * MAPDIM* MAPDEPTH))
-    //         {
+            if (xyzIdx < (MAPDIM * MAPDIM* MAPDEPTH))
+            {
 
-    //             cl_long z = xyzIdx % MAPDEPTH;
-    //             cl_long y = (xyzIdx / MAPDEPTH) % MAPDIM;
-    //             cl_long x = xyzIdx / (MAPDIM * MAPDEPTH); 
-
-
+                cl_long z = xyzIdx % MAPDEPTH;
+                cl_long y = (xyzIdx / MAPDEPTH) % MAPDIM;
+                cl_long x = xyzIdx / (MAPDIM * MAPDEPTH); 
 
 
-    //             if(x > MAPDIM)
-    //                 printf("X>MAPDIM\n");
-    //             if(y > MAPDIM)
-    //                 printf("Y>MAPDIM\n");
-    //             if(z > MAPDEPTH)
-    //                 printf("Z>MAPDEPTH\n");
+
+
+                if(x > MAPDIM)
+                    printf("X>MAPDIM\n");
+                if(y > MAPDIM)
+                    printf("Y>MAPDIM\n");
+                if(z > MAPDEPTH)
+                    printf("Z>MAPDEPTH\n");
 
                 
-    //             AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
-    //         }
-    //     }
-    // }
-
-    if(globalid == 0)
-    {
-        AStarSearch_BFS* search = &gameState->mapSearchers[0];
-        if(search->state == AStarPathFindingProgress_Failed || search->state == AStarPathFindingProgress_Finished)
-        {
-            printf("CLEARING\n");
-            AStarSearch_BFS_Instantiate(search);
-
+                AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
+            }
         }
     }
+
+
 
 }
 
@@ -4457,7 +4449,6 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     
 
     //update AStarPath Searchers
-    
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if(search->state == AStarPathFindingProgress_Searching)
     {
@@ -4465,7 +4456,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     }
     else if(search->state != AStarPathFindingProgress_Ready)
     {
-        printf("going to ready..");
+       // printf("going to ready..");
         search->state = AStarPathFindingProgress_Ready;
     }
 
@@ -4515,10 +4506,6 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
         pathStartOPtr = paths->pathStarts[pathIdx];
     }
-
-
-
-
 
 }
 

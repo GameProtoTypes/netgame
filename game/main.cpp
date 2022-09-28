@@ -606,7 +606,10 @@ int32_t main(int32_t argc, char* args[])
         ImGui::End();
         glm::vec4 worldMouseCoords = glm::inverse(view) * mouseScreenCoords;
         ImGui::Text("X,y: %f,%f", worldMouseCoords.x, worldMouseCoords.y);
-
+        
+        
+        
+        glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
 
         //draw map
         gameGraphics.pMapTileShadProgram->Use();
@@ -699,6 +702,7 @@ int32_t main(int32_t argc, char* args[])
 
 
         //draw gui
+        glBindTexture(GL_TEXTURE_2D, gameGraphics.lettersTileTexId);
 
         gameGraphics.pGuiShadProgram->Use();
         glm::mat4 identity(1.0);
@@ -719,6 +723,10 @@ int32_t main(int32_t argc, char* args[])
         glBindVertexArray(gameGraphics.linesVAO);
         glDrawArrays(GL_LINES, 0, gameCompute.maxLines);
         glBindVertexArray(0);
+
+
+
+
 
 
         if(gameStateActions->pauseState==0)

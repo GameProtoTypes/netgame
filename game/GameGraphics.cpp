@@ -463,14 +463,14 @@ void GameGraphics::Init()
     int desiredCh = 4;
     stbi_uc* stbimg = stbi_load("TileSet.png", &dims.x, &dims.y, &chIFile, desiredCh);
 
+
     if (chIFile != desiredCh)
         assert(0);
+
 
     //map textures
     glGenTextures(1, &mapTileTexId);
     glBindTexture(GL_TEXTURE_2D, mapTileTexId);
-
-
 
     int Mode = GL_RGBA;
     glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg);
@@ -481,10 +481,31 @@ void GameGraphics::Init()
 
 
 
+    stbi_uc* stbimg_letters = stbi_load("16x16_sm_ascii.png", &dims.x, &dims.y, &chIFile, desiredCh);
+    if (chIFile != desiredCh)
+            assert(0);
+
+    //tile textures textures   
+    glBindTexture(GL_TEXTURE_2D, 0); 
+    glGenTextures(1, &lettersTileTexId);
+    glBindTexture(GL_TEXTURE_2D, lettersTileTexId);
+
+    Mode = GL_RGBA;
+    glTexImage2D(GL_TEXTURE_2D, 0, Mode, dims.x, dims.y, 0, Mode, GL_UNSIGNED_BYTE, stbimg_letters);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+
+
+
+
 
     glFinish();
 
-
+    stbi_image_free(stbimg);
+    stbi_image_free(stbimg_letters);
 }
 
 GameGraphics::~GameGraphics()

@@ -112,6 +112,7 @@ public:
 	uint32_t mapTile2VAO, mapTile2VBO, mapTile2AttrVBO, mapTile2OtherAttrVBO;
 	int mapTileInstanceSIZE = 0;
 	GLuint mapTileTexId = 0;
+	GLuint lettersTileTexId = 0;
 
 	float viewScaleInterp = 0.0f;
 
