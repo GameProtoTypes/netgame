@@ -1,6 +1,10 @@
 #pragma once
-#define GUIID ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
-#define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id, ge_int2 pos, ge_int2 size
+#define GUIID_PASS ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
+
+
+#define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id
+#define GUIID_DEF_POSSIZE GUIID_DEF, ge_int2 pos, ge_int2 size
+
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
 #define GUI_GETOFFSET() GUI_GetOffset(gui)
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
@@ -20,8 +24,9 @@ void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
 
 
 
-void GUI_Begin_ScrollArea(GUIID_DEF, ge_int2 scroll_offset)
+void GUI_Begin_ScrollArea(GUIID_DEF_POSSIZE, ge_int2 scroll_offset)
 {
+    
     GUI_PushOffset(gui, scroll_offset);
 }
 
@@ -342,10 +347,33 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
     }
     return 0;
 }
+cl_uchar GUI_InteractionBoundsCheck(SyncedGui* gui, ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
+{
+    ge_int4 currentClip = GUI_MERGED_CLIP(gui); 
+    if(currentClip.x > boundStart.x)
+    {
+        boundStart.x = currentClip.x;
+    }
+    if(currentClip.y > boundStart.y)
+    {
+        boundStart.y = currentClip.y;
+    }
+    ge_int2 clipEnd;
+    clipEnd.x = currentClip.x + currentClip.z;
+    clipEnd.y = currentClip.y + currentClip.w;
+
+    if(clipEnd.x < boundEnd.x)
+        boundEnd.x = clipEnd.x;
+
+    if(clipEnd.y < boundEnd.y)
+        boundEnd.y = clipEnd.y;
 
 
 
-int* GetGuiFakeInt(SyncedGui* gui)
+    return GUI_BoundsCheck(boundStart, boundEnd, pos);
+}
+
+int* GUI_GetFakeInt(SyncedGui* gui)
 {
     int* param = &gui->fakeInts[gui->nextFakeIntIdx];
     gui->nextFakeIntIdx++;
@@ -364,7 +392,7 @@ int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
     }
     else
     {
-        return GetGuiFakeInt(gui);
+        return GUI_GetFakeInt(gui);
     }
 }
 
@@ -436,7 +464,7 @@ float4 ascii_to_uv(char ch)
 
 
 
-void GUI_TEXT(GUIID_DEF, char* str)
+void GUI_TEXT(GUIID_DEF_POSSIZE, char* str)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -476,7 +504,7 @@ void GUI_TEXT(GUIID_DEF, char* str)
 
 
 }
-void GUI_LABEL(GUIID_DEF, char* str, float3 color)
+void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -486,19 +514,21 @@ void GUI_LABEL(GUIID_DEF, char* str, float3 color)
     if(str != NULL)
     {
         GUI_PushClip(gui, pos, size);
-            GUI_TEXT(GUIID,  pos, size, str);
+            GUI_TEXT(GUIID_PASS,  pos, size, str);
         GUI_PopClip(gui);
     }
 }
 
-cl_uchar GUI_BUTTON(GUIID_DEF, char* str, int* down)
+cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
 {
+    ge_int2 origPos = pos;
+    ge_int2 origSize = size;
     GUI_COMMON_WIDGET_START()
 
 
     cl_uchar ret = 0;
     *down = 0;
-    if((GUI_BoundsCheck(pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
+    if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
         gui->hoverWidget = id;
 
@@ -530,8 +560,8 @@ cl_uchar GUI_BUTTON(GUIID_DEF, char* str, int* down)
     
     if(str != NULL)
     {
-        GUI_PushClip(gui, pos, size);
-            GUI_TEXT(GUIID,  pos, size, str);
+        GUI_PushClip(gui, origPos, origSize);
+            GUI_TEXT(GUIID_PASS,  origPos, origSize, str);
         GUI_PopClip(gui);
     }
 
@@ -545,7 +575,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF, char* str, int* down)
 
 
 
-cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF, int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -555,7 +585,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF, int* value, int min, int max)
     sizeHandle.y = size.y;
     sizeHandle.x = size.x/10;
 
-    if(GUI_BoundsCheck(pos, INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
+    if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
     {
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
         {
@@ -568,7 +598,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF, int* value, int min, int max)
 
 
     posHandle.y = pos.y;
-    posHandle.x = pos.x + ((size.x-sizeHandle.x)*((*value))/(max-1-min));
+    posHandle.x = pos.x + (((size.x-sizeHandle.x)*((*value - min)))/(max-1-min));
 
     posHandle.x = clamp(posHandle.x, pos.x, pos.x + size.x - sizeHandle.x);
 
@@ -578,11 +608,11 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF, int* value, int min, int max)
     
 
     int down;
-    GUI_BUTTON(GUIID, posHandle, sizeHandle, NULL, &down);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, NULL, &down);
 
 }
 
-cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF, int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -592,7 +622,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF, int* value, int min, int max)
     sizeHandle.y = size.y/10;
     sizeHandle.x = size.x;
 
-    if(GUI_BoundsCheck(pos, INT2_ADD(pos, size), gui->mouseLoc)&&(gui->ignoreAll == 0) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
+    if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
     {
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
         {
@@ -605,7 +635,8 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF, int* value, int min, int max)
 
 
     posHandle.x = pos.x;
-    posHandle.y = pos.y + ((size.y-sizeHandle.y)*((*value))/(max-1-min));
+
+    posHandle.y = pos.y + (((size.y-sizeHandle.y)*((*value - min)))/(max-1-min));
 
     posHandle.y = clamp(posHandle.y, pos.y, pos.y + size.y - sizeHandle.y);
 
@@ -615,8 +646,67 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF, int* value, int min, int max)
     
 
     int down;
-    LOCAL_STRL(valueTxt, "123456", valueTxtLen);
+    LOCAL_STRL(valueTxt, "strofnoconsequence", valueTxtLen);
     CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
-    GUI_BUTTON(GUIID, posHandle, sizeHandle, valueTxt, &down);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, valueTxt, &down);
+
+}
+
+
+void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
+{
+    ge_int2 scrollOffset;
+    scrollOffset.x = 0;
+    scrollOffset.y = 0;
+    int* scrollx=GUI_GetFakeInt(gui);
+    int* scrolly=GUI_GetFakeInt(gui);
+
+    ge_int2 vertSliderPos;
+    vertSliderPos.y = pos.y;
+    vertSliderPos.x = pos.x + size.x - 20;
+
+    ge_int2 vertSliderSize;
+    vertSliderSize.x = 20;
+    vertSliderSize.y = size.y-20;
+
+    ge_int2 horSliderPos;
+    horSliderPos.y = pos.y + size.y - 20;
+    horSliderPos.x = pos.x;
+
+    ge_int2 horSliderSize;
+    horSliderSize.x = size.x-20;
+    horSliderSize.y = 20;
+
+
+    ge_int2 canvasSize;
+    canvasSize.x = size.x - 20;
+    canvasSize.y = size.y - 20;
+
+    int a = scrollSpace.x - canvasSize.x;
+    int b = scrollSpace.y - canvasSize.y;
+
+    if(b>0)
+    {
+        GUI_SLIDER_INT_VERTICAL(GUIID_PASS, vertSliderPos, vertSliderSize, scrolly, 0, b);
+        scrollOffset.y = -*scrolly;
+    }
+    if(a>0)
+    {
+        GUI_SLIDER_INT_HORIZONTAL(GUIID_PASS, horSliderPos, horSliderSize, scrollx, 0, a);
+        scrollOffset.x= -*scrollx;
+    }
+
+    GUI_PushClip(gui, pos, canvasSize);
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    canvasSize.x, canvasSize.y, (float3)(0.3,0.3,0.3), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+
+    GUI_Begin_ScrollArea(GUIID_PASS, pos, canvasSize, scrollOffset);
+}
+
+void GUI_SCROLLBOX_END(GUIID_DEF)
+{
+    GUI_End_ScrollArea(gui);
+    GUI_PopClip(gui);
 
 }

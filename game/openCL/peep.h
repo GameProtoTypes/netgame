@@ -342,6 +342,19 @@ struct AStarSearch_IDA {
 
 
 
+struct AStarPathJob
+{
+	ge_short3 startLoc;
+	ge_short3 endLoc;
+} typedef AStarPathJob;
+
+#define ASTARJOBSCHEDULER_MAX_JOBS (256)
+struct AStarJobScheduler
+{
+	AStarPathJob jobQueue[ASTARJOBSCHEDULER_MAX_JOBS];
+	int curJobIdx;
+} typedef AStarJobScheduler;
+
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
 #define ASTAR_MAX_PATHS (1024)

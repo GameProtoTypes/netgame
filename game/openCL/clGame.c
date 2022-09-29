@@ -2986,13 +2986,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         btntxt[8] = '\0';
         
         LOCAL_STR(noneTxt, "NONE");
-        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){100, 50},noneTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50},noneTxt, &downDummy) == 1)
         {
             client->curTool = EditorTools_None;
         }
 
         LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy) == 1)
         {
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
@@ -3000,31 +3000,36 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STR(createTxt, "CREATE");
        
 
-        if(GUI_BUTTON(GUIID, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
         }
 
         LOCAL_STRL(labeltxt, "DEEP", labeltxtLen); 
-        GUI_LABEL(GUIID, (ge_int2){0 ,50}, (ge_int2){80 ,50}, labeltxt, (float3)(0.3,0.3,0.3));
+        GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50}, (ge_int2){80 ,50}, labeltxt, (float3)(0.3,0.3,0.3));
 
   
-        GUI_SLIDER_INT_VERTICAL(GUIID,  (ge_int2){0 ,100}, (ge_int2){80, 800}, &client->mapZView, 0, MAPDEPTH);
+        GUI_SLIDER_INT_VERTICAL(GUIID_PASS,  (ge_int2){0 ,100}, (ge_int2){80, 800}, &client->mapZView, 0, MAPDEPTH);
         LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
-        GUI_LABEL(GUIID, (ge_int2){0 ,900}, (ge_int2){80 ,50}, labeltxt2, (float3)(0.3,0.3,0.3));
+        GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, labeltxt2, (float3)(0.3,0.3,0.3));
         
-        // GUI_Begin_ScrollArea(GUIID, (ge_int2){0,0},(ge_int2){0,0},(ge_int2){0,0});
+        // GUI_Begin_ScrollArea(GUIID_PASS, (ge_int2){0,0},(ge_int2){0,0},(ge_int2){0,0});
 
         //     GUI_PushClip(gui, (ge_int2){0,220}, (ge_int2){50,50});
-        //         GUI_BUTTON(GUIID, (ge_int2){0 ,200}, (ge_int2){50, 50}, btntxt, &downDummy);
+        //         GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,200}, (ge_int2){50, 50}, btntxt, &downDummy);
         //     GUI_PopClip(gui);
 
         // GUI_End_ScrollArea(gui);
 
-
-
-
+        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},(ge_int2){200,200}, (ge_int2){550,500});
+            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,100}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,150}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,200}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,250}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,300}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+            GUI_BUTTON(GUIID_PASS, (ge_int2){500 ,300}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+        GUI_SCROLLBOX_END(GUIID_PASS);
 
         if(fakePass == 0)
             printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
