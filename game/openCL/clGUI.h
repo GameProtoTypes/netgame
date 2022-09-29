@@ -358,6 +358,8 @@ cl_uchar GUI_InteractionBoundsCheck(SyncedGui* gui, ge_int2 boundStart, ge_int2 
     {
         boundStart.y = currentClip.y;
     }
+
+
     ge_int2 clipEnd;
     clipEnd.x = currentClip.x + currentClip.z;
     clipEnd.y = currentClip.y + currentClip.w;
@@ -367,8 +369,6 @@ cl_uchar GUI_InteractionBoundsCheck(SyncedGui* gui, ge_int2 boundStart, ge_int2 
 
     if(clipEnd.y < boundEnd.y)
         boundEnd.y = clipEnd.y;
-
-
 
     return GUI_BoundsCheck(boundStart, boundEnd, pos);
 }

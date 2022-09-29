@@ -108,6 +108,8 @@ struct AStarPathNode
 	ge_int3 mapCoord_Q16;
 	offsetPtr nextOPtr;
 	offsetPtr prevOPtr;
+
+	short peepCount;
 }typedef AStarPathNode;
 
 struct DrivePhysics
