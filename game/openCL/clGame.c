@@ -3217,6 +3217,9 @@ void GUI_TEXT(GUIID_DEF, char* str)
 }
 void GUI_LABEL(GUIID_DEF, char* str, float3 color)
 {
+    pos = INT2_ADD(pos, GUI_GETOFFSET());
+
+
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
     size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
     
@@ -3386,6 +3389,7 @@ void GUI_Begin_ScrollArea(GUIID_DEF, ge_int2 scroll_offset)
     GUI_PushOffset(gui, scroll_offset);
 }
 
+#define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
 
 void  GUI_End_ScrollArea(SyncedGui* gui)
@@ -3551,6 +3555,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         {
             client->curTool = EditorTools_None;
         }
+
         LOCAL_STR(deleteTxt, "DELETE");
         if(GUI_BUTTON(GUIID, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy) == 1)
         {
@@ -3558,7 +3563,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             client->curTool = EditorTools_Delete;
         }
         LOCAL_STR(createTxt, "CREATE");
-        CL_ITOA(gameStateActions->tickIdx, createTxt, 7, 10);
+       
 
         if(GUI_BUTTON(GUIID, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
         {
@@ -3566,8 +3571,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             client->curTool = EditorTools_Create;
         }
 
-        LOCAL_STR(labeltxt, "TEST LABEL");
-        GUI_LABEL(GUIID, (ge_int2){200 ,50}, (ge_int2){100, 50}, labeltxt, (float3)(0.3,1.0,0.2));
+        LOCAL_STRL(labeltxt, "TEST LABEL", labeltxtLen); 
+        CL_ITOA(gameStateActions->tickIdx, labeltxt, labeltxtLen, 10);
+        GUI_LABEL(GUIID, (ge_int2){200 ,50}, GUI_AUTO_SIZE, labeltxt, (float3)(0.3,1.0,0.2));
         
         GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
 
@@ -3576,7 +3582,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             GUI_PushClip(gui, (ge_int2){0,220}, (ge_int2){50,50});
                 GUI_BUTTON(GUIID, (ge_int2){0 ,200}, (ge_int2){50, 50}, btntxt, &downDummy);
             GUI_PopClip(gui);
-            
+
         GUI_End_ScrollArea(gui);
 
 
