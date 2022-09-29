@@ -8,7 +8,7 @@
 //#define NO_ZSHADING
 //#define PEEP_ALL_ALWAYS_VISIBLE
 //#define PEEP_DISABLE_TILECORRECTIONS
-
+#define PEEP_PATH_CROWD (4)
 
 #include "clGUI.h"
 
@@ -302,6 +302,8 @@ void AStarInitPathNode(AStarPathNode* node)
     node->mapCoord_Q16 = (ge_int3){ 0,0,0 };
     node->nextOPtr = OFFSET_NULL;
     node->prevOPtr = OFFSET_NULL;
+
+    node->peepCount = 0;
 }
 
 
@@ -2059,43 +2061,61 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
 
     if (WHOLE_Q16(len) < 2)//within range of current target
     {
-        if (peep->physics.drive.drivingToTarget)
+
+
+        if (peep->physics.drive.targetPathNodeOPtr == OFFSET_NULL)
         {
+            //final node reached.
+            peep->comms.message_TargetReached_pending = 255;//send the message
 
-            if (peep->physics.drive.nextPathNodeOPtr == OFFSET_NULL)
-            {
-                //final node reached.
-                peep->comms.message_TargetReached_pending = 255;//send the message
-            }
-            else
-            {
+        }
+        else
+        {
+            //advance if theres room
+            AStarPathNode* targetPathNode;
+            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+            targetPathNode->peepCount++;
 
-                AStarPathNode* nxtpathNode;
-                OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.nextPathNodeOPtr,nxtpathNode);
+            AStarPathNode* prevpathNode;
+            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
+            if(prevpathNode != NULL)
+                prevpathNode->peepCount = clamp(prevpathNode->peepCount -1, 0, INT_MAX);
+
+
+            //advance
+            peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
+            peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
+
 
             
-                peep->physics.drive.nextPathNodeOPtr = nxtpathNode->nextOPtr;
-                if (peep->physics.drive.nextPathNodeOPtr != OFFSET_NULL) 
-                {
-                    AStarPathNode* nxtpathNode;
-                    OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.nextPathNodeOPtr,nxtpathNode);
+            if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL) 
+            {
+                AStarPathNode* targetPathNode;
+                OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+                
 
+                ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
+                MapToWorld(nextTarget_Q16, &nextTarget_Q16);
 
-                    ge_int3 nextTarget_Q16 = nxtpathNode->mapCoord_Q16;
-                    MapToWorld(nextTarget_Q16, &nextTarget_Q16);
-
-                    peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
-                    peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
-                    peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
-                }
+                peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
             }
+            
         }
+        
     }
-   
-    if (peep->physics.drive.drivingToTarget)
-    {
-       // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
 
+   
+
+    //advacne if theres room
+    AStarPathNode* targetPathNode;
+    OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+   
+
+    // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
+    if(targetPathNode != NULL && targetPathNode->peepCount < PEEP_PATH_CROWD)
+    {
         targetVelocity.x = d.x >> 2;
         targetVelocity.y = d.y >> 2;
         targetVelocity.z = d.z >> 2;
@@ -2105,10 +2125,11 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         peep->physics.base.vel_add_Q16.x += error.x;
         peep->physics.base.vel_add_Q16.y += error.y;
         peep->physics.base.vel_add_Q16.z += error.z;
-
-
-        peep->physics.base.CS_angle_rad = atan2(((float)(d.x))/(1<<16), ((float)(d.y)) / (1 << 16));
     }
+
+
+    peep->physics.base.CS_angle_rad = atan2(((float)(d.x))/(1<<16), ((float)(d.y)) / (1 << 16));
+
 
 
 
@@ -2125,7 +2146,11 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
         AStarSearch_BFS* search = &gameState->mapSearchers[0];
         if(search->state == AStarPathFindingProgress_Finished)
         {
-            peep->physics.drive.nextPathNodeOPtr = search->pathOPtr;
+            peep->physics.drive.targetPathNodeOPtr = search->pathOPtr;
+            //AStarPathNode* nxtPathNode;
+            //OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr, nxtPathNode);
+            
+
            // printf("path assining to %d\n", search->pathOPtr);
             peep->stateBasic.aStarSearchPtr = OFFSET_NULL;
         }
@@ -2133,29 +2158,31 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
     }
 
 
-    if(peep->physics.drive.nextPathNodeOPtr != OFFSET_NULL)
+    if(peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL)
     {
 
 
         //drive to the next path node
         AStarPathNode* nxtPathNode;
-        OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.nextPathNodeOPtr, nxtPathNode);
+        OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr, nxtPathNode);
+        //printf("PC: %d\n",nxtPathNode->peepCount);
+        if(nxtPathNode->peepCount < PEEP_PATH_CROWD)
+        {
+
+            ge_int3 worldloc;
+            MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
+            peep->physics.drive.target_x_Q16 = worldloc.x;
+            peep->physics.drive.target_y_Q16 = worldloc.y;
+            peep->physics.drive.target_z_Q16 = worldloc.z;
+            peep->physics.drive.drivingToTarget = 1;
+
+            //restrict comms to new channel
+            peep->comms.orders_channel = RandomRange(worldloc.x, 0, 10000);//broke
+            peep->comms.message_TargetReached = 0;
+            peep->comms.message_TargetReached_pending = 0;
 
 
-        ge_int3 worldloc;
-        MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
-        peep->physics.drive.target_x_Q16 = worldloc.x;
-        peep->physics.drive.target_y_Q16 = worldloc.y;
-        peep->physics.drive.target_z_Q16 = worldloc.z;
-        peep->physics.drive.drivingToTarget = 1;
-
-        //restrict comms to new channel
-        peep->comms.orders_channel = RandomRange(worldloc.x, 0, 10000);//broke
-        peep->comms.message_TargetReached = 0;
-        peep->comms.message_TargetReached_pending = 0;
-
-
-
+        }
 
 
 
@@ -3741,7 +3768,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
-        gameState->peeps[p].physics.drive.nextPathNodeOPtr = OFFSET_NULL;
+        gameState->peeps[p].physics.drive.targetPathNodeOPtr = OFFSET_NULL;
 
 
         gameState->peeps[p].stateBasic.faction = RandomRange(p,0,4);

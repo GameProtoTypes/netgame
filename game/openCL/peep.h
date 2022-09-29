@@ -118,7 +118,10 @@ struct DrivePhysics
 	int32_t target_y_Q16;
 	int32_t target_z_Q16;
 
-	offsetPtr nextPathNodeOPtr;
+	offsetPtr targetPathNodeOPtr;
+	offsetPtr prevPathNodeOPtr;
+
+	bool nearTarget;
 
 	int drivingToTarget;
 } typedef DrivePhysics;
