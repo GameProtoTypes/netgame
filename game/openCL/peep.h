@@ -165,7 +165,7 @@ struct Peep {
 	offsetPtr prevSelectionPeepPtr[MAX_CLIENTS];
 
 } typedef Peep;
-#pragma pack(pop)
+
 
 
 struct Particle {
