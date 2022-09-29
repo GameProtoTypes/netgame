@@ -213,6 +213,13 @@ add_custom_command(
             ${CMAKE_CURRENT_SOURCE_DIR}/TileSet.png
             ${CMAKE_CURRENT_BINARY_DIR}/Debug/TileSet.png)
 
+add_custom_command(
+    TARGET MinerTycoon POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_SOURCE_DIR}/16x16_sm_ascii.png
+            ${CMAKE_CURRENT_BINARY_DIR}/Debug/16x16_sm_ascii.png)
+
+
 
 #COPY THINGS FROM RUNTIME BACK INTO SOURCE (FOR EDITOR NESSECITIES AND SUCH STRANGE THINGS)
 add_custom_command(

@@ -2867,9 +2867,14 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
 
 void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 {
+
+    gameState->guiStyle.TEXT_COLOR = (float3)(1.0,1.0,1.0);
+
+    gameState->guiStyle.UV_WHITE = (float2)(40.0/255, 20.0/255);
+
     gameState->guiStyle.BUTTON_COLOR = (float3)(0.5,0.5,0.5);
     gameState->guiStyle.BUTTON_COLOR_HOVER = (float3)(0.7,0.7,0.7);
-    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.7,0.0,0.0);
+    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.4,0.4,0.4);
 
     gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2,0.2,0.2);
 
@@ -2881,12 +2886,6 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 
 
 
-void GUI_Text(ALL_CORE_PARAMS, const cl_char* text)
-{
-    
-
-}
-
 
 SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 {
@@ -2897,6 +2896,45 @@ int GrabGuiId(SyncedGui* gui)
     int id =  gui->nextId;;
     gui->nextId++;
     return id;
+}
+
+ge_int4 GUI_MERGED_CLIP(SyncedGui* gui)
+{
+    int idx = gui->clipStackIdx;
+    ge_int4 totalClip =  (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
+    ge_int2 totalClipEnd;
+    totalClipEnd.x = totalClip.x + totalClip.z;
+    totalClipEnd.y = totalClip.y + totalClip.w;
+
+    while(idx >=0)
+    {
+        ge_int4 clip = gui->clipStack[idx];
+        ge_int2 clipEnd;
+        clipEnd.x = clip.x + clip.z;
+        clipEnd.y = clip.y + clip.w;
+
+        if(clip.x > totalClip.x)
+            totalClip.x = clip.x;
+        if(clip.y > totalClip.y)
+            totalClip.y = clip.y;
+
+        if(clipEnd.x < totalClipEnd.x)
+        {
+            totalClipEnd.x = clipEnd.x;
+        }
+
+        if(clipEnd.y < totalClipEnd.y)
+        {
+            totalClipEnd.y = clipEnd.y;
+        }
+
+        idx--;
+    }
+
+    totalClip.z = totalClipEnd.x - totalClip.x;
+    totalClip.w = totalClipEnd.y - totalClip.y;
+
+    return totalClip;
 }
 
 void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width, int height, float3 color, float2 UVStart, float2 UVEnd)
@@ -2912,21 +2950,22 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width,
     float2 UVSize = UVEnd - UVStart;
 
     //clip
+    ge_int4 clip = GUI_MERGED_CLIP(gui);
     ge_int2 clipEnd;
-    clipEnd.x = gui->clip.x + gui->clip.z;
-    clipEnd.y = gui->clip.y + gui->clip.w;
+    clipEnd.x = clip.x + clip.z;
+    clipEnd.y = clip.y + clip.w;
 
-    if(x < gui->clip.x)
+    if(x < clip.x)
     {
-        width = width - (gui->clip.x - x);
+        width = width - (clip.x - x);
 
-        x = gui->clip.x;
+        x = clip.x;
     }
     
-    if(y < gui->clip.y)
+    if(y < clip.y)
     {
-        height = height - (gui->clip.y - y);
-        y = gui->clip.y;
+        height = height - (clip.y - y);
+        y = clip.y;
     }
     
     if(x + width > clipEnd.x)
@@ -3097,27 +3136,99 @@ void GUI_PopOffset(SyncedGui* gui)
         printf("ERROR: GUI PopOffset Call Missmatch.");
 }
 
-void GUI_SetClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
+void GUI_PushClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
 {
     startPos = INT2_ADD(startPos, GUI_GETOFFSET());
 
-    gui->clip.x = startPos.x;
-    gui->clip.y = startPos.y;
-    gui->clip.z = size.x;
-    gui->clip.w = size.y;
+    gui->clipStackIdx++;
+
+    gui->clipStack[gui->clipStackIdx].x = startPos.x;
+    gui->clipStack[gui->clipStackIdx].y = startPos.y;
+    gui->clipStack[gui->clipStackIdx].z = size.x;
+    gui->clipStack[gui->clipStackIdx].w = size.y;
 }
 
-void GUI_ReleaseClip(SyncedGui* gui)
+void GUI_PopClip(SyncedGui* gui)
 {
-    gui->clip = (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
+    gui->clipStackIdx--;
+    if(gui->clipStackIdx == 0)
+    {
+        gui->clipStackIdx = 0;
+        gui->clipStack[gui->clipStackIdx] = (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
+    }
+    else if(gui->clipStackIdx < 0)
+    {
+        printf("ERROR: GUI_PopClip Missmatch\n");
+        gui->clipStackIdx=0;
+    }
 }
 
 
 
+float4 ascii_to_uv(char ch)
+{
+    int x = ((int)ch)*16;
+    int y = 16*(x / 256);
+    x = x % 256;
 
 
+    return (float4)(x/255.0,y/255.0, (x+ 16)/255.0, (y+16)/255.0);
+}
 
-cl_uchar GUI_BUTTON(GUIID_DEF,  int* down)
+
+void GUI_TEXT(GUIID_DEF, char* str)
+{
+
+    const float charWidth = 10;
+    const float charHeight = 16;
+
+    int i = 0;
+    float posx = pos.x;
+    float posy = pos.y;
+    float offsetx = 0;
+    while(str[i] != '\0')
+    {
+        float2 uvstart;
+        float2 uvend;
+
+        float4 uv = ascii_to_uv(str[i]);
+        uvstart.x = uv.x;
+        uvstart.y = uv.y;
+        uvend.x = uv.z;
+        uvend.y = uv.w;
+        //printf("deawinggdfjkg");
+
+        if(str[i] == '\n')
+        {
+            posy += charHeight;
+            offsetx = 0;
+            i++;
+            continue;
+        }
+
+        
+
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, posx + offsetx, posy, charWidth, charHeight, gameState->guiStyle.TEXT_COLOR, uvstart, uvend );
+        i++;
+        offsetx+=charWidth;
+    }
+
+
+}
+void GUI_LABEL(GUIID_DEF, char* str, float3 color)
+{
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    
+    if(str != NULL)
+    {
+        GUI_PushClip(gui, pos, size);
+            GUI_TEXT(GUIID,  pos, size, str);
+        GUI_PopClip(gui);
+    }
+}
+
+cl_uchar GUI_BUTTON(GUIID_DEF, char* str, int* down)
 {
     pos = INT2_ADD(pos, GUI_GETOFFSET());
 
@@ -3152,8 +3263,16 @@ cl_uchar GUI_BUTTON(GUIID_DEF,  int* down)
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, (float2){0.0,0.0}, (float2){1.0,1.0} );
+    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
     
+    if(str != NULL)
+    {
+        GUI_PushClip(gui, pos, size);
+            GUI_TEXT(GUIID,  pos, size, str);
+        GUI_PopClip(gui);
+    }
+
+
     return ret;
 }
 
@@ -3192,11 +3311,11 @@ cl_uchar GUI_SLIDER_INT(GUIID_DEF, int* value, int min, int max)
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, (float2){0.0,0.0}, (float2){0.0,0.0} );
+    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
     
 
     int down;
-    GUI_BUTTON(GUIID, posHandle, sizeHandle, &down);
+    GUI_BUTTON(GUIID, posHandle, sizeHandle, NULL, &down);
 
 
 }
@@ -3316,8 +3435,9 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     gui->draggedOff = 0;
     gui->wOSidx = -1;
    
-    GUI_ReleaseClip( gui);
-
+    gui->clipStackIdx = 0;
+    gui->clipStack[0] = (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
+    
     if(BITGET(mouseState, MouseButtonBits_PrimaryPressed) || BITGET(mouseState, MouseButtonBits_SecondaryPressed))
     {
         gui->mouseLocBegin = mouseLoc;
@@ -3423,34 +3543,42 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass);
 
         int downDummy;
-        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){50, 50},&downDummy) == 1)
+        char btntxt[9] = "CLICK ME"; 
+        btntxt[8] = '\0';
+        
+        LOCAL_STR(noneTxt, "NONE");
+        if(GUI_BUTTON(GUIID, (ge_int2){0 ,0}, (ge_int2){100, 50},noneTxt, &downDummy) == 1)
         {
             client->curTool = EditorTools_None;
         }
-        if(GUI_BUTTON(GUIID, (ge_int2){50 ,0}, (ge_int2){50, 50},&downDummy) == 1)
+        LOCAL_STR(deleteTxt, "DELETE");
+        if(GUI_BUTTON(GUIID, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy) == 1)
         {
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
-        if(GUI_BUTTON(GUIID, (ge_int2){100 ,0}, (ge_int2){50, 50},&downDummy) == 1)
+        LOCAL_STR(createTxt, "CREATE");
+        CL_ITOA(gameStateActions->tickIdx, createTxt, 7, 10);
+
+        if(GUI_BUTTON(GUIID, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
         }
 
-
-
-
+        LOCAL_STR(labeltxt, "TEST LABEL");
+        GUI_LABEL(GUIID, (ge_int2){200 ,50}, (ge_int2){100, 50}, labeltxt, (float3)(0.3,1.0,0.2));
+        
         GUI_SLIDER_INT(GUIID,  (ge_int2){0 ,GUI_PXPERSCREEN-50}, (ge_int2){400, 50}, &client->mapZView, 0, MAPDEPTH);
-
 
         GUI_Begin_ScrollArea(GUIID, (ge_int2){0,0},(ge_int2){0,0},(ge_int2){0,0});
 
-            GUI_SetClip(gui, (ge_int2){10,220}, (ge_int2){50,50});
-
-            GUI_BUTTON(GUIID, (ge_int2){0 ,200}, (ge_int2){50, 50},&downDummy);
-
+            GUI_PushClip(gui, (ge_int2){0,220}, (ge_int2){50,50});
+                GUI_BUTTON(GUIID, (ge_int2){0 ,200}, (ge_int2){50, 50}, btntxt, &downDummy);
+            GUI_PopClip(gui);
+            
         GUI_End_ScrollArea(gui);
+
 
 
 

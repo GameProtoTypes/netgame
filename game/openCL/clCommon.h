@@ -11,9 +11,6 @@
 
 
 
-
-
-
 #include "peep.h"
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
@@ -54,5 +51,5 @@ linesVBO
 
 #include "randomcl.h"
 #include "perlincl.h"
-
+#include "clString.h"
 

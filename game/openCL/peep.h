@@ -372,6 +372,10 @@ enum GuiStatePassType
 
 struct GuiStyle
 {
+	float2 UV_WHITE;
+
+	float3 TEXT_COLOR;
+
 	float3 BUTTON_COLOR;
 	float3 BUTTON_COLOR_HOVER;
 	float3 BUTTON_COLOR_ACTIVE;
@@ -411,8 +415,8 @@ struct SyncedGui
 	ge_int2 widgetOffsetStack[SYNCGUI_MAX_DEPTH];
 	int wOSidx;
 
-	ge_int4 clip;
-
+	ge_int4 clipStack[SYNCGUI_MAX_DEPTH];
+	int clipStackIdx;
 
 	ge_int2 curBoundStart;
 	ge_int2 curBoundEnd;

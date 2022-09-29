@@ -700,6 +700,11 @@ int32_t main(int32_t argc, char* args[])
             glDeleteBuffers(1, &mouseVBO);
         }
 
+        //draw lines 
+        glBindVertexArray(gameGraphics.linesVAO);
+        glDrawArrays(GL_LINES, 0, gameCompute.maxLines);
+        glBindVertexArray(0);
+
 
         //draw gui
         glBindTexture(GL_TEXTURE_2D, gameGraphics.lettersTileTexId);
@@ -718,11 +723,6 @@ int32_t main(int32_t argc, char* args[])
         glDrawArrays(GL_TRIANGLES, 0, gameCompute.maxGuiRects*6);
         glBindVertexArray(0);
 
-
-        //draw lines 
-        glBindVertexArray(gameGraphics.linesVAO);
-        glDrawArrays(GL_LINES, 0, gameCompute.maxLines);
-        glBindVertexArray(0);
 
 
 
