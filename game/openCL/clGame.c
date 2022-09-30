@@ -2991,11 +2991,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             guiPass = GuiStatePassType_NoLogic;
             mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
             mouseState = gameStateActions->mouseState;
-            clientAction= NULL;
-            actionTracking=NULL;
-            cliId = -1;
-            gui = &gameState->fakeGui;
             client = ThisClient(ALL_CORE_PARAMS_PASS);
+            cliId = gameStateActions->clientId;
+            clientAction= &gameStateActions->clientActions[cliId].action;
+            actionTracking= &gameStateActions->clientActions[cliId].tracking;
+            
+            gui = &gameState->fakeGui;
+            
         }
         else
         {
@@ -3041,28 +3043,41 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, labeltxt2, (float3)(0.3,0.3,0.3));
         
-        // GUI_Begin_ScrollArea(GUIID_PASS, (ge_int2){0,0},(ge_int2){0,0},(ge_int2){0,0});
-
-        //     GUI_PushClip(gui, (ge_int2){0,220}, (ge_int2){50,50});
-        //         GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,200}, (ge_int2){50, 50}, btntxt, &downDummy);
-        //     GUI_PopClip(gui);
-
-        // GUI_End_ScrollArea(gui);
 
         GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},(ge_int2){200,200}, (ge_int2){550,500});
-            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,100}, (ge_int2){50, 50}, labeltxt2, &downDummy);
-            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,150}, (ge_int2){50, 50}, labeltxt2, &downDummy);
-            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,200}, (ge_int2){50, 50}, labeltxt2, &downDummy);
-            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,250}, (ge_int2){50, 50}, labeltxt2, &downDummy);
-            GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,300}, (ge_int2){50, 50}, labeltxt2, &downDummy);
-            GUI_BUTTON(GUIID_PASS, (ge_int2){500 ,300}, (ge_int2){50, 50}, labeltxt2, &downDummy);
+
+            //iterate selected peeps
+            Peep* p;
+            OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
+            
+            int i = 0;
+            while(p != NULL)
+            {
+                LOCAL_STRL(header, "Miner: ", headerLen); 
+                LOCAL_STRL(peeptxt, "------------", peeptxtLen); 
+                CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
+                GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50}, header, (float3)(0.3,0.3,0.3));
+        
+                GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50}, peeptxt, &downDummy);
+
+                i++;    
+                OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[actionTracking->clientId], p);
+            }
+
+
+
         GUI_SCROLLBOX_END(GUIID_PASS);
+        
 
         if(fakePass == 0)
             printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
 
         //selection box
         GUI_RESET_POST(ALL_CORE_PARAMS_PASS,  gui);
+
+
+
+
 
         if(fakePass)
             continue;

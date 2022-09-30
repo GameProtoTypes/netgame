@@ -53,7 +53,7 @@
 
 #define MAX_CLIENTS (1024)
 
-
+#define LOCAL_QUICK_CONNECT
 
 
 class GameNetworking

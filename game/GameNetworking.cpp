@@ -643,7 +643,7 @@
 
 
 				 CLIENT_nextTransferOffset += chunkSize;
-				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / gameCompute->structSizes.gameStateStructureSize);
+				 gameStateTransferPercent = (float(CLIENT_nextTransferOffset) / CLIENT_gameStateTransfer.size());
 				 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART: " << 100 * gameStateTransferPercent << "%" << std::endl;
 
 

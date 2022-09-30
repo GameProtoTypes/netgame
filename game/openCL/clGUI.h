@@ -10,9 +10,6 @@
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
 
-
-
-
 void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
 {
     gui->wOSidx++;
@@ -23,14 +20,6 @@ void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
 }
 
 
-
-void GUI_Begin_ScrollArea(GUIID_DEF_POSSIZE, ge_int2 scroll_offset)
-{
-    
-    GUI_PushOffset(gui, scroll_offset);
-}
-
-
 void GUI_PopOffset(SyncedGui* gui)
 {
     gui->wOSidx--;
@@ -38,12 +27,25 @@ void GUI_PopOffset(SyncedGui* gui)
         printf("ERROR: GUI PopOffset Call Missmatch.");
 }
 
-
-
-void  GUI_End_ScrollArea(SyncedGui* gui)
+ge_int2 GUI_GetOffset(SyncedGui* gui)
 {
-    GUI_PopOffset(gui);
+    ge_int2 sum = (ge_int2){0,0};
+    for(int i = 0; i <= gui->wOSidx; i++)
+    {
+        sum = INT2_ADD(sum, gui->widgetOffsetStack[gui->wOSidx]);
+    }
+    return sum;
 }
+
+
+#define GUI_COMMON_WIDGET_START() gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size);
+void gui_CommonWidgetStart(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 * pos, ge_int2* size)
+{
+    *pos = INT2_ADD(*pos, GUI_GETOFFSET());
+}
+
+
+
 
 
 
@@ -399,15 +401,6 @@ int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
 
 
 
-ge_int2 GUI_GetOffset(SyncedGui* gui)
-{
-    ge_int2 sum = (ge_int2){0,0};
-    for(int i = 0; i <= gui->wOSidx; i++)
-    {
-        sum = INT2_ADD(sum, gui->widgetOffsetStack[gui->wOSidx]);
-    }
-    return sum;
-}
 
 
 void GUI_PushClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
@@ -438,12 +431,6 @@ void GUI_PopClip(SyncedGui* gui)
 }
 
 
-
-#define GUI_COMMON_WIDGET_START() gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size);
-void gui_CommonWidgetStart(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 * pos, ge_int2* size)
-{
-    *pos = INT2_ADD(*pos, GUI_GETOFFSET());
-}
 
 
 
@@ -506,6 +493,8 @@ void GUI_TEXT(GUIID_DEF_POSSIZE, char* str)
 }
 void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
 {
+    ge_int2 origPos = pos;
+    ge_int2 origSize = size;
     GUI_COMMON_WIDGET_START()
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
@@ -513,8 +502,8 @@ void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
     
     if(str != NULL)
     {
-        GUI_PushClip(gui, pos, size);
-            GUI_TEXT(GUIID_PASS,  pos, size, str);
+        GUI_PushClip(gui, origPos, origSize);
+            GUI_TEXT(GUIID_PASS,  origPos, origSize, str);
         GUI_PopClip(gui);
     }
 }
@@ -655,6 +644,8 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, int* value, int min, int max
 
 void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
 {
+    GUI_COMMON_WIDGET_START();
+
     ge_int2 scrollOffset;
     scrollOffset.x = 0;
     scrollOffset.y = 0;
@@ -701,12 +692,15 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
     canvasSize.x, canvasSize.y, (float3)(0.3,0.3,0.3), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
-    GUI_Begin_ScrollArea(GUIID_PASS, pos, canvasSize, scrollOffset);
+    GUI_PushOffset(gui, pos + scrollOffset);
+
+  
 }
 
 void GUI_SCROLLBOX_END(GUIID_DEF)
 {
-    GUI_End_ScrollArea(gui);
+    GUI_PopOffset(gui);
+
     GUI_PopClip(gui);
 
 }
