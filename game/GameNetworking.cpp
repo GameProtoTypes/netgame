@@ -295,6 +295,16 @@
 	serverRunning = true;
  }
 
+ void GameNetworking::StopServer()
+ {
+	std::cout << "GameNetworking, Stopping Server.." << std::endl;
+
+	this->peerInterface->Shutdown(0);
+	serverRunning = false;
+
+ }
+
+
  inline void GameNetworking::SendTickSyncToHost()
  {
 	 int32_t ping = peerInterface->GetAveragePing(hostPeer);
@@ -346,7 +356,7 @@
 	 return sum;
  }
 
- void GameNetworking::ConnectToHost(SLNet::SystemAddress hostAddress)
+ SLNet::ConnectionAttemptResult  GameNetworking::ConnectToHost(SLNet::SystemAddress hostAddress)
 {
 	std::cout << "[CLIENT] Connecting To Host: " << hostAddress.ToString(false) << " Port: " << hostAddress.GetPort() << std::endl;
 	SLNet::SocketDescriptor desc;
@@ -375,7 +385,7 @@
 
 		}
 	}
-	
+	return connectInitSuccess;
 }
  void GameNetworking::CLIENT_HardDisconnect()
  {
@@ -616,7 +626,7 @@ void GameNetworking::CLIENT_DownloadFinishedActions()
 
 
 				#ifdef LOCAL_QUICK_CONNECT
-				if(connectedToHost)
+				if(clientGUID == this->clientGUID)
 				{
 					//hybrid and quick connect
 					std::cout << "[CLIENT] Hybrid QUICK-CONNECTING.." << std::endl;

@@ -138,11 +138,7 @@ public:
 	void CLIENT_SendRequestUnPause_ToHost(){}
 
 	void StartServer(int32_t port);
-	
-	void StopServer()
-	{
-
-	}
+	void StopServer();
 
 	//send null terminated message
 	void SendMessage(char* message);
@@ -154,7 +150,7 @@ public:
 	uint64_t CheckSumAction(ActionWrap* state);
 
 
-	void ConnectToHost(SLNet::SystemAddress hostAddress);
+	SLNet::ConnectionAttemptResult ConnectToHost(SLNet::SystemAddress hostAddress);
 
 	void CLIENT_HardDisconnect();
 	void CLIENT_SoftDisconnect();

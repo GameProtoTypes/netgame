@@ -3061,7 +3061,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50}, peeptxt, &downDummy);
 
                 i++;    
-                OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[actionTracking->clientId], p);
+                OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
             }
 
 
@@ -3071,6 +3071,10 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         if(fakePass == 0)
             printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
+        else{
+          //  printf("(fakepass) cli: %d, mapz: %d\n", cliId, client->mapZView);
+        }
+
 
         //selection box
         GUI_RESET_POST(ALL_CORE_PARAMS_PASS,  gui);

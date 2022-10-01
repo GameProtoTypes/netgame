@@ -237,8 +237,11 @@ int32_t main(int32_t argc, char* args[])
 
 
     #ifdef LOCAL_AUTO_CONNECT
+       
+
         gameNetworking.StartServer(GAMESERVERPORT);
         gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", GAMESERVERPORT));
+        
     #endif
 
     while (!quit)
@@ -499,7 +502,12 @@ int32_t main(int32_t argc, char* args[])
             {
                 gameNetworking.StartServer(port);
             }
-
+        
+        if(gameNetworking.serverRunning)
+            if(ImGui::Button("Stop Server"))
+            {
+                gameNetworking.StopServer();
+            }
 
         static char connectIPString[256] = "localhost";
 
