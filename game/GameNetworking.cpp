@@ -529,6 +529,19 @@
 		 targetTickTimeMs = MAXTICKTIMEMS;
 
  }
+
+void GameNetworking::CLIENT_DownloadFinishedActions()
+{
+	gameStateActions->pauseState = 0;
+	gameStateActions->clientId = clientId;
+
+	CLIENT_nextTransferOffset = 0;
+	gameStateTransferPercent = 0.0f;
+	CLIENT_SendSyncComplete();
+	fullyConnectedToHost = true;
+
+}
+
  void GameNetworking::UpdateHandleMessages()
  {
 	 int maxPacketPerUpdate = MAXPACKETSPERUPDATE;
@@ -599,21 +612,41 @@
 					connectedToHost = true;//for hybrid
 					
 				std::cout << "[HOST] Peer: MESSAGE_ENUM_CLIENT_INITIALDATA received from ClientGUID: " << clientGUID << std::endl;
-				std::cout << "[HOST] Sending Pause command to existing clients." << std::endl;
-
-				HOST_SendPauseAll_ToClients();
 
 
 
-				clients.back().downloadingState = 1;
+				#ifdef LOCAL_QUICK_CONNECT
+				if(connectedToHost)
+				{
+					//hybrid and quick connect
+					std::cout << "[CLIENT] Hybrid QUICK-CONNECTING.." << std::endl;
+					gameStateActions->pauseState = 1;
+					
+					this->clientId = clients.back().cliId;
+					//gameCompute->WriteFullGameState();
 
-				//compute game delta - and initialize transfer				
-				gameCompute->SaveGameStateDiff(&HOST_gameStateTransfer);
+					CLIENT_DownloadFinishedActions();
+					clients.back().downloadingState = 0;
+					
+				}
+				else
+				#endif
+				{
+					std::cout << "[HOST] Sending Pause command to existing clients." << std::endl;
 
-				HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
-				gameStateActions->pauseState = 1;
+					HOST_SendPauseAll_ToClients();
+					clients.back().downloadingState = 1;
 
-				HOST_SendGamePart_ToClient(clients.back().clientGUID);
+
+					//compute game delta - and initialize transfer				
+					gameCompute->SaveGameStateDiff(&HOST_gameStateTransfer);
+
+					HOST_SendSyncStart_ToClient(clients.back().cliId, systemGUID);
+					gameStateActions->pauseState = 1;
+
+					HOST_SendGamePart_ToClient(clients.back().clientGUID);
+				}
+
 			 }
 			 else if (msgtype == MESSAGE_ENUM_HOST_SYNCDATA1)
 			 {
@@ -658,23 +691,15 @@
 
 					// 	 assert(0);
 					//  }
+
+
 					 std::cout << "[CLIENT] Peer: MESSAGE_ENUM_HOST_GAMEDATA_PART final GameState part Recieved, applying diff and sending acknologement." << std::endl;
 					 
 					 gameCompute->LoadGameStateFromDiff(&CLIENT_gameStateTransfer, gameStateActions->tickIdx);//todo make the name server name or something
 					 
 
-					 
-					 gameStateActions->pauseState = 0;
-					 gameStateActions->clientId = clientId;
+					 CLIENT_DownloadFinishedActions();
 
-
-
-
-
-					 CLIENT_nextTransferOffset = 0;
-					 gameStateTransferPercent = 0.0f;
-					 CLIENT_SendSyncComplete();
-					 fullyConnectedToHost = true;
 				 }
 				 else
 					 CLIENT_SendGamePartAck();

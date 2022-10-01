@@ -236,7 +236,10 @@ int32_t main(int32_t argc, char* args[])
     uint64_t timerStartMs = SDL_GetTicks64();
 
 
-
+    #ifdef LOCAL_AUTO_CONNECT
+        gameNetworking.StartServer(GAMESERVERPORT);
+        gameNetworking.ConnectToHost(SLNet::SystemAddress("localhost", GAMESERVERPORT));
+    #endif
 
     while (!quit)
     {
@@ -499,6 +502,9 @@ int32_t main(int32_t argc, char* args[])
 
 
         static char connectIPString[256] = "localhost";
+
+
+
         if (!gameNetworking.connectedToHost)
         {
             ImGui::InputText("IP", connectIPString, 256);
@@ -506,6 +512,7 @@ int32_t main(int32_t argc, char* args[])
             {
                 gameNetworking.ConnectToHost(SLNet::SystemAddress(&connectIPString[0], port));
             }
+
         }
         if (gameNetworking.connectedToHost)
         {

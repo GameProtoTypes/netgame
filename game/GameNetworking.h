@@ -54,6 +54,7 @@
 #define MAX_CLIENTS (1024)
 
 #define LOCAL_QUICK_CONNECT
+#define LOCAL_AUTO_CONNECT
 
 
 class GameNetworking
@@ -118,6 +119,7 @@ public:
 	void CLIENT_SendGamePartAck();
 	void CLIENT_SendSyncComplete();
 
+	void CLIENT_DownloadFinishedActions();
 
 
 	void HOST_SendActionUpdates_ToClients(const std::vector<ActionWrap>& actions);
