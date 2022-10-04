@@ -1,3 +1,4 @@
+#define DEBUG
 
 
 #include "gpuvectortypes.h"

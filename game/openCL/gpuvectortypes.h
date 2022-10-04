@@ -8,11 +8,13 @@ typedef uint2 ge_uint2;
 typedef uint3 ge_uint3;
 typedef uint4 ge_uint4;
 typedef short3 ge_short3;
+typedef ushort3 ge_ushort3;
 
 
 typedef unsigned int offsetPtr;
 typedef ge_uint2 offsetPtr2;
 typedef ge_uint3 offsetPtr3;
+typedef ge_ushort3 offsetPtrShort3;
 
 #define INT2_ZERO(a) (a.x == 0 && a.y == 0 )
 #define INT3_ZERO(a) (a.x == 0 && a.y == 0 && a.z == 0 )
@@ -42,6 +44,7 @@ typedef ge_uint3 offsetPtr3;
 
 #define SHORT3_TO_INT3(a) ((ge_int3)(a.x, a.y, a.z))
 #define INT3_TO_SHORT3(a)  ((ge_short3)(a.x, a.y, a.z))
+#define VECTOR3_CAST(a,type)  ((type)(a.x, a.y, a.z))
 
 
 

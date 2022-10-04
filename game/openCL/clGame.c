@@ -174,6 +174,11 @@ cl_uchar MapTileData_PeepCount(cl_uint tileData)
 {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, MapTileFlags_PeepCount0, 3);
 }
+void MapTileData_SetPeepCount(cl_uint* tileData, cl_uchar peepCount)
+{
+    peepCount = clamp((int)peepCount,0, 7);
+    BITBANK_SET_SUBNUMBER_UINT(tileData, MapTileFlags_PeepCount0, 3, peepCount);
+}
 
 cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
@@ -1329,6 +1334,21 @@ cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_sh
 
 
 
+cl_uint* AStarPathNode_GetMapData(ALL_CORE_PARAMS, AStarPathNode* node)
+{
+    ge_int3 coord;
+    coord = GE_INT3_WHOLE_Q16(node->mapCoord_Q16);
+    #ifdef DEBUG
+    if(MapTileCoordValid(coord) == 0)
+    {   
+        CL_THROW_ASSERT();
+        return NULL;
+    }
+    #endif
+
+    return MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+}
+
 
 
 
@@ -2082,9 +2102,9 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
             AStarPathNode* targetPathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
 
+
             AStarPathNode* prevpathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
-
 
             //advance
             peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
@@ -2120,15 +2140,28 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
     // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
     if(targetPathNode != NULL)
     {
-        targetVelocity.x = d.x >> 2;
-        targetVelocity.y = d.y >> 2;
-        targetVelocity.z = d.z >> 2;
+        //cl_uint* mapData = AStarPathNode_GetMapData(ALL_CORE_PARAMS_PASS, targetPathNode);
+        
+        //CL_CHECK_NULL(mapData);
+        ge_int3 coord = GE_INT3_WHOLE_Q16(targetPathNode->mapCoord_Q16);
+        int peepCnt = gameState->map.levels[coord.z].peepCounts[coord.x][coord.y];
 
-        ge_int3 error = INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
+        //if(peepCnt < PEEP_PATH_CROWD /*|| WHOLE_Q16(len) > 10 */)
+        {
+            targetVelocity.x = d.x >> 2;
+            targetVelocity.y = d.y >> 2;
+            targetVelocity.z = d.z >> 2;
 
-        peep->physics.base.vel_add_Q16.x += error.x;
-        peep->physics.base.vel_add_Q16.y += error.y;
-        peep->physics.base.vel_add_Q16.z += error.z;
+            ge_int3 error = INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
+
+            peep->physics.base.vel_add_Q16.x += error.x;
+            peep->physics.base.vel_add_Q16.y += error.y;
+            peep->physics.base.vel_add_Q16.z += error.z;
+        }
+        //else
+        {
+         //   printf("pc: %d, ",peepCnt);
+        }
     }
 
 
@@ -2463,6 +2496,34 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             BITCLEAR(peep->stateBasic.bitflags0, PeepState_BitFlags_visible);
         }
     }
+
+
+
+    //update map coord tracking
+    if(VECTOR3_EQUAL(peep->mapCoord, maptilecoords) == 0)
+    {
+
+
+
+        peep->mapCoord_1 = peep->mapCoord;
+        peep->mapCoord = VECTOR3_CAST(maptilecoords, offsetPtrShort3);
+
+        //printf("a");
+            // cl_uint* mapData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, VECTOR3_CAST(peep->mapCoord, ge_int3));
+            // peepCnt = MapTileData_PeepCount(*mapData);
+            // MapTileData_SetPeepCount(mapData, peepCnt+1);
+        
+        int b = atomic_inc(&gameState->map.levels[peep->mapCoord.z].peepCounts[peep->mapCoord.x][peep->mapCoord.y]);
+        int a = atomic_dec(&gameState->map.levels[peep->mapCoord_1.z].peepCounts[peep->mapCoord_1.x][peep->mapCoord_1.y]);
+
+        //printf("%d,%d\n", a,b);
+    }
+        
+
+    
+    
+
+    
 
 
     //revert position to last good if needed
@@ -3756,6 +3817,11 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         WorldToMap(gameState->peeps[p].physics.base.pos_Q16, &gameState->peeps[p].posMap_Q16);
         gameState->peeps[p].lastGoodPosMap_Q16 = gameState->peeps[p].posMap_Q16;
 
+
+        gameState->peeps[p].mapCoord = VECTOR3_CAST(GE_INT3_WHOLE_Q16(gameState->peeps[p].posMap_Q16), offsetPtrShort3);
+        gameState->peeps[p].mapCoord_1 = OFFSET_NULL_SHORT_3D;
+
+
         gameState->peeps[p].physics.shape.radius_Q16 = TO_Q16(1);
         BITCLEAR(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_deathState);
         BITSET(gameState->peeps[p].stateBasic.bitflags0, PeepState_BitFlags_valid);
@@ -4055,8 +4121,8 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
     
 
-    //update AStarPath Searchers
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    //update AStarPath Searchers
     if(search->state == AStarPathFindingProgress_Searching)
     {
         AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
@@ -4066,6 +4132,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
        // printf("going to ready..");
         search->state = AStarPathFindingProgress_Ready;
     }
+
 
 
 

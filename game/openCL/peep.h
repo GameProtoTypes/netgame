@@ -20,9 +20,17 @@
 #define OFFSET_NULL_2D  ((offsetPtr2){0xFFFFFFFF , 0xFFFFFFFF})
 #define OFFSET_NULL_3D  ((offsetPtr3){0xFFFFFFFF , 0xFFFFFFFF,  0xFFFFFFFF})
 
+#define OFFSET_NULL_SHORT_3D  ((offsetPtrShort3){0xFFFF , 0xFFFF,  0xFFFF})
+
+
+
 #define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } else ARRAY[INDEX] = VALUE; }
 #define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
 #define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
+#define CL_THROW_ASSERT(){printf("[CL] ASSERT line %d \n", __LINE__);}
+
+
+
 
 #define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL){  POINTER = NULL;} else POINTER = &(ARRAY[OFFSET]);} 
 #define OFFSET_TO_PTR_2D(ARRAY2D, OFFSET2D, POINTER) { if((OFFSET2D.x == OFFSET_NULL) || (OFFSET2D.y == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY2D[OFFSET2D.x][OFFSET2D.y]); } 
@@ -154,6 +162,10 @@ struct Peep {
 	cl_int minDistPeep_Q16;
 	offsetPtr minDistPeepPtr;
 
+	offsetPtrShort3 mapCoord;
+	offsetPtrShort3 mapCoord_1;
+
+
 	ge_int3 posMap_Q16;
 	ge_int3 lastGoodPosMap_Q16;
 	
@@ -266,6 +278,9 @@ struct MapLevel {
 	//A - MapTile
 	//F - FLAGS
 	cl_uint data[MAPDIM][MAPDIM];
+
+	uint peepCounts[MAPDIM][MAPDIM];
+	uint peepCounts_Final[MAPDIM][MAPDIM];
 } typedef MapLevel;
 
 struct Map {

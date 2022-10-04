@@ -105,7 +105,9 @@
 			"__functional_base": "c",
 			"__memory": "c",
 			"__hash_table": "c",
-			"__split_buffer": "c"
+			"__split_buffer": "c",
+			"__functional_base_03": "c",
+			"__tuple": "c"
 		},
 		"gitdoc.enabled": false
 	}
