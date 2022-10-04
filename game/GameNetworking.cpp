@@ -93,6 +93,7 @@
 	 bs.Write(static_cast<uint8_t>(ID_USER_PACKET_ENUM));
 	 bs.Write(static_cast<uint8_t>(MESSAGE_ENUM_CLIENT_INITIALDATA));
 	 bs.Write(static_cast<uint32_t>(clientGUID));
+	 bs.Write(static_cast<int32_t>(prefferedClientID));
 
 	 this->peerInterface->Send(&bs, MEDIUM_PRIORITY, RELIABLE_ORDERED, 1, hostPeer, false);
  }
@@ -616,8 +617,13 @@ void GameNetworking::CLIENT_DownloadFinishedActions()
 			 {
 				uint32_t clientGUID;
 				bts.Read(clientGUID);
-				AddClientInternal(clientGUID, systemGUID);
+
+				int32_t requestedCliId;
+				bts.Read(requestedCliId);
+
+				AddClientInternal(clientGUID, systemGUID, requestedCliId);
 				
+
 				if(clientGUID == this->clientGUID)
 					connectedToHost = true;//for hybrid
 					
@@ -1033,10 +1039,25 @@ void GameNetworking::CLIENT_DownloadFinishedActions()
 		clients.erase(std::next(clients.begin(), removeIdx));
 }
 
-void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid)
+void GameNetworking::AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid, int32_t requestedCliId)
 {
 	clientMeta meta;
-	meta.cliId = nextCliIdx;
+
+	//solve cliId
+	bool cliIdInUse = false;
+	for(auto meta : clients)
+	{
+		if(meta.cliId == requestedCliId)
+		cliIdInUse = true;
+		break;
+	}
+
+	if(cliIdInUse)
+		meta.cliId = nextCliIdx;
+	else
+		meta.cliId = requestedCliId;
+
+
 	meta.rakGuid = rakguid;
 	meta.clientGUID = clientGUID;
 	meta.hostTickOffset = 0;

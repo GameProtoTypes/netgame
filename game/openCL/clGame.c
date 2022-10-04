@@ -170,6 +170,11 @@ cl_uchar MapTileData_TileSolid(cl_int tileData)
         return 0;
 }
 
+cl_uchar MapTileData_PeepCount(cl_uint tileData)
+{
+    return BITBANK_GET_SUBNUMBER_UINT(tileData, MapTileFlags_PeepCount0, 3);
+}
+
 cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
     cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
@@ -303,7 +308,6 @@ void AStarInitPathNode(AStarPathNode* node)
     node->nextOPtr = OFFSET_NULL;
     node->prevOPtr = OFFSET_NULL;
 
-    node->peepCount = 0;
 }
 
 
@@ -825,6 +829,9 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
         steps->nextPathStartIdx = ASTAR_MAX_PATHS-1;
         printf("Max Paths Reached!\n");
     }
+
+  //  OFFSET_TO_PTR(steps->pathNodes, startNodeOPtr, curNode2);
+   // curNode2->prevOPtr = OFFSET_NULL;
 
     return startNodeOPtr;
 }
@@ -2067,19 +2074,16 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         {
             //final node reached.
             peep->comms.message_TargetReached_pending = 255;//send the message
-
+            
         }
         else
         {
             //advance if theres room
             AStarPathNode* targetPathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-            targetPathNode->peepCount++;
 
             AStarPathNode* prevpathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
-            if(prevpathNode != NULL)
-                prevpathNode->peepCount = clamp(prevpathNode->peepCount -1, 0, INT_MAX);
 
 
             //advance
@@ -2114,7 +2118,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
    
 
     // Print_GE_INT3_Q16(peep->physics.base.pos_Q16);
-    if(targetPathNode != NULL && targetPathNode->peepCount < PEEP_PATH_CROWD)
+    if(targetPathNode != NULL)
     {
         targetVelocity.x = d.x >> 2;
         targetVelocity.y = d.y >> 2;
@@ -2147,6 +2151,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
         if(search->state == AStarPathFindingProgress_Finished)
         {
             peep->physics.drive.targetPathNodeOPtr = search->pathOPtr;
+            peep->physics.drive.prevPathNodeOPtr = OFFSET_NULL;
             //AStarPathNode* nxtPathNode;
             //OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr, nxtPathNode);
             
@@ -2165,9 +2170,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
         //drive to the next path node
         AStarPathNode* nxtPathNode;
         OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr, nxtPathNode);
-        //printf("PC: %d\n",nxtPathNode->peepCount);
-        if(nxtPathNode->peepCount < PEEP_PATH_CROWD)
-        {
+
 
             ge_int3 worldloc;
             MapToWorld(nxtPathNode->mapCoord_Q16, &worldloc);
@@ -2181,23 +2184,12 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
             peep->comms.message_TargetReached = 0;
             peep->comms.message_TargetReached_pending = 0;
 
-
-        }
-
-
-
     }
 
 
 
     PeepDrivePhysics(ALL_CORE_PARAMS_PASS, peep);
-
-
-
     PeepMapTileCollisions(ALL_CORE_PARAMS_PASS, peep);
-
-
-
 
 }
 

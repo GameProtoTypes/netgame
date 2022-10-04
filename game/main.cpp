@@ -494,8 +494,14 @@ int32_t main(int32_t argc, char* args[])
         ImGui::InputInt("Port", &port, 1, 1);
         ImGui::Text("Server Running: %d", gameNetworking.serverRunning);
         ImGui::Text("Client Running: %d", gameNetworking.connectedToHost);
-        ImGui::Text("GameState Client Idx: %d", gameNetworking.clientId);
-                
+        ImGui::InputInt("CLI ID", &gameNetworking.prefferedClientID);
+
+        if(gameNetworking.prefferedClientID < 0) 
+            gameNetworking.prefferedClientID = 0;
+        
+        ImGui::Text("Assigned GameState Client Idx: %d", gameNetworking.clientId);
+        
+
         ImGui::Text("Num Connections: %d", gameNetworking.clients.size());
         if(!gameNetworking.serverRunning && !gameNetworking.connectedToHost)
             if (ImGui::Button("Start Server"))

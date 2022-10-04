@@ -108,8 +108,6 @@ struct AStarPathNode
 	ge_int3 mapCoord_Q16;
 	offsetPtr nextOPtr;
 	offsetPtr prevOPtr;
-
-	short peepCount;
 }typedef AStarPathNode;
 
 struct DrivePhysics
@@ -220,7 +218,9 @@ enum MapTileFlags {
 
 	MapTileFlags_Explored,
 
-
+	MapTileFlags_PeepCount0,
+	MapTileFlags_PeepCount1,
+	MapTileFlags_PeepCount2,
 
 	MapTileFlags_LASTFLAG
 } typedef MapTileFlags;

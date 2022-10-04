@@ -178,7 +178,7 @@ public:
 	// The flag for breaking the loop inside the packet listening thread.
 	bool isListening = false;
 
-	void AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid);
+	void AddClientInternal(uint32_t clientGUID, SLNet::RakNetGUID rakguid, int32_t requestedCliId);
 
 	SLNet::RakPeerInterface* peerInterface;
 	
@@ -249,6 +249,8 @@ public:
 	float lastFrameTimeMs = MINTICKTIMEMS;
 
 	uint32_t clientGUID;
+
+	int prefferedClientID = 0;
 
 	int tickConnectionWatchDog = TIMEOUT_TICKS;
 	int tickSyncCounter = 0;
