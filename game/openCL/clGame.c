@@ -14,7 +14,7 @@
 
 
 
-SynchronizedClientState* ThisClient(ALL_CORE_PARAMS)
+RETURN_POINTER SynchronizedClientState* ThisClient(ALL_CORE_PARAMS)
 {
     return &gameState->clientStates[gameStateActions->clientId];
 }
@@ -77,15 +77,17 @@ inline void BITBANK_SET_SUBNUMBER_UINT(cl_uint* bank, cl_int lsbBitIdx, cl_int n
 inline MapTile MapDataGetTile(cl_uint tileData) {
     return (MapTile)BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
 }
-inline void MapDataSetTile(cl_uint* tileData, MapTile tile) {
-    BITBANK_SET_SUBNUMBER_UINT(tileData, 0, 8, tile);
+inline void MapDataSetTile(PARAM_GLOBAL_POINTER cl_uint* tileData, MapTile tile) {
+    cl_uint tmp = *tileData;
+    BITBANK_SET_SUBNUMBER_UINT(&tmp, 0, 8, tile);
+    *tileData = tmp;
 }
 
 inline int MapTileGetRotation(cl_uint tileData) {
     return BITBANK_GET_SUBNUMBER_UINT(tileData, 8, 2);
 }
 
-cl_uint* MapGetDataPointerFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
+RETURN_POINTER cl_uint* MapGetDataPointerFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
     return &(gameState->map.levels[(mapcoord).z].data[(mapcoord).x][(mapcoord).y]);
 }
@@ -97,7 +99,7 @@ MapTile MapGetTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 
 cl_uchar MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
 
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
@@ -129,7 +131,7 @@ cl_uchar MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
     return 2;
 }
 
-cl_uchar MapDataHas2LowAdjacentCorners(cl_uint* data)
+cl_uchar MapDataHas2LowAdjacentCorners( cl_uint* data)
 {
     if (BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT) + BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT) == 2)
         return 1;
@@ -148,9 +150,9 @@ cl_uchar MapDataHas2LowAdjacentCorners(cl_uint* data)
 
 cl_uchar MapHas2LowAdjacentCorners(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
-
-    return MapDataHas2LowAdjacentCorners(data);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+    cl_uint localCopy = *data;
+    return MapDataHas2LowAdjacentCorners(&localCopy);
 }
 
 
@@ -182,7 +184,7 @@ void MapTileData_SetPeepCount(cl_uint* tileData, cl_uchar peepCount)
 
 cl_uchar MapHasLowCorner(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
 
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
@@ -198,7 +200,7 @@ cl_uchar MapDataLowCornerCount(cl_int tileData)
 }
 cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
 
     if (MapDataGetTile(*data) == MapTile_NONE)
         return 0;
@@ -206,7 +208,7 @@ cl_uchar MapLowCornerCount(ALL_CORE_PARAMS, ge_int3 mapCoords)
     return MapDataLowCornerCount(*data);
 }
 
-cl_uchar MapDataXLevel(cl_uint* data)
+cl_uchar MapDataXLevel( cl_uint* data)
 {
     if(MapDataHas2LowAdjacentCorners(data) > 0 && MapDataLowCornerCount(*data) == 2)
     {
@@ -222,14 +224,14 @@ cl_uchar MapDataXLevel(cl_uint* data)
 
 cl_uchar MapTileXLevel(ALL_CORE_PARAMS, ge_int3 mapCoords)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
-
-    return MapDataXLevel(data);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoords);
+    cl_uint localCopy = *data;
+    return MapDataXLevel(&localCopy);
 }
 
 cl_uchar MapTileCoordStandInValid(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapcoord);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapcoord);
     MapTile tile = MapDataGetTile(*data);
     if (tile == MapTile_NONE)
     {
@@ -246,7 +248,7 @@ cl_uchar MapTileCoordStandInValid(ALL_CORE_PARAMS, ge_int3 mapcoord)
 
 cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterDirection)
 {
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapcoord);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapcoord);
     MapTile tile = MapDataGetTile(*data);
     if (tile == MapTile_NONE)
     {   
@@ -258,7 +260,7 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
 
         ge_int3 downCoord = mapcoord;
         downCoord.z--;
-        cl_uint* downData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, downCoord);
+        USE_POINTER cl_uint* downData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, downCoord);
         if( MapDataGetTile(*downData) != MapTile_NONE)
             return 1;
 
@@ -295,7 +297,7 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
 
 
 }
-inline void AStarNodeInstantiate(AStarNode* node)
+inline void AStarNodeInstantiate(PARAM_GLOBAL_POINTER AStarNode* node)
 {
     
     node->g_Q16 = TO_Q16(0);
@@ -307,7 +309,7 @@ inline void AStarNodeInstantiate(AStarNode* node)
     node->tileIdx.z = -1;
 
 }
-void AStarInitPathNode(AStarPathNode* node)
+void AStarInitPathNode(PARAM_GLOBAL_POINTER AStarPathNode* node)
 {
     node->mapCoord_Q16 = (ge_int3){ 0,0,0 };
     node->nextOPtr = OFFSET_NULL;
@@ -316,7 +318,7 @@ void AStarInitPathNode(AStarPathNode* node)
 }
 
 
-void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
+void AStarSearch_BFS_Instantiate(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 {
     for (int x = 0; x < MAPDIM; x++)
     {
@@ -324,7 +326,7 @@ void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
         {
             for (int z = 0; z < MAPDEPTH; z++)
             {
-                AStarNode* node = &search->details[x][y][z];
+                USE_POINTER AStarNode* node = &search->details[x][y][z];
                 AStarNodeInstantiate(node);
 
 
@@ -348,10 +350,10 @@ void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
     search->pathOPtr = OFFSET_NULL;
 
 }
-void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, cl_ulong idx, int x, int y, int z)
+void AStarSearch_BFS_InstantiateParrallel(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_ulong idx, int x, int y, int z)
 {
 
-    AStarNode* node = &search->details[x][y][z];
+    USE_POINTER AStarNode* node = &search->details[x][y][z];
     AStarNodeInstantiate(node);
     node->tileIdx = (ge_short3){x,y,z};
 
@@ -386,15 +388,15 @@ cl_uchar MapTileCoordValid(ge_int3 mapcoord)
     }
     return 0;
 }
-cl_uchar AStarNodeValid(AStarNode* node)
+cl_uchar AStarNodeValid(PARAM_GLOBAL_POINTER AStarNode* node)
 {
     return MapTileCoordValid(SHORT3_TO_INT3(node->tileIdx));
 }
-cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* prevNode)
+cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarNode* node, PARAM_GLOBAL_POINTER AStarNode* prevNode)
 {  
 
-    cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(prevNode->tileIdx));
-    cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx));
+    USE_POINTER cl_uint* fromTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(prevNode->tileIdx));
+    USE_POINTER cl_uint* toTileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx));
 
     ge_int3 delta = INT3_SUB(SHORT3_TO_INT3(node->tileIdx), SHORT3_TO_INT3( prevNode->tileIdx ));
     if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx), delta) == 0)
@@ -419,7 +421,7 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, AStarNode* node, AStarNode* 
 
 }
 
-void MakeCardinalDirectionOffsets(ge_int3* offsets)
+void MakeCardinalDirectionOffsets(PARAM_GLOBAL_POINTER ge_int3* offsets)
 {
     offsets[0] = (ge_int3){ 1, 0, 0 };
     offsets[1] = (ge_int3){ -1, 0, 0 };
@@ -451,16 +453,16 @@ void MakeCardinalDirectionOffsets(ge_int3* offsets)
     offsets[24] = (ge_int3){ 1, -1, 0 };
     offsets[25] = (ge_int3){ -1, -1, 0 };
 }
-int AStarOpenHeapKey(AStarSearch_BFS* search, AStarNode* node)
+int AStarOpenHeapKey(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* node)
 {
     //f
     return node->g_Q16 + node->h_Q16;
 }
 
-void AStarOpenHeapTrickleDown(AStarSearch_BFS* search, cl_int index)
+void AStarOpenHeapTrickleDown(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_int index)
 {
     cl_int largerChild;
-    AStarNode* top;
+    USE_POINTER AStarNode* top;
     offsetPtr3 topOPtr = search->openHeap_OPtrs[index];
     OFFSET_TO_PTR_3D(search->details, topOPtr, top);
 
@@ -470,9 +472,9 @@ void AStarOpenHeapTrickleDown(AStarSearch_BFS* search, cl_int index)
         int leftChild = 2 * index + 1;
         int rightChild = leftChild + 1;
 
-        AStarNode* leftChildNode;
+        USE_POINTER AStarNode* leftChildNode;
         OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[leftChild], leftChildNode)
-        AStarNode* rightChildNode;
+        USE_POINTER AStarNode* rightChildNode;
         OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChildNode)
 
         if ((rightChild < search->openHeapSize) && (AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode)))
@@ -480,7 +482,7 @@ void AStarOpenHeapTrickleDown(AStarSearch_BFS* search, cl_int index)
         else
             largerChild = leftChild;
 
-        AStarNode* largerChildNode;
+        USE_POINTER AStarNode* largerChildNode;
 
         OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[largerChild], largerChildNode)
 
@@ -496,7 +498,7 @@ void AStarOpenHeapTrickleDown(AStarSearch_BFS* search, cl_int index)
     search->openHeap_OPtrs[index] = topOPtr;
 }
 
-offsetPtr3 AStarOpenHeapRemove(AStarSearch_BFS* search)
+offsetPtr3 AStarOpenHeapRemove(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 {
     offsetPtr3 rootOPtr = search->openHeap_OPtrs[0];
 
@@ -509,42 +511,42 @@ offsetPtr3 AStarOpenHeapRemove(AStarSearch_BFS* search)
     return rootOPtr;
 }
 
-offsetPtr3 AStarRemoveFromOpen(AStarSearch_BFS* search)
+offsetPtr3 AStarRemoveFromOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 {
 
     offsetPtr3 nodeOPtr = AStarOpenHeapRemove(search);
     
 
-    AStarNode* node;
+    USE_POINTER AStarNode* node;
     OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
 
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
     return nodeOPtr;
 }
-void AStarAddToClosed( AStarSearch_BFS* search, AStarNode* node)
+void AStarAddToClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node)
 {
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
-cl_uchar AStarNodeInClosed(AStarSearch_BFS* search, AStarNode* node)
+cl_uchar AStarNodeInClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node)
 {
     return search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
-cl_uchar AStarNodeInOpen(AStarSearch_BFS* search, AStarNode* node)
+cl_uchar AStarNodeInOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* node)
 {
     return search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
 
-void AStarOpenHeapTrickleUp(AStarSearch_BFS* search, cl_int index)
+void AStarOpenHeapTrickleUp(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_int index)
 {
     cl_int prev = (index - 1) / 2;
     offsetPtr3 bottomOPtr = search->openHeap_OPtrs[index];
 
-    AStarNode* bottomNode;
+    USE_POINTER AStarNode* bottomNode;
     OFFSET_TO_PTR_3D(search->details, bottomOPtr, bottomNode);
 
-    AStarNode* prevNode;
+    USE_POINTER AStarNode* prevNode;
     OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[prev], prevNode);
 
     while (index > 0 && AStarOpenHeapKey(search, prevNode) > AStarOpenHeapKey(search, bottomNode))
@@ -558,7 +560,7 @@ void AStarOpenHeapTrickleUp(AStarSearch_BFS* search, cl_int index)
 }
 
 
-void AStarOpenHeapInsert(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
+void AStarOpenHeapInsert(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
 {
     search->openHeap_OPtrs[search->openHeapSize] = nodeOPtr;
     AStarOpenHeapTrickleUp(search, search->openHeapSize);
@@ -567,16 +569,16 @@ void AStarOpenHeapInsert(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
         printf("ERROR: AStarHeap Size Greater than ASTARHEAPSIZE!\n");
 
 }
-void AStarAddToOpen(AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
+void AStarAddToOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
 {
     AStarOpenHeapInsert(search, nodeOPtr);
 
-    AStarNode* node;
+    USE_POINTER AStarNode* node;
     OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
 }
 
-offsetPtr AStarPathStepsNextFreePathNode(AStarPathSteps* list)
+offsetPtr AStarPathStepsNextFreePathNode(PARAM_GLOBAL_POINTER AStarPathSteps* list)
 {
     offsetPtr ptr = list->nextListIdx;
     while ((list->pathNodes[ptr].nextOPtr != OFFSET_NULL))
@@ -599,42 +601,42 @@ offsetPtr AStarPathStepsNextFreePathNode(AStarPathSteps* list)
 
 
 
-void AStarRemoveFromClosed(AStarSearch_BFS* search, AStarNode* node)
+void AStarRemoveFromClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* node)
 {
     search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
 }
 
-cl_int AStarNodeDistanceHuristic(AStarSearch_BFS* search, AStarNode* nodeA, AStarNode* nodeB)
+cl_int AStarNodeDistanceHuristic(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* nodeA, PARAM_GLOBAL_POINTER AStarNode* nodeB)
 {
     return TO_Q16(abs(nodeA->tileIdx.x - nodeB->tileIdx.x) + abs(nodeA->tileIdx.y - nodeB->tileIdx.y) + abs(nodeA->tileIdx.z - nodeB->tileIdx.z));
 }
-cl_int AStarNodeDistanceHuristic_IDA(AStarSearch_IDA* search, ge_short3 locA, ge_short3 locB)
+cl_int AStarNodeDistanceHuristic_IDA(PARAM_GLOBAL_POINTER AStarSearch_IDA* search, ge_short3 locA, ge_short3 locB)
 {
     return TO_Q16(abs(locA.x - locB.x) + abs(locA.y - locB.y) + abs(locA.z - locB.z));
 }
-void AStarPrintNodeStats(AStarNode* node)
+void AStarPrintNodeStats(PARAM_GLOBAL_POINTER AStarNode* node)
 {
     printf("Node: Loc: ");
     Print_GE_SHORT3(node->tileIdx);
     printf(" H: %f, G: %f\n", FIXED2FLTQ16(node->h_Q16), FIXED2FLTQ16(node->g_Q16));
 }
-void AStarPrintPathNodeStats(AStarPathNode* node)
+void AStarPrintPathNodeStats(PARAM_GLOBAL_POINTER AStarPathNode* node)
 {
     printf("Node: Loc: ");
     Print_GE_INT3_Q16(node->mapCoord_Q16);
 }
-void AStarPrintSearchPathTo(AStarSearch_BFS* search, ge_int3 destTile)
+void AStarPrintSearchPathTo(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 destTile)
 {
-    AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
+    USE_POINTER AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
         OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, curNode);
     }
 }
-void AStarPrintSearchPathFrom(AStarSearch_BFS* search, ge_int3 startTile)
+void AStarPrintSearchPathFrom(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 startTile)
 {
-    AStarNode* curNode = &search->details[startTile.x][startTile.y][startTile.z];
+    USE_POINTER AStarNode* curNode = &search->details[startTile.x][startTile.y][startTile.z];
     while (curNode != NULL)
     {
         AStarPrintNodeStats(curNode);
@@ -642,9 +644,9 @@ void AStarPrintSearchPathFrom(AStarSearch_BFS* search, ge_int3 startTile)
     }
 }
 
-void AStarPrintPath(AStarPathSteps* paths, offsetPtr startNodeOPtr)
+void AStarPrintPath(PARAM_GLOBAL_POINTER AStarPathSteps* paths, offsetPtr startNodeOPtr)
 {
-    AStarPathNode* curNode;
+    USE_POINTER AStarPathNode* curNode;
     OFFSET_TO_PTR(paths->pathNodes, startNodeOPtr, curNode);
     while (curNode != NULL)
     {
@@ -716,23 +718,23 @@ cl_uchar GE_INT3_WHACHAMACOLIT1_ENTRY(ge_int3 a)
 }
 
 
-offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPathSteps* steps)
+offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarPathSteps* steps)
 {
     //grab a unused Node from pathNodes, and start building the list .
     offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
-    AStarNode* curNode;
+    USE_POINTER AStarNode* curNode;
     OFFSET_TO_PTR_3D(search->details, curNodeOPtr, curNode);
     CL_CHECK_NULL(curNode);
 
     offsetPtr startNodeOPtr = OFFSET_NULL;
-    AStarPathNode* pNP = NULL;
+    USE_POINTER AStarPathNode* pNP = NULL;
     int i = 0;
     while (curNode != NULL)
     { 
 
         int index = AStarPathStepsNextFreePathNode(&gameState->paths);
 
-        AStarPathNode* pN = &gameState->paths.pathNodes[index];
+        USE_POINTER AStarPathNode* pN = &gameState->paths.pathNodes[index];
 
         if (i == 0)
             startNodeOPtr = index;
@@ -764,7 +766,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
             {
                 //iterate until joint in path.
                 ge_int3 delta;
-                AStarNode* n2 = curNode;
+                USE_POINTER AStarNode* n2 = curNode;
                 do
                 {
                     OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
@@ -779,7 +781,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
 
                 if (n2 != NULL) 
                 {
-                    AStarNode* n2Prev;
+                    USE_POINTER AStarNode* n2Prev;
                     OFFSET_TO_PTR_3D(search->details, n2->prevOPtr, n2Prev);
 
                     if (curNode != n2Prev)
@@ -805,14 +807,14 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
 
 
     //form prev links
-    AStarPathNode* curNode2;
+    USE_POINTER AStarPathNode* curNode2;
     offsetPtr curNode2OPtr = startNodeOPtr;
     OFFSET_TO_PTR(steps->pathNodes, startNodeOPtr, curNode2);
 
     while (curNode2 != NULL)
     {
 
-        AStarPathNode* p;
+        USE_POINTER AStarPathNode* p;
         OFFSET_TO_PTR(steps->pathNodes, curNode2->nextOPtr, p);
 
 
@@ -843,21 +845,21 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, AStarSearch_BFS* search, AStarPath
 
 
 
-offsetPtr AStarFormPathSteps_IDA(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStarPathSteps* steps)
+offsetPtr AStarFormPathSteps_IDA(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search, PARAM_GLOBAL_POINTER AStarPathSteps* steps)
 {
     //grab a unused Node from pathNodes, and start building the list .
 
-    AStarNode_IDA* curNode;
+    USE_POINTER AStarNode_IDA* curNode;
     OFFSET_TO_PTR(search->path, 0, curNode);
 
     offsetPtr startNodeOPtr = OFFSET_NULL;
-    AStarPathNode* pNP = NULL;
+    USE_POINTER AStarPathNode* pNP = NULL;
     int i = 0;
     while (curNode != NULL && i <= search->pathEndIdx)
     { 
         int index = AStarPathStepsNextFreePathNode(&gameState->paths);
 
-        AStarPathNode* pN = &gameState->paths.pathNodes[index];
+        USE_POINTER AStarPathNode* pN = &gameState->paths.pathNodes[index];
 
         if (i == 0)
             startNodeOPtr = index;
@@ -888,14 +890,14 @@ offsetPtr AStarFormPathSteps_IDA(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStar
 
 
     //form prev links
-    AStarPathNode* curNode2;
+    USE_POINTER AStarPathNode* curNode2;
     offsetPtr curNode2OPtr = startNodeOPtr;
     OFFSET_TO_PTR(steps->pathNodes, startNodeOPtr, curNode2);
 
     while (curNode2 != NULL)
     {
 
-        AStarPathNode* p;
+        USE_POINTER AStarPathNode* p;
         OFFSET_TO_PTR(steps->pathNodes, curNode2->nextOPtr, p);
 
 
@@ -922,10 +924,10 @@ offsetPtr AStarFormPathSteps_IDA(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStar
 }
 
 
-AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_BFS* search, int iterations)
+AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER AStarSearch_BFS* search, int iterations)
 {
-    AStarNode* startNode;
-    AStarNode* targetNode;
+    USE_POINTER AStarNode* startNode;
+    USE_POINTER AStarNode* targetNode;
     OFFSET_TO_PTR_3D(search->details, search->startNodeOPtr,startNode);
     OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr,targetNode);
 
@@ -938,7 +940,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
         offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
 
 
-        AStarNode* current;
+        USE_POINTER AStarNode* current;
         OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
 
         //printf("G: "); PrintQ16(current->g_Q16); printf(" H: "); PrintQ16(current->h_Q16);
@@ -949,7 +951,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
             printf("AStarSearch_BFS_Continue AStarPathFindingProgress_Finished\n");
             search->state = AStarPathFindingProgress_Finished;
             
-            AStarNode* endNode;
+            USE_POINTER AStarNode* endNode;
             OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, endNode);
             CL_CHECK_NULL(endNode);
 
@@ -957,12 +959,12 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
             startNode->prevOPtr = OFFSET_NULL_3D;
 
             //form next links
-            AStarNode* curNode = targetNode;
+            USE_POINTER AStarNode* curNode = targetNode;
             offsetPtr3 curNodeOPtr = search->endNodeOPtr;
 
             while (curNode != NULL)
             {
-                AStarNode* p;
+                USE_POINTER AStarNode* p;
                 OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, p);
 
                 if(p != NULL)
@@ -1029,7 +1031,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
             // }
 
             offsetPtr3 prospectiveNodeOPtr = (offsetPtr3){prospectiveTileCoord.x,prospectiveTileCoord.y,prospectiveTileCoord.z};
-            AStarNode* prospectiveNode;
+            USE_POINTER AStarNode* prospectiveNode;
             OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
 
             if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0) || (AStarNodeInClosed(search, prospectiveNode)))
@@ -1076,7 +1078,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS, AStarSearch_B
 
 }
 
-cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, AStarSearch_BFS* search, ge_int3 startTile, ge_int3 destTile, int startIterations)
+cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 startTile, ge_int3 destTile, int startIterations)
 {
     if (MapTileCoordValid(startTile) == 0)
     {
@@ -1104,8 +1106,8 @@ cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, AStarSearch_BFS* search, ge_in
     search->startNodeOPtr = (offsetPtr3){startTile.x,startTile.y,startTile.z};
     search->endNodeOPtr = (offsetPtr3){destTile.x,destTile.y,destTile.z};
     
-    AStarNode* startNode;
-    AStarNode* targetNode;
+    USE_POINTER AStarNode* startNode;
+    USE_POINTER AStarNode* targetNode;
     OFFSET_TO_PTR_3D(search->details, search->startNodeOPtr,startNode);
     OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr,targetNode);
 
@@ -1116,7 +1118,7 @@ cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, AStarSearch_BFS* search, ge_in
 
     return AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, startIterations);
 }
-bool AStarSearch_IDA_Node_In_Path(AStarSearch_IDA* search, AStarNode_IDA* node)
+bool AStarSearch_IDA_Node_In_Path(PARAM_GLOBAL_POINTER AStarSearch_IDA* search, AStarNode_IDA* node)
 {
     for(int i = 0; i < search->pathEndIdx; i++)
     {
@@ -1125,7 +1127,7 @@ bool AStarSearch_IDA_Node_In_Path(AStarSearch_IDA* search, AStarNode_IDA* node)
     }
     return false;
 }
-bool AStarSearch_IDA_Loc_In_Path(AStarSearch_IDA* search, ge_short3 loc)
+bool AStarSearch_IDA_Loc_In_Path(PARAM_GLOBAL_POINTER AStarSearch_IDA* search, ge_short3 loc)
 {
     for(int i = 0; i < search->pathEndIdx; i++)
     {
@@ -1134,14 +1136,14 @@ bool AStarSearch_IDA_Loc_In_Path(AStarSearch_IDA* search, ge_short3 loc)
     }
     return false;
 }
-void AStarSearch_IDA_InitNode(AStarSearch_IDA* search, AStarNode_IDA* node)
+void AStarSearch_IDA_InitNode(PARAM_GLOBAL_POINTER AStarSearch_IDA* search, PARAM_GLOBAL_POINTER AStarNode_IDA* node)
 {
     node->tileLoc = (ge_short3)(-1,-1,-1);
     for(int i = 0; i <= 25; i++)
         node->searchedSuccessors[i] = false;
 }
 
-ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch_IDA* search, AStarNode_IDA* node, int* hCost, bool* failed)
+ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search, PARAM_GLOBAL_POINTER AStarNode_IDA* node,  int* hCost,  bool* failed)
 {
 
     int minCost = INT_MAX;
@@ -1164,7 +1166,7 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch
             continue;
         }
 
-        cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3( prospectiveTileCoord));
+        USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3( prospectiveTileCoord));
         MapTile tile = MapDataGetTile(*data);
         if (tile != MapTile_NONE)
         {
@@ -1189,7 +1191,7 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, AStarSearch
     return  node->tileLoc + INT3_TO_SHORT3( staticData->directionalOffsets[minCosti] );
 }
 
-int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search)
+int AStarSearch_IDA_Search(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search)
 {
     int pathRootsStack[ASTARSEARCH_IDA_PATHMAXSIZE];
     int rootStackIdx=0;
@@ -1197,7 +1199,7 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search)
     cl_long iterations = 0;
     while(true)
     {
-        AStarNode_IDA* node = &search->path[search->pathEndIdx];
+        USE_POINTER AStarNode_IDA* node = &search->path[search->pathEndIdx];
         int h = AStarNodeDistanceHuristic_IDA(search, node->tileLoc, search->endLoc);
         int f = node->gCost + h;
         
@@ -1236,7 +1238,8 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search)
 
 
         //choose successor
-        int hcost; bool failed;
+        int hcost;
+        bool failed;
         ge_short3 sLoc = AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS_PASS, search,  node, &hcost, &failed);
         if(failed)
         {
@@ -1275,7 +1278,7 @@ int AStarSearch_IDA_Search(ALL_CORE_PARAMS, AStarSearch_IDA* search)
 }
 
 
-AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, AStarSearch_IDA* search, int iterations)
+AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search, int iterations)
 {
     search->t = AStarSearch_IDA_Search(ALL_CORE_PARAMS_PASS, search);
     if(search->t == 0)
@@ -1296,7 +1299,7 @@ AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, AStarSearch_I
 
 
 
-cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_short3 startTile, ge_short3 destTile, int startIterations)
+cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search, ge_short3 startTile, ge_short3 destTile, int startIterations)
 {
     if (MapTileCoordValid(SHORT3_TO_INT3( startTile )) == 0)
     {
@@ -1334,7 +1337,7 @@ cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, AStarSearch_IDA* search, ge_sh
 
 
 
-cl_uint* AStarPathNode_GetMapData(ALL_CORE_PARAMS, AStarPathNode* node)
+RETURN_POINTER cl_uint* AStarPathNode_GetMapData(ALL_CORE_PARAMS, AStarPathNode* node)
 {
     ge_int3 coord;
     coord = GE_INT3_WHOLE_Q16(node->mapCoord_Q16);
@@ -1353,10 +1356,10 @@ cl_uint* AStarPathNode_GetMapData(ALL_CORE_PARAMS, AStarPathNode* node)
 
 
 //get the last path node from a node in a path
-offsetPtr AStarPathNode_LastPathNode(AStarPathSteps* steps, offsetPtr pathNodeOPtr)
+offsetPtr AStarPathNode_LastPathNode(PARAM_GLOBAL_POINTER AStarPathSteps* steps, offsetPtr pathNodeOPtr)
 {
     offsetPtr curNodeOPtr = pathNodeOPtr;
-    AStarPathNode* curNode;
+    USE_POINTER AStarPathNode* curNode;
     OFFSET_TO_PTR(steps->pathNodes, curNodeOPtr, curNode);
 
 
@@ -1398,7 +1401,7 @@ int SOME_INTERNAL_CORDIST(int x, int y)
         return 0;
 }
 
-ge_int3 Triangle3D_ToBaryCentric(Triangle3DHeavy* triangle, ge_int3 point)
+ge_int3 Triangle3D_ToBaryCentric( Triangle3DHeavy* triangle, ge_int3 point)
 {
     ge_int3 U = triangle->u_Q16;
     ge_int3 V = triangle->v_Q16;
@@ -1420,7 +1423,7 @@ ge_int3 Triangle3D_ToBaryCentric(Triangle3DHeavy* triangle, ge_int3 point)
     };
 }
 
-ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q16, int* dist_Q16)
+ge_int3 Triangle3DHeavy_ClosestPoint( Triangle3DHeavy* triangle, ge_int3 point_Q16, int* dist_Q16)
 {   
     ge_int3 P1 = triangle->base.verts_Q16[0];
     ge_int3 P2 = triangle->base.verts_Q16[1];
@@ -1563,7 +1566,7 @@ ge_int3 Triangle3DHeavy_ClosestPoint(Triangle3DHeavy* triangle, ge_int3 point_Q1
 
 
 
-void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
+void Triangle3DMakeHeavy( Triangle3DHeavy* triangle)
 {
     triangle->u_Q16 = INT3_SUB(triangle->base.verts_Q16[1], triangle->base.verts_Q16[0]);//P_2 - P_1
     triangle->v_Q16 = INT3_SUB(triangle->base.verts_Q16[2], triangle->base.verts_Q16[0]);//P_3 - P_1
@@ -1581,7 +1584,7 @@ void Triangle3DMakeHeavy(Triangle3DHeavy* triangle)
     }
 
 }
-void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2, ge_int3* fourCorners)
+void Triangle3D_Make2Face( Triangle3DHeavy* triangle1,  Triangle3DHeavy* triangle2, ge_int3* fourCorners)
 {
     triangle1->base.verts_Q16[0] = fourCorners[0];
     triangle1->base.verts_Q16[1] = fourCorners[1];
@@ -1597,7 +1600,7 @@ void Triangle3D_Make2Face(Triangle3DHeavy* triangle1, Triangle3DHeavy* triangle2
 
 
 
-void MapTileConvexHull_From_TileData(ConvexHull* hull, cl_int* tileData)
+void MapTileConvexHull_From_TileData( ConvexHull* hull,  cl_int* tileData)
 {
     ge_int3 A = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
     ge_int3 B = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
@@ -1714,7 +1717,7 @@ void PeepPrint(Peep* peep)
 }
 
 
-void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
+void PeepPeepPhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, PARAM_GLOBAL_POINTER Peep* otherPeep)
 {
 
     //calculate force based on penetration distance with otherPeep.
@@ -1768,7 +1771,7 @@ void PeepPeepPhysics(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
 
 }
 
-void PeepToPeepInteraction(ALL_CORE_PARAMS, Peep* peep, Peep* otherPeep)
+void PeepToPeepInteraction(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, PARAM_GLOBAL_POINTER Peep* otherPeep)
 {
     if (peep->stateBasic.deathState != 0 || otherPeep->stateBasic.deathState != 0)
         return;
@@ -1809,7 +1812,11 @@ void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
 }
 
 
-void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_map_tile, ge_int3* out_tile_world_pos_center_Q16, ge_int3* out_map_tile_coord_whole, cl_int* out_tile_data)
+void PeepGetMapTile(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, ge_int3 offset, 
+ MapTile* out_map_tile, 
+ ge_int3* out_tile_world_pos_center_Q16,
+  ge_int3* out_map_tile_coord_whole, 
+   cl_int* out_tile_data)
 {
     (*out_map_tile_coord_whole).z = WHOLE_Q16(peep->posMap_Q16.z) + (offset.z);
     (*out_map_tile_coord_whole).x = WHOLE_Q16(peep->posMap_Q16.x) + (offset.x);
@@ -1844,7 +1851,7 @@ void PeepGetMapTile(ALL_CORE_PARAMS, Peep* peep, ge_int3 offset, MapTile* out_ma
     
 }
 
-void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr)
+void RegionCollision(PARAM_GLOBAL_POINTER cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr)
 {
     if (W > 0 && lr == -1)//left outside
     {
@@ -1871,7 +1878,7 @@ void RegionCollision(cl_int* out_pen_Q16, cl_int radius_Q16, cl_int W, cl_int lr
 
 
 
-ge_int3 MapTileConvexHull_ClosestPointToPoint(ConvexHull* hull, ge_int3 point_Q16)
+ge_int3 MapTileConvexHull_ClosestPointToPoint( ConvexHull* hull, ge_int3 point_Q16)
 {
     int smallestDist_Q16 = TO_Q16(1000);
     ge_int3 closestPoint;
@@ -1898,7 +1905,7 @@ ge_int3 MapTileConvexHull_ClosestPointToPoint(ConvexHull* hull, ge_int3 point_Q1
     return closestPoint;
 }
 
-cl_uchar MapTileConvexHull_PointInside(ConvexHull* hull, ge_int3 point)
+cl_uchar MapTileConvexHull_PointInside( ConvexHull* hull, ge_int3 point)
 {
     //check dot product of point to verts against normal of the triangle
     for (int i = 0; i < 14; i++)
@@ -1924,7 +1931,7 @@ cl_uchar MapTileConvexHull_PointInside(ConvexHull* hull, ge_int3 point)
     return 1;
 }
 
-void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
+void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
     //maptile collisions
@@ -2068,7 +2075,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, Peep* peep)
 }
 
 
-void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
+void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     ge_int3 targetVelocity;
 
@@ -2099,22 +2106,21 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
         else
         {
             //advance if theres room
-            AStarPathNode* targetPathNode;
+            USE_POINTER AStarPathNode* targetPathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
 
 
-            AStarPathNode* prevpathNode;
+            USE_POINTER AStarPathNode* prevpathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
 
             //advance
             peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
             peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
 
-
             
             if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL) 
             {
-                AStarPathNode* targetPathNode;
+                USE_POINTER AStarPathNode* targetPathNode;
                 OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
                 
 
@@ -2133,7 +2139,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
    
 
     //advacne if theres room
-    AStarPathNode* targetPathNode;
+    USE_POINTER AStarPathNode* targetPathNode;
     OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
    
 
@@ -2172,7 +2178,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
 
 }
 
-void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
+void WalkAndFight(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
 
@@ -2180,7 +2186,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
     //if search is done - start the peep on path
     if(peep->stateBasic.aStarSearchPtr != OFFSET_NULL)
     {
-        AStarSearch_BFS* search = &gameState->mapSearchers[0];
+        USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
         if(search->state == AStarPathFindingProgress_Finished)
         {
             peep->physics.drive.targetPathNodeOPtr = search->pathOPtr;
@@ -2201,7 +2207,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 
 
         //drive to the next path node
-        AStarPathNode* nxtPathNode;
+        USE_POINTER AStarPathNode* nxtPathNode;
         OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr, nxtPathNode);
 
 
@@ -2227,7 +2233,7 @@ void WalkAndFight(ALL_CORE_PARAMS, Peep* peep)
 }
 
 
-void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
+void PeepAssignToSector_Detach(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
     cl_int x = ((peep->physics.base.pos_Q16.x >> 16) / (SECTOR_SIZE));
@@ -2244,10 +2250,10 @@ void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
         y = SQRT_MAXSECTORS / 2 - 1;
 
 
-    MapSector* newSector = &(gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2]);
+    USE_POINTER MapSector* newSector = &(gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2]);
     CL_CHECK_NULL(newSector)
 
-    MapSector* curSector;
+    USE_POINTER MapSector* curSector;
     OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, curSector);
 
     if ((curSector != newSector))
@@ -2289,14 +2295,14 @@ void PeepAssignToSector_Detach(ALL_CORE_PARAMS, Peep* peep)
     }
 
 }
-void PeepAssignToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
+void PeepAssignToSector_Insert(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     //assign new sector
     if (!CL_VECTOR2_EQUAL(peep->mapSectorPtr, peep->mapSector_pendingPtr))
     {
         peep->mapSectorPtr = peep->mapSector_pendingPtr;
 
-        MapSector* mapSector;
+        USE_POINTER MapSector* mapSector;
         OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, mapSector)
 
 
@@ -2309,12 +2315,12 @@ void PeepAssignToSector_Insert(ALL_CORE_PARAMS, Peep* peep)
         mapSector->lastPeepPtr = peep->ptr;
     }
 }
-void PeepPreUpdate1(ALL_CORE_PARAMS, Peep* peep)
+void PeepPreUpdate1(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
 }
 
-void PeepPreUpdate2(ALL_CORE_PARAMS, Peep* peep)
+void PeepPreUpdate2(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     peep->physics.base.v_Q16.z += peep->physics.base.vel_add_Q16.z;
     peep->physics.base.v_Q16.y += peep->physics.base.vel_add_Q16.y;
@@ -2361,7 +2367,7 @@ void PeepPreUpdate2(ALL_CORE_PARAMS, Peep* peep)
 
 }
 
-int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
+int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZViewLevel)
 {
     #ifdef PEEP_ALL_ALWAYS_VISIBLE
         return 1;
@@ -2425,13 +2431,13 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, Peep* peep, int mapZViewLevel)
 }
 
 
-void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
+void PeepUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
     peep->minDistPeep_Q16 = (1 << 30);
     peep->minDistPeepPtr = OFFSET_NULL;
 
-    MapSector* cursector;
+    USE_POINTER MapSector* cursector;
     OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, cursector);
 
     //traverse sector
@@ -2446,17 +2452,18 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
         for (cl_int sectory = miny; sectory <= maxy; sectory++)
         {
 
-            MapSector* sector = &gameState->sectors[sectorx][sectory];
+            USE_POINTER MapSector* sector = &gameState->sectors[sectorx][sectory];
             CL_CHECK_NULL(sector);
 
-            Peep* curPeep;
+            USE_POINTER Peep* curPeep;
             OFFSET_TO_PTR(gameState->peeps, sector->lastPeepPtr, curPeep);
             
 
-            Peep* firstPeep = curPeep;
+            USE_POINTER Peep* firstPeep = curPeep;
             while (curPeep != NULL)
             {
                 if (curPeep != peep) {
+
                     PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, curPeep);
                 }
                 
@@ -2470,8 +2477,9 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
         }
     }
    
-
-    WorldToMap(peep->physics.base.pos_Q16, &peep->posMap_Q16);
+    ge_int3 posMap_Q16;
+    WorldToMap( peep->physics.base.pos_Q16, &posMap_Q16);
+    peep->posMap_Q16 = posMap_Q16;
 
     ge_int3 maptilecoords;
     maptilecoords.x = WHOLE_Q16(peep->posMap_Q16.x);
@@ -2513,8 +2521,8 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
             // peepCnt = MapTileData_PeepCount(*mapData);
             // MapTileData_SetPeepCount(mapData, peepCnt+1);
         
-        int b = atomic_inc(&gameState->map.levels[peep->mapCoord.z].peepCounts[peep->mapCoord.x][peep->mapCoord.y]);
-        int a = atomic_dec(&gameState->map.levels[peep->mapCoord_1.z].peepCounts[peep->mapCoord_1.x][peep->mapCoord_1.y]);
+        //int b = atomic_inc(&gameState->map.levels[peep->mapCoord.z].peepCounts[peep->mapCoord.x][peep->mapCoord.y]);
+        //int a = atomic_dec(&gameState->map.levels[peep->mapCoord_1.z].peepCounts[peep->mapCoord_1.x][peep->mapCoord_1.y]);
 
         //printf("%d,%d\n", a,b);
     }
@@ -2563,7 +2571,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 }
 
-void ParticleUpdate(ALL_CORE_PARAMS, Particle* p)
+void ParticleUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Particle* p)
 {
     p->pos.x = ADD_QMP32(p->pos.x, p->vel.x);
     p->pos.y = ADD_QMP32(p->pos.y, p->vel.y);
@@ -2589,7 +2597,7 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
     {       
         if(z >= MAPDEPTH) continue;
 
-        cl_uint* data = &gameState->map.levels[z].data[x][y];
+        USE_POINTER cl_uint* data = &gameState->map.levels[z].data[x][y];
         MapTile center =MapDataGetTile(*data);
 
         if (center != MapTile_NONE)
@@ -2686,13 +2694,13 @@ void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
 void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
 {
     ge_int3 coord = (ge_int3){x,y,ThisClient(ALL_CORE_PARAMS_PASS)->mapZView };
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
     MapTile tile = MapDataGetTile(*data);
     MapTile tileUp;
     if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView < MAPDEPTH-1)
     {
         coord.z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1;
-        cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+        USE_POINTER cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
 
 
         tileUp = MapDataGetTile(*dataup);
@@ -2737,8 +2745,8 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
     finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)  << 2;//C
     finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) << 3;//D
 
-
-    uint xlev = MapDataXLevel(data);
+    cl_uint dataCpy = *data;
+    uint xlev = MapDataXLevel(&dataCpy);
     finalAttr |= (2-xlev) << 4;//X
 
 
@@ -2764,7 +2772,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
             if(MapTileCoordValid(mapCoord))
             {
             
-                cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+                USE_POINTER cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
                 MapTile tileoffup = MapDataGetTile(*dataoffup);
                 
                 if(tileoffup == MapTile_NONE)
@@ -2852,10 +2860,10 @@ void MapBuildTileView3Area(ALL_CORE_PARAMS, int x, int y)
 }
 
 
-void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
+void PrintSelectionPeepStats(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* p)
 {
 ///    Print_GE_INT3_Q16(p->physics.base.pos_Q16);
-    Peep* peep = p;
+    USE_POINTER Peep* peep = p;
     MapTile data[22];
     ge_int3 tileCenters_Q16[22];
     //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & data[0], & tileCenters_Q16[0]); printf("{ 1, 0, 0 }: %d\n", data[0]);
@@ -2884,7 +2892,7 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, Peep* p)
     //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & data[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", data[21]);
 }
 
-void MapTileCoordClamp(ge_int3* mapCoord)
+void MapTileCoordClamp( ge_int3* mapCoord)
 {
     (*mapCoord).x = clamp((*mapCoord).x, 0, MAPDIM - 1);
     (*mapCoord).y = clamp((*mapCoord).y, 0, MAPDIM - 1);
@@ -2892,7 +2900,9 @@ void MapTileCoordClamp(ge_int3* mapCoord)
 }
 
 
-void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* mapcoord_whole, int* occluded, int zViewRestrictLevel)
+void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, 
+ ge_int3* mapcoord_whole, 
+ int* occluded, int zViewRestrictLevel)
 {
     ge_int3 wrld_Q16;
     wrld_Q16.x = world_Q16.x;
@@ -2906,8 +2916,9 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16, ge_int3* map
 
     for (int z = zViewRestrictLevel; z >= 0; z--)
     {
-        cl_uint* data = &gameState->map.levels[z].data[(*mapcoord_whole).x][(*mapcoord_whole).y];
-        MapTile tile = MapDataGetTile(*data);
+        USE_POINTER cl_uint* data = &gameState->map.levels[z].data[(*mapcoord_whole).x][(*mapcoord_whole).y];
+        cl_uint dataCopy = *data;
+        MapTile tile = MapDataGetTile(dataCopy);
 
         if (tile != MapTile_NONE)
         {
@@ -2969,7 +2980,7 @@ void LINES_ClearAll(ALL_CORE_PARAMS)
     gameState->debugLinesIdx=0;;
 }
 
-float4 Matrix_Float4_Times_Vec4(float mat[4][4], float4 vec)
+float4 Matrix_Float4_Times_Vec4(global float mat[][4], float4 vec)
 {
     float4 res;
     res.x = mat[0][0] * vec.x + mat[0][1] * vec.y + mat[0][2] * vec.z + mat[0][3] * vec.w;
@@ -3009,7 +3020,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
     {
-        Peep* p = &gameState->peeps[curPeepIdx];
+        USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
         gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
 
         curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
@@ -3027,11 +3038,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             fakePass = 1;
         }
 
-        ClientAction* clientAction = &gameStateActions->clientActions[b].action;
-        ActionTracking* actionTracking = &gameStateActions->clientActions[b].tracking;
+        USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[b].action;
+        USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[b].tracking;
         int cliId = actionTracking->clientId;
-        SynchronizedClientState* client = &gameState->clientStates[cliId];
-        SyncedGui* gui = &gameState->clientStates[cliId].gui;
+        USE_POINTER SynchronizedClientState* client = &gameState->clientStates[cliId];
+        USE_POINTER SyncedGui* gui = &gameState->clientStates[cliId].gui;
         
 
 
@@ -3100,7 +3111,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},(ge_int2){200,200}, (ge_int2){550,500});
 
             //iterate selected peeps
-            Peep* p;
+            USE_POINTER Peep* p;
             OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
             
             int i = 0;
@@ -3193,7 +3204,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     client->selectedPeepsLastIdx = OFFSET_NULL;
                     for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
                     {
-                        Peep* p = &gameState->peeps[pi];
+                        USE_POINTER Peep* p = &gameState->peeps[pi];
                         p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
                         p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
 
@@ -3243,7 +3254,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 if (curPeepIdx != OFFSET_NULL)
                 {
                     //Do an AStarSearch_IDA
-                    Peep* curPeep = &gameState->peeps[curPeepIdx];
+                    USE_POINTER Peep* curPeep = &gameState->peeps[curPeepIdx];
                     world2D.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
                     world2D.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
                     int occluded;
@@ -3272,7 +3283,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         { 
                             while (curPeepIdx != OFFSET_NULL)
                             {
-                                Peep* curPeep = &gameState->peeps[curPeepIdx];
+                                USE_POINTER Peep* curPeep = &gameState->peeps[curPeepIdx];
 
                                 //tmp
                                 curPeep->stateBasic.aStarSearchPtr = 0;
@@ -3343,7 +3354,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 Print_GE_INT3(mapCoord);
                 if (mapCoord.z >= 0 && mapCoord.z < MAPDEPTH-1) 
                 {
-                    cl_uint* tileData = &gameState->map.levels[mapCoord.z+1].data[mapCoord.x][mapCoord.y]; 
+                    USE_POINTER cl_uint* tileData = &gameState->map.levels[mapCoord.z+1].data[mapCoord.x][mapCoord.y]; 
                     if(MapDataGetTile(*tileData) == MapTile_NONE)
                     {
                         *tileData = MapTile_Sand;
@@ -3395,7 +3406,7 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2d_Q16,
         &mapCoordWhole, &occluded, MAPDEPTH - 1);
 
-    cl_uint* tileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole);
+    USE_POINTER cl_uint* tileData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoordWhole);
     //do 3x3 kernel test
 
 
@@ -3404,25 +3415,25 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
     //offsets[24] = (ge_int3){ 1, -1, 0 };
     //offsets[25] = (ge_int3){ -1, -1, 0 };
 
-    cl_uint* data22 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[22]));
+    USE_POINTER cl_uint* data22 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[22]));
     MapTile tile22 = MapDataGetTile(*data22);
     if (tile22 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
     }
-    cl_uint* data24 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[24]));
+    USE_POINTER cl_uint* data24 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[24]));
     MapTile tile24 = MapDataGetTile(*data24);
     if (tile24 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
     }
-    cl_uint* data23 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[23]));
+    USE_POINTER cl_uint* data23 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[23]));
     MapTile tile23 = MapDataGetTile(*data23);
     if (tile23 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
     }
-    cl_uint* data25 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[25]));
+    USE_POINTER cl_uint* data25 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[25]));
     MapTile tile25 = MapDataGetTile(*data25);
     if (tile25 == MapTile_NONE)
     {
@@ -3445,28 +3456,28 @@ void MapCreateSlope(ALL_CORE_PARAMS, int x, int y)
 
 
 
-    cl_uint* data0 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[0]));
+    USE_POINTER cl_uint* data0 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[0]));
     MapTile tile0 = MapDataGetTile(*data0);
     if (tile0 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMRIGHT);
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
     }
-    cl_uint* data1 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[1]));
+    USE_POINTER cl_uint* data1 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[1]));
     MapTile tile1 = MapDataGetTile(*data1);
     if (tile1 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerBTMLEFT);
         BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
     }
-    cl_uint* data2 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[2]));
+    USE_POINTER cl_uint* data2 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[2]));
     MapTile tile2 = MapDataGetTile(*data2);
     if (tile2 == MapTile_NONE)
     {
         BITSET(*tileData, MapTileFlags_LowCornerTPRIGHT);
         BITSET(*tileData, MapTileFlags_LowCornerTPLEFT);
     }
-    cl_uint* data3 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[3]));
+    USE_POINTER cl_uint* data3 = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, INT3_ADD(mapCoordWhole, staticData->directionalOffsets[3]));
     MapTile tile3 = MapDataGetTile(*data3);
     if (tile3 == MapTile_NONE)
     {
@@ -3556,14 +3567,15 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
                 //}
 
 
-                cl_uint* data = &gameState->map.levels[z].data[x][y];
+                USE_POINTER cl_uint* data = &gameState->map.levels[z].data[x][y];
                 *data = tileType;
                 #ifdef ALL_EXPLORED
                 BITSET(*data, MapTileFlags_Explored);
                 #endif
 
-                BITBANK_SET_SUBNUMBER_UINT(data, MapTileFlags_RotBit1, 2, RandomRange(x*y,0,4));
-
+                cl_uint cpy = *data;
+                BITBANK_SET_SUBNUMBER_UINT(&cpy, MapTileFlags_RotBit1, 2, RandomRange(x*y,0,4));
+                *data = cpy;
 
                 i++;
             }
@@ -3668,7 +3680,7 @@ void StartupTests()
 
 
 
-void MapExplorerSpawn(ALL_CORE_PARAMS, MapExplorerAgent* agent)
+void MapExplorerSpawn(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER MapExplorerAgent* agent)
 {
     ge_int3 randomTileLoc;
     randomTileLoc.x = RandomRange((int)agent, 0, MAPDIM);
@@ -3676,14 +3688,14 @@ void MapExplorerSpawn(ALL_CORE_PARAMS, MapExplorerAgent* agent)
     randomTileLoc.z = RandomRange((int)agent, 0, MAPDEPTH);
 
 
-    cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, randomTileLoc);
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, randomTileLoc);
     if(MapDataGetTile(*data) == MapTile_NONE && BITGET(*data, MapTileFlags_Explored))
     {
         
     }
 }
 
-void AStarPathStepsInit(ALL_CORE_PARAMS, AStarPathSteps* steps)
+void AStarPathStepsInit(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarPathSteps* steps)
 {
     for (int i = 0; i < ASTARPATHSTEPSSIZE; i++)
     {
@@ -3814,7 +3826,10 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
                 
         gameState->peeps[p].physics.base.pos_Q16.z = worldCoord.z;
 
-        WorldToMap(gameState->peeps[p].physics.base.pos_Q16, &gameState->peeps[p].posMap_Q16);
+        ge_int3 pmap_Q16;
+        WorldToMap(gameState->peeps[p].physics.base.pos_Q16, &pmap_Q16);
+
+        gameState->peeps[p].posMap_Q16 = pmap_Q16;
         gameState->peeps[p].lastGoodPosMap_Q16 = gameState->peeps[p].posMap_Q16;
 
 
@@ -3880,7 +3895,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
     for (int i = 0; i < MAX_PARTICLES; i++)
     {
-        Particle* p = &gameState->particles[i];
+        USE_POINTER Particle* p = &gameState->particles[i];
 
         p->pos.x = FloatToQMP32((float)RandomRange(i, -spread, spread));
         p->pos.y = FloatToQMP32((float)RandomRange(i + 1, -spread, spread));
@@ -3894,7 +3909,7 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
 
 
-void UpdateMapExplorer(ALL_CORE_PARAMS,  MapExplorerAgent* agent)
+void UpdateMapExplorer(ALL_CORE_PARAMS,  PARAM_GLOBAL_POINTER MapExplorerAgent* agent)
 {
 
 
@@ -3902,7 +3917,7 @@ void UpdateMapExplorer(ALL_CORE_PARAMS,  MapExplorerAgent* agent)
 }
 
 
-void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
+void PeepDraw(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     float3 drawColor;
     float drawPosX = (float)((float)peep->physics.base.pos_Q16.x / (1 << 16));
@@ -3979,7 +3994,7 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
     peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
 }
 
-void ParticleDraw(ALL_CORE_PARAMS, Particle* particle, cl_uint ptr)
+void ParticleDraw(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Particle* particle, cl_uint ptr)
 {
     float3 drawColor;
     float drawPosX = (float)((float)particle->pos.x.number / (1 << particle->pos.x.q));
@@ -4009,7 +4024,7 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
     if (globalid < MAX_PEEPS) {
-        Peep* p = &gameState->peeps[globalid]; 
+        USE_POINTER Peep* p = &gameState->peeps[globalid]; 
         PeepPreUpdate2(ALL_CORE_PARAMS_PASS, p);
     }
 
@@ -4028,20 +4043,21 @@ __kernel void game_update(ALL_CORE_PARAMS)
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
-
+    
 
     if (globalid < MAX_PEEPS) {
-        Peep* p = &gameState->peeps[globalid]; 
+        USE_POINTER Peep* p = &gameState->peeps[globalid]; 
         PeepUpdate(ALL_CORE_PARAMS_PASS, p);
+
         PeepDraw(ALL_CORE_PARAMS_PASS, p);
     }
 
     if (globalid < MAX_PARTICLES) {
-        Particle* p = &gameState->particles[globalid];
+        USE_POINTER Particle* p = &gameState->particles[globalid];
         ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
         ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
     }
-
+    
     //update map view
     if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
@@ -4061,7 +4077,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
     }
 
     //update map explorers
-    MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
+    USE_POINTER MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
     UpdateMapExplorer(ALL_CORE_PARAMS_PASS, explorer);
 
 
@@ -4078,7 +4094,7 @@ __kernel void game_update2(ALL_CORE_PARAMS)
 
 
     //reset searches
-    AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if((search->state == AStarPathFindingProgress_Failed) || (search->state == AStarPathFindingProgress_Finished))
     {
         cl_ulong chunks = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
@@ -4121,7 +4137,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
     
 
-    AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
     //update AStarPath Searchers
     if(search->state == AStarPathFindingProgress_Searching)
     {
@@ -4140,7 +4156,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
 
     //draw debug lines on paths
-    AStarPathSteps* paths = &gameState->paths;
+    USE_POINTER AStarPathSteps* paths = &gameState->paths;
     
     //get a path
     int pathIdx = 0;
@@ -4148,12 +4164,12 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
     offsetPtr pathStartOPtr = paths->pathStarts[pathIdx];
     while(pathStartOPtr != OFFSET_NULL)
     {
-        AStarPathNode* node;
+        USE_POINTER AStarPathNode* node;
         OFFSET_TO_PTR(paths->pathNodes, pathStartOPtr, node)
 
         while(node != NULL && node->nextOPtr != OFFSET_NULL)
         {
-            AStarPathNode* nodeNext;
+            USE_POINTER AStarPathNode* nodeNext;
             OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, nodeNext);
             CL_CHECK_NULL(nodeNext);
 
@@ -4201,7 +4217,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         cl_ulong idx = globalid+WARPSIZE*pi;
         if (idx < MAX_PEEPS)
         {
-            Peep* p;
+            USE_POINTER Peep* p;
             CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, idx, p)
             CL_CHECK_NULL(p)
 
@@ -4255,7 +4271,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
         if (idx < MAX_PEEPS)
         {
 
-            Peep* p = &gameState->peeps[idx];
+            USE_POINTER Peep* p = &gameState->peeps[idx];
 
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingPtr, mapSector);
@@ -4282,7 +4298,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 }
 
 
-__kernel void size_tests(__global SIZETESTSDATA* data)
+__kernel void size_tests(PARAM_GLOBAL_POINTER SIZETESTSDATA* data)
 {
 
     data->gameStateStructureSize = sizeof(GameState);

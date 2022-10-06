@@ -2,8 +2,9 @@
 #include "cl_type_glue.h"
 #include "gpuvectortypes.h"
 
+#ifndef INT_MAX
 #define INT_MAX (2147483647)
-
+#endif
 
 #define GE_TO_CL_INT2(ge)((cl_int2)(ge.x,ge.y))
 #define GE_TO_CL_INT3(ge)((cl_int3)(ge.x,ge.y,ge.z))
@@ -159,7 +160,7 @@ inline void MATCH_QMP64(QMP64* qmpA, QMP64* qmpB, int offset)
 //0 returns TO_Q16(1) 
 #define SIGN_MAG_Q15_16(x) ((((((x) >> 31) & 0x00000001)*-2)+1) << 16)
 
-static int perlin_hash_numbers[] = { 208,34,231,213,32,248,233,56,161,78,24,140,71,48,140,254,245,255,247,247,40,
+constant static int perlin_hash_numbers[] = { 208,34,231,213,32,248,233,56,161,78,24,140,71,48,140,254,245,255,247,247,40,
                      185,248,251,245,28,124,204,204,76,36,1,107,28,234,163,202,224,245,128,167,204,
                      9,92,217,54,239,174,173,102,193,189,190,121,100,108,167,44,43,77,180,204,8,81,
                      70,223,11,38,24,254,210,210,177,32,81,195,243,125,8,169,112,32,97,53,195,13,

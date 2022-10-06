@@ -186,7 +186,7 @@ void GameGPUCompute::RunInitCompute1()
 
 
     printf("Building....\n");
-    ret = clBuildProgram(gameProgram, 1, &device_id,  "-I openCL", NULL, NULL);
+    ret = clBuildProgram(gameProgram, 1, &device_id, "-I openCL", NULL, NULL);
 
     if (ret != CL_SUCCESS) {
         // Determine the size of the log

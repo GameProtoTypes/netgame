@@ -107,7 +107,8 @@
 			"__hash_table": "c",
 			"__split_buffer": "c",
 			"__functional_base_03": "c",
-			"__tuple": "c"
+			"__tuple": "c",
+			"gpuvectortypes.h": "c"
 		},
 		"gitdoc.enabled": false
 	}

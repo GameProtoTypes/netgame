@@ -2,7 +2,7 @@
 #define GUIID_PASS ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
 
 
-#define GUIID_DEF ALL_CORE_PARAMS, SyncedGui* gui, int id
+#define GUIID_DEF ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int id
 #define GUIID_DEF_POSSIZE GUIID_DEF, ge_int2 pos, ge_int2 size
 
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
@@ -10,7 +10,7 @@
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
 
-void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
+void GUI_PushOffset(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 offset)
 {
     gui->wOSidx++;
     if(gui->wOSidx >= SYNCGUI_MAX_DEPTH)
@@ -20,14 +20,14 @@ void GUI_PushOffset(SyncedGui* gui, ge_int2 offset)
 }
 
 
-void GUI_PopOffset(SyncedGui* gui)
+void GUI_PopOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     gui->wOSidx--;
     if(gui->wOSidx < -1)
         printf("ERROR: GUI PopOffset Call Missmatch.");
 }
 
-ge_int2 GUI_GetOffset(SyncedGui* gui)
+ge_int2 GUI_GetOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     ge_int2 sum = (ge_int2){0,0};
     for(int i = 0; i <= gui->wOSidx; i++)
@@ -39,7 +39,7 @@ ge_int2 GUI_GetOffset(SyncedGui* gui)
 
 
 #define GUI_COMMON_WIDGET_START() gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size);
-void gui_CommonWidgetStart(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 * pos, ge_int2* size)
+void gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 * pos, ge_int2* size)
 {
     *pos = INT2_ADD(*pos, GUI_GETOFFSET());
 }
@@ -50,13 +50,13 @@ void gui_CommonWidgetStart(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 * pos, ge_in
 
 
 
-cl_uchar GUI_MOUSE_ON_GUI(SyncedGui* gui)
+cl_uchar GUI_MOUSE_ON_GUI(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     return gui->mouseOnGUI;
 }
 
 //call before gui path
-void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
+void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
 {
     gui->passType = passType;
     if(passType == GuiStatePassType_NoLogic)
@@ -107,7 +107,7 @@ void GUI_RESET(ALL_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
 }
 
 //call after gui path
-void GUI_RESET_POST(ALL_CORE_PARAMS, SyncedGui* gui)
+void GUI_RESET_POST(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
 
     if(BITGET(gui->mouseState, MouseButtonBits_PrimaryPressed) || BITGET(gui->mouseState, MouseButtonBits_SecondaryPressed))
@@ -159,18 +159,18 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 
 
 
-SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
+global SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 {
     return &gameState->clientStates[clientId].gui;
 }
-int GrabGuiId(SyncedGui* gui)
+int GrabGuiId(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     int id =  gui->nextId;;
     gui->nextId++;
     return id;
 }
 
-ge_int4 GUI_MERGED_CLIP(SyncedGui* gui)
+ge_int4 GUI_MERGED_CLIP(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     int idx = gui->clipStackIdx;
     ge_int4 totalClip =  (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
@@ -209,7 +209,7 @@ ge_int4 GUI_MERGED_CLIP(SyncedGui* gui)
     return totalClip;
 }
 
-void GUI_DrawRectangle(ALL_CORE_PARAMS, SyncedGui* gui, int x, int y, int width, int height, float3 color, float2 UVStart, float2 UVEnd)
+void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int x, int y, int width, int height, float3 color, float2 UVStart, float2 UVEnd)
 {
     if(gui->passType == GuiStatePassType_Synced)
     {
@@ -349,7 +349,7 @@ cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
     }
     return 0;
 }
-cl_uchar GUI_InteractionBoundsCheck(SyncedGui* gui, ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
+cl_uchar GUI_InteractionBoundsCheck(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
 {
     ge_int4 currentClip = GUI_MERGED_CLIP(gui); 
     if(currentClip.x > boundStart.x)
@@ -375,9 +375,9 @@ cl_uchar GUI_InteractionBoundsCheck(SyncedGui* gui, ge_int2 boundStart, ge_int2 
     return GUI_BoundsCheck(boundStart, boundEnd, pos);
 }
 
-int* GUI_GetFakeInt(SyncedGui* gui)
+RETURN_POINTER int* GUI_GetFakeInt(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
-    int* param = &gui->fakeInts[gui->nextFakeIntIdx];
+    USE_POINTER int* param = &gui->fakeInts[gui->nextFakeIntIdx];
     gui->nextFakeIntIdx++;
 
     if(gui->nextFakeIntIdx >= SYNCGUI_MAX_WIDGETS)
@@ -386,7 +386,7 @@ int* GUI_GetFakeInt(SyncedGui* gui)
     return param;
 }
 
-int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
+RETURN_POINTER int* GuiFakeSwitch_Param_Int(PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER int* param)
 {
     if(gui->passType == GuiStatePassType_Synced)
     {
@@ -403,7 +403,7 @@ int* GuiFakeSwitch_Param_Int(SyncedGui* gui, int* param)
 
 
 
-void GUI_PushClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
+void GUI_PushClip(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 startPos, ge_int2 size)
 {
     startPos = INT2_ADD(startPos, GUI_GETOFFSET());
 
@@ -415,7 +415,7 @@ void GUI_PushClip(SyncedGui* gui, ge_int2 startPos, ge_int2 size)
     gui->clipStack[gui->clipStackIdx].w = size.y;
 }
 
-void GUI_PopClip(SyncedGui* gui)
+void GUI_PopClip(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     gui->clipStackIdx--;
     if(gui->clipStackIdx == 0)
@@ -564,7 +564,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
 
 
 
-cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -601,7 +601,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, int* value, int min, int m
 
 }
 
-cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -649,8 +649,8 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
     ge_int2 scrollOffset;
     scrollOffset.x = 0;
     scrollOffset.y = 0;
-    int* scrollx=GUI_GetFakeInt(gui);
-    int* scrolly=GUI_GetFakeInt(gui);
+    USE_POINTER int* scrollx=GUI_GetFakeInt(gui);
+    USE_POINTER int* scrolly=GUI_GetFakeInt(gui);
 
     ge_int2 vertSliderPos;
     vertSliderPos.y = pos.y;

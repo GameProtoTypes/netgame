@@ -1,6 +1,17 @@
 #define DEBUG
 
 
+#define AMD
+
+#ifdef AMD
+    #define NULL 0
+#endif
+
+
+#define RETURN_POINTER global
+#define USE_POINTER global
+#define PARAM_GLOBAL_POINTER global
+
 #include "gpuvectortypes.h"
 #include "cl_type_glue.h"
 
