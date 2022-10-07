@@ -175,6 +175,9 @@ struct Peep {
 	offsetPtr nextSectorPeepPtr;
 	offsetPtr prevSectorPeepPtr;
 
+	offsetPtr nextSectorPeep_pendingPtr;
+	offsetPtr prevSectorPeep_pendingPtr;
+
 	//selection by clients
 	offsetPtr nextSelectionPeepPtr[MAX_CLIENTS];
 	offsetPtr prevSelectionPeepPtr[MAX_CLIENTS];
