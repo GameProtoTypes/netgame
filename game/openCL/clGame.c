@@ -3015,7 +3015,6 @@ void LINES_DrawLineWorld(ALL_CORE_PARAMS, float2 worldPosStart, float2 worldPosE
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
-
     cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
     PeepRenderSupport peepRenderSupport[MAX_PEEPS];
     while (curPeepIdx != OFFSET_NULL)
@@ -3150,7 +3149,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         if(fakePass)
             continue;
 
-
+        
         if (clientAction->actionCode == ClientActionCode_MouseStateChange)
         {
             
@@ -4020,6 +4019,8 @@ void ParticleDraw(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Particle* particle, cl_u
 
 __kernel void game_updatepre1(ALL_CORE_PARAMS)
 {
+
+
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
@@ -4040,6 +4041,7 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
 
 __kernel void game_update(ALL_CORE_PARAMS)
 {
+
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
@@ -4086,6 +4088,8 @@ __kernel void game_update(ALL_CORE_PARAMS)
 }
 __kernel void game_update2(ALL_CORE_PARAMS)
 {
+
+
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
@@ -4133,6 +4137,8 @@ __kernel void game_update2(ALL_CORE_PARAMS)
 
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
+
+
 
     ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
     
@@ -4202,6 +4208,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 
+
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
 
@@ -4222,7 +4229,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             CL_CHECK_NULL(p)
 
            
-
+           
 
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorPtr, mapSector);
@@ -4236,10 +4243,11 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             cl_uint reservation;
 
             reservation = atomic_add(lock, 1) + 1;
+
             barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
 
             while (*lock != reservation) {}
-
+            
             PeepAssignToSector_Detach(ALL_CORE_PARAMS_PASS, p);
 
             atomic_dec(lock);
@@ -4252,6 +4260,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
+    return;
 
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
@@ -4272,7 +4281,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
         {
 
             USE_POINTER Peep* p = &gameState->peeps[idx];
-
+           
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, p->mapSector_pendingPtr, mapSector);
 
@@ -4286,7 +4295,7 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
             int reservation = atomic_add(lock, 1) + 1;
 
-            barrier(CLK_GLOBAL_MEM_FENCE);
+            barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
 
             while (atomic_add(lock, 0) != reservation) {}
 
@@ -4298,11 +4307,14 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 }
 
 
-__kernel void size_tests(PARAM_GLOBAL_POINTER SIZETESTSDATA* data)
+__kernel void size_tests_kernel(PARAM_GLOBAL_POINTER SIZETESTSDATA* data)
 {
-
+    printf("msdsdfsdfsdfsdmm");
     data->gameStateStructureSize = sizeof(GameState);
     data->staticDataStructSize = sizeof(StaticData);
+
+    printf("SIZE_TESTS_KERNEL: sizeof(GameState): %d\n", sizeof(GameState));
+    printf("SIZE_TESTS_KERNEL: sizeof(StaticData): %d\n", sizeof(StaticData));
 
 }
 

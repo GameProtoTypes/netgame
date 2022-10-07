@@ -22,7 +22,11 @@
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)
 #define CL_HOST_ERROR_CHECK(ret) if (ret != 0) {printf("[GAMECOMPUTE] ret at %d is %d\n", __LINE__, ret); errorState = true; fflush(stdout); assert(0); }
 
-#define WARPSIZE (32)
+
+
+#define WARPSIZE (64)
+
+
 typedef  std::variant<int, float, std::string> GPUCompileVariant;
 
 
@@ -158,13 +162,13 @@ public:
 
 	SIZETESTSDATA structSizes;
 
-	int maxPeeps = 1024;
+	int maxPeeps = 1024*16;
 	int maxParticles = 32;
 	int mapDim = 128;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;
-	int maxLines = 1024*64;
+	int maxLines = 1024*8;
 
 	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;

@@ -218,17 +218,20 @@ void GameGPUCompute::RunInitCompute1()
         sizeTests_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(SIZETESTSDATA), nullptr, &ret);
         CL_HOST_ERROR_CHECK(ret)
 
-            sizetests_kernel = clCreateKernel(gameProgram, "size_tests", &ret); CL_HOST_ERROR_CHECK(ret)
+        sizetests_kernel = clCreateKernel(gameProgram, "size_tests_kernel", &ret); CL_HOST_ERROR_CHECK(ret)
+        CL_HOST_ERROR_CHECK(ret)
 
-            cl_event sizeTestEvent;
+        cl_event sizeTestEvent;
         ret = clSetKernelArg(sizetests_kernel, 0, sizeof(cl_mem), (void*)&sizeTests_mem_obj); CL_HOST_ERROR_CHECK(ret)
 
-            ret = clEnqueueNDRangeKernel(command_queue, sizetests_kernel, 1, NULL,
-                SingleKernelWorkItems, NULL, 0, NULL, &sizeTestEvent);
+        printf("running sizetest kernel..\n");
+        ret = clEnqueueNDRangeKernel(command_queue, sizetests_kernel, 1, NULL,
+            SingleKernelWorkItems, NULL, 0, NULL, &sizeTestEvent);
         CL_HOST_ERROR_CHECK(ret)
 
 
-        clWaitForEvents(1, &sizeTestEvent);
+        ret = clWaitForEvents(1, &sizeTestEvent);
+        CL_HOST_ERROR_CHECK(ret)
 
         ret = clEnqueueReadBuffer(command_queue, sizeTests_mem_obj, CL_TRUE, 0,
             sizeof(SIZETESTSDATA), &structSizes, 0, NULL, &sizeTestEvent);
@@ -239,6 +242,9 @@ void GameGPUCompute::RunInitCompute1()
 
         std::cout << "GAMESTATE SIZE: " << structSizes.gameStateStructureSize << std::endl;
         std::cout << "STATICDATA SIZE: " << structSizes.staticDataStructSize << std::endl;
+
+        assert(structSizes.gameStateStructureSize);
+        assert(structSizes.staticDataStructSize);
     }
 }
 
@@ -253,10 +259,13 @@ void GameGPUCompute::RunInitCompute2()
     WorkItemsInitMulti[0] = static_cast<size_t>(mapDim * mapDim) ;
 
         // Create memory buffers on the device
-
+        //assert(structSizes.staticDataStructSize);
+        printf("structSizes.staticDataStructSize: %d\n", structSizes.staticDataStructSize);
         staticData_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, structSizes.staticDataStructSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
+       // assert(structSizes.gameStateStructureSize);
+        printf("structSizes.gameStateStructureSize: %d\n", structSizes.gameStateStructureSize);
         gamestate_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, structSizes.gameStateStructureSize, nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -514,6 +523,7 @@ void GameGPUCompute::Stage1()
 
 void GameGPUCompute::ReadFullGameState()
 {
+    std::cout << "Reading Game State..." << std::endl;
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -529,10 +539,13 @@ void GameGPUCompute::ReadFullGameState()
     
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
+
+    std::cout << "Reading Game State [Finished]" << std::endl;
 }
 
 void GameGPUCompute::WriteFullGameState()
 {
+    std::cout << "Writing Game State..." << std::endl;
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)
@@ -540,12 +553,10 @@ void GameGPUCompute::WriteFullGameState()
     WriteGameStateB();
 
 
-
-
-
-
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
+
+    std::cout << "Writing Game State [Finished]" << std::endl;
 }
 
 void GameGPUCompute::WriteGameStateB()
