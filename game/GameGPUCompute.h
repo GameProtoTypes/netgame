@@ -64,7 +64,7 @@ public:
 
 	void AddCompileDefinition(std::string name, GPUCompileVariant val);
 
-
+	void RunInitCompute0();
 	void RunInitCompute1();
 	void RunInitCompute2();
 
@@ -83,9 +83,20 @@ public:
 	void LoadGameStateFromDiff(std::string diffFileName, std::string resultGameStateFileName);
 	void LoadGameStateFromDiff(std::vector<char>* data,  int id);
 
+	enum VENDOR
+	{
+		NVIDIA,
+		AMD
+	};
+
 	cl_context context;
 
 	cl_device_id device_id = NULL;
+    cl_uint ret_num_devices;
+    cl_uint ret_num_platforms;
+    int pfidx = 0;
+	cl_platform_id* platforms;
+	VENDOR vendor;
 
 	cl_command_queue command_queue;
 	cl_program gameProgram;
@@ -125,15 +136,27 @@ public:
 	cl_event readEvent;
 	cl_event writeEvent;    
 	
-	
-	// Execute the OpenCL update_kernel on the list
-    size_t SingleKernelWorkItems[1] = { 1 };
-    size_t SingleKernelWorkItemsPerWorkGroup[1] = { 1 };
 
-	const long GameUpdateWorkItems = WARPSIZE * 1024 * 4;
-    size_t WorkItems[1] = { static_cast<size_t>(GameUpdateWorkItems) };
-	size_t WorkItemsInitMulti[1] = { 0 };
-	size_t WorkItems1Warp[1] = { WARPSIZE };
+
+	SIZETESTSDATA structSizes;
+
+	int warpSize = 32;
+	int maxPeeps = 1024*16;
+	int maxParticles = 32;
+	int mapDim = 1024;
+	int mapDepth = 32;
+	int mapTileSize = 5;
+    int maxGuiRects = 1024;
+	int maxLines = 1024*8;
+
+    long GameUpdateWorkItems ;
+    size_t WorkItems[1]  ;
+	size_t WorkItemsInitMulti[1] ;
+	size_t WorkItems1Warp[1] ;
+    size_t SingleKernelWorkItems[1];
+    size_t SingleKernelWorkItemsPerWorkGroup[1];
+
+
 
 	cl_mem sizeTests_mem_obj;
 
@@ -158,16 +181,8 @@ public:
 
 	std::vector<cl_mem> graphicsObjects;
 
+	void BuildKernelRunSizes();
 
-	SIZETESTSDATA structSizes;
-
-	int maxPeeps = 1024*16;
-	int maxParticles = 32;
-	int mapDim = 1024;
-	int mapDepth = 32;
-	int mapTileSize = 5;
-    int maxGuiRects = 1024;
-	int maxLines = 1024*8;
 
 	std::shared_ptr<GameState_Pointer> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;

@@ -186,6 +186,9 @@ int32_t main(int32_t argc, char* args[])
     GameGraphics gameGraphics(&gameCompute);      
     gameGraphics.Init();  
     gameCompute.graphics = &gameGraphics;    
+
+    gameCompute.RunInitCompute0();
+    gameCompute.BuildKernelRunSizes();
     
     gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
     gameCompute.AddCompileDefinition("PARTICLE_VBO_INSTANCE_SIZE", gameGraphics.particleInstanceSIZE);
@@ -193,7 +196,7 @@ int32_t main(int32_t argc, char* args[])
     gameCompute.AddCompileDefinition("MAX_PARTICLES", gameCompute.maxParticles);
     gameCompute.AddCompileDefinition("MAPDIM", gameCompute.mapDim);
     gameCompute.AddCompileDefinition("MAPDEPTH", gameCompute.mapDepth);
-    gameCompute.AddCompileDefinition("WARPSIZE", WARPSIZE);
+    gameCompute.AddCompileDefinition("WARPSIZE", gameCompute.warpSize);
     gameCompute.AddCompileDefinition("GAME_UPDATE_WORKITEMS", gameCompute.GameUpdateWorkItems);
     gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
     gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);

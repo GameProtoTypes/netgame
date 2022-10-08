@@ -28,8 +28,6 @@ GameGPUCompute::GameGPUCompute()
 
 
 
-
-
 }
 
 GameGPUCompute::~GameGPUCompute()
@@ -59,6 +57,20 @@ GameGPUCompute::~GameGPUCompute()
 void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant val)
 {
     compileDefinitions.push_back({ name, val });
+}
+void GameGPUCompute::BuildKernelRunSizes()
+{
+    if(vendor == NVIDIA)
+        warpSize = 32;
+    else if(vendor == AMD)
+        warpSize = 64;
+
+        GameUpdateWorkItems = warpSize * 1024 * 4;
+        WorkItems[0] = static_cast<size_t>(GameUpdateWorkItems) ;
+        WorkItemsInitMulti[0] =  0 ;
+        WorkItems1Warp[0] =  warpSize ;
+        SingleKernelWorkItems[0] =  1 ;
+        SingleKernelWorkItemsPerWorkGroup[0] = 1 ;
 }
 
 void GameGPUCompute::AddCLSource(std::string path)
@@ -100,15 +112,46 @@ void GameGPUCompute::AddCLSource(std::string path)
 
     
 }
+void GameGPUCompute::RunInitCompute0()
+{
+    ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
+    printf("num cl platforms: %d\n", ret_num_platforms);
 
+
+    platforms = new cl_platform_id[ret_num_platforms];
+
+    ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
+    CL_HOST_ERROR_CHECK(ret)
+
+    ret = clGetDeviceIDs(platforms[pfidx], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
+    CL_HOST_ERROR_CHECK(ret)
+
+    char platformVerInfo[256];
+    size_t sizeRet;
+    clGetPlatformInfo(platforms[pfidx], CL_PLATFORM_VERSION,256, &platformVerInfo, &sizeRet);
+    std::cout << "CL_PLATFORM_VERSION: " << platformVerInfo << std::endl;
+
+    char platformVendorInfo[256];
+    clGetPlatformInfo(platforms[pfidx], CL_PLATFORM_VENDOR,256, &platformVendorInfo, &sizeRet);
+    std::cout << "CL_PLATFORM_VENDOR: " << platformVendorInfo << std::endl;
+
+    if(std::string(platformVendorInfo).find("NVIDIA") != std::string::npos)
+    {
+        printf("NVIDIA DETECTED.\n");
+        vendor = NVIDIA;
+    }
+    else if(std::string(platformVendorInfo).find("Advanced Micro Devices")  != std::string::npos)
+    {
+        printf("AMD DETECTED.\n");
+        vendor = AMD;
+    }
+}
 void GameGPUCompute::RunInitCompute1()
 {
     // Load the update_kernel source code into the array source_str
 
 
 
-
-    
     AddCLSource("openCL/clGame.c");
 
 
@@ -126,28 +169,9 @@ void GameGPUCompute::RunInitCompute1()
 
     printf("source loading done\n");
     // Get platform and device information
-    cl_uint ret_num_devices;
-    cl_uint ret_num_platforms;
 
 
-    ret = clGetPlatformIDs(0, NULL, &ret_num_platforms);
-    printf("num cl platforms: %d\n", ret_num_platforms);
-    const int pfidx = 0;
-
-    cl_platform_id* platforms = new cl_platform_id[ret_num_platforms];
-
-    ret = clGetPlatformIDs(ret_num_platforms, platforms, NULL);
-    CL_HOST_ERROR_CHECK(ret)
-
-    ret = clGetDeviceIDs(platforms[pfidx], CL_DEVICE_TYPE_ALL, 1, &device_id, &ret_num_devices);
-    CL_HOST_ERROR_CHECK(ret)
-
-    char platformVerInfo[256];
-    size_t sizeRet;
-    clGetPlatformInfo(platforms[pfidx], CL_PLATFORM_VERSION,256, &platformVerInfo, &sizeRet);
-    std::cout << "CL_PLATFORM_VERSION: " << platformVerInfo << std::endl;
-
-
+    
 
 
     // Create an OpenCL context
@@ -254,6 +278,7 @@ void GameGPUCompute::RunInitCompute1()
 
 void GameGPUCompute::RunInitCompute2()
 {
+    BuildKernelRunSizes();
 
 
     WorkItemsInitMulti[0] = static_cast<size_t>(mapDim * mapDim) ;
@@ -445,6 +470,10 @@ void GameGPUCompute::Stage1()
 {
     if (gameStateActions->pauseState != 0)
         return;
+
+
+    BuildKernelRunSizes();
+
 
     AquireAllGraphicsObjects();
 
