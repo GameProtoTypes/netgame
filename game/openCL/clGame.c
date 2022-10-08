@@ -2233,88 +2233,6 @@ void WalkAndFight(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 }
 
 
-void PeepAssignToSector_Detach(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
-{
-
-    cl_int x = ((peep->physics.base.pos_Q16.x >> 16) / (SECTOR_SIZE));
-    cl_int y = ((peep->physics.base.pos_Q16.y >> 16) / (SECTOR_SIZE));
-
-    //clamp
-    if (x < -SQRT_MAXSECTORS / 2)
-        x = -SQRT_MAXSECTORS / 2;
-    if (y < -SQRT_MAXSECTORS / 2)
-        y = -SQRT_MAXSECTORS / 2;
-    if (x >= SQRT_MAXSECTORS / 2)
-        x = SQRT_MAXSECTORS / 2 - 1;
-    if (y >= SQRT_MAXSECTORS / 2)
-        y = SQRT_MAXSECTORS / 2 - 1;
-
-
-    USE_POINTER MapSector* newSector = &(gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2]);
-    CL_CHECK_NULL(newSector)
-
-    USE_POINTER MapSector* curSector;
-    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, curSector);
-
-    if ((curSector != newSector))
-    {
-
-        if (curSector != NULL)
-        {
-
-            //remove peep from old sector
-            if ((peep->prevSectorPeepPtr != OFFSET_NULL))
-            {
-                gameState->peeps[peep->prevSectorPeepPtr].nextSectorPeepPtr = peep->nextSectorPeepPtr;
-            }
-            if ((peep->nextSectorPeepPtr != OFFSET_NULL))
-            {
-                gameState->peeps[peep->nextSectorPeepPtr].prevSectorPeepPtr = peep->prevSectorPeepPtr;
-            }
-
-
-            if (curSector->lastPeepPtr == peep->ptr) {
-
-                if (peep->prevSectorPeepPtr != OFFSET_NULL)
-                    curSector->lastPeepPtr = gameState->peeps[peep->prevSectorPeepPtr].ptr;
-                else
-                    curSector->lastPeepPtr = OFFSET_NULL;
-                
-                if (curSector->lastPeepPtr != OFFSET_NULL)
-                    gameState->peeps[curSector->lastPeepPtr].nextSectorPeepPtr = OFFSET_NULL;
-            }
-
-            //completely detach
-            peep->nextSectorPeepPtr = OFFSET_NULL;
-            peep->prevSectorPeepPtr = OFFSET_NULL;
-
-        }
-
-        //assign new sector for next stage
-        peep->mapSector_pendingPtr = newSector->ptr;
-    }
-
-}
-void PeepAssignToSector_Insert(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
-{
-    //assign new sector
-    if (!CL_VECTOR2_EQUAL(peep->mapSectorPtr, peep->mapSector_pendingPtr))
-    {
-        peep->mapSectorPtr = peep->mapSector_pendingPtr;
-
-        USE_POINTER MapSector* mapSector;
-        OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, mapSector)
-
-
-        //put peep in the sector.  extend list
-        if (mapSector->lastPeepPtr != OFFSET_NULL)
-        {
-            gameState->peeps[mapSector->lastPeepPtr].nextSectorPeepPtr = peep->ptr;
-            peep->prevSectorPeepPtr = gameState->peeps[mapSector->lastPeepPtr].ptr;
-        }
-        mapSector->lastPeepPtr = peep->ptr;
-    }
-}
 void PeepPreUpdate1(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
@@ -2437,8 +2355,14 @@ void PeepUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     peep->minDistPeep_Q16 = (1 << 30);
     peep->minDistPeepPtr = OFFSET_NULL;
 
-    USE_POINTER MapSector* cursector;
-    OFFSET_TO_PTR_2D(gameState->sectors, peep->mapSectorPtr, cursector);
+
+    cl_int x = ((peep->physics.base.pos_Q16.x >> 16) / (SECTOR_SIZE));
+    cl_int y = ((peep->physics.base.pos_Q16.y >> 16) / (SECTOR_SIZE));
+
+
+    USE_POINTER MapSector* cursector = &(gameState->sectors[x + SQRT_MAXSECTORS / 2][y + SQRT_MAXSECTORS / 2]);
+    CL_CHECK_NULL(cursector)
+
 
     //traverse sector
     int minx = cursector->ptr.x - 1; if (minx == 0xFFFFFFFF) minx = 0;
@@ -2455,25 +2379,17 @@ void PeepUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
             USE_POINTER MapSector* sector = &gameState->sectors[sectorx][sectory];
             CL_CHECK_NULL(sector);
 
-            USE_POINTER Peep* curPeep;
-            OFFSET_TO_PTR(gameState->peeps, sector->lastPeepPtr, curPeep);
-            
 
-            USE_POINTER Peep* firstPeep = curPeep;
-            while (curPeep != NULL)
+            for(int i = 0; i < MAX_PEEPS_PER_SECTOR; i++)
             {
-                if (curPeep != peep) {
-
-                    PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, curPeep);
+                USE_POINTER Peep* otherPeep;
+                OFFSET_TO_PTR(gameState->peeps, sector->peepPtrs[i], otherPeep);
+            
+                if (otherPeep != peep) {
+                    
+                    PeepToPeepInteraction(ALL_CORE_PARAMS_PASS, peep, otherPeep);
                 }
-                
-                OFFSET_TO_PTR(gameState->peeps, curPeep->prevSectorPeepPtr, curPeep);
-
-
-                if (curPeep == firstPeep)
-                    break;
             }
-
         }
     }
    
@@ -3738,7 +3654,6 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
         {
             gameState->sectors[secx][secy].ptr.x = secx;
             gameState->sectors[secx][secy].ptr.y = secy;
-            gameState->sectors[secx][secy].lastPeepPtr = OFFSET_NULL;
             gameState->sectors[secx][secy].lock = 0;
         }
     }
@@ -3852,10 +3767,6 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
         gameState->peeps[p].minDistPeepPtr = OFFSET_NULL;
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
-        gameState->peeps[p].mapSectorPtr = OFFSET_NULL_2D;
-        gameState->peeps[p].mapSector_pendingPtr = OFFSET_NULL_2D;
-        gameState->peeps[p].nextSectorPeepPtr = OFFSET_NULL;
-        gameState->peeps[p].prevSectorPeepPtr = OFFSET_NULL;
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
         gameState->peeps[p].physics.drive.drivingToTarget = 0;
@@ -3871,23 +3782,14 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
 
 
             CL_CHECKED_ARRAY_SET(gameState->peeps[p].nextSelectionPeepPtr, MAX_CLIENTS, i, OFFSET_NULL)
-                CL_CHECKED_ARRAY_SET(gameState->peeps[p].prevSelectionPeepPtr, MAX_CLIENTS, i, OFFSET_NULL)
+            CL_CHECKED_ARRAY_SET(gameState->peeps[p].prevSelectionPeepPtr, MAX_CLIENTS, i, OFFSET_NULL)
         }
 
     }
 
     printf("Peeps Initialized.\n");
 
-    for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
-    {
-        __global Peep* p = &gameState->peeps[pi];
 
-        PeepAssignToSector_Detach(ALL_CORE_PARAMS_PASS, p);
-        PeepAssignToSector_Insert(ALL_CORE_PARAMS_PASS, p);
-
-    }
-
-    printf("Peep Sector Assigment Finished\n");
 
 
 
@@ -4212,51 +4114,17 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
 
-    if (globalid >= WARPSIZE)
+    if (globalid >= GAME_UPDATE_WORKITEMS)
         return;
    
 
-    cl_uint chunkSize = (SQRT_MAXSECTORS*SQRT_MAXSECTORS) / WARPSIZE;
-
-    
-    // for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
-    // {
-    //     cl_ulong idx = globalid+WARPSIZE*pi;
-    //     if (idx < MAX_PEEPS)
-    //     {
-    //         USE_POINTER Peep* p;
-    //         CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, idx, p)
-    //         CL_CHECK_NULL(p)
-
-           
-           
-
-    //         global volatile MapSector* mapSector;
-    //         OFFSET_TO_PTR_2D(gameState->sectors, p->mapSectorPtr, mapSector);
-    //         CL_CHECK_NULL(mapSector)
-
-    //         global volatile cl_uint* lock = (global volatile cl_uint*) & mapSector->lock;
-    //         CL_CHECK_NULL(lock)
+    cl_uint chunkSize = (SQRT_MAXSECTORS*SQRT_MAXSECTORS) / GAME_UPDATE_WORKITEMS;
 
 
-
-    //         cl_uint reservation;
-
-    //         reservation = atomic_add(lock, 1) + 1;
-
-    //         barrier(CLK_GLOBAL_MEM_FENCE | CLK_LOCAL_MEM_FENCE);
-
-    //         while (*lock != reservation) {}
-            
-    //         PeepAssignToSector_Detach(ALL_CORE_PARAMS_PASS, p);
-
-    //         atomic_dec(lock);
-    //     }
-    // }
 
     for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
     {
-        cl_ulong idx = globalid+(SQRT_MAXSECTORS*SQRT_MAXSECTORS)*pi;
+        cl_ulong idx = globalid+(GAME_UPDATE_WORKITEMS)*pi;
         if (idx < SQRT_MAXSECTORS*SQRT_MAXSECTORS)
         {
 
@@ -4268,10 +4136,23 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, xy, mapSector);
             CL_CHECK_NULL(mapSector)
-            mapSector->lastPeepPtr = OFFSET_NULL;
 
-            for(int i = 0; i < MAX_PEEPS; i++)
-            {
+
+
+
+            for(int i = mapSector->chunkStart; (i < mapSector->chunkStart + 64) && i < MAX_PEEPS; i++)
+            {   
+                //bool alreadyInList = false;
+                for(int j = 0; j < MAX_PEEPS_PER_SECTOR; j++)
+                {
+                    if(mapSector->peepPtrs[j] == i)
+                    {
+                        //alreadyInList = true;
+                        continue;
+                    }
+                }
+                
+
                 USE_POINTER Peep* peep;
                 CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, i, peep)
                 CL_CHECK_NULL(peep)
@@ -4285,15 +4166,23 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 
 
-                if ((VECTOR2_EQUAL(peep->mapSectorPtr, xy) && mapSector != newSector))
+                if ((mapSector == newSector))
                 {
                     
-
+                    mapSector->peepPtrs[mapSector->ptrIterator] = i;
+                    mapSector->ptrIterator++;
+                    if(mapSector->ptrIterator >= MAX_PEEPS_PER_SECTOR)
+                    {
+                        mapSector->ptrIterator = 0;
+                    }
                 }
 
             }
 
-    
+
+            mapSector->chunkStart += 64;
+            if(mapSector->chunkStart > MAX_PEEPS - 64)
+                mapSector->chunkStart = 0;
         }
     }
 
@@ -4304,32 +4193,8 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
 
+    return;
 
-    // Get the index of the current element to be processed
-    int globalid = get_global_id(0);
-
-
-
-    if (globalid >= WARPSIZE)
-        return;
-
-
-    cl_uint chunkSize = MAX_PEEPS / WARPSIZE;
-
-    for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
-    {
-        cl_ulong idx = globalid+WARPSIZE*pi;
-        if(idx < MAX_PEEPS)
-        {
-            USE_POINTER Peep* peep;
-            CL_CHECKED_ARRAY_GET_PTR(gameState->peeps, MAX_PEEPS, idx, peep)
-            CL_CHECK_NULL(peep)
-
-            peep->mapSectorPtr = peep->mapSector_pendingPtr;
-            peep->nextSectorPeepPtr = peep->nextSectorPeep_pendingPtr;
-            peep->prevSectorPeepPtr = peep->prevSectorPeep_pendingPtr;
-        }
-    }
 }
 
 

@@ -9,8 +9,8 @@
 
 #define MAX_TRACKNODES (1024*8)
 
-#define SQRT_MAXSECTORS (128)
-#define SECTOR_SIZE (8)
+#define SQRT_MAXSECTORS (MAPDIM/2)
+#define SECTOR_SIZE (MAP_TILE_SIZE*2)
 
 #define MAX_PATHS (8096)
 
@@ -169,14 +169,7 @@ struct Peep {
 	ge_int3 posMap_Q16;
 	ge_int3 lastGoodPosMap_Q16;
 	
-	offsetPtr2 mapSector_pendingPtr;
-	offsetPtr2 mapSectorPtr;
 
-	offsetPtr nextSectorPeepPtr;
-	offsetPtr prevSectorPeepPtr;
-
-	offsetPtr nextSectorPeep_pendingPtr;
-	offsetPtr prevSectorPeep_pendingPtr;
 
 	//selection by clients
 	offsetPtr nextSelectionPeepPtr[MAX_CLIENTS];
@@ -292,11 +285,14 @@ struct Map {
 	cl_int mapHeight;
 } typedef Map;
 
-
+#define MAX_PEEPS_PER_SECTOR (16)
 struct MapSector {
-	offsetPtr lastPeepPtr;
+	offsetPtr peepPtrs[MAX_PEEPS_PER_SECTOR];
+	cl_int ptrIterator;
 	offsetPtr2 ptr;
 	cl_uint lock;
+
+	int chunkStart;
 } typedef MapSector;
 
 
