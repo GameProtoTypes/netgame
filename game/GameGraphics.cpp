@@ -70,7 +70,7 @@ void GameGraphics::Init()
 
 
         //Create window
-        gWindow = SDL_CreateWindow("Dwarf Carts", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+        gWindow = SDL_CreateWindow("Astroid Miner", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (gWindow == NULL)
         {
             printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
@@ -134,8 +134,8 @@ void GameGraphics::Init()
     std::shared_ptr<GEShader> pVertMapTileShad = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/vertMapTile.glsl");
     std::shared_ptr<GEShader> pFragMapTileShad = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/fragMapTile.glsl");
     std::shared_ptr<GEShader> pGeomMapTileShad = std::make_shared<GEShader>(GL_GEOMETRY_SHADER, "shaders/geomMapTile.glsl");
-    std::shared_ptr<GEShader> pGUIVertShad        = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/guiVertShader.glsl");
-    std::shared_ptr<GEShader> pGUIFragShad        = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/guiFragShader.glsl");
+    std::shared_ptr<GEShader> pGUIVertShad     = std::make_shared<GEShader>(GL_VERTEX_SHADER, "shaders/guiVertShader.glsl");
+    std::shared_ptr<GEShader> pGUIFragShad     = std::make_shared<GEShader>(GL_FRAGMENT_SHADER, "shaders/guiFragShader.glsl");
 
 
     //create programs to use those shaders.

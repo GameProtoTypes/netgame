@@ -9,8 +9,8 @@
 
 #define MAX_TRACKNODES (1024*8)
 
-#define SQRT_MAXSECTORS (MAPDIM/2)
-#define SECTOR_SIZE (MAP_TILE_SIZE*2)
+#define SQRT_MAXSECTORS (128)
+#define SECTOR_SIZE (8)
 
 #define MAX_PATHS (8096)
 
@@ -25,7 +25,7 @@
 
 
 #define CL_CHECKED_ARRAY_SET(ARRAY, ARRAY_SIZE, INDEX, VALUE) { if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX SET ON ARRAY "  #ARRAY " line %d \n", __LINE__); } else ARRAY[INDEX] = VALUE; }
-#define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY " line %d \n", __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
+#define CL_CHECKED_ARRAY_GET_PTR(ARRAY, ARRAY_SIZE, INDEX, POINTER) {if(INDEX >= ARRAY_SIZE) {printf("[CL] OUT OF BOUNDS INDEX %u ON ARRAY "  #ARRAY " line %d \n", #INDEX, __LINE__); POINTER = NULL;} else POINTER = &ARRAY[INDEX];}
 #define CL_CHECK_NULL(POINTER){if(POINTER == NULL) {printf("[CL] " #POINTER " POINTER IS NULL line %d \n", __LINE__);}}
 #define CL_THROW_ASSERT(){printf("[CL] ASSERT line %d \n", __LINE__);}
 
@@ -168,6 +168,9 @@ struct Peep {
 
 	ge_int3 posMap_Q16;
 	ge_int3 lastGoodPosMap_Q16;
+
+	offsetPtr2 sectorPtr;
+	int sectorListIdx;
 	
 
 

@@ -276,6 +276,12 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
+
+
+
+
+
+
         GameGraphics::RenderClientState* rclientst = &gameGraphics.renderClientState;
 
         rclientst->mousePrimaryPressed = 0;

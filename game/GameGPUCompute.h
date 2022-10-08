@@ -115,7 +115,6 @@ public:
 	cl_event initMultiEvent;
 	cl_event initMultiEvent2;
 	cl_event init2Event;
-
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updatepre1Event;    
@@ -164,7 +163,7 @@ public:
 
 	int maxPeeps = 1024*16;
 	int maxParticles = 32;
-	int mapDim = 128;
+	int mapDim = 1024;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;
