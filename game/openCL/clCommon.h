@@ -12,6 +12,10 @@
 #define USE_POINTER global
 #define PARAM_GLOBAL_POINTER global
 
+
+#define MAP_TILE_UV_WIDTH (1/16.0)
+#define MAP_TILE_UV_WIDTH_FLOAT2 ((float2)(1/16.0, 1/16.0))
+
 #include "gpuvectortypes.h"
 #include "cl_type_glue.h"
 

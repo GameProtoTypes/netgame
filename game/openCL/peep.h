@@ -111,6 +111,10 @@ struct PhysicsCircleShape
 }typedef PhysicsCircleShape;
 
 
+
+
+
+
 struct AStarPathNode
 {
 	ge_int3 mapCoord_Q16;
@@ -255,6 +259,9 @@ enum MapTile {
 	MapTile_Shadow_3,
 	MapTile_Shadow_4,
 	MapTile_Lava     = 16,
+	MapTile_WOODGRID,
+	MapTile_MACHINE_CRUSHER,
+	MapTile_MACHINE_FURNACE,
 	MapTile_Shadow_5 = 25,
 	MapTile_Shadow_6,
 	MapTile_Shadow_7,
@@ -278,6 +285,8 @@ struct MapLevel {
 	//F - FLAGS
 	cl_uint data[MAPDIM][MAPDIM];
 
+	offsetPtr machinePtr[MAPDIM][MAPDIM];
+
 	uint peepCounts[MAPDIM][MAPDIM];
 	uint peepCounts_Final[MAPDIM][MAPDIM];
 } typedef MapLevel;
@@ -286,6 +295,10 @@ struct Map {
 	MapLevel levels[MAPDEPTH];
 	cl_int mapWidth;
 	cl_int mapHeight;
+
+
+
+
 } typedef Map;
 
 #define MAX_PEEPS_PER_SECTOR (16)
@@ -390,12 +403,104 @@ struct AStarPathSteps
 
 }typedef AStarPathSteps;
 
-
-
-
 struct PeepRenderSupport {
 	cl_int render_selectedByClient;
 }typedef PeepRenderSupport;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+enum ItemTypes
+{
+	ItemType_IRON_ORE,
+	ItemType_IRON_DUST,
+	ItemType_IRON_BAR,
+	ItemType_ROCK_DUST,
+
+
+	ItemTypes_NUMITEMS
+} typedef ItemTypes;
+
+
+enum MachineTypes
+{
+	MachineTypes_CRUSHER,
+	MachineTypes_SMELTER,
+
+	MachineTypes_NUMRECIPES
+} typedef MachineTypes;
+
+struct Inventory
+{
+	int counts[ItemTypes_NUMITEMS];
+} typedef Inventory;
+
+struct MachineDesc
+{
+	MachineTypes type;
+	MapTile tile;
+
+	ItemTypes inputTypes[8]; int numInputs;
+	ItemTypes outputTypes[8]; int numOutputs;
+
+	int inputRatio[8];
+	int outputRatio[8];
+
+	int processingTime;
+} typedef MachineDesc;
+
+#define MAX_MACHINES (1024*4)
+struct Machine
+{
+	bool valid;
+	offsetPtrShort3 mapTilePtr;
+	offsetPtr MachineDescPtr;//ptr into bank of descriptions.
+
+	int tickProgess;
+	Inventory inventory;
+} typedef Machine;
+
+enum OrderActions
+{
+	OrderAction_MINE,
+	OrderAction_DROPOFF_MACHINE,
+	OrderAction_PICKUP_MACHINE,
+	OrderAction_WAYPOINT
+} typedef OrderActions;
+
+struct Order
+{
+	ge_int3 mapDest_Q16;
+	OrderActions action;
+} typedef Order;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 enum GuiStatePassType
@@ -471,6 +576,7 @@ enum EditorTools
 	EditorTools_Create
 } typedef EditorTools;
 
+
 struct SynchronizedClientState {
 
 	cl_int connected;
@@ -490,6 +596,7 @@ struct SynchronizedClientState {
 	int mapZView_1;
 
 	EditorTools curTool;
+	MachineTypes curToolMachine;
 	
 	SyncedGui gui;
 
@@ -518,9 +625,14 @@ struct GameState {
 
 	AStarPathSteps paths;
 
+	Machine machines[MAX_MACHINES];
+	int nextMachineIdx;
+	MachineDesc machineDescriptions[MachineTypes_NUMRECIPES];
+
+
+
 	SyncedGui fakeGui;
 	GuiStyle guiStyle;
-
 	cl_uint debugLinesIdx;
 
 

@@ -508,6 +508,17 @@ void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
     }
 }
 
+void GUI_IMAGE(GUIID_DEF_POSSIZE, float2 uvStart, float2 uvEnd, float3 color)
+{
+    ge_int2 origPos = pos;
+    ge_int2 origSize = size;
+    GUI_COMMON_WIDGET_START()
+
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    size.x, size.y, color, uvStart + (float2)(1.0,0.0), uvEnd+ (float2)(1.0,0.0) );
+
+}
+
 cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
 {
     ge_int2 origPos = pos;

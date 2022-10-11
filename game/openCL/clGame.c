@@ -252,9 +252,9 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
     MapTile tile = MapDataGetTile(*data);
     if (tile == MapTile_NONE)
     {   
-
-        if(enterDirection.z < 0)
-            return 0;
+        return 1;
+        //if(enterDirection.z < 0)
+        //    return 0;
 
 
 
@@ -269,34 +269,130 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
 
 
     }
-    else if(MapDataLowCornerCount(*data) == 0)//cant enter full blocks
-    {
+    else
         return 0;
-    }
-    else if(enterDirection.z == 0)//entering partial block from the side
-    {
-        cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, enterDirection);
-        if (ridgeType == 0)
-            return 1;
-    }
-    else if(enterDirection.z > 0)//entering partial block from below
-    {
-        ge_int3 dirNoZ = enterDirection;
-        dirNoZ.z = 0;
-        cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, dirNoZ);
-        if (ridgeType == 0)//running up continued ramp case.
-            return 1;
 
-    }
-    else if(enterDirection.z < 0)//entering partial block from above
-    {
-        if(MapDataLowCornerCount(*data) > 0)//could be a ramp 
-            return 1;
-    }
-    return 0;
+    //  if(MapDataLowCornerCount(*data) == 0)//cant enter full blocks
+    // {
+    //     return 0;
+    // }
+    // else if(enterDirection.z == 0)//entering partial block from the side
+    // {
+    //     cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, enterDirection);
+    //     if (ridgeType == 0)
+    //         return 1;
+    // }
+    // else if(enterDirection.z > 0)//entering partial block from below
+    // {
+    //     return 1;
+    //     ge_int3 dirNoZ = enterDirection;
+    //     dirNoZ.z = 0;
+    //     cl_uchar ridgeType = MapRidgeType(ALL_CORE_PARAMS_PASS, mapcoord, dirNoZ);
+    //     if (ridgeType == 0)//running up continued ramp case.
+    //         return 1;
+
+    // }
+    // else if(enterDirection.z < 0)//entering partial block from above
+    // {
+    //     return 1;
+    //     if(MapDataLowCornerCount(*data) > 0)//could be a ramp 
+    //         return 1;
+    // }
+    // return 0;
+}
+
+
+
+
+void Machine_InitDescriptions(ALL_CORE_PARAMS)
+{
+    MachineDesc* m = &gameState->machineDescriptions[MachineTypes_CRUSHER];
+    m->type = MachineTypes_CRUSHER;
+    m->tile = MapTile_MACHINE_CRUSHER;
+    m->numInputs = 1;
+    m->numOutputs = 2;
+    m->inputTypes[0] = ItemType_IRON_ORE;
+    m->outputTypes[0] = ItemType_IRON_DUST;
+    m->outputTypes[1] = ItemType_ROCK_DUST;
+
+    m->inputRatio[0] = 1;
+    m->outputRatio[0] = 1;
+    m->outputRatio[1] = 5;
+    m->processingTime = 30;
+
+
+
+
+    m = &gameState->machineDescriptions[MachineTypes_SMELTER];
+    m->type = MachineTypes_SMELTER;
+    m->tile = MapTile_MACHINE_FURNACE;
+    m->numInputs = 1;
+    m->numOutputs = 1;
+    m->inputTypes[0] = ItemType_IRON_DUST;
+    m->outputTypes[1] = ItemType_IRON_BAR;
+
+    m->inputRatio[0] = 5;
+    m->outputRatio[0] = 1;
+
+    m->processingTime = 100;
+
+
 
 
 }
+
+
+offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
+{
+    offsetPtr ptr = gameState->nextMachineIdx;
+
+    bool loopSense = false;
+    do
+    {
+        gameState->nextMachineIdx++;
+        if(gameState->nextMachineIdx >= MAX_MACHINES)
+        {
+            gameState->nextMachineIdx = 0;
+            if(loopSense == true)
+            {
+                printf("Machine_CreateMachine Out of Machine Space (MAX_MACHINES)!\n");
+                return OFFSET_NULL;
+            }
+            loopSense=true;
+        }
+    }while(gameState->machines[gameState->nextMachineIdx].valid == true);
+
+    return ptr;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 inline void AStarNodeInstantiate(PARAM_GLOBAL_POINTER AStarNode* node)
 {
     
@@ -406,8 +502,8 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarNo
     {
 
 
-        if(MapDataGetTile(*fromTileData) == MapTile_NONE)
-            return 0;
+      //  if(MapDataGetTile(*fromTileData) == MapTile_NONE)
+     //       return 0;
         //else could be a ramp
 
     
@@ -986,7 +1082,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
 
 
         //5 neighbors
-        for (int i = 0; i <= 3; i++)
+        for (int i = 0; i <= 5; i++)
         { 
             ge_int3 prospectiveTileCoord;
             ge_int3 dir = staticData->directionalOffsets[i];
@@ -2071,7 +2167,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     }
 
     //'game gravity'
-    peep->physics.base.v_Q16.z += (TO_Q16(-1) >> 3);
+    //peep->physics.base.v_Q16.z += (TO_Q16(-1) >> 3);
 }
 
 
@@ -2928,8 +3024,29 @@ void LINES_DrawLineWorld(ALL_CORE_PARAMS, float2 worldPosStart, float2 worldPosE
     LINES_DrawLine(ALL_CORE_PARAMS_PASS,  screenPosStart2, screenPosEnd2,  color);
 }
 
+ge_int2 GUI_TO_WORLD_Q16(ALL_CORE_PARAMS, ge_int2 guiCoord)
+{
+    float4 v;
+    v.x = guiCoord.x;
+    v.y = guiCoord.y;
+    v.z = 0.0;
+    v.w = 1.0f;
+    float4 worldPos = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix_Inv, v);
 
+    printf("%f, %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z, worldPos.w);
 
+    return (ge_int2){0,0};
+}
+
+float2 MapTileToUV(MapTile tile)
+{
+
+    //duplicate of geomMapTile.glsl code.
+    float2 uv;
+    uv.x = ((uint)tile & 15u) / 16.0;
+    uv.y = (((uint)tile >> 4u) & 15u) / 16.0;    
+    return uv;
+}
 
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
@@ -3008,13 +3125,21 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
-        LOCAL_STR(createTxt, "CREATE");
-       
 
+        LOCAL_STR(createTxt, "CREATE\nCRUSHER");
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
+            client->curToolMachine = MachineTypes_CRUSHER;
+        }
+
+        LOCAL_STR(createTxt2, "CREATE\nSMELTER");
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, createTxt2, &downDummy) == 1)
+        {
+            printf("create mode");
+            client->curTool = EditorTools_Create;
+            client->curToolMachine = MachineTypes_SMELTER;
         }
 
         LOCAL_STRL(labeltxt, "DEEP", labeltxtLen); 
@@ -3026,8 +3151,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, labeltxt2, (float3)(0.3,0.3,0.3));
         
 
+        {
         GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},(ge_int2){200,200}, (ge_int2){550,500});
-
             //iterate selected peeps
             USE_POINTER Peep* p;
             OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
@@ -3045,11 +3170,53 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 i++;    
                 OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
             }
-
-
-
         GUI_SCROLLBOX_END(GUIID_PASS);
-        
+        }
+
+
+
+        //hover stats
+        if(fakePass)
+        {
+
+            ge_int2 world_Q16;
+            world_Q16.x = gameStateActions->mouseLocWorldx_Q16;
+            world_Q16.y = gameStateActions->mouseLocWorldy_Q16;
+
+            //world to map
+            //get tile etc.
+            ge_int3 mapcoord_whole;
+            int occluded;
+            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world_Q16, &mapcoord_whole, &occluded, client->mapZView+1);
+
+            MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,1));
+            MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
+            MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,-1));
+
+
+            LOCAL_STRL(xtxt, "", xtxtLen); 
+            //CL_ITOA(tile, xtxt, xtxtLen, 10 );
+            //GUI_LABEL(GUIID_PASS, (ge_int2){300,200}, (ge_int2){100, 50}, xtxt, (float3)(0.3,0.3,0.3));
+            
+            GUI_LABEL(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx-5,gameStateActions->mouseLocy-50-5) , (ge_int2){50+10, 150+10}, xtxt, (float3)(0.3,0.3,0.3));
+            float2 uv = MapTileToUV(tileup);
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy-50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+            uv = MapTileToUV(tile);
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+            uv = MapTileToUV(tiledown);
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy+50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+        }
+
+
+
+
+
+
+
+
 
         if(fakePass == 0)
             printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
@@ -3272,10 +3439,31 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 Print_GE_INT3(mapCoord);
                 if (mapCoord.z >= 0 && mapCoord.z < MAPDEPTH-1) 
                 {
-                    USE_POINTER cl_uint* tileData = &gameState->map.levels[mapCoord.z+1].data[mapCoord.x][mapCoord.y]; 
+                    ge_int3 mapCoordSpawn;
+                    mapCoordSpawn.x = mapCoord.x;
+                    mapCoordSpawn.y = mapCoord.y;
+                    mapCoordSpawn.z = mapCoord.z+1;
+
+                    USE_POINTER cl_uint* tileData = &gameState->map.levels[mapCoordSpawn.z].data[mapCoordSpawn.x][mapCoordSpawn.y]; 
+
                     if(MapDataGetTile(*tileData) == MapTile_NONE)
                     {
-                        *tileData = MapTile_Sand;
+
+                        offsetPtr machinePtr = Machine_CreateMachine(ALL_CORE_PARAMS_PASS);
+                        gameState->map.levels[mapCoordSpawn.z].machinePtr[mapCoordSpawn.x][mapCoordSpawn.y] = machinePtr;
+
+                        Machine* machine;
+                        OFFSET_TO_PTR(gameState->machines, machinePtr, machine);
+                        CL_CHECK_NULL(machine);
+
+                        machine->valid = true;
+                        machine->mapTilePtr = VECTOR3_CAST(mapCoordSpawn, offsetPtrShort3);
+                        machine->MachineDescPtr = client->curToolMachine;
+                        MachineDesc* machDesc;
+                        OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, machDesc);
+                        CL_CHECK_NULL(machDesc);
+
+                        *tileData = machDesc->tile;
                         BITSET(*tileData, MapTileFlags_Explored);
                     }
                     
@@ -3642,9 +3830,13 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     GUI_INIT_STYLE(ALL_CORE_PARAMS_PASS);
 
 
+
     printf("Startup Tests..\n");
     StartupTests();
 
+
+    printf("Creating Machines Types\n");
+    Machine_InitDescriptions(ALL_CORE_PARAMS_PASS);
 
     gameState->numClients = 1;
     gameStateActions->pauseState = 0;

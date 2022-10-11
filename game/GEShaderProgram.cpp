@@ -90,7 +90,16 @@ void GEShaderProgram::SetUniform_Float(std::string name, float val)
 		glUniform1f(location, val);
 	}
 }
+void GEShaderProgram::SetUniform_Int(std::string name, int val)
+{
+	GLint location = glGetUniformLocation(programID,
+		name.c_str());
 
+	if (location >= 0)
+	{
+		glUniform1i(location, val);
+	}
+}
 
 void GEShaderProgram::SetUniform_Vec3(std::string name, glm::vec3& val)
 {

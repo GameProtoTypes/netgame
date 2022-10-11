@@ -86,6 +86,7 @@ struct GameStateActions {
 	cl_int mouseState;
 
 	float viewMatrix[4][4];
+	float viewMatrix_Inv[4][4];
 
 	cl_int dummyVars[32];
 

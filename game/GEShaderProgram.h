@@ -18,6 +18,7 @@ public:
 	void SetUniform_Vec2(std::string name, glm::vec2& val);
 	void SetUniform_IVec2(std::string name, glm::ivec2& val);
 	void SetUniform_Float(std::string name, float val);
+	void SetUniform_Int(std::string name, int val);
 
 	GLuint ProgramID(){ return programID; }
 
