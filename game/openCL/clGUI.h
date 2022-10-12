@@ -16,6 +16,8 @@
 
 #define GUIID_DEF ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int id
 #define GUIID_DEF_POSSIZE GUIID_DEF, ge_int2 pos, ge_int2 size
+#define GUIID_DEF_ALL GUIID_DEF_POSSIZE, GuiFlags flags
+
 
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
 #define GUI_GETOFFSET() GUI_GetOffset(gui)
@@ -90,7 +92,7 @@ void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mou
     }
     gui->guiRenderRectIdx = 0;
     gui->nextId = 0;
-    gui->nextFakeIntIdx = 0;
+    gui->nextStateIntIdx = 0;
 
     gui->mouseFrameDelta = INT2_SUB(mouseLoc, gui->mouseLoc);
 
@@ -394,10 +396,10 @@ cl_uchar GUI_InteractionBoundsCheck(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2
 
 RETURN_POINTER int* GUI_GetFakeInt(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
-    USE_POINTER int* param = &gui->fakeInts[gui->nextFakeIntIdx];
-    gui->nextFakeIntIdx++;
+    USE_POINTER int* param = &gui->stateInts[gui->nextStateIntIdx];
+    gui->nextStateIntIdx++;
 
-    if(gui->nextFakeIntIdx >= SYNCGUI_MAX_WIDGETS)
+    if(gui->nextStateIntIdx >= SYNCGUI_MAX_WIDGETS)
         printf("GUI_OUT_OF_WIDGETS\n");
     
     return param;
@@ -532,19 +534,19 @@ void GUI_BEGIN_TOGGLE_GROUP(GUIID_DEF)
 {
     gui->toggleExclusionGroupActive = true;
     gui->toggleExlusionGroupIdx = 0;
-    gui->lastToggleFakeIntPtr = OFFSET_NULL;
+    gui->lastToggleStateIntPtr = OFFSET_NULL;
 }
 void GUI_END_TOGGLE_GROUP(GUIID_DEF)
 {
     gui->toggleExclusionGroupActive = false;
     
-    if(gui->lastToggleFakeIntPtr != OFFSET_NULL)
+    if(gui->lastToggleStateIntPtr != OFFSET_NULL)
     {
         for(int i = 0; i < gui->toggleExlusionGroupIdx; i++)
         {
-            if(i != gui->lastToggleFakeIntPtr)
+            if(i != gui->lastToggleStateIntPtr)
             {
-                gui->fakeInts[gui->toggleExclusionGroupFakeInts[i]] = 0;
+                gui->stateInts[gui->toggleExclusionGroupStateInts[i]] = 0;
             }
         }
     }
@@ -559,7 +561,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
     int* toggleState = GUI_GetFakeInt(gui);
     if(gui->toggleExclusionGroupActive)
     {
-        gui->toggleExclusionGroupFakeInts[gui->toggleExlusionGroupIdx] = gui->nextFakeIntIdx-1;
+        gui->toggleExclusionGroupStateInts[gui->toggleExlusionGroupIdx] = gui->nextStateIntIdx-1;
         gui->toggleExlusionGroupIdx++;
     }
 
@@ -587,7 +589,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
                 {
                     if(gui->toggleExclusionGroupActive)
                     {
-                        gui->lastToggleFakeIntPtr = gui->nextFakeIntIdx-1;
+                        gui->lastToggleStateIntPtr = gui->nextStateIntIdx-1;
                     }
                     *toggleState = 1;
 

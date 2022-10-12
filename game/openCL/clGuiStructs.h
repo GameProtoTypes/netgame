@@ -8,11 +8,8 @@
 
 enum GuiFlags
 {
-	GuiFlags_FillParent,
-	GuiFlags_Mouse_Draggable,
-
-
-	GuiFlags_NumFlags
+	GuiFlags_FillParent = 1,
+	GuiFlags_Mouse_Draggable = 1 << 1
 } typedef GuiFlags;
 
 enum GuiStatePassType
@@ -75,12 +72,12 @@ struct SyncedGui
 
 	GuiStatePassType passType;
 
-	int fakeInts[SYNCGUI_MAX_WIDGETS];
-	int nextFakeIntIdx;
+	int stateInts[SYNCGUI_MAX_WIDGETS];
+	int nextStateIntIdx;
 
     bool toggleExclusionGroupActive;
-	offsetPtr toggleExclusionGroupFakeInts[SYNCGUI_MAX_DEPTH];
+	offsetPtr toggleExclusionGroupStateInts[SYNCGUI_MAX_DEPTH];
 	int toggleExlusionGroupIdx;
-	offsetPtr lastToggleFakeIntPtr;
+	offsetPtr lastToggleStateIntPtr;
 } typedef SyncedGui;
 
