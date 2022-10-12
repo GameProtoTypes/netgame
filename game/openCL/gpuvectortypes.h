@@ -54,3 +54,6 @@ void Print_GE_INT2(ge_int2 v);
 void Print_GE_INT3(ge_int3 v);
 void Print_GE_SHORT3(ge_short3 v);
 
+void PrintFloat2(float2 val);
+void PrintFloat3(float3 val);
+void PrintFloat4(float4 val);

@@ -25,8 +25,7 @@
 
 #include "fixedpoint_opencl.h"
 
-
-
+#include "clGuiStructs.h"
 #include "peep.h"
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable

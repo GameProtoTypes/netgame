@@ -297,8 +297,6 @@ struct Map {
 	cl_int mapHeight;
 
 
-
-
 } typedef Map;
 
 #define MAX_PEEPS_PER_SECTOR (16)
@@ -500,74 +498,6 @@ struct Order
 
 
 
-
-
-
-enum GuiStatePassType
-{
-	GuiStatePassType_NoLogic,
-	GuiStatePassType_Synced
-} typedef GuiStatePassType;
-
-
-struct GuiStyle
-{
-	float2 UV_WHITE;
-
-	float3 TEXT_COLOR;
-
-	float3 BUTTON_COLOR;
-	float3 BUTTON_COLOR_HOVER;
-	float3 BUTTON_COLOR_ACTIVE;
-
-	float3 SLIDER_COLOR_BACKGROUND;
-
-}typedef GuiStyle;
-
-
-
-#define SYNCGUI_MAX_WIDGETS (512)
-#define SYNCGUI_MAX_DEPTH (8)
-struct SyncedGui
-{
-	int guiRenderRectIdx;
-	int nextId;
-
-	ge_int2 mouseLocBegin;
-	ge_int2 mouseLoc;
-	ge_int2 mouseFrameDelta;
-	int mouseState;
-
-	int fakeDummyInt;
-
-	cl_uchar ignoreAll;//1 when mouse button pushed off-gui and then goes on gui while button(s) held
-	cl_uchar dragOff;//1 when gui held and then mouse dragged off.
-	cl_uchar draggedOff;//1 when gui held and then mouse dragged off and released.
-
-	cl_uchar mouseDragging;
-
-	int lastActiveWidget;
-	int hoverWidget;
-	int activeWidget;
-
-	cl_uchar mouseOnGUI;
-
-	ge_int2 widgetOffsetStack[SYNCGUI_MAX_DEPTH];
-	int wOSidx;
-
-	ge_int4 clipStack[SYNCGUI_MAX_DEPTH];
-	int clipStackIdx;
-
-	ge_int2 curBoundStart;
-	ge_int2 curBoundEnd;
-
-	GuiStatePassType passType;
-
-	int fakeInts[SYNCGUI_MAX_WIDGETS];
-	int nextFakeIntIdx;
-
-
-} typedef SyncedGui;
 
 enum EditorTools
 {

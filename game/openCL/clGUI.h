@@ -1,4 +1,16 @@
 #pragma once
+
+
+
+
+#include "clGuiStructs.h"
+
+
+
+
+
+
+
 #define GUIID_PASS ALL_CORE_PARAMS_PASS, gui, GrabGuiId(gui)
 
 
@@ -38,9 +50,13 @@ ge_int2 GUI_GetOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
 }
 
 
-#define GUI_COMMON_WIDGET_START() gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size);
+#define GUI_COMMON_WIDGET_START() \
+    ge_int2 origPos = pos; \
+    ge_int2 origSize = size; \
+    gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size);
 void gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 * pos, ge_int2* size)
 {
+
     *pos = INT2_ADD(*pos, GUI_GETOFFSET());
 }
 
@@ -146,7 +162,8 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 
     gameState->guiStyle.BUTTON_COLOR = (float3)(0.5,0.5,0.5);
     gameState->guiStyle.BUTTON_COLOR_HOVER = (float3)(0.7,0.7,0.7);
-    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.4,0.4,0.4);
+    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.3,0.3,0.3);
+    gameState->guiStyle.BUTTON_COLOR_TOGGLED = (float3)(0.4, 0.4, 0.4);
 
     gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2,0.2,0.2);
 
@@ -433,12 +450,6 @@ void GUI_PopClip(PARAM_GLOBAL_POINTER SyncedGui* gui)
 
 
 
-
-
-
-
-
-
 float4 ascii_to_uv(char ch)
 {
     int x = ((int)ch)*16;
@@ -493,8 +504,7 @@ void GUI_TEXT(GUIID_DEF_POSSIZE, char* str)
 }
 void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
 {
-    ge_int2 origPos = pos;
-    ge_int2 origSize = size;
+
     GUI_COMMON_WIDGET_START()
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
@@ -510,8 +520,7 @@ void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
 
 void GUI_IMAGE(GUIID_DEF_POSSIZE, float2 uvStart, float2 uvEnd, float3 color)
 {
-    ge_int2 origPos = pos;
-    ge_int2 origSize = size;
+
     GUI_COMMON_WIDGET_START()
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
@@ -519,11 +528,40 @@ void GUI_IMAGE(GUIID_DEF_POSSIZE, float2 uvStart, float2 uvEnd, float3 color)
 
 }
 
-cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
+void GUI_BEGIN_TOGGLE_GROUP(GUIID_DEF)
 {
-    ge_int2 origPos = pos;
-    ge_int2 origSize = size;
+    gui->toggleExclusionGroupActive = true;
+    gui->toggleExlusionGroupIdx = 0;
+    gui->lastToggleFakeIntPtr = OFFSET_NULL;
+}
+void GUI_END_TOGGLE_GROUP(GUIID_DEF)
+{
+    gui->toggleExclusionGroupActive = false;
+    
+    if(gui->lastToggleFakeIntPtr != OFFSET_NULL)
+    {
+        for(int i = 0; i < gui->toggleExlusionGroupIdx; i++)
+        {
+            if(i != gui->lastToggleFakeIntPtr)
+            {
+                gui->fakeInts[gui->toggleExclusionGroupFakeInts[i]] = 0;
+            }
+        }
+    }
+
+}
+cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
+{
+
     GUI_COMMON_WIDGET_START()
+
+
+    int* toggleState = GUI_GetFakeInt(gui);
+    if(gui->toggleExclusionGroupActive)
+    {
+        gui->toggleExclusionGroupFakeInts[gui->toggleExlusionGroupIdx] = gui->nextFakeIntIdx-1;
+        gui->toggleExlusionGroupIdx++;
+    }
 
 
     cl_uchar ret = 0;
@@ -541,6 +579,21 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
         else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
             ret = 1;
+            if(toggle)
+            {
+                if(*toggleState)
+                    *toggleState = 0;
+                else
+                {
+                    if(gui->toggleExclusionGroupActive)
+                    {
+                        gui->lastToggleFakeIntPtr = gui->nextFakeIntIdx-1;
+                    }
+                    *toggleState = 1;
+
+
+                }
+            }
         }
         gui->mouseOnGUI = 1;
     }
@@ -554,6 +607,11 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
         color = gameState->guiStyle.BUTTON_COLOR_ACTIVE;
     }
 
+    if(*toggleState == 1)
+    {
+        color = gameState->guiStyle.BUTTON_COLOR_TOGGLED;
+    }
+
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
     size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
@@ -565,6 +623,10 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down)
         GUI_PopClip(gui);
     }
 
+    if(toggle)
+    {
+        ret = *toggleState;
+    }
 
     return ret;
 }
@@ -608,7 +670,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* 
     
 
     int down;
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, NULL, &down);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, NULL, &down, false);
 
 }
 
@@ -648,7 +710,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* va
     int down;
     LOCAL_STRL(valueTxt, "strofnoconsequence", valueTxtLen);
     CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, valueTxt, &down);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, valueTxt, &down, false);
 
 }
 

@@ -38,6 +38,20 @@ void Print_GE_SHORT3(ge_short3 v)
 {
     printf("{%d,%d,%d}\n", v.x, v.y, v.z);
 }
+void PrintFloat2(float2 v)
+{
+    printf("{%f,%f}\n", v.x, v.y);
+}
+void PrintFloat3(float3 v)
+{
+    printf("{%f,%f,%f}\n", v.x, v.y, v.z);
+}
+void PrintFloat4(float4 v)
+{
+    printf("{%f,%f,%f,%f}\n", v.x, v.y, v.z, v.w);
+}
+
+
 
 inline cl_uint BITBANK_GET_SUBNUMBER_UINT(cl_uint bank, cl_int lsbBitIdx, cl_int numBits)
 {
@@ -3113,21 +3127,23 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         char btntxt[9] = "CLICK ME"; 
         btntxt[8] = '\0';
         
+        GUI_BEGIN_TOGGLE_GROUP(GUIID_PASS);
+
         LOCAL_STR(noneTxt, "NONE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50},noneTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50},noneTxt, &downDummy, true) == 1)
         {
             client->curTool = EditorTools_None;
         }
 
         LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy, true) == 1)
         {
             printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy, true) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3135,12 +3151,16 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, createTxt2, &downDummy) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, createTxt2, &downDummy, true) == 1)
         {
             printf("create mode");
             client->curTool = EditorTools_Create;
             client->curToolMachine = MachineTypes_SMELTER;
         }
+
+         GUI_END_TOGGLE_GROUP(GUIID_PASS);
+
+
 
         LOCAL_STRL(labeltxt, "DEEP", labeltxtLen); 
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50}, (ge_int2){80 ,50}, labeltxt, (float3)(0.3,0.3,0.3));
@@ -3152,7 +3172,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         
 
         {
-        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},(ge_int2){200,200}, (ge_int2){550,500});
+        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},
+        (ge_int2){200,200},
+        (ge_int2){550,500});
             //iterate selected peeps
             USE_POINTER Peep* p;
             OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
@@ -3165,7 +3187,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
                 GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50}, header, (float3)(0.3,0.3,0.3));
         
-                GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50}, peeptxt, &downDummy);
+                GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50}, peeptxt, &downDummy, true);
 
                 i++;    
                 OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
@@ -3197,20 +3219,27 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             LOCAL_STRL(xtxt, "", xtxtLen); 
             //CL_ITOA(tile, xtxt, xtxtLen, 10 );
             //GUI_LABEL(GUIID_PASS, (ge_int2){300,200}, (ge_int2){100, 50}, xtxt, (float3)(0.3,0.3,0.3));
+            const int widgx = 80;
+            const int widgy = 800;
             
-            GUI_LABEL(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx-5,gameStateActions->mouseLocy-50-5) , (ge_int2){50+10, 150+10}, xtxt, (float3)(0.3,0.3,0.3));
+
+            GUI_LABEL(GUIID_PASS, (ge_int2)(widgx-5,widgy-50-5) , (ge_int2){50+10, 150+10}, xtxt, (float3)(0.3,0.3,0.3));
             float2 uv = MapTileToUV(tileup);
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy-50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy-50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
 
             uv = MapTileToUV(tile);
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
 
             uv = MapTileToUV(tiledown);
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(gameStateActions->mouseLocx,gameStateActions->mouseLocy+50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50}, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
 
         }
 
-
+        if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Searching)
+        {
+            LOCAL_STRL(thinkingtxt, "FINDING PATH..", thinkingtxtLen); 
+            GUI_LABEL(GUIID_PASS, (ge_int2)(400,100), (ge_int2)(150,50),thinkingtxt, (float3)(1.0,0,0) );
+        }
 
 
 
