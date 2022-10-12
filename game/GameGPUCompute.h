@@ -143,11 +143,11 @@ public:
 	int warpSize = 32;
 	int maxPeeps = 1024*16;
 	int maxParticles = 32;
-	int mapDim = 1024;
+	int mapDim = 256;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;
-	int maxLines = 1024*8;
+	int maxLines = 1024*64;
 
     long GameUpdateWorkItems ;
     size_t WorkItems[1]  ;

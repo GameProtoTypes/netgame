@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define SYNCGUI_MAX_WIDGETS (512)
+#define SYNCGUI_MAX_WIDGETS (4096)
 #define SYNCGUI_MAX_DEPTH (8)
 
 
@@ -32,7 +32,7 @@ struct GuiStyle
 
 	float3 SLIDER_COLOR_BACKGROUND;
 
-}typedef GuiStyle;
+} typedef GuiStyle;
 
 
 
@@ -76,7 +76,7 @@ struct SyncedGui
 	int nextStateIntIdx;
 
     bool toggleExclusionGroupActive;
-	offsetPtr toggleExclusionGroupStateInts[SYNCGUI_MAX_DEPTH];
+	offsetPtr toggleExclusionGroupStateInts[SYNCGUI_MAX_WIDGETS];
 	int toggleExlusionGroupIdx;
 	offsetPtr lastToggleStateIntPtr;
 } typedef SyncedGui;

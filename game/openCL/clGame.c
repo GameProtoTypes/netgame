@@ -3,7 +3,7 @@
 #include "clCommon.h"
 
 
-#define FLATMAP
+//#define FLATMAP
 #define ALL_EXPLORED
 //#define NO_ZSHADING
 //#define PEEP_ALL_ALWAYS_VISIBLE
@@ -490,9 +490,9 @@ void AStarSearch_BFS_InstantiateParrallel(PARAM_GLOBAL_POINTER AStarSearch_BFS* 
 
 
 
-cl_uchar MapTileCoordValid(ge_int3 mapcoord)
+cl_uchar MapTileCoordValid(ge_int3 mapcoord, int xybuffer)
 {
-    if (mapcoord.x >= 0 && mapcoord.y >= 0 && mapcoord.z >= 0 && mapcoord.x < MAPDIM && mapcoord.y < MAPDIM && mapcoord.z < MAPDEPTH)
+    if ((mapcoord.x >= xybuffer) && (mapcoord.y >= xybuffer) && mapcoord.z >= 0 && (mapcoord.x < MAPDIM-xybuffer) && (mapcoord.y < MAPDIM-xybuffer) && mapcoord.z < MAPDEPTH)
     {
         return 1;
     }
@@ -500,7 +500,7 @@ cl_uchar MapTileCoordValid(ge_int3 mapcoord)
 }
 cl_uchar AStarNodeValid(PARAM_GLOBAL_POINTER AStarNode* node)
 {
-    return MapTileCoordValid(SHORT3_TO_INT3(node->tileIdx));
+    return MapTileCoordValid(SHORT3_TO_INT3(node->tileIdx),1);
 }
 cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarNode* node, PARAM_GLOBAL_POINTER AStarNode* prevNode)
 {  
@@ -1104,7 +1104,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
             prospectiveTileCoord.y = current->tileIdx.y + dir.y;
             prospectiveTileCoord.z = current->tileIdx.z + dir.z;
  
-            if (MapTileCoordValid(prospectiveTileCoord)==0)
+            if (MapTileCoordValid(prospectiveTileCoord, 1)==0)
             {
                 continue;
             }
@@ -1190,12 +1190,12 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
 
 cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 startTile, ge_int3 destTile, int startIterations)
 {
-    if (MapTileCoordValid(startTile) == 0)
+    if (MapTileCoordValid(startTile,1) == 0)
     {
         printf("AStarSearch_BFS_Routine: Start MapCoord Not Valid.\n");
         return AStarPathFindingProgress_Failed;
     }
-    if (MapTileCoordValid(destTile) == 0)
+    if (MapTileCoordValid(destTile,1) == 0)
     {
         printf("AStarSearch_BFS_Routine: Dest MapCoord Not Valid.\n");
         return AStarPathFindingProgress_Failed;
@@ -1271,7 +1271,7 @@ ge_short3 AStarSearch_IDA_NodeGrabNextBestSuccessor(ALL_CORE_PARAMS, PARAM_GLOBA
         prospectiveTileCoord.y = node->tileLoc.y + dir.y;
         prospectiveTileCoord.z = node->tileLoc.z + dir.z;
 
-        if (MapTileCoordValid(SHORT3_TO_INT3( prospectiveTileCoord))==0)
+        if (MapTileCoordValid(SHORT3_TO_INT3( prospectiveTileCoord),1)==0)
         {
             continue;
         }
@@ -1411,12 +1411,12 @@ AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, PARAM_GLOBAL_
 
 cl_uchar AStarSearch_IDA_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_IDA* search, ge_short3 startTile, ge_short3 destTile, int startIterations)
 {
-    if (MapTileCoordValid(SHORT3_TO_INT3( startTile )) == 0)
+    if (MapTileCoordValid(SHORT3_TO_INT3( startTile ),1) == 0)
     {
         printf("AStarSearch_IDA_Routine: Start MapCoord Not Valid.\n");
         return 0;
     }
-    if (MapTileCoordValid(SHORT3_TO_INT3(destTile)) == 0)
+    if (MapTileCoordValid(SHORT3_TO_INT3(destTile),1) == 0)
     {
         printf("AStarSearch_IDA_Routine: Dest MapCoord Not Valid.\n");
         return 0;
@@ -1452,7 +1452,7 @@ RETURN_POINTER cl_uint* AStarPathNode_GetMapData(ALL_CORE_PARAMS, AStarPathNode*
     ge_int3 coord;
     coord = GE_INT3_WHOLE_Q16(node->mapCoord_Q16);
     #ifdef DEBUG
-    if(MapTileCoordValid(coord) == 0)
+    if(MapTileCoordValid(coord,1) == 0)
     {   
         CL_THROW_ASSERT();
         return NULL;
@@ -2369,6 +2369,14 @@ void PeepPreUpdate2(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     peep->physics.base.pos_Q16.y += peep->physics.base.pos_post_Q16.y;
     peep->physics.base.pos_Q16.x += peep->physics.base.pos_post_Q16.x;
 
+
+    //hard map limits
+    const int lb = 1;
+    peep->physics.base.pos_Q16.x = clamp(peep->physics.base.pos_Q16.x, (-(MAP_TILE_SIZE*(((MAPDIM)/2)-lb)))<<16, (MAP_TILE_SIZE*(((MAPDIM)/2)-lb))<<16);
+    peep->physics.base.pos_Q16.y = clamp(peep->physics.base.pos_Q16.y, (-(MAP_TILE_SIZE*(((MAPDIM)/2)-lb)))<<16, (MAP_TILE_SIZE*(((MAPDIM)/2)-lb))<<16);
+    peep->physics.base.pos_Q16.z = clamp(peep->physics.base.pos_Q16.z, -(MAP_TILE_SIZE)<<16, (MAP_TILE_SIZE*(MAPDEPTH))<<16);
+
+
     peep->physics.base.pos_post_Q16.z = 0;
     peep->physics.base.pos_post_Q16.y = 0;
     peep->physics.base.pos_post_Q16.x = 0;
@@ -2798,7 +2806,7 @@ void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
             ge_int3 offset = staticData->directionalOffsets[dirOffsets[i]];
             ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1 };
 
-            if(MapTileCoordValid(mapCoord))
+            if(MapTileCoordValid(mapCoord,0))
             {
             
                 USE_POINTER cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
@@ -2921,10 +2929,10 @@ void PrintSelectionPeepStats(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* p)
     //PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { -1, 1, 1 }, & data[21], & tileCenters_Q16[21]); printf("{ -1, 1, 1 }: %d\n", data[21]);
 }
 
-void MapTileCoordClamp( ge_int3* mapCoord)
+void MapTileCoordClamp( ge_int3* mapCoord, int xybuffer)
 {
-    (*mapCoord).x = clamp((*mapCoord).x, 0, MAPDIM - 1);
-    (*mapCoord).y = clamp((*mapCoord).y, 0, MAPDIM - 1);
+    (*mapCoord).x = clamp((*mapCoord).x, xybuffer, MAPDIM - 1 - xybuffer);
+    (*mapCoord).y = clamp((*mapCoord).y, xybuffer, MAPDIM - 1 - xybuffer);
     (*mapCoord).z = clamp((*mapCoord).z, 0, MAPDEPTH - 1);
 }
 
@@ -2941,7 +2949,7 @@ void GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS, ge_int2 world_Q16,
     (*mapcoord_whole).y = WHOLE_Q16((*mapcoord_whole).y);
 
 
-    MapTileCoordClamp(mapcoord_whole);
+    MapTileCoordClamp(mapcoord_whole,1);
 
     for (int z = zViewRestrictLevel; z >= 0; z--)
     {
@@ -3138,14 +3146,14 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STR(deleteTxt, "DELETE");
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},deleteTxt, &downDummy, true) == 1)
         {
-            printf("delete mode.");
+            //printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, createTxt, &downDummy, true) == 1)
         {
-            printf("create mode");
+          //  printf("create mode");
             client->curTool = EditorTools_Create;
             client->curToolMachine = MachineTypes_CRUSHER;
         }
@@ -3153,7 +3161,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, createTxt2, &downDummy, true) == 1)
         {
-            printf("create mode");
+           // printf("create mode");
             client->curTool = EditorTools_Create;
             client->curToolMachine = MachineTypes_SMELTER;
         }
@@ -3170,11 +3178,12 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, labeltxt2, (float3)(0.3,0.3,0.3));
         
-
-        {
-        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){100,100},
+        GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+        (ge_int2){200,200},0);
+        
+        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
         (ge_int2){200,200},
-        (ge_int2){550,500});
+        (ge_int2){1000,1000});
             //iterate selected peeps
             USE_POINTER Peep* p;
             OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
@@ -3182,6 +3191,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             int i = 0;
             while(p != NULL)
             {
+
                 LOCAL_STRL(header, "Miner: ", headerLen); 
                 LOCAL_STRL(peeptxt, "------------", peeptxtLen); 
                 CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
@@ -3193,8 +3203,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
             }
         GUI_SCROLLBOX_END(GUIID_PASS);
-        }
-
+        
+        GUI_END_WINDOW(GUIID_PASS);
 
 
         //hover stats
@@ -3722,7 +3732,7 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
 }
 void MapCreate2(ALL_CORE_PARAMS, int x, int y)
 {
-    MapCreateSlope(ALL_CORE_PARAMS_PASS, x, y);
+    //MapCreateSlope(ALL_CORE_PARAMS_PASS, x, y);
     MapBuildTileView(ALL_CORE_PARAMS_PASS, x, y);
     MapUpdateShadow(ALL_CORE_PARAMS_PASS, x, y);
 
@@ -3879,7 +3889,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
             gameState->sectors[secx][secy].ptr.x = secx;
             gameState->sectors[secx][secy].ptr.y = secy;
             gameState->sectors[secx][secy].lock = 0;
-
+            gameState->sectors[secx][secy].empty = true; 
             for(int j = 0; j < MAX_PEEPS_PER_SECTOR; j++)
             {
                 gameState->sectors[secx][secy].peepPtrs[j] = OFFSET_NULL;
@@ -4364,6 +4374,9 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             peep->sectorPtr.x = x + SQRT_MAXSECTORS / 2;
             peep->sectorPtr.y = y + SQRT_MAXSECTORS / 2;
 
+            MapSector* sector;
+            OFFSET_TO_PTR_2D(gameState->sectors, peep->sectorPtr, sector);
+            sector->empty = false;
         }
 
     }
@@ -4397,6 +4410,9 @@ __kernel void game_preupdate_2(ALL_CORE_PARAMS) {
             global volatile MapSector* mapSector;
             OFFSET_TO_PTR_2D(gameState->sectors, xy, mapSector);
             CL_CHECK_NULL(mapSector)
+
+            if(mapSector->empty)
+                continue;
 
             //clear non-present peeps
             for(int j = 0; j < MAX_PEEPS_PER_SECTOR; j++)

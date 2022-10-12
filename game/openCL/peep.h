@@ -9,8 +9,8 @@
 
 #define MAX_TRACKNODES (1024*8)
 
-#define SQRT_MAXSECTORS (128)
-#define SECTOR_SIZE (8)
+#define SQRT_MAXSECTORS (MAPDIM/2)
+#define SECTOR_SIZE (10)
 
 #define MAX_PATHS (8096)
 
@@ -305,6 +305,7 @@ struct MapSector {
 	cl_int ptrIterator;
 	offsetPtr2 ptr;
 	cl_uint lock;
+	bool empty;
 
 	int chunkStart;
 } typedef MapSector;
