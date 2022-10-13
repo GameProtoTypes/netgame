@@ -528,6 +528,14 @@ struct SynchronizedClientState {
 
 	EditorTools curTool;
 	MachineTypes curToolMachine;
+
+
+
+	bool menuToggles[4];
+	int menuScrollx;
+	int menuScrolly;
+
+
 	
 	SyncedGui gui;
 

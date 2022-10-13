@@ -32,10 +32,23 @@ struct GuiStyle
 
 	float3 SLIDER_COLOR_BACKGROUND;
 
+
+
+	int WINDOW_PADDING;
+	int WINDOW_HEADER_SIZE;
+
 } typedef GuiStyle;
 
 
-
+struct GuiStateInt
+{
+	int id;
+	union
+	{
+		int Vi;
+		ge_int2 Vi2;
+	} value;
+} typedef GuiStateInt;
 
 struct SyncedGui
 {
@@ -61,7 +74,7 @@ struct SyncedGui
 
 	cl_uchar mouseOnGUI;
 
-	ge_int2 widgetOffsetStack[SYNCGUI_MAX_DEPTH];
+	ge_int4 widgetContainerGeomStack[SYNCGUI_MAX_DEPTH];
 	int wOSidx;
 
 	ge_int4 clipStack[SYNCGUI_MAX_DEPTH];
@@ -72,8 +85,8 @@ struct SyncedGui
 
 	GuiStatePassType passType;
 
-	int stateInts[SYNCGUI_MAX_WIDGETS];
-	int nextStateIntIdx;
+	// int stateInts[SYNCGUI_MAX_WIDGETS];
+	// int nextStateIntIdx;
 
     bool toggleExclusionGroupActive;
 	offsetPtr toggleExclusionGroupStateInts[SYNCGUI_MAX_WIDGETS];

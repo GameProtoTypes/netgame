@@ -15,47 +15,55 @@
 
 
 #define GUIID_DEF ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int id
-#define GUIID_DEF_POSSIZE GUIID_DEF, ge_int2 pos, ge_int2 size
-#define GUIID_DEF_ALL GUIID_DEF_POSSIZE, GuiFlags flags
+#define GUIID_DEF_ALL GUIID_DEF, ge_int2 pos, ge_int2 size, GuiFlags flags
+
 
 
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
-#define GUI_GETOFFSET() GUI_GetOffset(gui)
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
 
-void GUI_PushOffset(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 offset)
+void GUI_PushContainer(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 pos, ge_int2 size)
 {
     gui->wOSidx++;
     if(gui->wOSidx >= SYNCGUI_MAX_DEPTH)
-        printf("ERROR: GUI_PushOffset Overflow (SYNCGUI_MAX_DEPTH)");
+        printf("ERROR: GUI_PushContainer Overflow (SYNCGUI_MAX_DEPTH)");
 
-    gui->widgetOffsetStack[gui->wOSidx] = offset;
+    gui->widgetContainerGeomStack[gui->wOSidx].x = pos.x;
+    gui->widgetContainerGeomStack[gui->wOSidx].y = pos.y;
+    gui->widgetContainerGeomStack[gui->wOSidx].z = size.x;
+    gui->widgetContainerGeomStack[gui->wOSidx].w = size.y;
 }
 
 
-void GUI_PopOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
+void GUI_PopContianer(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     gui->wOSidx--;
     if(gui->wOSidx < -1)
         printf("ERROR: GUI PopOffset Call Missmatch.");
 }
 
-ge_int2 GUI_GetOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
+ge_int2 GUI_GetTotalOffset(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
     ge_int2 sum = (ge_int2){0,0};
     for(int i = 0; i <= gui->wOSidx; i++)
     {
-        sum = INT2_ADD(sum, gui->widgetOffsetStack[i]);
+        ge_int2 a = (ge_int2)(gui->widgetContainerGeomStack[i].x, gui->widgetContainerGeomStack[i].y);
+        sum = INT2_ADD(sum, a);
     }
     return sum;
+}
+ge_int2 GUI_GetContainerSize(PARAM_GLOBAL_POINTER SyncedGui* gui)
+{
+    ge_int2 a = (ge_int2)(gui->widgetContainerGeomStack[gui->wOSidx].z, gui->widgetContainerGeomStack[gui->wOSidx].w);
+    return a;
 }
 
 
 #define GUI_COMMON_WIDGET_START() \
     ge_int2 origPos = pos; \
     ge_int2 origSize = size; \
-    bool goodStart = gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size); \
+    bool goodStart = gui_CommonWidgetStart(ALL_CORE_PARAMS_PASS,  gui, &pos, &size, flags); \
 
 
 
@@ -99,10 +107,16 @@ ge_int4 GUI_MERGED_CLIP(PARAM_GLOBAL_POINTER SyncedGui* gui)
     return totalClip;
 }
 
-bool gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 * pos, ge_int2* size)
+bool gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 * pos, ge_int2* size, GuiFlags flags)
 {
 
-    *pos = INT2_ADD(*pos, GUI_GETOFFSET());
+    if(flags & GuiFlags_FillParent)
+    {
+        *pos = (ge_int2)(0,0);
+        *size = GUI_GetContainerSize(gui);
+    }
+
+    *pos = INT2_ADD(*pos, GUI_GetTotalOffset(gui));
 
     ge_int4 curClip = GUI_MERGED_CLIP(gui);
 
@@ -120,11 +134,6 @@ bool gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui,
     
     return true;
 }
-
-
-
-
-
 
 
 cl_uchar GUI_MOUSE_ON_GUI(PARAM_GLOBAL_POINTER SyncedGui* gui)
@@ -151,7 +160,6 @@ void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mou
     }
     gui->guiRenderRectIdx = 0;
     gui->nextId = 0;
-    gui->nextStateIntIdx = 0;
 
     gui->mouseFrameDelta = INT2_SUB(mouseLoc, gui->mouseLoc);
 
@@ -221,13 +229,23 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 
     gameState->guiStyle.UV_WHITE = (float2)(40.0/255, 20.0/255);
 
-    gameState->guiStyle.BUTTON_COLOR = (float3)(0.5,0.5,0.5);
-    gameState->guiStyle.BUTTON_COLOR_HOVER = (float3)(0.7,0.7,0.7);
-    gameState->guiStyle.BUTTON_COLOR_ACTIVE = (float3)(0.3,0.3,0.3);
-    gameState->guiStyle.BUTTON_COLOR_TOGGLED = (float3)(0.4, 0.4, 0.4);
+    gameState->guiStyle.BUTTON_COLOR            = (float3)(0.5, 0.5, 0.5);
+    gameState->guiStyle.BUTTON_COLOR_HOVER      = (float3)(0.7, 0.7, 0.7);
+    gameState->guiStyle.BUTTON_COLOR_ACTIVE     = (float3)(0.3, 0.3, 0.3);
+    gameState->guiStyle.BUTTON_COLOR_TOGGLED    = (float3)(0.4, 0.4, 0.4);
 
-    gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2,0.2,0.2);
+    gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2, 0.2, 0.2);
 
+    gameState->guiStyle.WINDOW_PADDING = 5;
+    gameState->guiStyle.WINDOW_HEADER_SIZE = 20;
+//  gameState->guiStyle.
+//  gameState->guiStyle.
+//  gameState->guiStyle.
+//  gameState->guiStyle.
+//  gameState->guiStyle.
+
+
+    
 }
 
 
@@ -415,29 +433,6 @@ cl_uchar GUI_InteractionBoundsCheck(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2
     return GUI_BoundsCheck(boundStart, boundEnd, pos);
 }
 
-RETURN_POINTER int* GUI_GetFakeInt(PARAM_GLOBAL_POINTER SyncedGui* gui)
-{
-    USE_POINTER int* param = &gui->stateInts[gui->nextStateIntIdx];
-    gui->nextStateIntIdx++;
-
-    if(gui->nextStateIntIdx >= SYNCGUI_MAX_WIDGETS)
-        printf("GUI_OUT_OF_WIDGETS\n");
-    
-    return param;
-}
-
-RETURN_POINTER int* GuiFakeSwitch_Param_Int(PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER int* param)
-{
-    if(gui->passType == GuiStatePassType_Synced)
-    {
-        return param;
-    }
-    else
-    {
-        return GUI_GetFakeInt(gui);
-    }
-}
-
 
 
 
@@ -445,7 +440,7 @@ RETURN_POINTER int* GuiFakeSwitch_Param_Int(PARAM_GLOBAL_POINTER SyncedGui* gui,
 
 void GUI_PushClip(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 startPos, ge_int2 size)
 {
-    startPos = INT2_ADD(startPos, GUI_GETOFFSET());
+    startPos = INT2_ADD(startPos, GUI_GetTotalOffset(gui));
 
     gui->clipStackIdx++;
 
@@ -485,7 +480,7 @@ float4 ascii_to_uv(char ch)
 
 
 
-void GUI_TEXT(GUIID_DEF_POSSIZE, char* str)
+void GUI_TEXT(GUIID_DEF_ALL, char* str)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -525,7 +520,7 @@ void GUI_TEXT(GUIID_DEF_POSSIZE, char* str)
 
 
 }
-void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
+void GUI_LABEL(GUIID_DEF_ALL, char* str, float3 color)
 {
 
     GUI_COMMON_WIDGET_START()
@@ -540,12 +535,12 @@ void GUI_LABEL(GUIID_DEF_POSSIZE, char* str, float3 color)
     if(str != NULL)
     {
         GUI_PushClip(gui, origPos, origSize);
-            GUI_TEXT(GUIID_PASS,  origPos, origSize, str);
+            GUI_TEXT(GUIID_PASS,  origPos, origSize, 0, str);
         GUI_PopClip(gui);
     }
 }
 
-void GUI_IMAGE(GUIID_DEF_POSSIZE, float2 uvStart, float2 uvEnd, float3 color)
+void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
 {
 
     GUI_COMMON_WIDGET_START()
@@ -557,47 +552,16 @@ void GUI_IMAGE(GUIID_DEF_POSSIZE, float2 uvStart, float2 uvEnd, float3 color)
 
 }
 
-void GUI_BEGIN_TOGGLE_GROUP(GUIID_DEF)
-{
-    gui->toggleExclusionGroupActive = true;
-    gui->toggleExlusionGroupIdx = 0;
-    gui->lastToggleStateIntPtr = OFFSET_NULL;
-}
-void GUI_END_TOGGLE_GROUP(GUIID_DEF)
-{
-    gui->toggleExclusionGroupActive = false;
-    
-    if(gui->lastToggleStateIntPtr != OFFSET_NULL)
-    {
-        for(int i = 0; i < gui->toggleExlusionGroupIdx; i++)
-        {
-            if(i != gui->lastToggleStateIntPtr)
-            {
-                gui->stateInts[gui->toggleExclusionGroupStateInts[i]] = 0;
-            }
-        }
-    }
-
-}
-cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
+cl_uchar GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
 {
 
     GUI_COMMON_WIDGET_START()
 
 
-    int* toggleState = GUI_GetFakeInt(gui);
-
-
-    if(toggle)
+    if(toggleState != NULL)
     {
         if(!goodStart)
             return *toggleState;
-    }
-
-    if(gui->toggleExclusionGroupActive)
-    {
-        gui->toggleExclusionGroupStateInts[gui->toggleExlusionGroupIdx] = gui->nextStateIntIdx-1;
-        gui->toggleExlusionGroupIdx++;
     }
 
 
@@ -616,16 +580,13 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
         else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
             ret = 1;
-            if(toggle)
+            if(toggleState != NULL)
             {
                 if(*toggleState)
                     *toggleState = 0;
                 else
                 {
-                    if(gui->toggleExclusionGroupActive)
-                    {
-                        gui->lastToggleStateIntPtr = gui->nextStateIntIdx-1;
-                    }
+
                     *toggleState = 1;
 
 
@@ -644,7 +605,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
         color = gameState->guiStyle.BUTTON_COLOR_ACTIVE;
     }
 
-    if(*toggleState == 1)
+    if(toggleState != NULL && *toggleState == true)
     {
         color = gameState->guiStyle.BUTTON_COLOR_TOGGLED;
     }
@@ -656,11 +617,11 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
     if(str != NULL)
     {
         GUI_PushClip(gui, origPos, origSize);
-            GUI_TEXT(GUIID_PASS,  origPos, origSize, str);
+            GUI_TEXT(GUIID_PASS,  origPos, origSize, 0, str);
         GUI_PopClip(gui);
     }
 
-    if(toggle)
+    if(toggleState != NULL)
     {
         ret = *toggleState;
     }
@@ -674,7 +635,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_POSSIZE, char* str, int* down, bool toggle)
 
 
 
-cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
     if(!goodStart)
@@ -709,12 +670,12 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* 
     
 
     int down;
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, NULL, &down, false);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, NULL, &down, NULL);
 
     return 0;
 }
 
-cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* value, int min, int max)
+cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
     if(!goodStart)
@@ -747,18 +708,18 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_POSSIZE, PARAM_GLOBAL_POINTER int* va
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
     size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
-    
+
 
     int down;
     LOCAL_STRL(valueTxt, "strofnoconsequence", valueTxtLen);
     CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, valueTxt, &down, false);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, valueTxt, &down, NULL);
 
     return 0;
 }
 
 
-void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
+void GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, PARAM_GLOBAL_POINTER int* scrollx, PARAM_GLOBAL_POINTER int* scrolly)
 {
     GUI_COMMON_WIDGET_START();
     if(!goodStart)
@@ -768,8 +729,6 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
     ge_int2 scrollOffset;
     scrollOffset.x = 0;
     scrollOffset.y = 0;
-    USE_POINTER int* scrollx=GUI_GetFakeInt(gui);
-    USE_POINTER int* scrolly=GUI_GetFakeInt(gui);
 
     ge_int2 vertSliderPos;
     vertSliderPos.y = origPos.y;
@@ -798,13 +757,13 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
     if(b>0)
     {
 
-        GUI_SLIDER_INT_VERTICAL(GUIID_PASS, vertSliderPos, vertSliderSize, scrolly, 0, b);
+        GUI_SLIDER_INT_VERTICAL(GUIID_PASS, vertSliderPos, vertSliderSize, 0, scrolly, 0, b);
         scrollOffset.y = -*scrolly;
     }
     if(a>0)
     {
         
-        GUI_SLIDER_INT_HORIZONTAL(GUIID_PASS, horSliderPos, horSliderSize, scrollx, 0, a);
+        GUI_SLIDER_INT_HORIZONTAL(GUIID_PASS, horSliderPos, horSliderSize, 0, scrollx, 0, a);
         scrollOffset.x= -*scrollx;
     }
 
@@ -813,14 +772,14 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_POSSIZE, ge_int2 scrollSpace)
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
     canvasSize.x, canvasSize.y, (float3)(0.2,0.2,0.2), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
-    GUI_PushOffset(gui, origPos + scrollOffset);
+    GUI_PushContainer(gui, origPos + scrollOffset, origSize);
 
   
 }
 
 void GUI_SCROLLBOX_END(GUIID_DEF)
 {
-    GUI_PopOffset(gui);
+   GUI_PopContianer(gui);
    GUI_PopClip(gui);
 
 }
@@ -828,20 +787,53 @@ void GUI_SCROLLBOX_END(GUIID_DEF)
 
 bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL)
 {
+
     GUI_COMMON_WIDGET_START();
     if(!goodStart)
         return false;
 
-   GUI_PushClip(gui, pos, size);
 
+
+    float3 headerColor = (float3)(0.4,0.4,0.4);
+
+
+    if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
+    {
+        gui->hoverWidget = id;
+
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+        {
+            gui->activeWidget = id;
+            headerColor = (float3)(0.2,0.2,0.2);
+          //  pos += gui->mouseFrameDelta;
+         //   origPos += gui->mouseFrameDelta;
+        }
+        
+        else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
+        {
+            headerColor = (float3)(0.5,0.5,0.5);
+        }
+        gui->mouseOnGUI = 1;
+    }
+
+
+
+
+
+
+
+\
+
+    GUI_PushClip(gui, pos, size);
     
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, 10, (float3)(0.1,0.1,0.1), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, gameState->guiStyle.WINDOW_HEADER_SIZE, headerColor, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y+10, 
-    size.x, size.y-10, (float3)(0.6,0.6,0.6), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y+gameState->guiStyle.WINDOW_HEADER_SIZE, 
+    size.x, size.y-gameState->guiStyle.WINDOW_HEADER_SIZE, (float3)(0.6,0.6,0.6), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
-    GUI_PushOffset(gui, origPos);
+    GUI_PushContainer(gui, origPos+(ge_int2)(gameState->guiStyle.WINDOW_PADDING,gameState->guiStyle.WINDOW_HEADER_SIZE), 
+    origSize-(ge_int2)(gameState->guiStyle.WINDOW_PADDING*2,gameState->guiStyle.WINDOW_PADDING + gameState->guiStyle.WINDOW_HEADER_SIZE));
 
 }
 
@@ -849,5 +841,5 @@ void GUI_END_WINDOW(GUIID_DEF)
 {
     GUI_PopClip(gui);
 
-    GUI_PopOffset(gui);
+    GUI_PopContianer(gui);
 }

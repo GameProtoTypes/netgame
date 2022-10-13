@@ -143,7 +143,7 @@ public:
 	int warpSize = 32;
 	int maxPeeps = 1024*16;
 	int maxParticles = 32;
-	int mapDim = 256;
+	int mapDim = 1024;
 	int mapDepth = 32;
 	int mapTileSize = 5;
     int maxGuiRects = 1024;
