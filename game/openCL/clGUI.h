@@ -142,9 +142,10 @@ cl_uchar GUI_MOUSE_ON_GUI(PARAM_GLOBAL_POINTER SyncedGui* gui)
 }
 
 //call before gui path
-void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType)
+void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mouseLoc, int mouseState, GuiStatePassType passType, bool isLocalClient)
 {
     gui->passType = passType;
+    gui->isLocalClient = isLocalClient;
     if(passType == GuiStatePassType_NoLogic)
     {
         //clear just drawn rectangles
@@ -160,6 +161,8 @@ void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mou
     }
     gui->guiRenderRectIdx = 0;
     gui->nextId = 0;
+
+
 
     gui->mouseFrameDelta = INT2_SUB(mouseLoc, gui->mouseLoc);
 
@@ -237,7 +240,7 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
     gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2, 0.2, 0.2);
 
     gameState->guiStyle.WINDOW_PADDING = 5;
-    gameState->guiStyle.WINDOW_HEADER_SIZE = 20;
+    gameState->guiStyle.WINDOW_HEADER_SIZE = 30;
 //  gameState->guiStyle.
 //  gameState->guiStyle.
 //  gameState->guiStyle.
@@ -552,20 +555,28 @@ void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
 
 }
 
-cl_uchar GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
+bool GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
 {
 
     GUI_COMMON_WIDGET_START()
 
 
-    if(toggleState != NULL)
+    if(!goodStart)
     {
-        if(!goodStart)
+        if(toggleState != NULL)
+        {
             return *toggleState;
+        }
+        else
+        {
+            return 0;
+        }
     }
+        
+    
 
 
-    cl_uchar ret = 0;
+    bool ret = false;
     *down = 0;
     if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
@@ -583,12 +594,11 @@ cl_uchar GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
             if(toggleState != NULL)
             {
                 if(*toggleState)
-                    *toggleState = 0;
+                    (*toggleState) = false;
                 else
                 {
 
-                    *toggleState = 1;
-
+                    (*toggleState) = true;
 
                 }
             }
@@ -605,8 +615,9 @@ cl_uchar GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
         color = gameState->guiStyle.BUTTON_COLOR_ACTIVE;
     }
 
-    if(toggleState != NULL && *toggleState == true)
+    if((toggleState != NULL) && (*toggleState))
     {
+
         color = gameState->guiStyle.BUTTON_COLOR_TOGGLED;
     }
 
@@ -623,7 +634,7 @@ cl_uchar GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
 
     if(toggleState != NULL)
     {
-        ret = *toggleState;
+        ret = (*toggleState);
     }
 
     return ret;
@@ -785,13 +796,27 @@ void GUI_SCROLLBOX_END(GUIID_DEF)
 }
 
 
-bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL)
+
+
+
+bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* windowSize)
 {
+    if(windowPos != NULL)
+    {
+        pos = *windowPos;
+    }
+    if(windowSize != NULL)
+    {
+        size = *windowSize;
+    }
 
     GUI_COMMON_WIDGET_START();
+
+    GUI_PushClip(gui, pos, size);
+
+
     if(!goodStart)
         return false;
-
 
 
     float3 headerColor = (float3)(0.4,0.4,0.4);
@@ -801,17 +826,32 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL)
     {
         gui->hoverWidget = id;
 
-        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
             gui->activeWidget = id;
             headerColor = (float3)(0.2,0.2,0.2);
-          //  pos += gui->mouseFrameDelta;
+           // printf("frame delta: ");Print_GE_INT2(gui->mouseFrameDelta);
+           if(gui->passType == GuiStatePassType_NoLogic)
+           {
+                (*windowPos) += gui->mouseFrameDelta;
+                printf("noNetWindowPos: "); Print_GE_INT2((*windowPos));
+           }
          //   origPos += gui->mouseFrameDelta;
         }
         
-        else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
+
+
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
             headerColor = (float3)(0.5,0.5,0.5);
+
+            printf("window, guipasstype: %d, is local client: %d", gui->passType, gui->isLocalClient);
+            if(gui->passType == GuiStatePassType_Synced && !gui->isLocalClient)
+            {
+                (*windowPos) += (gui->mouseLoc - gui->mouseLocBegin);
+                printf("NetWindowPos: "); Print_GE_INT2((*windowPos));
+                printf("Delta: "); Print_GE_INT2((gui->mouseLoc - gui->mouseLocBegin));
+            }
         }
         gui->mouseOnGUI = 1;
     }
@@ -822,12 +862,13 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL)
 
 
 
-\
 
-    GUI_PushClip(gui, pos, size);
+
+    GUI_LABEL(GUIID_PASS, pos,
+    (ge_int2)(size.x, gameState->guiStyle.WINDOW_HEADER_SIZE), 0, str,  headerColor);
     
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, gameState->guiStyle.WINDOW_HEADER_SIZE, headerColor, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    //GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    //size.x, gameState->guiStyle.WINDOW_HEADER_SIZE, headerColor, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y+gameState->guiStyle.WINDOW_HEADER_SIZE, 
     size.x, size.y-gameState->guiStyle.WINDOW_HEADER_SIZE, (float3)(0.6,0.6,0.6), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );

@@ -207,6 +207,16 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/angelScript
         ${CMAKE_CURRENT_BINARY_DIR}/Debug/angelScript)
 
+#compression binaries
+add_custom_command(
+    TARGET MinerTycoon POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/windows_binaries
+        ${CMAKE_CURRENT_BINARY_DIR}/Debug/windows_binaries)
+        
+
+
+
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy

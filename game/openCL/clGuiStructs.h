@@ -84,13 +84,10 @@ struct SyncedGui
 	ge_int2 curBoundEnd;
 
 	GuiStatePassType passType;
+	bool isLocalClient;
 
-	// int stateInts[SYNCGUI_MAX_WIDGETS];
-	// int nextStateIntIdx;
 
-    bool toggleExclusionGroupActive;
-	offsetPtr toggleExclusionGroupStateInts[SYNCGUI_MAX_WIDGETS];
-	int toggleExlusionGroupIdx;
-	offsetPtr lastToggleStateIntPtr;
+	GuiState guiState;
+
 } typedef SyncedGui;
 

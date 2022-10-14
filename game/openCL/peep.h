@@ -508,6 +508,7 @@ enum EditorTools
 } typedef EditorTools;
 
 
+
 struct SynchronizedClientState {
 
 	cl_int connected;
@@ -531,9 +532,6 @@ struct SynchronizedClientState {
 
 
 
-	bool menuToggles[4];
-	int menuScrollx;
-	int menuScrolly;
 
 
 	
@@ -570,7 +568,7 @@ struct GameState {
 
 
 
-	SyncedGui fakeGui;
+	SyncedGui fakePassGui;
 	GuiStyle guiStyle;
 	cl_uint debugLinesIdx;
 

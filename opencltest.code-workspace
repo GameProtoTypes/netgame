@@ -108,7 +108,8 @@
 			"__split_buffer": "c",
 			"__functional_base_03": "c",
 			"__tuple": "c",
-			"gpuvectortypes.h": "c"
+			"gpuvectortypes.h": "c",
+			"clgui.h": "c"
 		},
 		"gitdoc.enabled": false
 	}

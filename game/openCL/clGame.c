@@ -512,6 +512,22 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarNo
     if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx), delta) == 0)
         return 0;
 
+    //must be adjacent to 
+    bool adjacent = false;
+    for(int i = 0; i < 26; i++)
+    {
+        ge_int3 worldCoord = staticData->directionalOffsets[i] + SHORT3_TO_INT3(node->tileIdx);
+        MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, worldCoord);
+        if(tile != MapTile_NONE)
+        {
+            adjacent = true;
+            break;
+        }
+    }
+    if(adjacent == false)
+        return 0;
+
+
     if(delta.z > 0)
     {
 
@@ -3070,6 +3086,25 @@ float2 MapTileToUV(MapTile tile)
     return uv;
 }
 
+
+void PrintMouseState(int mouseState)
+{
+    if(BITGET(mouseState, MouseButtonBits_PrimaryDown))
+        printf("MouseButtonBits_PrimaryDown |");
+    if(BITGET(mouseState, MouseButtonBits_PrimaryPressed))
+        printf("MouseButtonBits_PrimaryPressed |");
+    if(BITGET(mouseState, MouseButtonBits_PrimaryReleased))
+        printf("MouseButtonBits_PrimaryReleased |");
+    if(BITGET(mouseState, MouseButtonBits_SecondaryDown))
+        printf("MouseButtonBits_SecondaryDown |");
+    if(BITGET(mouseState, MouseButtonBits_SecondaryPressed))
+        printf("MouseButtonBits_SecondaryPressed |");
+    if(BITGET(mouseState, MouseButtonBits_SecondaryReleased))
+        printf("MouseButtonBits_SecondaryReleased |");
+
+    printf("\n");
+}
+
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
@@ -3088,11 +3123,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
     {
         int b = a;
-        cl_uchar fakePass = 0;
+        GuiStatePassType guiPass = GuiStatePassType_Synced;
         if(a == gameStateActions->numActions)
         {
             b = 0;//'local' client
-            fakePass = 1;
+            guiPass = GuiStatePassType_NoLogic;
         }
 
         USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[b].action;
@@ -3103,11 +3138,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         
 
 
-        GuiStatePassType guiPass = GuiStatePassType_Synced;
+
         ge_int2 mouseLoc;
         int mouseState;
-
-        if(fakePass)//redirect pointers above so they reflect the local client only.
+        bool guiIsLocalClient = false;
+        if(guiPass == GuiStatePassType_NoLogic)//redirect pointers above so they reflect the local client only.
         {
             guiPass = GuiStatePassType_NoLogic;
             mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
@@ -3117,7 +3152,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             clientAction= &gameStateActions->clientActions[cliId].action;
             actionTracking= &gameStateActions->clientActions[cliId].tracking;
             
-            gui = &gameState->fakeGui;
+            gui = &gameState->fakePassGui;
+            guiIsLocalClient = true;
             
         }
         else
@@ -3126,10 +3162,17 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
             mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
             mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+
+            if(client == ThisClient(ALL_CORE_PARAMS_PASS))
+                guiIsLocalClient = true;
+
+            PrintMouseState( mouseState);
+            printf("IsLocalClient: %d\n", guiIsLocalClient);
         }
 
 
-        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass);
+
+        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass, guiIsLocalClient);
 
         int downDummy;
         char btntxt[9] = "CLICK ME"; 
@@ -3139,20 +3182,21 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         LOCAL_STR(noneTxt, "NONE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, noneTxt, &downDummy, &client->menuToggles[0]) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
         {
             client->curTool = EditorTools_None;
         }
 
+
         LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},0, deleteTxt, &downDummy, &client->menuToggles[1]) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},0, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
         {
             //printf("delete mode.");
             client->curTool = EditorTools_Delete;
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, 0, createTxt, &downDummy, &client->menuToggles[2]) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, 0, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
         {
           //  printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3160,7 +3204,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, 0, createTxt2, &downDummy, &client->menuToggles[3]) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, 0, createTxt2, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
         {
            // printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3179,13 +3223,16 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, 0, labeltxt2, (float3)(0.3,0.3,0.3));
             
+        
+
+        LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
         GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-        (ge_int2){200,200},0);
+        (ge_int2){200,200},0,  robotSelWindowStr, &gui->guiState.windowPositions[0],&gui->guiState.windowSizes[0] );
 
         GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
         (ge_int2){10,10},
         GuiFlags_FillParent,
-        (ge_int2){1000,1000}, &client->menuScrollx, &client->menuScrolly);
+        (ge_int2){1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly);
             //iterate selected peeps
             USE_POINTER Peep* p;
             OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
@@ -3207,10 +3254,10 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         GUI_SCROLLBOX_END(GUIID_PASS);
         
         GUI_END_WINDOW(GUIID_PASS);
-
+        
 
         //hover stats
-        if(fakePass)
+        if(guiPass == GuiStatePassType_NoLogic)
         {
 
             ge_int2 world_Q16;
@@ -3259,7 +3306,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
-        if(fakePass == 0)
+        if(guiPass == GuiStatePassType_Synced)
             printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
         else{
           //  printf("(fakepass) cli: %d, mapz: %d\n", cliId, client->mapZView);
@@ -3273,7 +3320,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
-        if(fakePass)
+        if(guiPass == GuiStatePassType_NoLogic)
             continue;
 
         
@@ -3284,7 +3331,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             int buttons = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
 
 
-            Print_GE_INT2(mouseLoc);
+
             
             //end selection
             if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed))
@@ -3857,6 +3904,19 @@ void AStarPathStepsInit(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarPathSteps* st
 }
 
 
+
+void CLIENT_InitClientStates(ALL_CORE_PARAMS)
+{
+    for(int i = 0; i < MAX_CLIENTS; i++)
+    {
+        SynchronizedClientState* client = &gameState->clientStates[i];
+        SyncedGui* gui = &client->gui;
+
+        GuiState_Init(&gui->guiState);
+    }
+    GuiState_Init(&gameState->fakePassGui.guiState);
+}
+
 __kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
@@ -3869,6 +3929,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     printf("Initializing GUI..\n");
     GUI_INIT_STYLE(ALL_CORE_PARAMS_PASS);
+
+    printf("Initializing Default Client States..\n");
+    CLIENT_InitClientStates(ALL_CORE_PARAMS_PASS);
 
 
 

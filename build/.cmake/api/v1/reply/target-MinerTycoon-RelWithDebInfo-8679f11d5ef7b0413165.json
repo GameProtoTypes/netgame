@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "game/Debug/MinerTycoon.exe"
+			"path" : "game/RelWithDebInfo/MinerTycoon.exe"
 		},
 		{
-			"path" : "game/Debug/MinerTycoon.pdb"
+			"path" : "game/RelWithDebInfo/MinerTycoon.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -69,7 +69,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1"
+					"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MD /Zi /O2 /Ob1 /DNDEBUG"
 				},
 				{
 					"fragment" : "-std:c++20"
@@ -174,11 +174,11 @@
 	[
 		{
 			"backtrace" : 3,
-			"id" : "SLikeNet::@74d9b763750fd0e015d6"
+			"id" : "imgui::@6890427a1f51a3e7e1df"
 		},
 		{
 			"backtrace" : 3,
-			"id" : "imgui::@6890427a1f51a3e7e1df"
+			"id" : "SLikeNet::@74d9b763750fd0e015d6"
 		},
 		{
 			"backtrace" : 3,
@@ -194,7 +194,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Zi /Ob0 /Od /RTC1",
+				"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MD /Zi /O2 /Ob1 /DNDEBUG",
 				"role" : "flags"
 			},
 			{
@@ -253,17 +253,17 @@
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "..\\Debug\\imgui.lib",
+				"fragment" : "..\\RelWithDebInfo\\imgui.lib",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "..\\SLikeNet\\Debug\\SLikeNet.lib",
+				"fragment" : "..\\SLikeNet\\RelWithDebInfo\\SLikeNet.lib",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "..\\angelscriptsdk\\angelscript\\projects\\cmake\\Debug\\angelscriptd.lib",
+				"fragment" : "..\\angelscriptsdk\\angelscript\\projects\\cmake\\RelWithDebInfo\\angelscript.lib",
 				"role" : "libraries"
 			},
 			{
