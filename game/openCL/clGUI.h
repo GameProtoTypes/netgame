@@ -825,6 +825,7 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
     if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
         gui->hoverWidget = id;
+        gui->mouseOnGUI = 1;
 
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
@@ -834,7 +835,7 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
            if(gui->passType == GuiStatePassType_NoLogic)
            {
                 (*windowPos) += gui->mouseFrameDelta;
-                printf("noNetWindowPos: "); Print_GE_INT2((*windowPos));
+               // printf("noNetWindowPos: "); Print_GE_INT2((*windowPos));
            }
          //   origPos += gui->mouseFrameDelta;
         }
@@ -846,14 +847,14 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
             headerColor = (float3)(0.5,0.5,0.5);
 
             printf("window, guipasstype: %d, is local client: %d", gui->passType, gui->isLocalClient);
-            if(gui->passType == GuiStatePassType_Synced && !gui->isLocalClient)
+            if(gui->passType == GuiStatePassType_Synced)
             {
                 (*windowPos) += (gui->mouseLoc - gui->mouseLocBegin);
-                printf("NetWindowPos: "); Print_GE_INT2((*windowPos));
-                printf("Delta: "); Print_GE_INT2((gui->mouseLoc - gui->mouseLocBegin));
+                //printf("NetWindowPos: "); Print_GE_INT2((*windowPos));
+               // printf("Delta: "); Print_GE_INT2((gui->mouseLoc - gui->mouseLocBegin));
             }
         }
-        gui->mouseOnGUI = 1;
+
     }
 
 
@@ -883,4 +884,16 @@ void GUI_END_WINDOW(GUIID_DEF)
     GUI_PopClip(gui);
 
     GUI_PopContianer(gui);
+}
+
+void GUI_UpdateToggleGroup(PARAM_GLOBAL_POINTER bool* bank, int bankSize, int idx)
+{
+    for(int i = 0; i < bankSize; i++)
+    {
+        if(i == idx)
+            continue;
+
+        bank[i] = false;
+    }
+
 }

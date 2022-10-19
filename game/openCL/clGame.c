@@ -3185,6 +3185,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
         {
             client->curTool = EditorTools_None;
+            GUI_UpdateToggleGroup(gui->guiState.menuToggles, 4, 0);
         }
 
 
@@ -3193,6 +3194,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         {
             //printf("delete mode.");
             client->curTool = EditorTools_Delete;
+            GUI_UpdateToggleGroup(gui->guiState.menuToggles, 4, 1);
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
@@ -3201,6 +3203,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
           //  printf("create mode");
             client->curTool = EditorTools_Create;
             client->curToolMachine = MachineTypes_CRUSHER;
+            GUI_UpdateToggleGroup(gui->guiState.menuToggles, 4, 2);
         }
 
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
@@ -3209,6 +3212,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
            // printf("create mode");
             client->curTool = EditorTools_Create;
             client->curToolMachine = MachineTypes_SMELTER;
+
+            GUI_UpdateToggleGroup(gui->guiState.menuToggles, 4, 3);
         }
 
 
