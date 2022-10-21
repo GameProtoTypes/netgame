@@ -144,9 +144,9 @@ bool gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui,
 }
 
 
-cl_uchar GUI_MOUSE_ON_GUI(PARAM_GLOBAL_POINTER SyncedGui* gui)
+bool GUI_MOUSE_ON_GUI(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
-    return gui->mouseOnGUI;
+    return gui->mouseOnGUI || gui->mouseOnGUI_1;
 }
 
 //call before gui path
@@ -226,7 +226,7 @@ void GUI_RESET_POST(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui)
         }
     }
 
-
+    gui->mouseOnGUI_1 = gui->mouseOnGUI;
     gui->mouseOnGUI = 0;
 }
 

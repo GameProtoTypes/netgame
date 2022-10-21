@@ -72,7 +72,8 @@ struct SyncedGui
 	int hoverWidget;
 	int activeWidget;
 
-	cl_uchar mouseOnGUI;
+	bool mouseOnGUI;
+	bool mouseOnGUI_1;
 
 	ge_int4 widgetContainerGeomStack[SYNCGUI_MAX_DEPTH];
 	int wOSidx;

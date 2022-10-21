@@ -3116,19 +3116,7 @@ void PrintMouseState(int mouseState)
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
 
-    cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
-    PeepRenderSupport peepRenderSupport[MAX_PEEPS];
-    while (curPeepIdx != OFFSET_NULL)
-    {
-        USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
-        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
-                
-        curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
-    }
-
-
-
-
+    
 
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
@@ -3292,7 +3280,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         //hover stats
-        if(guiPass == GuiStatePassType_NoLogic)
+        if((guiPass == GuiStatePassType_NoLogic) && (GUI_MOUSE_ON_GUI(gui) == 0))
         {
 
             ge_int2 world_Q16;
@@ -4477,6 +4465,20 @@ __kernel void game_update2(ALL_CORE_PARAMS)
 
 __kernel void game_post_update_single( ALL_CORE_PARAMS )
 {
+
+
+    //set selected peeps to highlight.
+    cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
+    PeepRenderSupport peepRenderSupport[MAX_PEEPS];
+    while (curPeepIdx != OFFSET_NULL)
+    {
+        USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
+        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
+                
+        curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
+    }
+
+
 
 
 

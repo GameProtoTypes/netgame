@@ -71,6 +71,9 @@ struct GameStateActions {
 	ActionWrap clientActions[32];
 	cl_int numActions;
 
+
+
+
 	cl_uint tickIdx;
 	int32_t pauseState;
 
