@@ -188,16 +188,25 @@ void GUI_RESET(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 mou
     gui->clipStackIdx = 0;
     gui->clipStack[0] = (ge_int4){0,0,GUI_PXPERSCREEN,GUI_PXPERSCREEN};
     
+    gui->mouseDragging = 0;  
     if(BITGET(mouseState, MouseButtonBits_PrimaryPressed) || BITGET(mouseState, MouseButtonBits_SecondaryPressed))
     {
         gui->mouseLocBegin = mouseLoc;
+        gui->mouseFrameDelta = (ge_int2)(0,0);
+       // printf("pressedbegin "); Print_GE_INT2(mouseLoc);
         gui->mouseDragging = 1;
-
     }
     else if(BITGET(mouseState, MouseButtonBits_PrimaryReleased) || BITGET(mouseState, MouseButtonBits_SecondaryReleased))
     {
         gui->ignoreAll = 0;  
-        gui->mouseDragging = 0;  
+        //printf("pressedrelease "); Print_GE_INT2(mouseLoc);
+        gui->mouseDragging = 1;
+    }
+
+    if(BITGET(mouseState, MouseButtonBits_PrimaryDown))
+    {
+        gui->mouseDragging = 1;
+
     }
 
 }
@@ -835,32 +844,58 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
         gui->hoverWidget = id;
         gui->mouseOnGUI = 1;
 
-        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
+
+
+
+        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
         {
-            gui->activeWidget = id;
-            headerColor = (float3)(0.2,0.2,0.2);
-           // printf("frame delta: ");Print_GE_INT2(gui->mouseFrameDelta);
+
+            if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
+                gui->activeWidget = id;
+          
+           
            if(gui->passType == GuiStatePassType_NoLogic)
            {
+                printf("noNetframe delta(down): ");Print_GE_INT2(gui->mouseFrameDelta);
+                printf("noNet mousepos: "); Print_GE_INT2(gui->mouseLoc);
                 (*windowPos) += gui->mouseFrameDelta;
-               // printf("noNetWindowPos: "); Print_GE_INT2((*windowPos));
+                printf("noNetWindowPos: "); Print_GE_INT2((*windowPos));
            }
-         //   origPos += gui->mouseFrameDelta;
         }
         
 
 
-        if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
+        if(gui->lastActiveWidget == id && BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
-            headerColor = (float3)(0.5,0.5,0.5);
+           // headerColor = (float3)(0.5,0.5,0.5);
 
-            printf("window, guipasstype: %d, is local client: %d", gui->passType, gui->isLocalClient);
-            if(gui->passType == GuiStatePassType_Synced)
+            //printf("window, guipasstype: %d, is local client: %d", gui->passType, gui->isLocalClient);
+           
+            if( gui->passType == GuiStatePassType_Synced)
             {
+                printf("Netframe delta(rel): ");Print_GE_INT2(gui->mouseFrameDelta);
                 (*windowPos) += (gui->mouseLoc - gui->mouseLocBegin);
-                //printf("NetWindowPos: "); Print_GE_INT2((*windowPos));
-               // printf("Delta: "); Print_GE_INT2((gui->mouseLoc - gui->mouseLocBegin));
+                printf("NetWindowPos: "); Print_GE_INT2((*windowPos));
+                printf("NetDelta: "); Print_GE_INT2((gui->mouseLoc - gui->mouseLocBegin));
             }
+
+            //resolve screen edges
+            ge_int2 bottomRight = (*windowPos) + (*windowSize);
+            if(bottomRight.x > GUI_PXPERSCREEN)
+            {
+                windowPos->x -=  bottomRight.x - GUI_PXPERSCREEN;
+            }
+            if(bottomRight.y > GUI_PXPERSCREEN)
+            {
+                windowPos->y -=  bottomRight.y - GUI_PXPERSCREEN;
+            }
+
+            if(windowPos->x < 0)
+                windowPos->x = 0;
+            if(windowPos->y < 0)
+                windowPos->y = 0;    
+
+
         }
 
     }

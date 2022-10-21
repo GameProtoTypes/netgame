@@ -3113,11 +3113,65 @@ void PrintMouseState(int mouseState)
     printf("\n");
 }
 
+
+
+void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
+{
+    if(client->selectedMachine != OFFSET_NULL)
+    {
+
+        Machine* mach;
+        OFFSET_TO_PTR(gameState->machines, client->selectedMachine, mach);
+        
+        LOCAL_STRL(mw, "Machine", mwlen); 
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+            (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
+        {
+
+            LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
+            CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
+            GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), 0, thinkingtxt2, (float3)(0,0,0) );
+
+            int downDummy;
+            LOCAL_STR(stateStrStart, "Start"); 
+            LOCAL_STR(stateStrStop, "Stop"); 
+            char* stateStr = stateStrStart;
+            float3 btnColor;
+
+            if( mach->state == MachineState_Running )
+            {
+                stateStr = stateStrStop;
+                btnColor = (float3)(1.0,0.0,0.0);
+            }
+            else if( mach->state == MachineState_Idle )
+            {
+                stateStr = stateStrStart;
+                btnColor = (float3)(0.0,0.7,0.0);
+            }
+
+            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, btnColor, stateStr, &downDummy, NULL))
+            {
+                if(gui->passType == GuiStatePassType_Synced)
+                {    
+                    if( mach->state == MachineState_Running)
+                    {
+                        mach->state = MachineState_Idle;
+                    }
+                    else if( mach->state == MachineState_Idle)
+                    {
+                        mach->state = MachineState_Running;
+                    }
+                }
+            }
+            GUI_END_WINDOW(GUIID_PASS);
+        }
+    }
+}
+
+
+
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
-
-    
-
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
     {
@@ -3330,56 +3384,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         //selected machine
         {
-           if(client->selectedMachine != OFFSET_NULL)
-           {
+            MachineGui(ALL_CORE_PARAMS_PASS,  gui, client);
 
-                Machine* mach;
-                OFFSET_TO_PTR(gameState->machines, client->selectedMachine, mach);
-                
-                LOCAL_STRL(mw, "Machine", mwlen); 
-                if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-                    (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
-                {
-
-                    LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
-                    CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
-                    GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), 0, thinkingtxt2, (float3)(0,0,0) );
-
-                    int downDummy;
-                    LOCAL_STR(stateStrStart, "Start"); 
-                    LOCAL_STR(stateStrStop, "Stop"); 
-                    char* stateStr = stateStrStart;
-                    float3 btnColor;
-
-                    if( mach->state == MachineState_Running)
-                    {
-                        stateStr = stateStrStop;
-                        btnColor = (float3)(1.0,0.0,0.0);
-                    }
-                    else if( mach->state == MachineState_Idle)
-                    {
-                        stateStr = stateStrStart;
-                        btnColor = (float3)(0.0,0.7,0.0);
-                    }
-
-                
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, btnColor, stateStr, &downDummy, NULL))
-                    {
-                        if(guiPass == GuiStatePassType_Synced)
-                        {    
-                            if( mach->state == MachineState_Running)
-                            {
-                                mach->state = MachineState_Idle;
-                            }
-                            else if( mach->state == MachineState_Idle)
-                            {
-                                mach->state = MachineState_Running;
-                            }
-                        }
-                    }
-                    GUI_END_WINDOW(GUIID_PASS);
-                }
-           }
+          
         }
 
 
