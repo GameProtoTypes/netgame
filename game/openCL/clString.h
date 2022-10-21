@@ -1,7 +1,7 @@
 
 
 //make a string as a local variable (non constant)
-#define LOCAL_STR(STRNAME, STR) char STRNAME[sizeof(STR)+1] = STR;  STRNAME[sizeof(STR)] = '\0';  
+#define LOCAL_STR(STRNAME, STR) int STRNAME##_len=sizeof(STR); char STRNAME[sizeof(STR)+1] = STR;  STRNAME[sizeof(STR)] = '\0';  
 #define LOCAL_STRL(STRNAME, STR, STRLEN) int STRLEN=sizeof(STR);  char STRNAME[sizeof(STR)+1] = STR;  STRNAME[sizeof(STR)] = '\0';  
 
 

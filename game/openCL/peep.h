@@ -460,6 +460,14 @@ struct MachineDesc
 	int processingTime;
 } typedef MachineDesc;
 
+enum MachineState
+{
+	MachineState_Idle,
+	MachineState_Running,
+	MachineState_Damaged
+} typedef MachineState;
+
+
 #define MAX_MACHINES (1024*4)
 struct Machine
 {
@@ -468,6 +476,7 @@ struct Machine
 	offsetPtr MachineDescPtr;//ptr into bank of descriptions.
 
 	int tickProgess;
+	MachineState state;
 	Inventory inventory;
 } typedef Machine;
 
@@ -503,6 +512,7 @@ struct Order
 enum EditorTools
 {
 	EditorTools_None,
+	EditorTools_Select,
 	EditorTools_Delete,
 	EditorTools_Create
 } typedef EditorTools;
@@ -530,7 +540,8 @@ struct SynchronizedClientState {
 	EditorTools curTool;
 	MachineTypes curToolMachine;
 
-
+	ge_short3 selectedMapCoord;
+	offsetPtr selectedMachine;
 
 
 

@@ -1924,7 +1924,6 @@ void WorldToMap(ge_int3 world_Q16, ge_int3* out_map_tilecoords_Q16)
     map_coords_Q16.x += (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f
     map_coords_Q16.y += (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f.
     *out_map_tilecoords_Q16 = map_coords_Q16;
-
 }
 
 void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
@@ -1935,6 +1934,7 @@ void MapToWorld(ge_int3 map_tilecoords_Q16, ge_int3* world_Q16)
     map_tilecoords_Q16.y -= (TO_Q16(MAPDIM) >> 1);//MAPDIM*0.5f
 
     *world_Q16 = GE_INT3_MUL_Q16(map_tilecoords_Q16, b);
+
 }
 
 
@@ -2480,6 +2480,14 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
         return 0;
     }
     
+}
+
+
+void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
+{
+    if(machine->state == MachineState_Running)
+        machine->tickProgess++;
+
 }
 
 
@@ -3114,7 +3122,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     {
         USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
         gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
-
+                
         curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
     }
 
@@ -3181,10 +3189,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         
 
 
-        LOCAL_STR(noneTxt, "NONE");
+        LOCAL_STR(noneTxt, "SELECT");
         if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
         {
-            client->curTool = EditorTools_None;
+            client->curTool = EditorTools_Select;
+
             GUI_UpdateToggleGroup(gui->guiState.menuToggles, 4, 0);
         }
 
@@ -3296,8 +3305,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             uv = MapTileToUV(tiledown);
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50},0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
-
         }
+
+
+
+
 
         if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Searching)
         {
@@ -3307,7 +3319,56 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
+        //selected machine
+        {
+           if(client->selectedMachine != OFFSET_NULL)
+           {
 
+                Machine* mach;
+                OFFSET_TO_PTR(gameState->machines, client->selectedMachine, mach);
+                
+                LOCAL_STRL(mw, "Machine", mwlen); 
+                GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+                    (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] );
+
+                    LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
+                    CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
+                    GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), 0, thinkingtxt2, (float3)(0,0,0) );
+
+                    int downDummy;
+                    LOCAL_STR(stateStrStart, "Start"); 
+                    LOCAL_STR(stateStrStop, "Stop"); 
+                    char* stateStr = stateStrStart;
+
+                    if( mach->state == MachineState_Running)
+                    {
+                       stateStr = stateStrStop;
+
+                    }
+                    else if( mach->state == MachineState_Idle)
+                    {
+                        stateStr = stateStrStart;
+
+                    }
+
+                
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, stateStr, &downDummy, NULL))
+                    {
+                        if(guiPass == GuiStatePassType_Synced)
+                        {    
+                            if( mach->state == MachineState_Running)
+                            {
+                                mach->state = MachineState_Idle;
+                            }
+                            else if( mach->state == MachineState_Idle)
+                            {
+                                mach->state = MachineState_Running;
+                            }
+                        }
+                    }
+                GUI_END_WINDOW(GUIID_PASS);
+           }
+        }
 
 
 
@@ -3518,7 +3579,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             }
 
             //create
-            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) && (gui->draggedOff == 0) && client->curTool == EditorTools_Create)
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) 
+            && (gui->draggedOff == 0) && client->curTool == EditorTools_Create)
             {
                 ge_int2 world2DMouse;
                 world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
@@ -3571,6 +3633,34 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 }
 
             }
+
+            //select tile
+            if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) 
+            && (gui->draggedOff == 0) && client->curTool == EditorTools_Select)
+            {
+                ge_int2 world2DMouse;
+                world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                world2DMouse.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+
+                ge_int3 mapCoord;
+                int occluded;
+                GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
+                
+                client->selectedMapCoord = INT3_TO_SHORT3(mapCoord);
+
+                offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
+
+                if(machinePtr != OFFSET_NULL)
+                {
+                    Machine* machine;
+                    OFFSET_TO_PTR(gameState->machines, machinePtr, machine);
+
+                    printf("machine selected\n");
+                }
+                client->selectedMachine = machinePtr;
+
+            }
+
 
         }
 
@@ -3765,6 +3855,7 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
                 //    tileType = MapTile_DarkGrass;
                 //}
 
+                gameState->map.levels[z].machinePtr[x][y] = OFFSET_NULL;
 
                 USE_POINTER cl_uint* data = &gameState->map.levels[z].data[x][y];
                 *data = tileType;
@@ -3908,6 +3999,10 @@ void AStarPathStepsInit(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarPathSteps* st
 
 }
 
+void CLIENT_InitClientState(SynchronizedClientState* client)
+{
+    client->selectedMachine = OFFSET_NULL;
+}
 
 
 void CLIENT_InitClientStates(ALL_CORE_PARAMS)
@@ -3915,6 +4010,7 @@ void CLIENT_InitClientStates(ALL_CORE_PARAMS)
     for(int i = 0; i < MAX_CLIENTS; i++)
     {
         SynchronizedClientState* client = &gameState->clientStates[i];
+        CLIENT_InitClientState(client);
         SyncedGui* gui = &client->gui;
 
         GuiState_Init(&gui->guiState);
@@ -4265,12 +4361,21 @@ __kernel void game_update(ALL_CORE_PARAMS)
         PeepDraw(ALL_CORE_PARAMS_PASS, p);
     }
 
+    if ( globalid < MAX_MACHINES)
+    {
+        USE_POINTER Machine* m = &gameState->machines[globalid]; 
+        MachineUpdate(ALL_CORE_PARAMS_PASS, m);
+    }
+
     if (globalid < MAX_PARTICLES) {
         USE_POINTER Particle* p = &gameState->particles[globalid];
         ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
         ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
     }
     
+
+
+
     //update map view
     if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
