@@ -3163,6 +3163,17 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
                     }
                 }
             }
+
+
+            //LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
+            //CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
+
+            //InventoryGui();
+
+
+
+
+
             GUI_END_WINDOW(GUIID_PASS);
         }
     }

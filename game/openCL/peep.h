@@ -433,6 +433,7 @@ enum ItemTypes
 } typedef ItemTypes;
 
 
+
 enum MachineTypes
 {
 	MachineTypes_CRUSHER,
