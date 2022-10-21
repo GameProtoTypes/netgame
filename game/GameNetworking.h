@@ -24,6 +24,7 @@
 #endif
 
 
+#include "Common.h"
 #include "GameGPUCompute.h"
 
 
@@ -51,7 +52,7 @@
 #define TIMEOUT_TICKS (TICKSYNC_TICKS*50)
 
 
-#define MAX_CLIENTS (1024)
+
 
 #define LOCAL_QUICK_CONNECT
 #define LOCAL_AUTO_CONNECT

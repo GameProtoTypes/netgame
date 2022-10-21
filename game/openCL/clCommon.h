@@ -16,6 +16,8 @@
 #define MAP_TILE_UV_WIDTH (1/16.0)
 #define MAP_TILE_UV_WIDTH_FLOAT2 ((float2)(1/16.0, 1/16.0))
 
+#include "dynamicDefines.h"
+
 #include "gpuvectortypes.h"
 #include "cl_type_glue.h"
 

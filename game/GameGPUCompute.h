@@ -16,7 +16,7 @@
 
 #include "assert.h"
 
-
+#include "Common.h"
 #include "openCL/cpu_gpu_structs.h"
 
 #define GAMECOMPUTE_MAX_SOURCE_SIZE (0x100000)

@@ -66,9 +66,9 @@ struct ActionWrap {
 
 } typedef ActionWrap;
 
-
+#define MAX_ACTIONS_PER_TICK (MAX_CLIENTS)
 struct GameStateActions {
-	ActionWrap clientActions[32];
+	ActionWrap clientActions[MAX_ACTIONS_PER_TICK];
 	cl_int numActions;
 
 
