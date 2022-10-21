@@ -3169,10 +3169,10 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
             //CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
 
             //InventoryGui();
+            //GUI_LABEL(GUIID_PASS, (ge_int2)(0,100), (ge_int2)(50,50), 0, &ItemTypeStrings[0][0], (float3)(0,0,0) );
 
 
-
-
+            GUI_TEXT_CONST(GUIID_PASS, (ge_int2)(0,100), (ge_int2)(50,50), 0, &ItemTypeStrings[ItemType_IRON_BAR][0]);
 
             GUI_END_WINDOW(GUIID_PASS);
         }
@@ -4048,6 +4048,25 @@ void CLIENT_InitClientStates(ALL_CORE_PARAMS)
     GuiState_Init(&gameState->fakePassGui.guiState);
 }
 
+
+
+void MakeItemStrings(PARAM_GLOBAL_POINTER char* strings)
+{
+    //char a[ITEMTYPE_STRING_MAX_LENGTH] = "Iron Dust\0";
+    //strings[0] = a;
+
+    //ItemTypeStrings[ITEMTYPE_STRING_MAX_LENGTH][ItemTypes_NUMITEMS];
+
+   // LOCAL_STR(a, "Iron Dust");
+
+
+    //strings[1] = '\0';
+    //strings[1*ITEMTYPE_STRING_MAX_LENGTH] = "Iron Dust\0";
+   // strings[2*ITEMTYPE_STRING_MAX_LENGTH] = "Iron Bar\0";
+    //strings[3*ITEMTYPE_STRING_MAX_LENGTH] = "Rock Dust\0";
+}
+
+
 __kernel void game_init_single(ALL_CORE_PARAMS)
 {
     printf("Game Initializing...\n");
@@ -4057,6 +4076,9 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     printf("Initializing StaticData Buffers..\n");
     MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
+   // MakeItemStrings(staticData->ItemTypeStrings);
+
+
 
     printf("Initializing GUI..\n");
     GUI_INIT_STYLE(ALL_CORE_PARAMS_PASS);

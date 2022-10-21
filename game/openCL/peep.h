@@ -587,7 +587,17 @@ struct GameState {
 } typedef GameState;
 
 
+#define ITEMTYPE_STRING_MAX_LENGTH (128)
+
 struct StaticData {
 	ge_int3 directionalOffsets[26];
 
+
 }typedef StaticData;
+
+__constant char ItemTypeStrings[ItemTypes_NUMITEMS][ITEMTYPE_STRING_MAX_LENGTH] = { 
+    "Iron ore",
+    "Iron Dust",
+    "Iron Bar",
+    "Rock Dust"
+  };

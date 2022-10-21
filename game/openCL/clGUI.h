@@ -497,48 +497,54 @@ float4 ascii_to_uv(char ch)
     return (float4)(x/255.0,y/255.0, (x+ 16)/255.0, (y+16)/255.0);
 }
 
-
+#define GUI_TEXT_CODE \
+ GUI_COMMON_WIDGET_START()\
+\
+    const float charWidth = 10;\
+    const float charHeight = 16;\
+\
+    int i = 0;\
+    float posx = pos.x;\
+    float posy = pos.y;\
+    float offsetx = 0;\
+    while(str[i] != '\0')\
+    {\
+        float2 uvstart;\
+        float2 uvend;\
+\
+        float4 uv = ascii_to_uv(str[i]);\
+        uvstart.x = uv.x;\
+        uvstart.y = uv.y;\
+        uvend.x = uv.z;\
+        uvend.y = uv.w;\
+\
+\
+        if(str[i] == '\n')\
+        {\
+            posy += charHeight;\
+            offsetx = 0;\
+            i++;\
+            continue;\
+        }\
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, posx + offsetx, posy, charWidth, charHeight, gameState->guiStyle.TEXT_COLOR, uvstart, uvend );\
+        i++;\
+        offsetx+=charWidth;\
+    }
 
 void GUI_TEXT(GUIID_DEF_ALL, char* str)
 {
-    GUI_COMMON_WIDGET_START()
+    GUI_TEXT_CODE
+}
 
-    const float charWidth = 10;
-    const float charHeight = 16;
-
-    int i = 0;
-    float posx = pos.x;
-    float posy = pos.y;
-    float offsetx = 0;
-    while(str[i] != '\0')
-    {
-        float2 uvstart;
-        float2 uvend;
-
-        float4 uv = ascii_to_uv(str[i]);
-        uvstart.x = uv.x;
-        uvstart.y = uv.y;
-        uvend.x = uv.z;
-        uvend.y = uv.w;
-        //printf("deawinggdfjkg");
-
-        if(str[i] == '\n')
-        {
-            posy += charHeight;
-            offsetx = 0;
-            i++;
-            continue;
-        }
-
-        
-
-        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, posx + offsetx, posy, charWidth, charHeight, gameState->guiStyle.TEXT_COLOR, uvstart, uvend );
-        i++;
-        offsetx+=charWidth;
-    }
-
+void GUI_TEXT_CONST(GUIID_DEF_ALL, __constant char* str)
+{
+   GUI_TEXT_CODE
 
 }
+
+
+
+
 void GUI_LABEL(GUIID_DEF_ALL, char* str, float3 color)
 {
 
