@@ -578,12 +578,10 @@ struct GameState {
 	MachineDesc machineDescriptions[MachineTypes_NUMRECIPES];
 
 
-
+	//------------------------------------------------------not synced
 	SyncedGui fakePassGui;
 	GuiStyle guiStyle;
 	cl_uint debugLinesIdx;
-
-
 
 } typedef GameState;
 

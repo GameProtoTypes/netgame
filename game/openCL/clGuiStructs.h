@@ -25,7 +25,7 @@ struct GuiStyle
 
 	float3 TEXT_COLOR;
 
-	float3 BUTTON_COLOR;
+	float3 BUTTON_COLOR_DEF;
 	float3 BUTTON_COLOR_HOVER;
 	float3 BUTTON_COLOR_ACTIVE;
 	float3 BUTTON_COLOR_TOGGLED;

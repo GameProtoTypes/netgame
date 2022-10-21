@@ -79,6 +79,7 @@ struct GameStateActions {
 	cl_uint clientId;
 
 
+
 	cl_int mouseLocx;
 	cl_int mouseLocy;
 	cl_int mouseLocWorldx_Q16;

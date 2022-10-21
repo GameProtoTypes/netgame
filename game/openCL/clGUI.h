@@ -22,6 +22,7 @@
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
+#define GUI_COLOR_DEF (gameState->guiStyle.BUTTON_COLOR_TOGGLED)
 
 void GUI_PushContainer(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 pos, ge_int2 size)
 {
@@ -118,20 +119,27 @@ bool gui_CommonWidgetStart(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui,
 
     *pos = INT2_ADD(*pos, GUI_GetTotalOffset(gui));
 
-    ge_int4 curClip = GUI_MERGED_CLIP(gui);
+    //check clipping if inside parent
 
-    if(pos->x > curClip.x + curClip.z)
-        return false;
-    
-    if(pos->y > curClip.y + curClip.w)
-        return false;
+    if(gui->clipStackIdx > 0)
+    {
+        ge_int4 curClip = GUI_MERGED_CLIP(gui);
+        if(pos->x > curClip.x + curClip.z)
+            return false;
+        
+        if(pos->y > curClip.y + curClip.w)
+            return false;
 
-    if(pos->x + size->x < curClip.x)
-        return false;
-    
-    if(pos->y + size->y < curClip.y)
-        return false;
-    
+        if(pos->x + size->x < curClip.x)
+            return false;
+        
+        if(pos->y + size->y < curClip.y)
+            return false;
+    }
+
+
+
+
     return true;
 }
 
@@ -232,7 +240,7 @@ void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 
     gameState->guiStyle.UV_WHITE = (float2)(40.0/255, 20.0/255);
 
-    gameState->guiStyle.BUTTON_COLOR            = (float3)(0.5, 0.5, 0.5);
+    gameState->guiStyle.BUTTON_COLOR_DEF            = (float3)(0.5, 0.5, 0.5);
     gameState->guiStyle.BUTTON_COLOR_HOVER      = (float3)(0.7, 0.7, 0.7);
     gameState->guiStyle.BUTTON_COLOR_ACTIVE     = (float3)(0.3, 0.3, 0.3);
     gameState->guiStyle.BUTTON_COLOR_TOGGLED    = (float3)(0.4, 0.4, 0.4);
@@ -274,7 +282,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
 {
     if(gui->passType == GuiStatePassType_Synced)
     {
-        return;
+       return;
     }
 
 
@@ -308,7 +316,6 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     }
     if(y + height > clipEnd.y)
     {
-
         height = clipEnd.y - y;
     }
 
@@ -555,7 +562,7 @@ void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
 
 }
 
-bool GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
+bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, bool* toggleState)
 {
 
     GUI_COMMON_WIDGET_START()
@@ -606,19 +613,18 @@ bool GUI_BUTTON(GUIID_DEF_ALL, char* str, int* down, bool* toggleState)
         gui->mouseOnGUI = 1;
     }
 
-    float3 color = gameState->guiStyle.BUTTON_COLOR;
 
     if(gui->hoverWidget == id)
-        color =  gameState->guiStyle.BUTTON_COLOR_HOVER;
+        color *=  gameState->guiStyle.BUTTON_COLOR_HOVER;
 
     if(gui->activeWidget == id){
-        color = gameState->guiStyle.BUTTON_COLOR_ACTIVE;
+        color *= gameState->guiStyle.BUTTON_COLOR_ACTIVE;
     }
 
     if((toggleState != NULL) && (*toggleState))
     {
 
-        color = gameState->guiStyle.BUTTON_COLOR_TOGGLED;
+        color *= gameState->guiStyle.BUTTON_COLOR_TOGGLED;
     }
 
 
@@ -681,7 +687,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* valu
     
 
     int down;
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, NULL, &down, NULL);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_COLOR_DEF, NULL, &down, NULL);
 
     return 0;
 }
@@ -724,17 +730,17 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
     int down;
     LOCAL_STRL(valueTxt, "strofnoconsequence", valueTxtLen);
     CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, valueTxt, &down, NULL);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_COLOR_DEF, valueTxt, &down, NULL);
 
     return 0;
 }
 
 
-void GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, PARAM_GLOBAL_POINTER int* scrollx, PARAM_GLOBAL_POINTER int* scrolly)
+bool GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, PARAM_GLOBAL_POINTER int* scrollx, PARAM_GLOBAL_POINTER int* scrolly)
 {
     GUI_COMMON_WIDGET_START();
     if(!goodStart)
-        return;
+        return false;
 
 
     ge_int2 scrollOffset;
@@ -785,7 +791,7 @@ void GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, PARAM_GLOBAL_POINTE
 
     GUI_PushContainer(gui, origPos + scrollOffset, origSize);
 
-  
+    return true;
 }
 
 void GUI_SCROLLBOX_END(GUIID_DEF)
@@ -816,8 +822,10 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
 
 
     if(!goodStart)
+    {
+        GUI_PopClip(gui);
         return false;
-
+    }
 
     float3 headerColor = (float3)(0.4,0.4,0.4);
 
@@ -877,6 +885,7 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
     GUI_PushContainer(gui, origPos+(ge_int2)(gameState->guiStyle.WINDOW_PADDING,gameState->guiStyle.WINDOW_HEADER_SIZE), 
     origSize-(ge_int2)(gameState->guiStyle.WINDOW_PADDING*2,gameState->guiStyle.WINDOW_PADDING + gameState->guiStyle.WINDOW_HEADER_SIZE));
 
+    return true;
 }
 
 void GUI_END_WINDOW(GUIID_DEF)

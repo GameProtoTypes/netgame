@@ -3127,16 +3127,25 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
     }
 
 
+
+
+
     //apply turns
     for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
     {
+
         int b = a;
         GuiStatePassType guiPass = GuiStatePassType_Synced;
         if(a == gameStateActions->numActions)
         {
             b = 0;//'local' client
             guiPass = GuiStatePassType_NoLogic;
+  
         }
+
+
+
+
 
         USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[b].action;
         USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[b].tracking;
@@ -3145,7 +3154,17 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         USE_POINTER SyncedGui* gui = &gameState->clientStates[cliId].gui;
         
 
+        //detect new clients
+        if(gameState->numClients < cliId+1)
+        {
+            printf("New Client Connected!\n");
+            gameState->numClients = cliId+1;
 
+            //reset the fake pass gui
+            if(cliId == gameStateActions->clientId)
+                gameState->fakePassGui = *gui;
+
+        }
 
         ge_int2 mouseLoc;
         int mouseState;
@@ -3190,7 +3209,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         LOCAL_STR(noneTxt, "SELECT");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
         {
             client->curTool = EditorTools_Select;
 
@@ -3199,7 +3218,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},0, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},0, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
         {
             //printf("delete mode.");
             client->curTool = EditorTools_Delete;
@@ -3207,7 +3226,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, 0, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
         {
           //  printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3216,7 +3235,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, 0, createTxt2, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
         {
            // printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3240,35 +3259,37 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         
 
         LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
-        GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-        (ge_int2){200,200},0,  robotSelWindowStr, &gui->guiState.windowPositions[0],&gui->guiState.windowSizes[0] );
-
-        GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
-        (ge_int2){10,10},
-        GuiFlags_FillParent,
-        (ge_int2){1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly);
-            //iterate selected peeps
-            USE_POINTER Peep* p;
-            OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
-                  
-            int i = 0;
-            while(p != NULL)
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+        (ge_int2){200,200},0,  robotSelWindowStr, &gui->guiState.windowPositions[0],&gui->guiState.windowSizes[0] ))
+        {
+            if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
+            (ge_int2){10,10},
+            GuiFlags_FillParent,
+            (ge_int2){1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly))
             {
+                //iterate selected peeps
+                USE_POINTER Peep* p;
+                OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
+                    
+                int i = 0;
+                while(p != NULL)
+                {
 
-                LOCAL_STRL(header, "Miner: ", headerLen); 
-                LOCAL_STRL(peeptxt, "------------", peeptxtLen); 
-                CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
-                GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
-        
-                GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},0, peeptxt, &downDummy, NULL);
+                    LOCAL_STRL(header, "Miner: ", headerLen); 
+                    LOCAL_STRL(peeptxt, "------------", peeptxtLen); 
+                    CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
+                    GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
+            
+                    GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},0,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL);
 
-                i++;    
-                OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
+                    i++;    
+                    OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
+                }
+                GUI_SCROLLBOX_END(GUIID_PASS);
             }
-        GUI_SCROLLBOX_END(GUIID_PASS);
-        
-        GUI_END_WINDOW(GUIID_PASS);
-        
+            
+            GUI_END_WINDOW(GUIID_PASS);
+        }
 
         //hover stats
         if(guiPass == GuiStatePassType_NoLogic)
@@ -3328,8 +3349,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 OFFSET_TO_PTR(gameState->machines, client->selectedMachine, mach);
                 
                 LOCAL_STRL(mw, "Machine", mwlen); 
-                GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-                    (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] );
+                if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+                    (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
+                {
 
                     LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
                     CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
@@ -3339,20 +3361,21 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     LOCAL_STR(stateStrStart, "Start"); 
                     LOCAL_STR(stateStrStop, "Stop"); 
                     char* stateStr = stateStrStart;
+                    float3 btnColor;
 
                     if( mach->state == MachineState_Running)
                     {
-                       stateStr = stateStrStop;
-
+                        stateStr = stateStrStop;
+                        btnColor = (float3)(1.0,0.0,0.0);
                     }
                     else if( mach->state == MachineState_Idle)
                     {
                         stateStr = stateStrStart;
-
+                        btnColor = (float3)(0.0,0.7,0.0);
                     }
 
                 
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, stateStr, &downDummy, NULL))
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, btnColor, stateStr, &downDummy, NULL))
                     {
                         if(guiPass == GuiStatePassType_Synced)
                         {    
@@ -3366,7 +3389,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                             }
                         }
                     }
-                GUI_END_WINDOW(GUIID_PASS);
+                    GUI_END_WINDOW(GUIID_PASS);
+                }
            }
         }
 
