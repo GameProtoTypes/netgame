@@ -294,7 +294,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
        return;
     }
 
-
+     
     uint idx = gui->guiRenderRectIdx;
 
     float2 UVSize = UVEnd - UVStart;
@@ -352,7 +352,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     heightf*= -2.0f;
 
 
-
+  
     const int stride = 7;
 
     guiVBO[idx*stride + 0] = xf+widthf;
@@ -416,6 +416,7 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     idx++;
 
     gui->guiRenderRectIdx = idx;
+      
 }
 
 cl_uchar GUI_BoundsCheck(ge_int2 boundStart, ge_int2 boundEnd, ge_int2 pos)
@@ -567,13 +568,14 @@ void GUI_LABEL(GUIID_DEF_ALL, char* str, float3 color)
 
 void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
 {
-
+ 
     GUI_COMMON_WIDGET_START()
     if(!goodStart)
+    {   
         return;
-
-    GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, uvStart + (float2)(1.0,0.0), uvEnd+ (float2)(1.0,0.0) );
+    }
+     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
+    size.x, size.y, color, uvStart + (float2)(1.0,0.0), uvEnd + (float2)(1.0,0.0) );
 
 }
 
@@ -599,7 +601,8 @@ bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, bool* toggleS
 
 
     bool ret = false;
-    *down = 0;
+    if(down != NULL)
+        *down = 0;
     if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id)))
     {
         gui->hoverWidget = id;
@@ -607,7 +610,8 @@ bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, bool* toggleS
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown))
         {
             gui->activeWidget = id;
-            *down = 1;
+            if(down != NULL)
+                *down = 1;
         }
         
         else if(BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))

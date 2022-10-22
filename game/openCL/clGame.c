@@ -10,6 +10,8 @@
 //#define PEEP_DISABLE_TILECORRECTIONS
 #define PEEP_PATH_CROWD (4)
 
+//#define DEBUG_PATHS
+
 #include "clGUI.h"
 
 
@@ -343,7 +345,7 @@ void Machine_InitDescriptions(ALL_CORE_PARAMS)
     m->numInputs = 1;
     m->numOutputs = 1;
     m->inputTypes[0] = ItemType_IRON_DUST;
-    m->outputTypes[1] = ItemType_IRON_BAR;
+    m->outputTypes[0] = ItemType_IRON_BAR;
 
     m->inputRatio[0] = 5;
     m->outputRatio[0] = 1;
@@ -2227,7 +2229,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
         {
             //final node reached.
             peep->comms.message_TargetReached_pending = 255;//send the message
-            
+            peep->physics.drive.drivingToTarget = 0;
         }
         else
         {
@@ -2485,9 +2487,52 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
 
 void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
 {
-    if(machine->state == MachineState_Running)
+    MachineDesc* desc;
+    OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, desc);
+
+    bool readyToProcess = true;
+    for(int i = 0; i < 8; i++)
+    {
+        int ratio = desc->inputRatio[i];
+        ItemTypes type = desc->inputTypes[i];
+        if(ratio >= 1)
+        {
+            if(machine->inventory.counts[type] >= ratio)
+            {
+                
+            }
+            else
+            {
+                readyToProcess = false;
+            }
+        }
+    }
+
+    if(readyToProcess && machine->state == MachineState_Running)
+    {
         machine->tickProgess++;
 
+        if(machine->tickProgess >= desc->processingTime)
+        {
+            machine->tickProgess = 0;
+            MachineTypes type = desc->type;
+            
+          
+
+            for(int i = 0; i < 8; i++)
+            {
+                int ratio = desc->inputRatio[i];
+                int outRatio = desc->outputRatio[i];
+                ItemTypes type = desc->inputTypes[i];
+                ItemTypes outType = desc->outputTypes[i];
+
+                machine->inventory.counts[type]-=ratio;
+                machine->inventory.counts[outType]+=outRatio;
+            }
+            
+        }
+        
+    }
 }
 
 
@@ -3114,23 +3159,186 @@ void PrintMouseState(int mouseState)
 }
 
 
+void InventoryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Inventory* inventory)
+{
+    GUI_COMMON_WIDGET_START()
+
+    if(!goodStart)
+    {
+        return;
+    }
+
+    int j = 0;
+    for(int i = 0; i < ItemTypes_NUMITEMS; i++)
+    {
+        int count = inventory->counts[i];
+        if(count > 0)
+        {
+            LOCAL_STR(cntstr, "-----------");
+            CL_ITOA(count, cntstr, cntstr_len, 10 );                 
+            GUI_TEXT(GUIID_PASS, origPos + (ge_int2)(0,(j+1)*20 + 100), (ge_int2)(50,20), 0, cntstr);
+
+            GUI_TEXT_CONST(GUIID_PASS, origPos + (ge_int2)(50,(j+1)*20 + 100), (ge_int2)(50,20), 0, &ItemTypeStrings[i][0]);
+            j++;
+        }
+    }
+}
+void MapDeleteTile(ALL_CORE_PARAMS, ge_int3 mapCoord)
+{
+    if (mapCoord.z > 0) 
+    {
+        gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
+        
+
+        offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
+        if(machinePtr != OFFSET_NULL)
+        {
+            Machine* mach;
+            OFFSET_TO_PTR(gameState->machines, machinePtr, mach);
+            mach->valid = false;
+        }
+        gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y] = OFFSET_NULL;
+
+
+        MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+    }
+}
+
+USE_POINTER Machine* MachineGetFromMapCoord(ALL_CORE_PARAMS, ge_int3 mapCoord)
+{
+    offsetPtr ptr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
+    USE_POINTER Machine* machine;
+    OFFSET_TO_PTR(gameState->machines, ptr, machine);
+
+    return machine;
+}
+
+void TransferInventory(PARAM_GLOBAL_POINTER Inventory* invFrom, PARAM_GLOBAL_POINTER Inventory* invTo)
+{
+    for(int i = 0; i < ItemTypes_NUMITEMS; i++)
+    {
+        invTo->counts[i] += invFrom->counts[i];
+        invFrom->counts[i] = 0;
+    }
+}
+
+void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
+{
+    if(client->selectedPeepPrimary != OFFSET_NULL)
+    {
+        USE_POINTER Peep* peep;
+        OFFSET_TO_PTR(gameState->peeps, client->selectedPeepPrimary, peep);
+
+        LOCAL_STRL(mw, "Miner 123456", mwlen); 
+        CL_ITOA(peep->ptr, (mw)+6,mwlen-6, 10);
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
+            (ge_int2){200,500},0,  mw, &gui->guiState.windowPositions[2],&gui->guiState.windowSizes[2] ))
+        {
+
+            if(peep->physics.drive.drivingToTarget)
+            {
+                LOCAL_STR(thinkingtxt, "Traveling..."); 
+                GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(gui->guiState.windowSizes[2].x,20), 0, thinkingtxt, (float3)(0.0,0,0) );
+            }
+
+            
+
+            
+            ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
+            mapCoord.z--;
+
+            MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+            USE_POINTER Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+
+
+            if(downTile != MapTile_NONE)
+            {
+                LOCAL_STR(dig, "Drill Down"); 
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20), (ge_int2)(100,50), 0, (float3)(0.4,0.4,0.4), dig, NULL, NULL ))
+                {
+                    if(gui->passType == GuiStatePassType_Synced)
+                    {
+                        printf("digging...\n");
+
+                        if(downTile == MapTile_IronOre)
+                        {
+                            peep->inventory.counts[ItemType_IRON_ORE]+=10;
+                        }
+                        else if(downTile == MapTile_Rock)
+                        {
+                            peep->inventory.counts[ItemType_ROCK_DUST]+=100;
+                        }
+
+
+                        MapDeleteTile(ALL_CORE_PARAMS_PASS,  mapCoord);
+                    }
+                }
+
+                if(machine != NULL)
+                {
+                    LOCAL_STR(transferStr, "Push Down"); 
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50), (ge_int2)(gui->guiState.windowSizes[2].x,50), 0, (float3)(0.4,0.4,0.4), transferStr, NULL, NULL ))
+                    {    
+                        if(gui->passType == GuiStatePassType_Synced)
+                        {
+                            TransferInventory(&peep->inventory, &machine->inventory);
+                        }
+                    }
+                    LOCAL_STR(transferStr2, "Pull Up"); 
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50), 0, (float3)(0.4,0.4,0.4), transferStr2, NULL, NULL ))
+                    {
+                        if(gui->passType == GuiStatePassType_Synced)
+                        {
+                            TransferInventory(&machine->inventory, &peep->inventory);
+                        }
+                    }
+                }
+
+            }
+
+
+            InventoryGui(GUIID_PASS, (ge_int2)(0,50),gui->guiState.windowSizes[2], 0, &peep->inventory);
+
+            GUI_END_WINDOW(GUIID_PASS);
+        }
+
+
+
+    }
+}
+
 
 void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
     if(client->selectedMachine != OFFSET_NULL)
     {
 
-        Machine* mach;
+        USE_POINTER Machine* mach;
         OFFSET_TO_PTR(gameState->machines, client->selectedMachine, mach);
-        
-        LOCAL_STRL(mw, "Machine", mwlen); 
+        CL_CHECK_NULL(mach);
+
+        USE_POINTER MachineDesc* desc;
+        OFFSET_TO_PTR(gameState->machineDescriptions, mach->MachineDescPtr, desc);
+        CL_CHECK_NULL(desc);
+
+        LOCAL_STRL(mw, "Machine ------", mwlen); 
+        CL_ITOA(client->selectedMachine, (mw)+8,mwlen-8, 10);
         if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-            (ge_int2){200,200},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
+            (ge_int2){200,500},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
         {
 
-            LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
-            CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
-            GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), 0, thinkingtxt2, (float3)(0,0,0) );
+            LOCAL_STRL(thinkingtxt2, "---", thinkingtxtLen); 
+            float perc = ((float)mach->tickProgess/desc->processingTime);
+            char* p = CL_ITOA(perc*100, thinkingtxt2, thinkingtxtLen, 10 );
+            *(p+2) = '%'; if(thinkingtxt2[1] == '\0') thinkingtxt2[1] = ' ';
+            GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(perc*gui->guiState.windowSizes[1].x,50), 0, thinkingtxt2, (float3)(0,0.7,0) );
+
+
 
             int downDummy;
             LOCAL_STR(stateStrStart, "Start"); 
@@ -3161,18 +3369,20 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
                     {
                         mach->state = MachineState_Running;
                     }
+
+                    
                 }
+            }
+            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), 0,(float3)(0,0,1.0), NULL, &downDummy, NULL))
+            {
+                mach->inventory.counts[desc->inputTypes[0]]+=20;
+
             }
 
 
-            //LOCAL_STRL(thinkingtxt2, "-------------", thinkingtxtLen); 
-            //CL_ITOA(mach->tickProgess, thinkingtxt2, thinkingtxtLen, 10 );
-
-            //InventoryGui();
-            //GUI_LABEL(GUIID_PASS, (ge_int2)(0,100), (ge_int2)(50,50), 0, &ItemTypeStrings[0][0], (float3)(0,0,0) );
+            InventoryGui(GUIID_PASS,  (ge_int2)(0,0), gui->guiState.windowSizes[1],0,&mach->inventory );
 
 
-            GUI_TEXT_CONST(GUIID_PASS, (ge_int2)(0,100), (ge_int2)(50,50), 0, &ItemTypeStrings[ItemType_IRON_BAR][0]);
 
             GUI_END_WINDOW(GUIID_PASS);
         }
@@ -3309,7 +3519,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
         GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, 0, labeltxt2, (float3)(0.3,0.3,0.3));
             
-        
 
         LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
         if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
@@ -3329,11 +3538,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 {
 
                     LOCAL_STRL(header, "Miner: ", headerLen); 
-                    LOCAL_STRL(peeptxt, "------------", peeptxtLen); 
-                    CL_ITOA(p->physics.drive.targetPathNodeOPtr, peeptxt, peeptxtLen, 10 );
+                    LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
                     GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
             
-                    GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},0,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL);
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},0,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
+                    {
+                        client->selectedPeepPrimary = p->ptr;
+                    }
 
                     i++;    
                     OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
@@ -3358,9 +3569,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             int occluded;
             GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world_Q16, &mapcoord_whole, &occluded, client->mapZView+1);
 
+
+
             MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,1));
             MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
             MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,-1));
+            
+
 
 
             LOCAL_STRL(xtxt, "", xtxtLen); 
@@ -3376,13 +3591,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             uv = MapTileToUV(tile);
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
-
+   
             uv = MapTileToUV(tiledown);
+   
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50},0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+            
         }
-
-
-
 
 
         if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Searching)
@@ -3394,11 +3609,11 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         //selected machine
-        {
-            MachineGui(ALL_CORE_PARAMS_PASS,  gui, client);
+        MachineGui(ALL_CORE_PARAMS_PASS,  gui, client);
+        
+        //selected single peep
+        PeepCommandGui(ALL_CORE_PARAMS_PASS, gui, client);
 
-          
-        }
 
 
 
@@ -3471,38 +3686,51 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 {
                     client->selectedPeepsLastIdx = OFFSET_NULL;
+                    client->selectedPeepPrimary = OFFSET_NULL;
+                    int selectionCount = 0;
                     for (cl_uint pi = 0; pi < MAX_PEEPS; pi++)
                     {
+
+
                         USE_POINTER Peep* p = &gameState->peeps[pi];
                         p->prevSelectionPeepPtr[cliId] = OFFSET_NULL;
                         p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
 
 
                         if (p->stateBasic.faction == actionTracking->clientId)
-                        if ((p->physics.base.pos_Q16.x > client->mouseWorldBegin_Q16.x)
-                        && (p->physics.base.pos_Q16.x < client->mouseWorldEnd_Q16.x))
                         {
-
-                            if ((p->physics.base.pos_Q16.y < client->mouseWorldEnd_Q16.y)
-                                && (p->physics.base.pos_Q16.y > client->mouseWorldBegin_Q16.y))
+                            if ((p->physics.base.pos_Q16.x > client->mouseWorldBegin_Q16.x)
+                            && (p->physics.base.pos_Q16.x < client->mouseWorldEnd_Q16.x))
                             {
-                                if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, client->mapZView))
+
+                                if ((p->physics.base.pos_Q16.y < client->mouseWorldEnd_Q16.y)
+                                    && (p->physics.base.pos_Q16.y > client->mouseWorldBegin_Q16.y))
                                 {
-
-                                    if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                                    if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, p, client->mapZView))
                                     {
-                                        gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
-                                        p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
-                                        p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
-                                    }
-                                    client->selectedPeepsLastIdx = pi;
 
-                                    PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
+                                        if (client->selectedPeepsLastIdx != OFFSET_NULL)
+                                        {
+                                            gameState->peeps[client->selectedPeepsLastIdx].nextSelectionPeepPtr[cliId] = pi;
+                                            p->prevSelectionPeepPtr[cliId] = client->selectedPeepsLastIdx;
+                                            p->nextSelectionPeepPtr[cliId] = OFFSET_NULL;
+                                        }
+                                        client->selectedPeepsLastIdx = pi;
+                                        client->selectedPeepPrimary = pi;
+                                        selectionCount++;
+                                        PrintSelectionPeepStats(ALL_CORE_PARAMS_PASS, p);
+
+                                    }
 
                                 }
-
                             }
                         }
+
+                    }
+
+                    if(selectionCount != 1)
+                    {
+                        client->selectedPeepPrimary = OFFSET_NULL;
                     }
 
                 }
@@ -3594,17 +3822,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
                 
                 Print_GE_INT3(mapCoord);
-                if (mapCoord.z > 0) 
-                {
-                    gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
-                    
-                    MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
-                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
-                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
-                    MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
-                }
+                MapDeleteTile(ALL_CORE_PARAMS_PASS, mapCoord);
+               
 
             }
 
@@ -3843,7 +4062,7 @@ void MapCreate(ALL_CORE_PARAMS, int x, int y)
                     }
                     else if (RandomRange(x * y * z + 1, 0, 20) == 1)
                     {
-                        tileType = MapTile_CopperOre;
+                        tileType = MapTile_GoldOre;
                     }
                     else if (RandomRange(x * y * z + 2, 0, 100) == 1)
                     {
@@ -4032,6 +4251,7 @@ void AStarPathStepsInit(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarPathSteps* st
 void CLIENT_InitClientState(SynchronizedClientState* client)
 {
     client->selectedMachine = OFFSET_NULL;
+    client->selectedPeepPrimary = OFFSET_NULL;
 }
 
 
@@ -4544,6 +4764,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
 
     //draw debug lines on paths
+    #ifdef DEBUG_PATHS
     USE_POINTER AStarPathSteps* paths = &gameState->paths;
     
     //get a path
@@ -4584,7 +4805,7 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
         pathStartOPtr = paths->pathStarts[pathIdx];
     }
-
+    #endif
 }
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {

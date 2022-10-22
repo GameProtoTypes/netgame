@@ -155,6 +155,25 @@ struct PeepCommunication {
 }typedef PeepCommunication;
 
 
+enum ItemTypes
+{
+	ItemType_IRON_ORE,
+	ItemType_IRON_DUST,
+	ItemType_IRON_BAR,
+	ItemType_ROCK_DUST,
+
+	ItemType_COBALT_ORE,
+	ItemType_NICKLE_ORE,
+
+	ItemType_SOME_ORE = 256,
+
+	ItemTypes_NUMITEMS
+} typedef ItemTypes;
+
+struct Inventory
+{
+	int counts[ItemTypes_NUMITEMS];
+} typedef Inventory;
 
 struct Peep {
 	offsetPtr ptr;
@@ -162,6 +181,9 @@ struct Peep {
 	struct PeepState_Basic stateBasic;
 	struct PeepPhysics physics;
 	struct PeepCommunication comms;
+
+	Inventory inventory;
+
 
 	cl_int minDistPeep_Q16;
 	offsetPtr minDistPeepPtr;
@@ -249,8 +271,8 @@ enum MapTile {
 	MapTile_LightGrass,
 	MapTile_DarkGrass,
 	MapTile_Rock,
+	MapTile_GoldOre,
 	MapTile_IronOre,
-	MapTile_CopperOre,
 	MapTile_DiamondOre,
 	MapTile_MossyRock,
 	MapTile_Shadow_0,
@@ -421,17 +443,6 @@ struct PeepRenderSupport {
 
 
 
-enum ItemTypes
-{
-	ItemType_IRON_ORE,
-	ItemType_IRON_DUST,
-	ItemType_IRON_BAR,
-	ItemType_ROCK_DUST,
-
-
-	ItemTypes_NUMITEMS
-} typedef ItemTypes;
-
 
 
 enum MachineTypes
@@ -442,10 +453,7 @@ enum MachineTypes
 	MachineTypes_NUMRECIPES
 } typedef MachineTypes;
 
-struct Inventory
-{
-	int counts[ItemTypes_NUMITEMS];
-} typedef Inventory;
+
 
 struct MachineDesc
 {
@@ -524,6 +532,8 @@ struct SynchronizedClientState {
 
 	cl_int connected;
 	cl_uint selectedPeepsLastIdx;
+
+	offsetPtr selectedPeepPrimary;
 
 	PeepRenderSupport peepRenderSupport[MAX_PEEPS];
 

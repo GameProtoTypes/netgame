@@ -18,7 +18,7 @@ void GuiState_Init(GuiState* state)
     for(int w = 0 ; w < GUI_MAX_WINDOWS; w++)
     {
         state->windowPositions[w] = (ge_int2)(100,100);
-        state->windowSizes[w] = (ge_int2)(200,200);
+        state->windowSizes[w] = (ge_int2)(200,400);
     }
     
 

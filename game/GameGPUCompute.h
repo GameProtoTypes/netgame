@@ -146,7 +146,7 @@ public:
 	int mapDim = 1024;
 	int mapDepth = 32;
 	int mapTileSize = 5;
-    int maxGuiRects = 1024;
+    int maxGuiRects = 1024*16;
 	int maxLines = 1024*64;
 
     long GameUpdateWorkItems ;
