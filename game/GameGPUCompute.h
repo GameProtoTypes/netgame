@@ -141,7 +141,7 @@ public:
 	SIZETESTSDATA structSizes;
 
 	int warpSize = 32;
-	int maxPeeps = 1024*16;
+	int maxPeeps = 1024*1;
 	int maxParticles = 32;
 	int mapDim = 1024;
 	int mapDepth = 32;

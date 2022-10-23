@@ -318,45 +318,66 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
 }
 
 
+void Machine_InitRecipes(ALL_CORE_PARAMS)
+{
+   MachineRecipe* recip = &gameState->machineRecipes[MachineRecipe_IRON_ORE_CRUSHING];
+   recip->numInputs = 1;
+   recip->numOutputs = 2;
+   recip->inputTypes[0] = ItemType_IRON_ORE;
+   recip->outputTypes[0] = ItemType_IRON_DUST;
+   recip->outputTypes[1] = ItemType_ROCK_DUST;
 
+   recip->inputRatio[0] = 1;
+   recip->outputRatio[0] = 1;
+   recip->outputRatio[1] = 5;
+
+
+
+    recip = &gameState->machineRecipes[MachineRecipe_IRON_DUST_SMELTING];
+    recip->numInputs = 1;
+    recip->numOutputs = 1;
+    recip->inputTypes[0] = ItemType_IRON_DUST;
+    recip->outputTypes[0] = ItemType_IRON_BAR;
+
+    recip->inputRatio[0] = 5;
+    recip->outputRatio[0] = 1;
+
+
+    gameState->validMachineRecipes[MachineTypes_CRUSHER][0] = MachineRecipe_IRON_ORE_CRUSHING;
+    gameState->validMachineRecipes[MachineTypes_SMELTER][0] = MachineRecipe_IRON_DUST_SMELTING;
+
+
+
+}
 
 void Machine_InitDescriptions(ALL_CORE_PARAMS)
 {
     MachineDesc* m = &gameState->machineDescriptions[MachineTypes_CRUSHER];
     m->type = MachineTypes_CRUSHER;
     m->tile = MapTile_MACHINE_CRUSHER;
-    m->numInputs = 1;
-    m->numOutputs = 2;
-    m->inputTypes[0] = ItemType_IRON_ORE;
-    m->outputTypes[0] = ItemType_IRON_DUST;
-    m->outputTypes[1] = ItemType_ROCK_DUST;
-
-    m->inputRatio[0] = 1;
-    m->outputRatio[0] = 1;
-    m->outputRatio[1] = 5;
     m->processingTime = 30;
-
-
 
 
     m = &gameState->machineDescriptions[MachineTypes_SMELTER];
     m->type = MachineTypes_SMELTER;
     m->tile = MapTile_MACHINE_FURNACE;
-    m->numInputs = 1;
-    m->numOutputs = 1;
-    m->inputTypes[0] = ItemType_IRON_DUST;
-    m->outputTypes[0] = ItemType_IRON_BAR;
-
-    m->inputRatio[0] = 5;
-    m->outputRatio[0] = 1;
-
     m->processingTime = 100;
-
-
-
 
 }
 
+void InitItemTypeTiles(ALL_CORE_PARAMS)
+{
+    gameState->ItemTypeTiles[ItemType_IRON_ORE].itemTile = ItemTile_Ore;
+    gameState->ItemTypeTiles[ItemType_IRON_DUST].itemTile = ItemTile_Dust;
+    gameState->ItemTypeTiles[ItemType_IRON_BAR].itemTile = ItemTile_Bar;
+    gameState->ItemTypeTiles[ItemType_ROCK_DUST].itemTile = ItemTile_Dust;
+
+
+    gameState->ItemColors[ItemType_IRON_ORE] = COLOR_ORANGE;
+    gameState->ItemColors[ItemType_IRON_DUST] = COLOR_ORANGE;
+    gameState->ItemColors[ItemType_IRON_BAR] = COLOR_ORANGE;
+    gameState->ItemColors[ItemType_ROCK_DUST] = COLOR_WHITE;
+}
 
 offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
 {
@@ -2490,11 +2511,14 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
     MachineDesc* desc;
     OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, desc);
 
+    MachineRecipe* recip;
+    OFFSET_TO_PTR(gameState->machineRecipes, machine->recipePtr, recip);
+
     bool readyToProcess = true;
     for(int i = 0; i < 8; i++)
     {
-        int ratio = desc->inputRatio[i];
-        ItemTypes type = desc->inputTypes[i];
+        int ratio = recip->inputRatio[i];
+        ItemTypes type = recip->inputTypes[i];
         if(ratio >= 1)
         {
             if(machine->inventory.counts[type] >= ratio)
@@ -2521,10 +2545,10 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
 
             for(int i = 0; i < 8; i++)
             {
-                int ratio = desc->inputRatio[i];
-                int outRatio = desc->outputRatio[i];
-                ItemTypes type = desc->inputTypes[i];
-                ItemTypes outType = desc->outputTypes[i];
+                int ratio = recip->inputRatio[i];
+                int outRatio = recip->outputRatio[i];
+                ItemTypes type = recip->inputTypes[i];
+                ItemTypes outType = recip->outputTypes[i];
 
                 machine->inventory.counts[type]-=ratio;
                 machine->inventory.counts[outType]+=outRatio;
@@ -3129,13 +3153,13 @@ ge_int2 GUI_TO_WORLD_Q16(ALL_CORE_PARAMS, ge_int2 guiCoord)
     return (ge_int2){0,0};
 }
 
-float2 MapTileToUV(MapTile tile)
+float2 TileToUV(TileUnion tile)
 {
 
     //duplicate of geomMapTile.glsl code.
     float2 uv;
-    uv.x = ((uint)tile & 15u) / 16.0;
-    uv.y = (((uint)tile >> 4u) & 15u) / 16.0;    
+    uv.x = ((uint)tile.mapTile & 15u) / 16.0;
+    uv.y = (((uint)tile.mapTile >> 4u) & 15u) / 16.0;    
     return uv;
 }
 
@@ -3174,12 +3198,18 @@ void InventoryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Inventory* inventory)
         int count = inventory->counts[i];
         if(count > 0)
         {
+            const int height = 40;
+            float2 uv = TileToUV(gameState->ItemTypeTiles[i]);
+            GUI_IMAGE(GUIID_PASS, origPos + (ge_int2)(0,(j+1)*height + 100), (ge_int2)(height,height), 0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, gameState->ItemColors[i]);
+
+
             LOCAL_STR(cntstr, "-----------");
             CL_ITOA(count, cntstr, cntstr_len, 10 );                 
-            GUI_TEXT(GUIID_PASS, origPos + (ge_int2)(0,(j+1)*20 + 100), (ge_int2)(50,20), 0, cntstr);
+            GUI_TEXT(GUIID_PASS, origPos + (ge_int2)(height,(j+1)*height + 100), (ge_int2)(50,height), 0, cntstr);
 
-            GUI_TEXT_CONST(GUIID_PASS, origPos + (ge_int2)(50,(j+1)*20 + 100), (ge_int2)(50,20), 0, &ItemTypeStrings[i][0]);
+            GUI_TEXT_CONST(GUIID_PASS, origPos + (ge_int2)(height+50,(j+1)*height + 100), (ge_int2)(50,height), 0, &ItemTypeStrings[i][0]);
             j++;
+
         }
     }
 }
@@ -3326,6 +3356,9 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
         OFFSET_TO_PTR(gameState->machineDescriptions, mach->MachineDescPtr, desc);
         CL_CHECK_NULL(desc);
 
+        USE_POINTER MachineRecipe* recip;
+        OFFSET_TO_PTR(gameState->machineRecipes, mach->recipePtr, recip);
+
         LOCAL_STRL(mw, "Machine ------", mwlen); 
         CL_ITOA(client->selectedMachine, (mw)+8,mwlen-8, 10);
         if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
@@ -3375,8 +3408,11 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
             }
             if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), 0,(float3)(0,0,1.0), NULL, &downDummy, NULL))
             {
-                mach->inventory.counts[desc->inputTypes[0]]+=20;
-
+                for(int i = 0; i < 8; i++)
+                {
+                    if(recip->inputTypes[i] != ItemType_INVALID_ITEM)
+                        mach->inventory.counts[recip->inputTypes[i]]+=20;
+                }
             }
 
 
@@ -3586,13 +3622,13 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             
 
             GUI_LABEL(GUIID_PASS, (ge_int2)(widgx-5,widgy-50-5) , (ge_int2){50+10, 150+10}, 0, xtxt, (float3)(0.3,0.3,0.3));
-            float2 uv = MapTileToUV(tileup);
+            float2 uv = TileToUV((TileUnion){tileup});
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy-50) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
 
-            uv = MapTileToUV(tile);
+            uv = TileToUV((TileUnion){tile});
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
    
-            uv = MapTileToUV(tiledown);
+            uv = TileToUV((TileUnion){tiledown});
    
             GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50},0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
 
@@ -3863,6 +3899,9 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         machine->valid = true;
                         machine->mapTilePtr = VECTOR3_CAST(mapCoordSpawn, offsetPtrShort3);
                         machine->MachineDescPtr = client->curToolMachine;
+                        machine->recipePtr = gameState->validMachineRecipes[client->curToolMachine][0];
+
+
                         MachineDesc* machDesc;
                         OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, machDesc);
                         CL_CHECK_NULL(machDesc);
@@ -4314,6 +4353,10 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
 
     printf("Creating Machines Types\n");
     Machine_InitDescriptions(ALL_CORE_PARAMS_PASS);
+    printf("Creating Machine Recipes\n");
+    Machine_InitRecipes(ALL_CORE_PARAMS_PASS);
+    printf("Mapping Item Tiles\n");   
+    InitItemTypeTiles(ALL_CORE_PARAMS_PASS);
 
     gameState->numClients = 1;
     gameStateActions->pauseState = 0;

@@ -32,8 +32,8 @@ public:
 	void Init();
 
 	//Screen dimension constants
-	const int32_t SCREEN_WIDTH = 1024;
-	const int32_t SCREEN_HEIGHT = 600;
+	const int32_t SCREEN_WIDTH = 1920;
+	const int32_t SCREEN_HEIGHT = 1080;
 
 	struct RenderClientState {
 		int32_t mousex = 0;

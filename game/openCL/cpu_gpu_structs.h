@@ -107,5 +107,5 @@ enum MouseButtonBits {
 } typedef MouseButtonBits;
 
 
-#define GUI_PXPERSCREEN (1000)
-#define GUI_PXPERSCREEN_F (1000.0f)
+#define GUI_PXPERSCREEN (2000)
+#define GUI_PXPERSCREEN_F (2000.0f)

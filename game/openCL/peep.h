@@ -157,13 +157,36 @@ struct PeepCommunication {
 
 enum ItemTypes
 {
+	ItemType_INVALID_ITEM,
 	ItemType_IRON_ORE,
 	ItemType_IRON_DUST,
 	ItemType_IRON_BAR,
 	ItemType_ROCK_DUST,
 
+	ItemType_TIN_ORE,
+	ItemType_TIN_DUST,
+
 	ItemType_COBALT_ORE,
 	ItemType_NICKLE_ORE,
+
+	ItemType_RUTHENIUM_ORE,
+	ItemType_RUTHENIUM_DUST,
+
+	ItemType_RHODIUM_ORE,
+	ItemType_RHODIUM_DUST,
+
+	ItemType_PALADIUM_ORE,
+	ItemType_PALADIUM_DUST,
+
+	ItemType_OSMIUM_ORE,
+	ItemType_OSMIUM_DUST,
+
+	ItemType_IRIDIUM_ORE,
+	ItemType_IRIDIUM_DUST,
+
+	ItemType_PLATINUM_ORE,
+	ItemType_PLATINUM_DUST,
+
 
 	ItemType_SOME_ORE = 256,
 
@@ -299,6 +322,19 @@ enum MapTile {
 
 	MapTile_NONE = 255
 }typedef MapTile;
+
+
+#define NUM_ITEMTILES (3)
+enum ItemTile {
+	ItemTile_Dust = 20,
+	ItemTile_Bar = 21,
+	ItemTile_Ore = 22
+}typedef ItemTile;
+
+union TileUnion {
+	MapTile mapTile;
+	ItemTile itemTile;
+}typedef TileUnion;
 
 
 struct MapLevel {	
@@ -450,21 +486,35 @@ enum MachineTypes
 	MachineTypes_CRUSHER,
 	MachineTypes_SMELTER,
 
-	MachineTypes_NUMRECIPES
+	MachineTypes_NUMTYPES
 } typedef MachineTypes;
 
+enum MachineRecipes
+{
+	MachineRecipe_INVALID,
+	MachineRecipe_IRON_ORE_CRUSHING,
+	MachineRecipe_IRON_DUST_SMELTING,
 
+	MachineRecipe_NUMRECIPES
+} typedef MachineRecipes;
+
+
+
+struct MachineRecipe
+{
+	ItemTypes inputTypes[8]; int numInputs;
+	ItemTypes outputTypes[8]; int numOutputs;
+
+	int inputRatio[8];
+	int outputRatio[8];
+} typedef MachineRecipe;
 
 struct MachineDesc
 {
 	MachineTypes type;
 	MapTile tile;
 
-	ItemTypes inputTypes[8]; int numInputs;
-	ItemTypes outputTypes[8]; int numOutputs;
 
-	int inputRatio[8];
-	int outputRatio[8];
 
 	int processingTime;
 } typedef MachineDesc;
@@ -483,6 +533,8 @@ struct Machine
 	bool valid;
 	offsetPtrShort3 mapTilePtr;
 	offsetPtr MachineDescPtr;//ptr into bank of descriptions.
+
+	offsetPtr recipePtr;
 
 	int tickProgess;
 	MachineState state;
@@ -586,8 +638,11 @@ struct GameState {
 
 	Machine machines[MAX_MACHINES];
 	int nextMachineIdx;
-	MachineDesc machineDescriptions[MachineTypes_NUMRECIPES];
-
+	MachineDesc machineDescriptions[MachineTypes_NUMTYPES];
+	MachineRecipe machineRecipes[MachineRecipe_NUMRECIPES];
+	MachineRecipes validMachineRecipes[MachineTypes_NUMTYPES][MachineRecipe_NUMRECIPES];
+	TileUnion ItemTypeTiles[ItemTypes_NUMITEMS];
+	float3 ItemColors[ItemTypes_NUMITEMS];
 
 	//------------------------------------------------------not synced
 	SyncedGui fakePassGui;
@@ -606,7 +661,8 @@ struct StaticData {
 }typedef StaticData;
 
 __constant char ItemTypeStrings[ItemTypes_NUMITEMS][ITEMTYPE_STRING_MAX_LENGTH] = { 
-    "Iron ore",
+	"Invalid",
+    "Iron Ore",
     "Iron Dust",
     "Iron Bar",
     "Rock Dust"
