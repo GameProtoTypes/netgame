@@ -3289,7 +3289,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
             if(downTile != MapTile_NONE)
             {
                 LOCAL_STR(dig, "Drill Down"); 
-                if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20), (ge_int2)(100,50), 0, (float3)(0.4,0.4,0.4), dig, NULL, NULL ))
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, (float3)(0.4,0.4,0.4), dig, NULL, NULL ))
                 {
                     if(gui->passType == GuiStatePassType_Synced)
                     {
@@ -3312,7 +3312,8 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                 if(machine != NULL)
                 {
                     LOCAL_STR(transferStr, "Push Down"); 
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50), (ge_int2)(gui->guiState.windowSizes[2].x,50), 0, (float3)(0.4,0.4,0.4), transferStr, NULL, NULL ))
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
+                     (float3)(0.4,0.4,0.4), transferStr, NULL, NULL ))
                     {    
                         if(gui->passType == GuiStatePassType_Synced)
                         {
@@ -3320,7 +3321,8 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         }
                     }
                     LOCAL_STR(transferStr2, "Pull Up"); 
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50), 0, (float3)(0.4,0.4,0.4), transferStr2, NULL, NULL ))
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,20+50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),
+                     GuiFlags_Beveled, (float3)(0.4,0.4,0.4), transferStr2, NULL, NULL ))
                     {
                         if(gui->passType == GuiStatePassType_Synced)
                         {
@@ -3371,7 +3373,7 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
             *(p+2) = '%'; if(thinkingtxt2[1] == '\0') thinkingtxt2[1] = ' ';
             GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(perc*gui->guiState.windowSizes[1].x,50), 0, thinkingtxt2, (float3)(0,0.7,0) );
 
-
+            
 
             int downDummy;
             LOCAL_STR(stateStrStart, "Start"); 
@@ -3390,7 +3392,7 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
                 btnColor = (float3)(0.0,0.7,0.0);
             }
 
-            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), 0, btnColor, stateStr, &downDummy, NULL))
+            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), GuiFlags_Beveled, btnColor, stateStr, &downDummy, NULL))
             {
                 if(gui->passType == GuiStatePassType_Synced)
                 {    
@@ -3406,7 +3408,7 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
                     
                 }
             }
-            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), 0,(float3)(0,0,1.0), NULL, &downDummy, NULL))
+            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), GuiFlags_Beveled,(float3)(0,0,1.0), NULL, &downDummy, NULL))
             {
                 for(int i = 0; i < 8; i++)
                 {
@@ -3508,7 +3510,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         LOCAL_STR(noneTxt, "SELECT");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
         {
             client->curTool = EditorTools_Select;
 
@@ -3517,7 +3519,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
         LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},0, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},GuiFlags_Beveled, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
         {
             //printf("delete mode.");
             client->curTool = EditorTools_Delete;
@@ -3525,7 +3527,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
         {
           //  printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3534,7 +3536,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         }
 
         LOCAL_STR(createTxt2, "CREATE\nSMELTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, 0, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
+        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
         {
            // printf("create mode");
             client->curTool = EditorTools_Create;
@@ -3577,7 +3579,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
                     GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
             
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},0,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
+                    if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},GuiFlags_Beveled,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
                     {
                         client->selectedPeepPrimary = p->ptr;
                     }

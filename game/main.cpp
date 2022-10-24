@@ -260,16 +260,22 @@ int32_t main(int32_t argc, char* args[])
         GSCS(A)
         cl_ulong time_start;
         cl_ulong time_end;
-
+      ImGui::Begin("Profiling");
+                
+        clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+        clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+        double nanoSeconds = static_cast<double>(time_end - time_start);
+        ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+            
+        
         clGetEventProfilingInfo(gameCompute.updateEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
         clGetEventProfilingInfo(gameCompute.updateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-
-        ImGui::Begin("Profiling");
-        double nanoSeconds = static_cast<double>(time_end - time_start);
+        nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("update_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+
+
         clGetEventProfilingInfo(gameCompute.preUpdateEvent1, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
         clGetEventProfilingInfo(gameCompute.preUpdateEvent2, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-
         nanoSeconds = static_cast<double>(time_end - time_start);
         ImGui::Text("preupdate_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
             

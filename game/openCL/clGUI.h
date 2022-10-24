@@ -287,7 +287,15 @@ int GrabGuiId(PARAM_GLOBAL_POINTER SyncedGui* gui)
 }
 
 
-void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int x, int y, int width, int height, float3 color, float2 UVStart, float2 UVEnd)
+void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, 
+int x, 
+int y,
+int width,
+int height,
+float3 color, 
+float2 UVStart, 
+float2 UVEnd,
+bool bevelled)
 {
     if(gui->passType == GuiStatePassType_Synced)
     {
@@ -349,24 +357,34 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     yf+=1.0f;
 
     widthf *= 2.0f;
-    heightf*= -2.0f;
+    heightf*= 2.0f;
 
 
   
     const int stride = 7;
+    float bevelx = 0.0f;
+    float bevely = 0.0f;
+    if(bevelled)
+    {
+        bevelx = clamp(0.005f, 0.0f, widthf/2.0f);
+        bevely = clamp(0.005f, 0.0f, heightf/2.0f);
+    }
 
-    guiVBO[idx*stride + 0] = xf+widthf;
-    guiVBO[idx*stride + 1] = yf+heightf;
+    
+    //main quad
+    guiVBO[idx*stride + 0] = xf+widthf  - bevelx;//A
+    guiVBO[idx*stride + 1] = yf-heightf + bevely;//A
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
     guiVBO[idx*stride + 4] = color.z;
+    
     guiVBO[idx*stride + 5] = UVEnd.x;
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = xf;
-    guiVBO[idx*stride + 1] = yf;
+    guiVBO[idx*stride + 0] = xf + bevelx;//B
+    guiVBO[idx*stride + 1] = yf - bevely;//B
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -375,8 +393,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = xf;
-    guiVBO[idx*stride + 1] = yf+heightf;
+    guiVBO[idx*stride + 0] = xf + bevelx;//C
+    guiVBO[idx*stride + 1] = yf-heightf+ bevely;//C
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -385,8 +403,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = xf+widthf;
-    guiVBO[idx*stride + 1] = yf+heightf;
+    guiVBO[idx*stride + 0] = xf+widthf  - bevelx;//A
+    guiVBO[idx*stride + 1] = yf-heightf + bevely;//A
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -395,8 +413,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     guiVBO[idx*stride + 6] = UVEnd.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = xf+widthf;
-    guiVBO[idx*stride + 1] = yf;
+    guiVBO[idx*stride + 0] = xf+widthf - bevelx;//D
+    guiVBO[idx*stride + 1] = yf - bevely;//D
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -405,8 +423,8 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
 
-    guiVBO[idx*stride + 0] = xf;
-    guiVBO[idx*stride + 1] = yf;
+    guiVBO[idx*stride + 0] = xf + bevelx;
+    guiVBO[idx*stride + 1] = yf - bevely;
 
     guiVBO[idx*stride + 2] = color.x;
     guiVBO[idx*stride + 3] = color.y;
@@ -414,6 +432,261 @@ void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, int
     guiVBO[idx*stride + 5] = UVStart.x;
     guiVBO[idx*stride + 6] = UVStart.y;
     idx++;
+
+    float3 colorBottom = color * (float3)(0.8,0.8,0.8);
+    //Bottom Quad
+    guiVBO[idx*stride + 0] = xf+widthf ;//E
+    guiVBO[idx*stride + 1] = yf-heightf ;//E
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf + bevelx;//C
+    guiVBO[idx*stride + 1] = yf-heightf+ bevely;//C
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf ;//F
+    guiVBO[idx*stride + 1] = yf-heightf;//F
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf+widthf ;//E
+    guiVBO[idx*stride + 1] = yf-heightf ;//E
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf+widthf  - bevelx;//A
+    guiVBO[idx*stride + 1] =  yf-heightf + bevely;//A
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf + bevelx;//C
+    guiVBO[idx*stride + 1] =  yf-heightf+ bevely;//C
+
+    guiVBO[idx*stride + 2] = colorBottom.x;
+    guiVBO[idx*stride + 3] = colorBottom.y;
+    guiVBO[idx*stride + 4] = colorBottom.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    //rightQuad
+    float3 colorRight = color * (float3)(0.8,0.8,0.8);
+    guiVBO[idx*stride + 0] = xf+widthf; //G
+    guiVBO[idx*stride + 1] = yf;//G
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf+widthf - bevelx;//D
+    guiVBO[idx*stride + 1] = yf - bevely;//D
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf+widthf ;//E
+    guiVBO[idx*stride + 1] = yf-heightf ;//E
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf+widthf - bevelx;//D
+    guiVBO[idx*stride + 1] = yf - bevely;//D
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf+widthf  - bevelx;//A
+    guiVBO[idx*stride + 1] =  yf-heightf + bevely;//A
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf+widthf ;//E
+    guiVBO[idx*stride + 1] =  yf-heightf ;//E
+
+    guiVBO[idx*stride + 2] = colorRight.x;
+    guiVBO[idx*stride + 3] = colorRight.y;
+    guiVBO[idx*stride + 4] = colorRight.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+
+     //TopQuad
+    float3 colorTop = color * (float3)(0.9,0.9,0.9);
+    guiVBO[idx*stride + 0] = xf+widthf; //G
+    guiVBO[idx*stride + 1] = yf;//G
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf ;//H
+    guiVBO[idx*stride + 1] = yf ;//H
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf+widthf - bevelx;//D
+    guiVBO[idx*stride + 1] =  yf - bevely;//D
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf ;//H
+    guiVBO[idx*stride + 1] =  yf ;//H
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =   xf + bevelx;//B
+    guiVBO[idx*stride + 1] =   yf - bevely;//B
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =   xf+widthf - bevelx;//D
+    guiVBO[idx*stride + 1] =   yf - bevely;//D
+
+    guiVBO[idx*stride + 2] = colorTop.x;
+    guiVBO[idx*stride + 3] = colorTop.y;
+    guiVBO[idx*stride + 4] = colorTop.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+     //LeftQuad
+    float3 colorLeft = color * (float3)(0.9,0.9,0.9);
+    guiVBO[idx*stride + 0] = xf + bevelx;//B
+    guiVBO[idx*stride + 1] = yf - bevely;//B
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] = xf ;//H
+    guiVBO[idx*stride + 1] = yf ;//H
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =   xf ;//F
+    guiVBO[idx*stride + 1] =   yf-heightf;//F
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf + bevelx;//C
+    guiVBO[idx*stride + 1] =  yf-heightf+ bevely;//C
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVEnd.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =   xf + bevelx;//B
+    guiVBO[idx*stride + 1] =   yf - bevely;//B
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    guiVBO[idx*stride + 5] = UVEnd.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    guiVBO[idx*stride + 0] =  xf ;//F
+    guiVBO[idx*stride + 1] =  yf-heightf;//F
+
+    guiVBO[idx*stride + 2] = colorLeft.x;
+    guiVBO[idx*stride + 3] = colorLeft.y;
+    guiVBO[idx*stride + 4] = colorLeft.z;
+    guiVBO[idx*stride + 5] = UVStart.x;
+    guiVBO[idx*stride + 6] = UVStart.y;
+    idx++;
+
+    
 
     gui->guiRenderRectIdx = idx;
       
@@ -527,7 +800,7 @@ float4 ascii_to_uv(char ch)
             i++;\
             continue;\
         }\
-        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, posx + offsetx, posy, charWidth, charHeight, gameState->guiStyle.TEXT_COLOR, uvstart, uvend );\
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, posx + offsetx, posy, charWidth, charHeight, gameState->guiStyle.TEXT_COLOR, uvstart, uvend  , false );\
         i++;\
         offsetx+=charWidth;\
     }
@@ -556,7 +829,7 @@ void GUI_LABEL(GUIID_DEF_ALL, char* str, float3 color)
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE  , false);
     
     if(str != NULL)
     {
@@ -575,7 +848,7 @@ void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
         return;
     }
      GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, uvStart + (float2)(1.0,0.0), uvEnd + (float2)(1.0,0.0) );
+    size.x, size.y, color, uvStart + (float2)(1.0,0.0), uvEnd + (float2)(1.0,0.0) , false );
 
 }
 
@@ -648,7 +921,7 @@ bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, bool* toggleS
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, size.y, color, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE , (flags & GuiFlags_Beveled) );
     
     if(str != NULL)
     {
@@ -702,7 +975,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* valu
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE , false );
     
 
     int down;
@@ -743,7 +1016,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
 
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, size.y, gameState->guiStyle.SLIDER_COLOR_BACKGROUND, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE, false );
 
 
     int down;
@@ -806,7 +1079,7 @@ bool GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, PARAM_GLOBAL_POINTE
     GUI_PushClip(gui, origPos, canvasSize);
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    canvasSize.x, canvasSize.y, (float3)(0.2,0.2,0.2), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    canvasSize.x, canvasSize.y, (float3)(0.2,0.2,0.2), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE , false );
 
     GUI_PushContainer(gui, origPos + scrollOffset, origSize);
 
@@ -925,7 +1198,7 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* win
     //size.x, gameState->guiStyle.WINDOW_HEADER_SIZE, headerColor, gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
 
     GUI_DrawRectangle(ALL_CORE_PARAMS_PASS, gui, pos.x, pos.y+gameState->guiStyle.WINDOW_HEADER_SIZE, 
-    size.x, size.y-gameState->guiStyle.WINDOW_HEADER_SIZE, (float3)(0.6,0.6,0.6), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE );
+    size.x, size.y-gameState->guiStyle.WINDOW_HEADER_SIZE, (float3)(0.6,0.6,0.6), gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE , false);
 
     GUI_PushContainer(gui, origPos+(ge_int2)(gameState->guiStyle.WINDOW_PADDING,gameState->guiStyle.WINDOW_HEADER_SIZE), 
     origSize-(ge_int2)(gameState->guiStyle.WINDOW_PADDING*2,gameState->guiStyle.WINDOW_PADDING + gameState->guiStyle.WINDOW_HEADER_SIZE));

@@ -9,10 +9,13 @@
 #define COLOR_GREEN (float3)(0.0,1.0,0.0)
 #define COLOR_BLUE (float3)(0.0,0.0,1.0)
 #define COLOR_ORANGE (float3)(0.95,0.38,0.0)
+
+
 enum GuiFlags
 {
 	GuiFlags_FillParent = 1,
-	GuiFlags_Mouse_Draggable = 1 << 1
+	GuiFlags_Mouse_Draggable = 1 << 1,
+	GuiFlags_Beveled  = 1 << 2
 } typedef GuiFlags;
 
 enum GuiStatePassType
