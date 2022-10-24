@@ -286,7 +286,6 @@ int GrabGuiId(PARAM_GLOBAL_POINTER SyncedGui* gui)
     return id;
 }
 
-
 void GUI_DrawRectangle(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, 
 int x, 
 int y,
@@ -852,7 +851,7 @@ void GUI_IMAGE(GUIID_DEF_ALL, float2 uvStart, float2 uvEnd, float3 color)
 
 }
 
-bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, bool* toggleState)
+bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, PARAM_GLOBAL_POINTER  bool* toggleState)
 {
 
     GUI_COMMON_WIDGET_START()
@@ -1097,7 +1096,7 @@ void GUI_SCROLLBOX_END(GUIID_DEF)
 
 
 
-bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, ge_int2* windowPos, ge_int2* windowSize)
+bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, PARAM_GLOBAL_POINTER ge_int2* windowPos, PARAM_GLOBAL_POINTER ge_int2* windowSize)
 {
     if(windowPos != NULL)
     {

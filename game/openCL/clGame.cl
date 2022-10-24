@@ -320,7 +320,7 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
 
 void Machine_InitRecipes(ALL_CORE_PARAMS)
 {
-   MachineRecipe* recip = &gameState->machineRecipes[MachineRecipe_IRON_ORE_CRUSHING];
+   USE_POINTER MachineRecipe* recip = &gameState->machineRecipes[MachineRecipe_IRON_ORE_CRUSHING];
    recip->numInputs = 1;
    recip->numOutputs = 2;
    recip->inputTypes[0] = ItemType_IRON_ORE;
@@ -352,7 +352,7 @@ void Machine_InitRecipes(ALL_CORE_PARAMS)
 
 void Machine_InitDescriptions(ALL_CORE_PARAMS)
 {
-    MachineDesc* m = &gameState->machineDescriptions[MachineTypes_CRUSHER];
+    USE_POINTER MachineDesc* m = &gameState->machineDescriptions[MachineTypes_CRUSHER];
     m->type = MachineTypes_CRUSHER;
     m->tile = MapTile_MACHINE_CRUSHER;
     m->processingTime = 30;
@@ -2508,10 +2508,10 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
 
 void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
 {
-    MachineDesc* desc;
+    USE_POINTER MachineDesc* desc;
     OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, desc);
 
-    MachineRecipe* recip;
+    USE_POINTER MachineRecipe* recip;
     OFFSET_TO_PTR(gameState->machineRecipes, machine->recipePtr, recip);
 
     bool readyToProcess = true;
@@ -3223,7 +3223,7 @@ void MapDeleteTile(ALL_CORE_PARAMS, ge_int3 mapCoord)
         offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
         if(machinePtr != OFFSET_NULL)
         {
-            Machine* mach;
+            USE_POINTER Machine* mach;
             OFFSET_TO_PTR(gameState->machines, machinePtr, mach);
             mach->valid = false;
         }
@@ -3894,7 +3894,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         offsetPtr machinePtr = Machine_CreateMachine(ALL_CORE_PARAMS_PASS);
                         gameState->map.levels[mapCoordSpawn.z].machinePtr[mapCoordSpawn.x][mapCoordSpawn.y] = machinePtr;
 
-                        Machine* machine;
+                        USE_POINTER Machine* machine;
                         OFFSET_TO_PTR(gameState->machines, machinePtr, machine);
                         CL_CHECK_NULL(machine);
 
@@ -3904,7 +3904,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         machine->recipePtr = gameState->validMachineRecipes[client->curToolMachine][0];
 
 
-                        MachineDesc* machDesc;
+                        USE_POINTER MachineDesc* machDesc;
                         OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, machDesc);
                         CL_CHECK_NULL(machDesc);
 
@@ -3942,7 +3942,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 if(machinePtr != OFFSET_NULL)
                 {
-                    Machine* machine;
+                    USE_POINTER Machine* machine;
                     OFFSET_TO_PTR(gameState->machines, machinePtr, machine);
 
                     printf("machine selected\n");
@@ -4289,7 +4289,7 @@ void AStarPathStepsInit(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarPathSteps* st
 
 }
 
-void CLIENT_InitClientState(SynchronizedClientState* client)
+void CLIENT_InitClientState(PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
     client->selectedMachine = OFFSET_NULL;
     client->selectedPeepPrimary = OFFSET_NULL;
@@ -4300,9 +4300,9 @@ void CLIENT_InitClientStates(ALL_CORE_PARAMS)
 {
     for(int i = 0; i < MAX_CLIENTS; i++)
     {
-        SynchronizedClientState* client = &gameState->clientStates[i];
+        USE_POINTER SynchronizedClientState* client = &gameState->clientStates[i];
         CLIENT_InitClientState(client);
-        SyncedGui* gui = &client->gui;
+        USE_POINTER SyncedGui* gui = &client->gui;
 
         GuiState_Init(&gui->guiState);
     }
@@ -4881,7 +4881,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
             peep->sectorPtr.x = x + SQRT_MAXSECTORS / 2;
             peep->sectorPtr.y = y + SQRT_MAXSECTORS / 2;
 
-            MapSector* sector;
+            USE_POINTER MapSector* sector;
             OFFSET_TO_PTR_2D(gameState->sectors, peep->sectorPtr, sector);
             sector->empty = false;
         }

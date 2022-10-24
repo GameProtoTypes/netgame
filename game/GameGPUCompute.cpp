@@ -152,7 +152,7 @@ void GameGPUCompute::RunInitCompute1()
 
 
 
-    AddCLSource("openCL/clGame.c");
+    AddCLSource("openCL/clGame.cl");
 
 
     std::vector<char*> sourcePtrs;

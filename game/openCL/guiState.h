@@ -11,7 +11,7 @@ struct GuiState
 } typedef GuiState;
 
 
-void GuiState_Init(GuiState* state)
+void GuiState_Init(PARAM_GLOBAL_POINTER GuiState* state)
 {
 
 
