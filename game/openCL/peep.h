@@ -73,7 +73,7 @@ struct PeepState_Basic
 	cl_int buriedGlitchState;
 
 
-
+	offsetPtr orderPtr;
 	
 	offsetPtr aStarSearchPtr;
 
@@ -396,6 +396,7 @@ struct AStarSearch_BFS {
 	
 	offsetPtr3 openHeap_OPtrs[ASTARHEAPSIZE];
 	cl_int openHeapSize;
+	
 	offsetPtr3 endNodeOPtr;
 	offsetPtr3 startNodeOPtr;
 
@@ -541,18 +542,32 @@ struct Machine
 	Inventory inventory;
 } typedef Machine;
 
+
+
+
+
+#define MAX_ORDERS (1024)
 enum OrderActions
 {
 	OrderAction_MINE,
 	OrderAction_DROPOFF_MACHINE,
 	OrderAction_PICKUP_MACHINE,
-	OrderAction_WAYPOINT
+	OrderAction_WAYPOINT,
+	OrderAction_JUMP_TO_ORDER
 } typedef OrderActions;
 
+
+struct OrderActionData
+{
+	offsetPtr jumpToOrderPtr;
+	offsetPtr pathOPtr;
+};
 struct Order
 {
 	ge_int3 mapDest_Q16;
 	OrderActions action;
+	offsetPtr nextOrder;
+	offsetPtr prevOrder;
 } typedef Order;
 
 
@@ -643,6 +658,10 @@ struct GameState {
 	MachineRecipes validMachineRecipes[MachineTypes_NUMTYPES][MachineRecipe_NUMRECIPES];
 	TileUnion ItemTypeTiles[ItemTypes_NUMITEMS];
 	float3 ItemColors[ItemTypes_NUMITEMS];
+
+
+	Order orders[MAX_ORDERS];
+
 
 	//------------------------------------------------------not synced
 	SyncedGui fakePassGui;

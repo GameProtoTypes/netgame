@@ -382,7 +382,7 @@ void InitItemTypeTiles(ALL_CORE_PARAMS)
 offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
 {
     offsetPtr ptr = gameState->nextMachineIdx;
-
+    
     bool loopSense = false;
     do
     {
@@ -3266,8 +3266,8 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
 
         LOCAL_STRL(mw, "Miner 123456", mwlen); 
         CL_ITOA(peep->ptr, (mw)+6,mwlen-6, 10);
-        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-            (ge_int2){200,500},0,  mw, &gui->guiState.windowPositions[2],&gui->guiState.windowSizes[2] ))
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[2],
+            &gui->guiState.windowSizes[2] ,0,  mw ))
         {
 
             if(peep->physics.drive.drivingToTarget)
@@ -3332,17 +3332,35 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                 }
 
             }
-
-
             InventoryGui(GUIID_PASS, (ge_int2)(0,50),gui->guiState.windowSizes[2], 0, &peep->inventory);
 
             GUI_END_WINDOW(GUIID_PASS);
         }
-
-
-
     }
 }
+
+void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
+{
+        LOCAL_STR(orderWinStr, "Orders")
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[3],
+        &gui->guiState.windowSizes[3] ,0,  orderWinStr ))
+        {
+            LOCAL_STR(addstr, "ADD")
+            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GREEN, addstr, NULL, NULL))
+            {
+                
+
+            }
+
+
+
+
+            GUI_END_WINDOW(GUIID_PASS);
+        }
+}
+
+
+
 
 
 void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
@@ -3363,8 +3381,8 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
 
         LOCAL_STRL(mw, "Machine ------", mwlen); 
         CL_ITOA(client->selectedMachine, (mw)+8,mwlen-8, 10);
-        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-            (ge_int2){200,500},0,  mw, &gui->guiState.windowPositions[1],&gui->guiState.windowSizes[1] ))
+        if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[1],
+            &gui->guiState.windowSizes[1],0,  mw ))
         {
 
             LOCAL_STRL(thinkingtxt2, "---", thinkingtxtLen); 
@@ -3559,8 +3577,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             
 
         LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
-        if(GUI_BEGIN_WINDOW(GUIID_PASS, (ge_int2){100,100},
-        (ge_int2){200,200},0,  robotSelWindowStr, &gui->guiState.windowPositions[0],&gui->guiState.windowSizes[0] ))
+        if(GUI_BEGIN_WINDOW(GUIID_PASS,  &gui->guiState.windowPositions[0],
+        &gui->guiState.windowSizes[0],0,  robotSelWindowStr ))
         {
             if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
             (ge_int2){10,10},
@@ -3652,7 +3670,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         //selected single peep
         PeepCommandGui(ALL_CORE_PARAMS_PASS, gui, client);
 
-
+        //order list
+        OrderListGui(ALL_CORE_PARAMS_PASS, gui, client);
 
 
         if(guiPass == GuiStatePassType_Synced)
@@ -3683,23 +3702,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             
             //end selection
-            if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed))
+            if(BITGET_MF(buttons, MouseButtonBits_PrimaryPressed) && (GUI_MOUSE_ON_GUI(gui) == 0))
             {
 
-                if(GUI_MOUSE_ON_GUI(gui) == 0)
-                {
-                    printf("Starting Drag Selection..\n");
-                    client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
-                    client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
-                    client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
-                    client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
+                printf("Starting Drag Selection..\n");
+                client->mouseGUIBegin.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+                client->mouseGUIBegin.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+                client->mouseWorldBegin_Q16.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
+                client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
 
-                    client->mouseOnGUiBegin = 0;
-                }
-                else
-                {
-                    client->mouseOnGUiBegin = 1;
-                }
             }
             else if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (gui->draggedOff == 0))
             {
@@ -4481,6 +4492,10 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].stateBasic.deathState = 0;
         gameState->peeps[p].stateBasic.buriedGlitchState = 0;
         gameState->peeps[p].stateBasic.aStarSearchPtr = OFFSET_NULL;
+        gameState->peeps[p].stateBasic.orderPtr = OFFSET_NULL;
+
+      
+        
 
         gameState->peeps[p].physics.base.v_Q16 = (ge_int3){ 0,0,0 };
         gameState->peeps[p].physics.base.vel_add_Q16 = (ge_int3){ 0,0,0 };

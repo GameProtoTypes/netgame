@@ -940,9 +940,6 @@ bool GUI_BUTTON(GUIID_DEF_ALL, float3 color, char* str, int* down, PARAM_GLOBAL_
 
 
 
-
-
-
 cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value, int min, int max)
 {
     GUI_COMMON_WIDGET_START()
@@ -1091,21 +1088,40 @@ void GUI_SCROLLBOX_END(GUIID_DEF)
    GUI_PopClip(gui);
 
 }
-
-
-
-
-
-bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, PARAM_GLOBAL_POINTER ge_int2* windowPos, PARAM_GLOBAL_POINTER ge_int2* windowSize)
+bool GUI_BEGIN_CONTEXT_MENU(GUIID_DEF_ALL)
 {
-    if(windowPos != NULL)
+    GUI_COMMON_WIDGET_START();
+
+    GUI_PushClip(gui, pos, size);
+    if(!goodStart)
     {
-        pos = *windowPos;
+        GUI_PopClip(gui);
+        return false;
     }
-    if(windowSize != NULL)
-    {
-        size = *windowSize;
-    }
+
+    GUI_PushContainer(gui, origPos+(ge_int2)(gameState->guiStyle.WINDOW_PADDING,gameState->guiStyle.WINDOW_HEADER_SIZE), 
+    origSize-(ge_int2)(gameState->guiStyle.WINDOW_PADDING*2,gameState->guiStyle.WINDOW_PADDING + gameState->guiStyle.WINDOW_HEADER_SIZE));
+    
+    return true;
+}
+
+void GUI_END_CONTEXT_MENU(GUIID_DEF)
+{
+    GUI_PopClip(gui);
+
+    GUI_PopContianer(gui);
+}
+
+
+
+bool GUI_BEGIN_WINDOW(GUIID_DEF, 
+PARAM_GLOBAL_POINTER ge_int2* windowPos,
+PARAM_GLOBAL_POINTER ge_int2* windowSize, 
+GuiFlags flags, char* str )
+{
+    ge_int2 pos = *windowPos;
+    ge_int2 size = *windowSize;
+
 
     GUI_COMMON_WIDGET_START();
 
@@ -1125,8 +1141,6 @@ bool GUI_BEGIN_WINDOW(GUIID_DEF_ALL, char* str, PARAM_GLOBAL_POINTER ge_int2* wi
     {
         gui->hoverWidget = id;
         gui->mouseOnGUI = 1;
-
-
 
 
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
