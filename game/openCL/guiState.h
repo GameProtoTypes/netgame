@@ -1,8 +1,11 @@
+
+#define NUM_EDITOR_MENU_TABS (5)
+
 #define GUI_MAX_WINDOWS (10)
 struct GuiState
 {
 	
-	bool menuToggles[4];
+	bool menuToggles[NUM_EDITOR_MENU_TABS];
 	int menuScrollx;
 	int menuScrolly;
 

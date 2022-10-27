@@ -32,9 +32,9 @@
 
 
 
-#define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL){  POINTER = NULL;} else POINTER = &(ARRAY[OFFSET]);} 
-#define OFFSET_TO_PTR_2D(ARRAY2D, OFFSET2D, POINTER) { if((OFFSET2D.x == OFFSET_NULL) || (OFFSET2D.y == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY2D[OFFSET2D.x][OFFSET2D.y]); } 
-#define OFFSET_TO_PTR_3D(ARRAY3D, OFFSET3D, POINTER) { if((OFFSET3D.x == OFFSET_NULL) || (OFFSET3D.y == OFFSET_NULL) || (OFFSET3D.z == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY3D[OFFSET3D.x][OFFSET3D.y][OFFSET3D.z]); } 
+#define OFFSET_TO_PTR(ARRAY, OFFSET, POINTER) { if(OFFSET == OFFSET_NULL){  POINTER = NULL;} else POINTER = &(ARRAY[OFFSET]);  } 
+#define OFFSET_TO_PTR_2D(ARRAY2D, OFFSET2D, POINTER) { if((OFFSET2D.x == OFFSET_NULL) || (OFFSET2D.y == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY2D[OFFSET2D.x][OFFSET2D.y]);} 
+#define OFFSET_TO_PTR_3D(ARRAY3D, OFFSET3D, POINTER) { if((OFFSET3D.x == OFFSET_NULL) || (OFFSET3D.y == OFFSET_NULL) || (OFFSET3D.z == OFFSET_NULL)){ POINTER = NULL; } else POINTER = &(ARRAY3D[OFFSET3D.x][OFFSET3D.y][OFFSET3D.z]);} 
 
 #define CHECKED_OFFSET_TO_PTR_3D(ARRAY3D, ARRAYSIZE3D, OFFSET3D, POINTER) { if((OFFSET3D.x == OFFSET_NULL) || (OFFSET3D.y == OFFSET_NULL) || (OFFSET3D.z == OFFSET_NULL)){ POINTER = NULL; } else { if(OFFSET3D.x >= ARRAYSIZE3D.x || OFFSET3D.y >= ARRAYSIZE3D.y || OFFSET3D.z >= ARRAYSIZE3D.z) { printf("[CL] OUT OF BOUNDS INDEX GET ON ARRAY "  #ARRAY3D " line %d \n", __LINE__); }   POINTER = &(ARRAY3D[OFFSET3D.x][OFFSET3D.y][OFFSET3D.z]);} } 
 
@@ -74,10 +74,7 @@ struct PeepState_Basic
 
 
 	offsetPtr orderPtr;
-	
-	offsetPtr aStarSearchPtr;
-
-
+	bool orderInProgress;
 
 }typedef PeepState_Basic;
 
@@ -117,9 +114,12 @@ struct PhysicsCircleShape
 
 struct AStarPathNode
 {
+	bool valid;
 	ge_int3 mapCoord_Q16;
 	offsetPtr nextOPtr;
 	offsetPtr prevOPtr;
+
+	bool processing;
 }typedef AStarPathNode;
 
 struct DrivePhysics
@@ -312,6 +312,7 @@ enum MapTile {
 	MapTile_Shadow_7,
 	MapTile_Shadow_8,
 	MapTile_Shadow_9,
+	MapTile_MACHINE_COMMAND_CENTER = 35,
 	MapTile_Shadow_10 = 41,
 	MapTile_Shadow_11,
 	MapTile_Shadow_12,
@@ -435,22 +436,8 @@ struct AStarSearch_IDA {
 
 
 
-struct AStarPathJob
-{
-	ge_short3 startLoc;
-	ge_short3 endLoc;
-} typedef AStarPathJob;
-
-#define ASTARJOBSCHEDULER_MAX_JOBS (256)
-struct AStarJobScheduler
-{
-	AStarPathJob jobQueue[ASTARJOBSCHEDULER_MAX_JOBS];
-	int curJobIdx;
-} typedef AStarJobScheduler;
-
-
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
-#define ASTAR_MAX_PATHS (1024)
+#define ASTAR_MAX_PATHS (16)
 struct AStarPathSteps
 {
 	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
@@ -471,21 +458,11 @@ struct PeepRenderSupport {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 enum MachineTypes
 {
 	MachineTypes_CRUSHER,
 	MachineTypes_SMELTER,
+	MachineTypes_COMMAND_CENTER,
 
 	MachineTypes_NUMTYPES
 } typedef MachineTypes;
@@ -549,6 +526,7 @@ struct Machine
 #define MAX_ORDERS (1024)
 enum OrderActions
 {
+	OrderAction_NONE,
 	OrderAction_MINE,
 	OrderAction_DROPOFF_MACHINE,
 	OrderAction_PICKUP_MACHINE,
@@ -560,14 +538,28 @@ enum OrderActions
 struct OrderActionData
 {
 	offsetPtr jumpToOrderPtr;
-	offsetPtr pathOPtr;
+
 };
+
+
 struct Order
 {
-	ge_int3 mapDest_Q16;
+	bool valid;
+	bool pendingDelete;
+
+	ge_int3 mapDest_Coord;
 	OrderActions action;
-	offsetPtr nextOrder;
-	offsetPtr prevOrder;
+	offsetPtr nextExecutionOrder;
+	offsetPtr prevExecutionOrder;
+
+	offsetPtr nextValidOrder;
+	offsetPtr prevValidOrder;
+
+
+
+
+	offsetPtr pathToDestPtr;
+
 } typedef Order;
 
 
@@ -661,6 +653,8 @@ struct GameState {
 
 
 	Order orders[MAX_ORDERS];
+	int nextOrderIdx;
+
 
 
 	//------------------------------------------------------not synced

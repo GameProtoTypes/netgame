@@ -40,13 +40,14 @@ char* CL_ITOA(int value, char* result, int resultSize, int base) {
         value /= base;
         *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
         counter++;
+
     } while ( value && counter < resultSize );
 
 
     //return if out of bounds of result
     if(counter >= resultSize)
     {
-        printf("ERROR: CL_ITA Overflow\n");
+        printf("ERROR: CL_ITOA Overflow\n");
         return result;
     }
 
