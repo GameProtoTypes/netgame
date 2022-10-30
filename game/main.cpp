@@ -96,6 +96,38 @@ void print(std::string &msg)
 }
 
 
+void ProfileEvent(cl_event event, std::string label, cl_ulong* startNanoSec, bool isFirst = false)
+{
+    cl_ulong time_start;
+    cl_ulong time_end;
+
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+    double nanoSeconds = static_cast<double>(time_end - time_start);
+
+    cl_ulong nanoStartLocal = time_start;
+    cl_ulong nanoEndLocal = time_end;
+    if(isFirst == true)
+    {
+        time_end = time_end - time_start;
+        nanoEndLocal = time_end;
+        nanoStartLocal = 0;
+        *startNanoSec = time_start;
+    }
+    else
+    {
+        nanoStartLocal -= *startNanoSec;
+        nanoEndLocal -= *startNanoSec;
+    }
+
+    ImGui::Text("%s Execution time is: %0.3f milliseconds, ST: %f, ET: %f", label.data(), 
+    nanoSeconds / 1000000.0,
+    nanoStartLocal / 1000000.0,
+    nanoEndLocal/ 1000000.0);
+
+
+}
+
 
 int32_t main(int32_t argc, char* args[]) 
 {
@@ -258,32 +290,27 @@ int32_t main(int32_t argc, char* args[])
 
         
         GSCS(A)
-        cl_ulong time_start;
-        cl_ulong time_end;
-      ImGui::Begin("Profiling");
+
+        ImGui::Begin("Profiling");
                 
-        clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        double nanoSeconds = static_cast<double>(time_end - time_start);
-        ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-            
-        
-        clGetEventProfilingInfo(gameCompute.updateEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        clGetEventProfilingInfo(gameCompute.updateEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = static_cast<double>(time_end - time_start);
-        ImGui::Text("update_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+        // double nanoSeconds = static_cast<double>(time_end - time_start);
+        // ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+        cl_ulong nanoSec;
+        cl_ulong nanoSec2;
+        ProfileEvent(gameCompute.actionEvent, "actionEvent", &nanoSec, true);
+        ProfileEvent(gameCompute.guiEvent, "guiEvent", &nanoSec2, true);
 
+        ProfileEvent(gameCompute.preUpdateEvent1, "preUpdateEvent1", &nanoSec);
+        ProfileEvent(gameCompute.preUpdateEvent2, "preUpdateEvent2", &nanoSec);
+        ProfileEvent(gameCompute.updatepre1Event, "updatepre1Event", &nanoSec);
+        ProfileEvent(gameCompute.updateEvent, "updateEvent", &nanoSec);
+        ProfileEvent(gameCompute.update2Event, "update2Event", &nanoSec);
+        ProfileEvent(gameCompute.postupdateEvent, "postupdateEvent", &nanoSec);
 
-        clGetEventProfilingInfo(gameCompute.preUpdateEvent1, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        clGetEventProfilingInfo(gameCompute.preUpdateEvent2, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = static_cast<double>(time_end - time_start);
-        ImGui::Text("preupdate_kernel Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-            
-        clGetEventProfilingInfo(gameCompute.readEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        clGetEventProfilingInfo(gameCompute.readEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = static_cast<double>(time_end - time_start);
-        ImGui::Text("GPU->CPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-
+        //ProfileEvent(gameCompute.writeEvent, "writeEvent (CPU->GPU)");
+        //ProfileEvent(gameCompute.readEvent, "readEvent (GPU->CPU)");
 
 
 
@@ -697,8 +724,6 @@ int32_t main(int32_t argc, char* args[])
         glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxParticles);
         glBindVertexArray(0);
 
-
-
         //draw mouse
         {
 
@@ -784,10 +809,6 @@ int32_t main(int32_t argc, char* args[])
 
 
  
-        clGetEventProfilingInfo(gameCompute.writeEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        clGetEventProfilingInfo(gameCompute.writeEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        nanoSeconds = static_cast<double>(time_end - time_start);
-        ImGui::Text("CPU->GPU Transfer time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
 
 
         ImGui::Text("TickIdx: %d", gameStateActions->tickIdx);

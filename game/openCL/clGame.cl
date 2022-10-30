@@ -3650,7 +3650,224 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
 }
 
 
+void GuiCode(ALL_CORE_PARAMS, 
+PARAM_GLOBAL_POINTER SynchronizedClientState* client, 
+PARAM_GLOBAL_POINTER ClientAction* clientAction, 
+PARAM_GLOBAL_POINTER SyncedGui* gui, 
+bool guiIsLocalClient, 
+ge_int2 mouseLoc,
+int mouseState,
+GuiStatePassType guiPass,
+int cliId)
+{
 
+
+    GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass, guiIsLocalClient);
+
+    int downDummy;
+    char btntxt[9] = "CLICK ME"; 
+    btntxt[8] = '\0';
+    
+    
+
+
+    LOCAL_STR(noneTxt, "SELECT");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
+    {
+        client->curTool = EditorTools_Select;
+
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 0);
+    }
+    LOCAL_STR(deleteTxt, "DELETE");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},GuiFlags_Beveled, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
+    {
+        //printf("delete mode.");
+        client->curTool = EditorTools_Delete;
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 1);
+    }
+
+    LOCAL_STR(createTxt, "CREATE\nCRUSHER");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
+    {
+        //  printf("create mode");
+        client->curTool = EditorTools_Create;
+        client->curToolMachine = MachineTypes_CRUSHER;
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 2);
+    }
+
+    LOCAL_STR(createTxt3, "CREATE\nSMELTER");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt3, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
+    {
+        // printf("create mode");
+        client->curTool = EditorTools_Create;
+        client->curToolMachine = MachineTypes_SMELTER;
+
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 3);
+    }
+
+    LOCAL_STR(createTxt2, "CREATE\nCOMMAND CENTER");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){400 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[4])) == 1)
+    {
+        // printf("create mode");
+        client->curTool = EditorTools_Create;
+        client->curToolMachine = MachineTypes_COMMAND_CENTER;
+
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 4);
+    }
+
+
+    LOCAL_STRL(labeltxt, "DEEP", labeltxtLen); 
+    GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50}, (ge_int2){80 ,50},0, labeltxt, (float3)(0.3,0.3,0.3));
+
+
+    if(GUI_SLIDER_INT_VERTICAL(GUIID_PASS,  (ge_int2){0 ,100}, (ge_int2){80, 800}, 0, &client->mapZView, 0, MAPDEPTH))
+    {
+        client->mapZViewDelay = 1;
+    }
+
+    LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
+    GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, 0, labeltxt2, (float3)(0.3,0.3,0.3));
+        
+
+    LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
+    if(GUI_BEGIN_WINDOW(GUIID_PASS,  &gui->guiState.windowPositions[0],
+    &gui->guiState.windowSizes[0],0,  robotSelWindowStr ))
+    {
+        if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
+        (ge_int2){10,10},
+        GuiFlags_FillParent,
+        (ge_int2){1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly))
+        {
+            //iterate selected peeps
+            USE_POINTER Peep* p;
+            OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
+                
+            int i = 0;
+            while(p != NULL)
+            {
+
+                LOCAL_STRL(header, "Miner: ", headerLen); 
+                LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
+                GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
+        
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},GuiFlags_Beveled,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
+                {
+                    client->selectedPeepPrimary = p->ptr;
+                }
+
+                i++;    
+                OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
+            }
+            GUI_SCROLLBOX_END(GUIID_PASS);
+        }
+        
+        GUI_END_WINDOW(GUIID_PASS);
+    }
+
+    //hover stats
+    if((guiPass == GuiStatePassType_NoLogic) && (GUI_MOUSE_ON_GUI(gui) == 0))
+    {
+
+        ge_int2 world_Q16;
+        world_Q16.x = gameStateActions->mouseLocWorldx_Q16;
+        world_Q16.y = gameStateActions->mouseLocWorldy_Q16;
+
+        //world to map
+        //get tile etc.
+        ge_int3 mapcoord_whole;
+        int occluded;
+        GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world_Q16, &mapcoord_whole, &occluded, client->mapZView+1);
+
+
+
+        MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,1));
+        MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
+        MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,-1));
+        
+
+
+
+        LOCAL_STRL(xtxt, "", xtxtLen); 
+        //CL_ITOA(tile, xtxt, xtxtLen, 10 );
+        //GUI_LABEL(GUIID_PASS, (ge_int2){300,200}, (ge_int2){100, 50}, xtxt, (float3)(0.3,0.3,0.3));
+        const int widgx = 80;
+        const int widgy = 800;
+        
+
+        GUI_LABEL(GUIID_PASS, (ge_int2)(widgx-5,widgy-50-5) , (ge_int2){50+10, 150+10}, 0, xtxt, (float3)(0.3,0.3,0.3));
+        float2 uv = TileToUV((TileUnion){tileup});
+        GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy-50) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+        uv = TileToUV((TileUnion){tile});
+        GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+        uv = TileToUV((TileUnion){tiledown});
+
+        GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50},0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
+
+        
+    }
+
+
+    if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Searching)
+    {
+        LOCAL_STRL(thinkingtxt, "FINDING PATH..", thinkingtxtLen); 
+        GUI_LABEL(GUIID_PASS, (ge_int2)(400,100), (ge_int2)(150,50), 0, thinkingtxt, (float3)(1.0,0,0) );
+    }
+
+
+
+    //selected machine
+    MachineGui(ALL_CORE_PARAMS_PASS,  gui, client);
+    
+    //selected single peep
+    PeepCommandGui(ALL_CORE_PARAMS_PASS, gui, client);
+
+    //order list
+    OrderListGui(ALL_CORE_PARAMS_PASS, gui, client);
+
+
+    if(guiPass == GuiStatePassType_Synced)
+        printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
+    else{
+        //  printf("(fakepass) cli: %d, mapz: %d\n", cliId, client->mapZView);
+    }
+
+
+    //selection box
+    GUI_RESET_POST(ALL_CORE_PARAMS_PASS,  gui);
+
+
+
+
+}
+
+
+
+
+__kernel void game_hover_gui(ALL_CORE_PARAMS_HOVER_GUI)
+{
+
+    int cliId = gameStateActions->clientId;
+    USE_POINTER SynchronizedClientState* client =  ThisClient(ALL_CORE_PARAMS_PASS);
+    USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
+    USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
+    USE_POINTER SyncedGui* gui = &gameState->fakePassGui;
+    GuiStatePassType guiPass = GuiStatePassType_NoLogic;
+    ge_int2 mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
+    int mouseState = gameStateActions->mouseState;
+    bool guiIsLocalClient = true;
+
+    GuiCode(ALL_CORE_PARAMS_PASS, 
+        client, 
+        clientAction, 
+        gui, 
+        guiIsLocalClient, 
+        mouseLoc, 
+        mouseState, 
+        guiPass, 
+        cliId);
+}
 
 
 
@@ -3658,7 +3875,7 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
 __kernel void game_apply_actions(ALL_CORE_PARAMS)
 {
     //apply turns
-    for (int32_t a = 0; a < gameStateActions->numActions+1; a++)
+    for (int32_t a = 0; a < gameStateActions->numActions; a++)
     {
 
         int b = a;
@@ -3669,9 +3886,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             guiPass = GuiStatePassType_NoLogic;
   
         }
-
-
-
 
 
         USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[b].action;
@@ -3724,183 +3938,15 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
             printf("IsLocalClient: %d\n", guiIsLocalClient);
         }
 
-
-
-        GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass, guiIsLocalClient);
-
-        int downDummy;
-        char btntxt[9] = "CLICK ME"; 
-        btntxt[8] = '\0';
-        
-        
-
-
-        LOCAL_STR(noneTxt, "SELECT");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
-        {
-            client->curTool = EditorTools_Select;
-
-            GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 0);
-        }
-        LOCAL_STR(deleteTxt, "DELETE");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},GuiFlags_Beveled, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
-        {
-            //printf("delete mode.");
-            client->curTool = EditorTools_Delete;
-            GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 1);
-        }
-
-        LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
-        {
-          //  printf("create mode");
-            client->curTool = EditorTools_Create;
-            client->curToolMachine = MachineTypes_CRUSHER;
-            GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 2);
-        }
-
-        LOCAL_STR(createTxt3, "CREATE\nSMELTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt3, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
-        {
-           // printf("create mode");
-            client->curTool = EditorTools_Create;
-            client->curToolMachine = MachineTypes_SMELTER;
-
-            GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 3);
-        }
-
-        LOCAL_STR(createTxt2, "CREATE\nCOMMAND CENTER");
-        if(GUI_BUTTON(GUIID_PASS, (ge_int2){400 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[4])) == 1)
-        {
-           // printf("create mode");
-            client->curTool = EditorTools_Create;
-            client->curToolMachine = MachineTypes_COMMAND_CENTER;
-
-            GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 4);
-        }
-
-
-        LOCAL_STRL(labeltxt, "DEEP", labeltxtLen); 
-        GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50}, (ge_int2){80 ,50},0, labeltxt, (float3)(0.3,0.3,0.3));
-
-
-        GUI_SLIDER_INT_VERTICAL(GUIID_PASS,  (ge_int2){0 ,100}, (ge_int2){80, 800},0, &client->mapZView, 0, MAPDEPTH);
-
-        LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
-        GUI_LABEL(GUIID_PASS, (ge_int2){0 ,900}, (ge_int2){80 ,50}, 0, labeltxt2, (float3)(0.3,0.3,0.3));
-            
-
-        LOCAL_STRL(robotSelWindowStr, "Selected Robots", robotSelWindowStrLen); 
-        if(GUI_BEGIN_WINDOW(GUIID_PASS,  &gui->guiState.windowPositions[0],
-        &gui->guiState.windowSizes[0],0,  robotSelWindowStr ))
-        {
-            if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2){0,0},
-            (ge_int2){10,10},
-            GuiFlags_FillParent,
-            (ge_int2){1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly))
-            {
-                //iterate selected peeps
-                USE_POINTER Peep* p;
-                OFFSET_TO_PTR(gameState->peeps, client->selectedPeepsLastIdx, p);
-                    
-                int i = 0;
-                while(p != NULL)
-                {
-
-                    LOCAL_STRL(header, "Miner: ", headerLen); 
-                    LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
-                    GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
-            
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},GuiFlags_Beveled,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
-                    {
-                        client->selectedPeepPrimary = p->ptr;
-                    }
-
-                    i++;    
-                    OFFSET_TO_PTR(gameState->peeps, p->prevSelectionPeepPtr[cliId], p);
-                }
-                GUI_SCROLLBOX_END(GUIID_PASS);
-            }
-            
-            GUI_END_WINDOW(GUIID_PASS);
-        }
-
-        //hover stats
-        if((guiPass == GuiStatePassType_NoLogic) && (GUI_MOUSE_ON_GUI(gui) == 0))
-        {
-
-            ge_int2 world_Q16;
-            world_Q16.x = gameStateActions->mouseLocWorldx_Q16;
-            world_Q16.y = gameStateActions->mouseLocWorldy_Q16;
-
-            //world to map
-            //get tile etc.
-            ge_int3 mapcoord_whole;
-            int occluded;
-            GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world_Q16, &mapcoord_whole, &occluded, client->mapZView+1);
-
-
-
-            MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,1));
-            MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
-            MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,-1));
-            
-
-
-
-            LOCAL_STRL(xtxt, "", xtxtLen); 
-            //CL_ITOA(tile, xtxt, xtxtLen, 10 );
-            //GUI_LABEL(GUIID_PASS, (ge_int2){300,200}, (ge_int2){100, 50}, xtxt, (float3)(0.3,0.3,0.3));
-            const int widgx = 80;
-            const int widgy = 800;
-            
-
-            GUI_LABEL(GUIID_PASS, (ge_int2)(widgx-5,widgy-50-5) , (ge_int2){50+10, 150+10}, 0, xtxt, (float3)(0.3,0.3,0.3));
-            float2 uv = TileToUV((TileUnion){tileup});
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy-50) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
-
-            uv = TileToUV((TileUnion){tile});
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy) , (ge_int2){50, 50}, 0, uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
-   
-            uv = TileToUV((TileUnion){tiledown});
-   
-            GUI_IMAGE(GUIID_PASS, (ge_int2)(widgx,widgy+50) , (ge_int2){50, 50},0,  uv, uv + MAP_TILE_UV_WIDTH_FLOAT2, (float3)(1,1,1));
-
-            
-        }
-
-
-        if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Searching)
-        {
-            LOCAL_STRL(thinkingtxt, "FINDING PATH..", thinkingtxtLen); 
-            GUI_LABEL(GUIID_PASS, (ge_int2)(400,100), (ge_int2)(150,50), 0, thinkingtxt, (float3)(1.0,0,0) );
-        }
-
-
-
-        //selected machine
-        MachineGui(ALL_CORE_PARAMS_PASS,  gui, client);
-        
-        //selected single peep
-        PeepCommandGui(ALL_CORE_PARAMS_PASS, gui, client);
-
-        //order list
-        OrderListGui(ALL_CORE_PARAMS_PASS, gui, client);
-
-
-        if(guiPass == GuiStatePassType_Synced)
-            printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
-        else{
-          //  printf("(fakepass) cli: %d, mapz: %d\n", cliId, client->mapZView);
-        }
-
-
-        //selection box
-        GUI_RESET_POST(ALL_CORE_PARAMS_PASS,  gui);
-
-
-
-
+        GuiCode(ALL_CORE_PARAMS_PASS, 
+        client, 
+        clientAction, 
+        gui, 
+        guiIsLocalClient, 
+        mouseLoc, 
+        mouseState, 
+        guiPass, 
+        cliId);
 
         if(guiPass == GuiStatePassType_NoLogic)
             continue;
@@ -4959,6 +5005,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
     //update map view
     if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
+        
         cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
 
         for (cl_ulong i = 0; i < chunkSize+1; i++)
@@ -4978,8 +5025,6 @@ __kernel void game_update(ALL_CORE_PARAMS)
     USE_POINTER MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
     UpdateMapExplorer(ALL_CORE_PARAMS_PASS, explorer);
 
-
-    
 
 }
 __kernel void game_update2(ALL_CORE_PARAMS)
@@ -5050,7 +5095,12 @@ __kernel void game_post_update_single( ALL_CORE_PARAMS )
 
 
 
-    ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
+    if(ThisClient(ALL_CORE_PARAMS_PASS)->mapZViewDelay)
+    {
+        ThisClient(ALL_CORE_PARAMS_PASS)->mapZViewDelay--;
+    }
+    else
+        ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
     
 
     USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];

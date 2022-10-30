@@ -991,7 +991,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
 
     sizeHandle.y = size.y/10;
     sizeHandle.x = size.x;
-
+    cl_uchar ret = 0;
     if((GUI_InteractionBoundsCheck(gui, pos, INT2_ADD(pos, size), gui->mouseLoc) && (gui->ignoreAll == 0) && (gui->dragOff == 0)) || (gui->dragOff && ( gui->lastActiveWidget == id+1)))
     {
         if(BITGET(gui->mouseState, MouseButtonBits_PrimaryDown) || BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased) )
@@ -999,6 +999,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
             float perc = ((float)(gui->mouseLoc.y  - pos.y))/(size.y );
             int d = perc*(max-min);
             (*value) = clamp(min + d, min, max-1);
+            ret = 1;
         }
         gui->mouseOnGUI = 1;
     }
@@ -1020,7 +1021,7 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
     CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
     GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_COLOR_DEF, valueTxt, &down, NULL);
 
-    return 0;
+    return ret;
 }
 
 
@@ -1114,6 +1115,28 @@ void GUI_END_CONTEXT_MENU(GUIID_DEF)
 
 
 
+
+bool GUI_BEGIN_DROP_LIST_SELECT(GUIID_DEF_ALL, 
+    char* list,
+    int* strLocations, 
+    int listSize,
+    
+    bool* dropOpen,
+    int* curSelection
+)
+{
+    GUI_COMMON_WIDGET_START();
+
+
+}
+
+void GUI_END_DROP_LIST_SELECT(GUIID_DEF)
+{
+
+}
+
+
+
 bool GUI_BEGIN_WINDOW(GUIID_DEF, 
 PARAM_GLOBAL_POINTER ge_int2* windowPos,
 PARAM_GLOBAL_POINTER ge_int2* windowSize, 
@@ -1190,8 +1213,6 @@ GuiFlags flags, char* str )
                 windowPos->x = 0;
             if(windowPos->y < 0)
                 windowPos->y = 0;    
-
-
         }
 
     }

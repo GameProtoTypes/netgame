@@ -99,6 +99,8 @@ public:
 	VENDOR vendor;
 
 	cl_command_queue command_queue;
+	cl_command_queue command_queue2;
+
 	cl_program gameProgram;
 	cl_program rayGuiHeader;
 	cl_program fullProgram;
@@ -113,6 +115,7 @@ public:
 	cl_kernel update2_kernel;
 	cl_kernel post_update_single_kernel;
 	cl_kernel action_kernel;
+	cl_kernel gui_kernel;
 	cl_kernel init_kernel;
 	cl_kernel init_kernal_multi;
 	cl_kernel init_kernal_multi2;
@@ -133,6 +136,7 @@ public:
 	cl_event update2Event;      
 	cl_event postupdateEvent;
 	cl_event actionEvent;
+	cl_event guiEvent;
 	cl_event readEvent;
 	cl_event writeEvent;    
 	
@@ -141,7 +145,7 @@ public:
 	SIZETESTSDATA structSizes;
 
 	int warpSize = 32;
-	int maxPeeps = 1024*1;
+	int maxPeeps = 1024*8;
 	int maxParticles = 32;
 	int mapDim = 1024;
 	int mapDepth = 32;
@@ -160,10 +164,15 @@ public:
 
 	cl_mem sizeTests_mem_obj;
 
-	cl_mem synchClients_mem_obj;
+
 	cl_mem staticData_mem_obj;
 	cl_mem gamestate_mem_obj;
 	cl_mem gamestateB_mem_obj;
+
+	cl_mem staticData_mem_obj_ro;
+	cl_mem gamestate_mem_obj_ro;
+	cl_mem gamestateB_mem_obj_ro;
+
 
 	cl_mem graphics_peeps_mem_obj;
 	cl_mem graphics_particles_mem_obj;

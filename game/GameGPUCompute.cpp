@@ -233,9 +233,10 @@ void GameGPUCompute::RunInitCompute1()
         printf("CL Programs built.\n");
 
     // Create a command queue
-    command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &ret);
+    command_queue = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE , &ret);
     CL_HOST_ERROR_CHECK(ret)
-
+    command_queue2 = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE , &ret);
+    CL_HOST_ERROR_CHECK(ret)
     {
         //run size tests
         printf("Running Size Tests\n");
@@ -297,6 +298,17 @@ void GameGPUCompute::RunInitCompute2()
 
         gamestateB_mem_obj = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(GameStateActions), nullptr, &ret);
     CL_HOST_ERROR_CHECK(ret)
+
+
+
+        staticData_mem_obj_ro = clCreateBuffer(context, CL_MEM_READ_ONLY, structSizes.staticDataStructSize, nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+        gamestate_mem_obj_ro = clCreateBuffer(context, CL_MEM_READ_ONLY, structSizes.gameStateStructureSize, nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+        gamestateB_mem_obj_ro = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(GameStateActions), nullptr, &ret);
+    CL_HOST_ERROR_CHECK(ret)
+
+
 
 
 
@@ -371,6 +383,7 @@ void GameGPUCompute::RunInitCompute2()
         update_kernel = clCreateKernel(gameProgram, "game_update", &ret); CL_HOST_ERROR_CHECK(ret)
         update2_kernel = clCreateKernel(gameProgram, "game_update2", &ret); CL_HOST_ERROR_CHECK(ret)
         action_kernel = clCreateKernel(gameProgram, "game_apply_actions", &ret); CL_HOST_ERROR_CHECK(ret)
+        gui_kernel = clCreateKernel(gameProgram, "game_hover_gui", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernel = clCreateKernel(gameProgram, "game_init_single", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernal_multi = clCreateKernel(gameProgram, "game_init_multi", &ret); CL_HOST_ERROR_CHECK(ret)
         init_kernal_multi2 = clCreateKernel(gameProgram, "game_init_multi2", &ret); CL_HOST_ERROR_CHECK(ret)
@@ -386,6 +399,7 @@ void GameGPUCompute::RunInitCompute2()
         kernels.push_back(update_kernel);
         kernels.push_back(update2_kernel);
         kernels.push_back(action_kernel);
+        kernels.push_back(gui_kernel);
         kernels.push_back(init_kernel);
         kernels.push_back(init_kernal_multi);
         kernels.push_back(init_kernal_multi2);
@@ -396,9 +410,14 @@ void GameGPUCompute::RunInitCompute2()
         for (cl_kernel k : kernels)
         {
             int i = 0;
+
+
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&staticData_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&gamestate_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&gamestateB_mem_obj); CL_HOST_ERROR_CHECK(ret)
+           
+            
+
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_peeps_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_particles_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile1VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
@@ -407,8 +426,12 @@ void GameGPUCompute::RunInitCompute2()
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2VBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2AttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_mapTile2OtherAttrVBO_mem_obj); CL_HOST_ERROR_CHECK(ret)
+
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_guiVBO_obj); CL_HOST_ERROR_CHECK(ret)
             ret = clSetKernelArg(k, i++, sizeof(cl_mem), (void*)&graphics_linesVBO_obj); CL_HOST_ERROR_CHECK(ret)
+           
+
+
         }
         
 
@@ -474,32 +497,41 @@ void GameGPUCompute::Stage1()
 
     BuildKernelRunSizes();
 
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+    ret = clFinish(command_queue2);
+    CL_HOST_ERROR_CHECK(ret)
 
     AquireAllGraphicsObjects();
 
     ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+    ret = clFinish(command_queue2);
     CL_HOST_ERROR_CHECK(ret)
 
     ret = clEnqueueNDRangeKernel(command_queue, action_kernel, 1, NULL,
         SingleKernelWorkItems, NULL, 0, NULL, &actionEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clFinish(command_queue);
+
+    ret = clEnqueueNDRangeKernel(command_queue2, gui_kernel, 1, NULL,
+        SingleKernelWorkItems, NULL, 0, NULL, &guiEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
+    clFlush(command_queue);
+    clFlush(command_queue2);
+
+    ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
          WorkItems, NULL, 1, &actionEvent, &preUpdateEvent1);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
+
 
     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel_2, 1, NULL,
         WorkItems, NULL, 1, &preUpdateEvent1, &preUpdateEvent2);
     CL_HOST_ERROR_CHECK(ret)
 
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
+
 
     ret = clEnqueueNDRangeKernel(command_queue, game_updatepre1_kernel, 1, NULL,
         WorkItems, NULL, 1, &preUpdateEvent2, &updatepre1Event);
@@ -509,16 +541,13 @@ void GameGPUCompute::Stage1()
         WorkItems, NULL, 1, &updatepre1Event, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
     
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
+
 
 
     ret = clEnqueueNDRangeKernel(command_queue, update2_kernel, 1, NULL,
         WorkItems, NULL, 1, &updateEvent, &update2Event);
     CL_HOST_ERROR_CHECK(ret)
     
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
 
 
 
@@ -527,16 +556,15 @@ void GameGPUCompute::Stage1()
     CL_HOST_ERROR_CHECK(ret)
 
 
-    ret = clFinish(command_queue);
-    CL_HOST_ERROR_CHECK(ret)
-    
+
 
     ReleaseAllGraphicsObjects();
 
+
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
-
-
+    ret = clFinish(command_queue2);
+    CL_HOST_ERROR_CHECK(ret)
 
     // Read the memory buffer C on the device to the local variable C
     ret = clEnqueueReadBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
@@ -545,8 +573,8 @@ void GameGPUCompute::Stage1()
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
-
-
+    ret = clFinish(command_queue2);
+    CL_HOST_ERROR_CHECK(ret)
 
 }
 
@@ -767,8 +795,17 @@ void GameGPUCompute::AquireAllGraphicsObjects()
 {
     for (auto obj : graphicsObjects)
     {
-        ret = clEnqueueAcquireGLObjects(command_queue, 1, &obj, 0, 0, 0);
-        CL_HOST_ERROR_CHECK(ret)
+        if(obj != graphics_guiVBO_obj)
+        {
+            ret = clEnqueueAcquireGLObjects(command_queue, 1, &obj, 0, 0, 0);
+            CL_HOST_ERROR_CHECK(ret)
+        }
+        else{
+            ret = clEnqueueAcquireGLObjects(command_queue2, 1, &obj, 0, 0, 0);
+            CL_HOST_ERROR_CHECK(ret)
+        }
+
+
     }
     //ret = clFinish(command_queue);
     //CL_HOST_ERROR_CHECK(ret)
@@ -778,8 +815,16 @@ void GameGPUCompute::ReleaseAllGraphicsObjects()
 {
     for (auto obj : graphicsObjects)
     {
-        ret = clEnqueueReleaseGLObjects(command_queue, 1, &obj, 0, 0, 0);
-        CL_HOST_ERROR_CHECK(ret)
+        if(obj != graphics_guiVBO_obj)
+        {
+            ret = clEnqueueReleaseGLObjects(command_queue, 1, &obj, 0, 0, 0);
+            CL_HOST_ERROR_CHECK(ret)
+        }
+        else
+        {
+            ret = clEnqueueReleaseGLObjects(command_queue2, 1, &obj, 0, 0, 0);
+            CL_HOST_ERROR_CHECK(ret)
+        }
     }
     //ret = clFinish(command_queue);
     //CL_HOST_ERROR_CHECK(ret)

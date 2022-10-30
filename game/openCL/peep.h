@@ -606,6 +606,7 @@ struct SynchronizedClientState {
 
 	int mapZView;
 	int mapZView_1;
+	int mapZViewDelay;
 
 	EditorTools curTool;
 	MachineTypes curToolMachine;
@@ -655,7 +656,7 @@ struct GameState {
 	Order orders[MAX_ORDERS];
 	int nextOrderIdx;
 
-
+	int s[32];
 
 	//------------------------------------------------------not synced
 	SyncedGui fakePassGui;
