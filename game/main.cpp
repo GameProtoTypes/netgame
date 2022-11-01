@@ -279,14 +279,38 @@ int32_t main(int32_t argc, char* args[])
         
     #endif
 
+
+    std::vector<ActionWrap> clientActions;
+
     while (!quit)
     {
         timerStartMs = SDL_GetTicks64();
 
         gameGraphics.BeginDraw();
         
+        
 
-        gameCompute.Stage1();
+
+
+
+        if (gameNetworking.fullyConnectedToHost)
+        {
+            gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
+
+        }
+        gameNetworking.Update();
+
+
+        if(gameStateActions->pauseState==0)
+        {   
+            gameStateActions->tickIdx++;
+        }
+
+        gameCompute.WriteGameStateB();
+        clientActions.clear();
+
+
+        gameCompute.Stage1_Begin();
 
         
         GSCS(A)
@@ -470,7 +494,7 @@ int32_t main(int32_t argc, char* args[])
              (rclientst->mousePrimaryDown << MouseButtonBits_PrimaryDown) |
              (rclientst->mouseSecondaryDown << MouseButtonBits_SecondaryDown);
 
-        std::vector<ActionWrap> clientActions;
+
         if (rclientst->mousePrimaryReleased || rclientst->mousePrimaryPressed || rclientst->mouseSecondaryReleased || rclientst->mouseSecondaryPressed)
         {
             ActionWrap actionWrap;
@@ -491,14 +515,6 @@ int32_t main(int32_t argc, char* args[])
         }
 
 
-        GSCS(B)
-        if (gameNetworking.fullyConnectedToHost)
-        {
-            gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
-        }
-        gameNetworking.Update();
-
-        GSCS(C)
 
 
         gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
@@ -521,6 +537,7 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("PAUSE"))
             {
+                gameCompute.Stage1_End();
                 gameStateActions->pauseState = 1;
                 if(gameNetworking.serverRunning)
                     gameNetworking.HOST_SendPauseAll_ToClients();
@@ -531,6 +548,7 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("RESUME"))
             {
+                gameCompute.Stage1_End();
                 gameStateActions->pauseState = 0;
                 if(gameNetworking.serverRunning)
                     gameNetworking.HOST_SendResumeAll_ToClients();
@@ -553,12 +571,14 @@ int32_t main(int32_t argc, char* args[])
         if(!gameNetworking.serverRunning && !gameNetworking.connectedToHost)
             if (ImGui::Button("Start Server"))
             {
+                gameCompute.Stage1_End();
                 gameNetworking.StartServer(port);
             }
         
         if(gameNetworking.serverRunning)
             if(ImGui::Button("Stop Server"))
             {
+                gameCompute.Stage1_End();
                 gameNetworking.StopServer();
             }
 
@@ -579,10 +599,12 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("CLIENT_HardDisconnect"))
             {
+                gameCompute.Stage1_End();
                 gameNetworking.CLIENT_HardDisconnect();
             }
             if (ImGui::Button("CLIENT_SoftDisconnect"))
             {
+                gameCompute.Stage1_End();
                 gameNetworking.CLIENT_SoftDisconnect();
             }
         }
@@ -592,7 +614,7 @@ int32_t main(int32_t argc, char* args[])
         if (ImGui::Button("Send Message"))
         {
             char buffer[256];
-            sprintf_s(buffer, "HELLOOOO %d", gameStateActions->tickIdx);
+            sprintf_s(buffer, "msg %d", gameStateActions->tickIdx);
             gameNetworking.SendMessage(buffer);
         }
         ImGui::Text("FrameTime: %f, TargetTickTime: %f, PID Error %f", gameNetworking.lastFrameTimeMs , gameNetworking.targetTickTimeMs, gameNetworking.tickPIDError);
@@ -627,6 +649,7 @@ int32_t main(int32_t argc, char* args[])
                 
         if (ImGui::Button("Save GameState To File"))
         {   
+            gameCompute.Stage1_End();
             gameCompute.ReadFullGameState();
             std::ofstream myfile;
             myfile.open("gamestate.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
@@ -641,6 +664,7 @@ int32_t main(int32_t argc, char* args[])
         }
         if (ImGui::Button("Load GameState From File"))
         {
+            gameCompute.Stage1_End();
             std::ifstream myfile;
             myfile.open("gamestate.bin", std::ifstream::binary);
             if (!myfile.is_open())
@@ -662,12 +686,14 @@ int32_t main(int32_t argc, char* args[])
         if(ImGui::Button("Save Diff"))
         {
             std::vector<char> data;
+            gameCompute.Stage1_End();
             gameCompute.SaveGameStateDiff(&data, false);
         }
         static int loadtickIdx = 0;
         ImGui::InputInt("Load Tick",&loadtickIdx);
         if(ImGui::Button("Load Diff ^"))
         {
+            gameCompute.Stage1_End();
             gameCompute.LoadGameStateFromDiff(loadtickIdx);
         }
 
@@ -799,16 +825,13 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-
-        if(gameStateActions->pauseState==0)
-            gameStateActions->tickIdx++;
-
         GSCS(D)
-        gameCompute.WriteGameStateB();
+
+
+        gameCompute.Stage1_End();
 
 
 
- 
 
 
         ImGui::Text("TickIdx: %d", gameStateActions->tickIdx);
