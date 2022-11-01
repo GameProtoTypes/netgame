@@ -133,7 +133,7 @@ struct DrivePhysics
 
 	bool nearTarget;
 
-	int drivingToTarget;
+
 } typedef DrivePhysics;
 
 
@@ -606,7 +606,7 @@ struct SynchronizedClientState {
 
 	int mapZView;
 	int mapZView_1;
-	int mapZViewDelay;
+	bool updateMap;
 
 	EditorTools curTool;
 	MachineTypes curToolMachine;

@@ -113,7 +113,7 @@ public:
 	cl_kernel game_updatepre1_kernel;
 	cl_kernel update_kernel;
 	cl_kernel update2_kernel;
-	cl_kernel post_update_single_kernel;
+	cl_kernel post_update_kernel;
 	cl_kernel action_kernel;
 	cl_kernel gui_kernel;
 	cl_kernel init_kernel;

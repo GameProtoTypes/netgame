@@ -1033,8 +1033,6 @@ void AStarPathSteps_DeletePath(ALL_CORE_PARAMS, offsetPtr pathStartPtr)
         }
     }
 
-
-
     USE_POINTER AStarPathNode* pathNode;
     offsetPtr curPathPtr = pathStartPtr;
     do {
@@ -2288,11 +2286,10 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 void Peep_DetachFromOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     peep->stateBasic.orderPtr = OFFSET_NULL;
-    peep->stateBasic.orderInProgress = false;
+
 
 
     peep->physics.drive.targetPathNodeOPtr = OFFSET_NULL;
-    peep->physics.drive.drivingToTarget = false;
 }
 
 void Peep_AssignOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, offsetPtr orderPtr)
@@ -2304,7 +2301,7 @@ void Peep_AssignOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, offsetPt
     OFFSET_TO_PTR(gameState->orders, orderPtr, order);
 
     peep->physics.drive.targetPathNodeOPtr = order->pathToDestPtr;
-    peep->physics.drive.drivingToTarget = true;
+
 }
 
 
@@ -2367,6 +2364,12 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
         d.z = MUL_PAD_Q16(d.z, len);
     }
 
+
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr, order);
+
+
+
     if (WHOLE_Q16(len) < 2)//within range of current target
     {
 
@@ -2374,6 +2377,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
         if(peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL)
         {
+
             //advance if theres room
             USE_POINTER AStarPathNode* targetPathNode;
             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
@@ -2384,42 +2388,44 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
             
             //advance
-            peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
-            peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
-
-            
-            if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL) 
+            if(targetPathNode->nextOPtr != OFFSET_NULL)
             {
-                USE_POINTER AStarPathNode* targetPathNode;
-                OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-                CL_CHECK_NULL(targetPathNode);
+                peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
+                peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
 
-                ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
-                MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+                if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
+                {
+                    USE_POINTER AStarPathNode* targetPathNode;
+                    OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+                    CL_CHECK_NULL(targetPathNode);
 
-                peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
-                peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
-                peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                    ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
+                    MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+
+                    peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                    peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                    peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                }
             }
             else
             {
-                //final node reached.
+                //final dest reached.
                 peep->comms.message_TargetReached_pending = 255;//send the message
-                peep->physics.drive.drivingToTarget = 0;
 
-                if( peep->stateBasic.orderPtr != OFFSET_NULL )
+                if( order != NULL )
                 {
-                    USE_POINTER Order* order;
-                    OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr, order);
-
                     //delete single orders
                     if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
                     {
                         Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
                     }
+                    else//advance order
+                    {
+                        Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
+                    }
+                    
                 }
             }
-            
         }
         
     }
@@ -2513,7 +2519,7 @@ void WalkAndFight(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
             peep->physics.drive.target_x_Q16 = worldloc.x;
             peep->physics.drive.target_y_Q16 = worldloc.y;
             peep->physics.drive.target_z_Q16 = worldloc.z;
-            peep->physics.drive.drivingToTarget = 1;
+
 
             //restrict comms to new channel
             peep->comms.orders_channel = RandomRange(worldloc.x, 0, 10000);//broke
@@ -2580,7 +2586,6 @@ void PeepPreUpdate2(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     /*
     if (peep->comms.message_TargetReached_pending)
     {
-        peep->physics.drive.drivingToTarget = 0;
         peep->comms.message_TargetReached = peep->comms.message_TargetReached_pending;
         peep->comms.message_TargetReached--;//message fade
     }
@@ -3421,7 +3426,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
             &gui->guiState.windowSizes[2] ,0,  mw ))
         {
 
-            if(peep->physics.drive.drivingToTarget)
+            if(peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL)
             {
                 LOCAL_STR(thinkingtxt, "Traveling..."); 
                 GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(gui->guiState.windowSizes[2].x,20), 0, thinkingtxt, (float3)(0.0,0,0) );
@@ -3548,11 +3553,13 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
                     if(GUI_BUTTON(GUIID_PASS, (ge_int2)(100,(j+1)*50), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
                     {
                         if(gui->passType == GuiStatePassType_Synced)
+                        {
+                            printf("deleting order by button\n");
                             Order_DeleteOrder(ALL_CORE_PARAMS_PASS, i);
+                        }
                     }
 
-                    if(order->pendingDelete)
-                        Order_DeleteOrder(ALL_CORE_PARAMS_PASS, i);
+               
 
 
                     j++;
@@ -3722,7 +3729,7 @@ int cliId)
 
     if(GUI_SLIDER_INT_VERTICAL(GUIID_PASS,  (ge_int2){0 ,100}, (ge_int2){80, 800}, 0, &client->mapZView, 0, MAPDEPTH))
     {
-        client->mapZViewDelay = 1;
+
     }
 
     LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
@@ -4118,7 +4125,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                 {
                                     if(curPeep->stateBasic.orderPtr != OFFSET_NULL)
                                     {
-                                        Order_DeleteOrder(ALL_CORE_PARAMS_PASS, curPeep->stateBasic.orderPtr);
+                                       
                                         Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, curPeep);
                                     }
                                     Peep_AssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
@@ -4133,7 +4140,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                                 //curPeep->physics.drive.target_x_Q16 = worldloc.x;
                                 //curPeep->physics.drive.target_y_Q16 = worldloc.y;
                                 //curPeep->physics.drive.target_z_Q16 = worldloc.z;
-                                //curPeep->physics.drive.drivingToTarget = 1;
+
 
 
 
@@ -4801,7 +4808,6 @@ __kernel void game_init_single2(ALL_CORE_PARAMS)
         gameState->peeps[p].minDistPeep_Q16 = (1 << 30);
         gameState->peeps[p].physics.drive.target_x_Q16 = gameState->peeps[p].physics.base.pos_Q16.x;
         gameState->peeps[p].physics.drive.target_y_Q16 = gameState->peeps[p].physics.base.pos_Q16.y;
-        gameState->peeps[p].physics.drive.drivingToTarget = 0;
         gameState->peeps[p].physics.drive.targetPathNodeOPtr = OFFSET_NULL;
 
 
@@ -4969,7 +4975,12 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
         
     LINES_ClearAll(ALL_CORE_PARAMS_PASS);
 
-    
+    if(globalid == 0)
+    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
+    {
+        ThisClient(ALL_CORE_PARAMS_PASS)->updateMap = true;
+        ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
+    }
 }
 
 
@@ -5003,7 +5014,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
 
 
     //update map view
-    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
+    if (ThisClient(ALL_CORE_PARAMS_PASS)->updateMap)
     {
         
         cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
@@ -5071,96 +5082,118 @@ __kernel void game_update2(ALL_CORE_PARAMS)
         }
     }
 
-
+    if(globalid == 0)
+    if(ThisClient(ALL_CORE_PARAMS_PASS)->updateMap)
+    {
+        ThisClient(ALL_CORE_PARAMS_PASS)->updateMap = false;
+    }
 
 }
 
 
-__kernel void game_post_update_single( ALL_CORE_PARAMS )
+__kernel void game_post_update( ALL_CORE_PARAMS )
 {
+    // Get the index of the current element to be processed
+    int globalid = get_global_id(0);
+    int localid = get_local_id(0);
 
 
-    //set selected peeps to highlight.
-    cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
-    PeepRenderSupport peepRenderSupport[MAX_PEEPS];
-    while (curPeepIdx != OFFSET_NULL)
+    if(globalid == 0)
     {
-        USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
-        gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
-                
-        curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
-    }
-
-
-
-
-
-    if(ThisClient(ALL_CORE_PARAMS_PASS)->mapZViewDelay)
-    {
-        ThisClient(ALL_CORE_PARAMS_PASS)->mapZViewDelay--;
-    }
-    else
-        ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
-    
-
-    USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
-    //update AStarPath Searchers
-    if(search->state == AStarPathFindingProgress_Searching)
-    {
-        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
-    }
-    else if(search->state != AStarPathFindingProgress_Ready)
-    {
-       // printf("going to ready..");
-        search->state = AStarPathFindingProgress_Ready;
-    }
-
-
-
-
-
-
-
-    //draw debug lines on paths
-    #ifdef DEBUG_PATHS
-
-
-    USE_POINTER AStarPathSteps* paths = &gameState->paths;
-    
-
-
-    for(int i = 0; i < ASTAR_MAX_PATHS; i++)
-    {
-        offsetPtr pathStartOPtr = paths->pathStarts[i];
-        if(pathStartOPtr != OFFSET_NULL)
+        //set selected peeps to highlight.
+        cl_uint curPeepIdx = gameState->clientStates[gameStateActions->clientId].selectedPeepsLastIdx;
+        PeepRenderSupport peepRenderSupport[MAX_PEEPS];
+        while (curPeepIdx != OFFSET_NULL)
         {
-            USE_POINTER AStarPathNode* node;
-            OFFSET_TO_PTR(paths->pathNodes, pathStartOPtr, node)
+            USE_POINTER Peep* p = &gameState->peeps[curPeepIdx];
+            gameState->clientStates[gameStateActions->clientId].peepRenderSupport[curPeepIdx].render_selectedByClient = 1;
+                    
+            curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
+        }
 
-            while(node != NULL && node->nextOPtr != OFFSET_NULL)
+        USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
+        //update AStarPath Searchers
+        if(search->state == AStarPathFindingProgress_Searching)
+        {
+            AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
+        }
+        else if(search->state != AStarPathFindingProgress_Ready)
+        {
+        // printf("going to ready..");
+            search->state = AStarPathFindingProgress_Ready;
+        }
+
+
+        //draw debug lines on paths
+        #ifdef DEBUG_PATHS
+
+
+        USE_POINTER AStarPathSteps* paths = &gameState->paths;
+
+        for(int i = 0; i < ASTAR_MAX_PATHS; i++)
+        {
+            offsetPtr pathStartOPtr = paths->pathStarts[i];
+            if(pathStartOPtr != OFFSET_NULL)
             {
-                USE_POINTER AStarPathNode* nodeNext;
-                OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, nodeNext);
-                CL_CHECK_NULL(nodeNext);
+                USE_POINTER AStarPathNode* node;
+                OFFSET_TO_PTR(paths->pathNodes, pathStartOPtr, node)
 
-                ge_int3 worldCoord_Q16;
-                MapToWorld(( node->mapCoord_Q16 ), &worldCoord_Q16);
+                while(node != NULL && node->nextOPtr != OFFSET_NULL)
+                {
+                    USE_POINTER AStarPathNode* nodeNext;
+                    OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, nodeNext);
+                    CL_CHECK_NULL(nodeNext);
 
-                ge_int3 worldCoordNext_Q16;
-                MapToWorld(( nodeNext->mapCoord_Q16 ), &worldCoordNext_Q16);
+                    ge_int3 worldCoord_Q16;
+                    MapToWorld(( node->mapCoord_Q16 ), &worldCoord_Q16);
+
+                    ge_int3 worldCoordNext_Q16;
+                    MapToWorld(( nodeNext->mapCoord_Q16 ), &worldCoordNext_Q16);
+
+                    
+                    float2 worldCoordsFloat = (float2)(FIXED2FLTQ16(worldCoord_Q16.x),FIXED2FLTQ16(worldCoord_Q16.y));
+                    float2 worldCoordsNextFloat = (float2)(FIXED2FLTQ16(worldCoordNext_Q16.x),FIXED2FLTQ16(worldCoordNext_Q16.y));
 
                 
-                float2 worldCoordsFloat = (float2)(FIXED2FLTQ16(worldCoord_Q16.x),FIXED2FLTQ16(worldCoord_Q16.y));
-                float2 worldCoordsNextFloat = (float2)(FIXED2FLTQ16(worldCoordNext_Q16.x),FIXED2FLTQ16(worldCoordNext_Q16.y));
-
-            
-                LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, (float3)(RandomRange(i, 0, 1000)/1000.0f, RandomRange(i+1, 0, 1000)/1000.0f, 1.0f));
+                    LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, (float3)(RandomRange(i, 0, 1000)/1000.0f, RandomRange(i+1, 0, 1000)/1000.0f, 1.0f));
 
 
-                OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, node)
+                    OFFSET_TO_PTR(paths->pathNodes, node->nextOPtr, node)
+                }
             }
         }
+
+
     }
+
+
+    int chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
+    for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
+    {
+        cl_ulong idx = globalid+(GAME_UPDATE_WORKITEMS)*pi;
+        if (idx < MAX_ORDERS)
+        {
+            USE_POINTER Order* order;
+            CL_CHECKED_ARRAY_GET_PTR(gameState->orders, MAX_ORDERS, idx, order)
+
+
+            if(order->valid && order->pendingDelete)
+            {
+                if(order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL)
+                {
+                    printf("deleting expired and dangling order\n");
+                    Order_DeleteOrder(ALL_CORE_PARAMS_PASS, idx);
+                }
+            }
+
+            order->pendingDelete = true;
+        }
+    }
+
+
+
+
+
     #endif
 }
 
@@ -5198,19 +5231,6 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
 
 
     //parrellel order Pre update
-    chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
-    for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
-    {
-        cl_ulong idx = globalid+(GAME_UPDATE_WORKITEMS)*pi;
-        if (idx < MAX_ORDERS)
-        {
-            USE_POINTER Order* order;
-            CL_CHECKED_ARRAY_GET_PTR(gameState->orders, MAX_ORDERS, idx, order)
-
-            order->pendingDelete = true;
-        }
-
-    }
 
 
 
