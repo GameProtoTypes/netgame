@@ -68,7 +68,10 @@ public:
 	void RunInitCompute1();
 	void RunInitCompute2();
 
-	void Stage1();
+	void Stage1_Begin();
+	void Stage1_End();
+
+	bool stage1_Running;
 
 	void ReadFullGameState();
 	void WriteFullGameState();
@@ -154,6 +157,7 @@ public:
 	int maxLines = 1024*64;
 
     long GameUpdateWorkItems ;
+	int numComputeUnits;
     size_t WorkItems[1]  ;
 	size_t WorkItemsInitMulti[1] ;
 	size_t WorkItems1Warp[1] ;

@@ -517,6 +517,10 @@ struct Machine
 	int tickProgess;
 	MachineState state;
 	Inventory inventory;
+
+	//Command Center Sepecific
+	offsetPtr rootOrderPtr;
+
 } typedef Machine;
 
 
@@ -544,8 +548,10 @@ struct OrderActionData
 
 struct Order
 {
+	offsetPtr ptr;
 	bool valid;
 	bool pendingDelete;
+	bool isCustom;
 
 	ge_int3 mapDest_Coord;
 	OrderActions action;

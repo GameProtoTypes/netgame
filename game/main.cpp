@@ -311,7 +311,7 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameCompute.Stage1_Begin();
-
+        gameCompute.Stage1_End();
         
         GSCS(A)
 
@@ -701,6 +701,14 @@ int32_t main(int32_t argc, char* args[])
         glm::vec4 worldMouseCoords = glm::inverse(view) * mouseScreenCoords;
         ImGui::Text("X,y: %f,%f", worldMouseCoords.x, worldMouseCoords.y);
         
+
+        //-----------------------------------------------------------------------------------
+        gameCompute.Stage1_End();
+
+
+
+
+
         
         glActiveTexture(GL_TEXTURE0); // Texture unit 0
         glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
@@ -828,7 +836,6 @@ int32_t main(int32_t argc, char* args[])
         GSCS(D)
 
 
-        gameCompute.Stage1_End();
 
 
 

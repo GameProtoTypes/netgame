@@ -11,6 +11,9 @@ struct GuiState
 
 	ge_int2 windowPositions[GUI_MAX_WINDOWS];
 	ge_int2 windowSizes[GUI_MAX_WINDOWS];
+
+    int scrollBoxes_x[GUI_MAX_WINDOWS];
+    int scrollBoxes_y[GUI_MAX_WINDOWS];
 } typedef GuiState;
 
 

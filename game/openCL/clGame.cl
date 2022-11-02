@@ -404,6 +404,13 @@ offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
         }
     }while(gameState->machines[gameState->nextMachineIdx].valid == true);
 
+    USE_POINTER Machine* machine;
+    OFFSET_TO_PTR(gameState->machines, ptr, machine);
+
+
+    machine->rootOrderPtr = OFFSET_NULL;
+
+
     return ptr;
 }
 
@@ -2776,7 +2783,7 @@ void PeepUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
 
     //update visibility
-    if (!VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
+    if (!VECTOR3_EQUAL(maptilecoords, maptilecoords_prev) || ThisClient(ALL_CORE_PARAMS_PASS)->updateMap)
     {
         if (PeepMapVisiblity(ALL_CORE_PARAMS_PASS, peep, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView))
         {     
@@ -3521,7 +3528,119 @@ offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
         }
     }
 
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, ptr, order);
+
+    order->valid = true;
+    order->ptr = ptr;
+    order->pendingDelete = false;
+    order->isCustom = false;
+    order->prevExecutionOrder = OFFSET_NULL;
+    order->nextExecutionOrder = OFFSET_NULL;
+    order->pathToDestPtr = OFFSET_NULL;
+
+
+
     return ptr;
+}
+
+bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
+{
+    GUI_COMMON_WIDGET_START();
+    if(!goodStart)
+        return false;
+
+    if(order->valid)
+    {
+        LOCAL_STR(descstr, "ORDER -----------")
+        CL_ITOA(order->ptr, descstr+6, 6, 10 );
+        GUI_LABEL(GUIID_PASS, origPos, origSize - (ge_int2)(50,1), 0, descstr, (float3)(0,0,0));
+        
+
+        LOCAL_STR(delStr, "DELETE")
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+            {
+                printf("deleting order by button\n");
+                Order_DeleteOrder(ALL_CORE_PARAMS_PASS, order->ptr);
+            }
+        }
+        LOCAL_STR(upStr, "UP")
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,0), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, upStr, NULL, NULL))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+            {
+                USE_POINTER Order* prevOrder;
+                OFFSET_TO_PTR(gameState->orders, order->prevExecutionOrder, prevOrder);
+
+                USE_POINTER Order* nextOrder;
+                OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextOrder);
+
+
+                if(prevOrder != NULL)
+                {
+                    prevOrder->nextExecutionOrder = order->nextExecutionOrder;
+                    order->nextExecutionOrder = prevOrder->ptr;
+                    order->prevExecutionOrder = prevOrder->prevExecutionOrder;
+                    prevOrder->prevExecutionOrder = order->ptr;
+
+
+                    if(prevOrder->prevExecutionOrder != OFFSET_NULL)
+                    {
+                        USE_POINTER Order* prevPrevOrder;
+                        OFFSET_TO_PTR(gameState->orders, prevOrder->prevExecutionOrder, prevPrevOrder);
+
+                        prevPrevOrder->nextExecutionOrder = order->ptr;
+                    }
+
+                    if(nextOrder != NULL)
+                    {
+                        nextOrder->prevExecutionOrder = prevOrder->ptr;
+                    }
+                }
+            }
+        }
+        LOCAL_STR(downStr, "DOWN")
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,2*origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, downStr, NULL, NULL))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+            {
+                USE_POINTER Order* prevOrder;
+                OFFSET_TO_PTR(gameState->orders, order->prevExecutionOrder, prevOrder);
+
+                USE_POINTER Order* nextOrder;
+                OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextOrder);
+
+
+                if(nextOrder != NULL)
+                {
+
+                    nextOrder->nextExecutionOrder = order->ptr;
+                    order->prevExecutionOrder = nextOrder->ptr;
+                    order->nextExecutionOrder = nextOrder->nextExecutionOrder;
+                    nextOrder->prevExecutionOrder = order->prevExecutionOrder;
+
+
+                    if(nextOrder->nextExecutionOrder != OFFSET_NULL)
+                    {
+                        USE_POINTER Order* nextNextOrder;
+                        OFFSET_TO_PTR(gameState->orders, nextOrder->nextExecutionOrder, nextNextOrder);
+
+                        nextNextOrder->prevExecutionOrder = order->ptr;
+                    }
+
+                    if(prevOrder != NULL)
+                    {
+                        prevOrder->nextExecutionOrder = nextOrder->ptr;
+                    }
+                }
+            }
+        }
+        return true;
+
+    }
+    return false;
 }
 
 void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
@@ -3537,33 +3656,16 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
 
             }
 
+            const entryHeight = 100;
             int j = 0;
             for(int i = 0; i < MAX_ORDERS; i++)
             {
                 USE_POINTER Order* order;
                 OFFSET_TO_PTR(gameState->orders, i, order);
+                OrderEntryGui(GUIID_PASS,(ge_int2)(0,(j+1)*entryHeight), (ge_int2)(gui->guiState.windowSizes[3].x, entryHeight), 0,  order);
                 if(order->valid)
-                {
-                    LOCAL_STR(descstr, "ORDER -----------")
-                    CL_ITOA(i, descstr+6, 6, 10 );
-                    GUI_LABEL(GUIID_PASS, (ge_int2)(0,(j+1)*50), (ge_int2)(100,50), 0, descstr, (float3)(0,0,0));
-                    
-
-                    LOCAL_STR(delStr, "DELETE")
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(100,(j+1)*50), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
-                    {
-                        if(gui->passType == GuiStatePassType_Synced)
-                        {
-                            printf("deleting order by button\n");
-                            Order_DeleteOrder(ALL_CORE_PARAMS_PASS, i);
-                        }
-                    }
-
-               
-
-
                     j++;
-                }
+                
             }
             GUI_END_WINDOW(GUIID_PASS);
         }
@@ -3571,9 +3673,105 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
 
 
 
+void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedClientState* client, PARAM_GLOBAL_POINTER Machine* machine)
+{
+    GUI_COMMON_WIDGET_START()
+    if(!goodStart)
+        return ;
+
+    USE_POINTER Order* currentRootOrder;
+    OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, currentRootOrder);
+    if(currentRootOrder == NULL || !currentRootOrder->valid)
+    {
+        machine->rootOrderPtr = OFFSET_NULL;
+    }
 
 
 
+    LOCAL_STR(addstr, "New Order")
+
+
+
+
+
+
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_GREEN, addstr, NULL, NULL))
+    {
+        if(gui->passType == GuiStatePassType_Synced)
+        {
+            offsetPtr newOrderPTr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+            USE_POINTER Order* newOrder;
+            OFFSET_TO_PTR(gameState->orders, newOrderPTr, newOrder);
+
+            OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, currentRootOrder);
+
+            if(currentRootOrder == NULL || !currentRootOrder->valid)
+            {
+                printf("new standalone order\n");
+                machine->rootOrderPtr = newOrderPTr;
+            }
+            else
+            {
+
+                offsetPtr endOrderPtr = machine->rootOrderPtr;
+                USE_POINTER Order* endOrder;
+                OFFSET_TO_PTR(gameState->orders, endOrderPtr, endOrder);
+                
+                do
+                {
+                    OFFSET_TO_PTR(gameState->orders, endOrder->nextExecutionOrder, endOrder);
+                    
+                    if(endOrder==NULL)
+                    {
+                        break;
+                    }
+                    else
+                        endOrderPtr = endOrder->ptr;
+                } while(endOrderPtr != OFFSET_NULL);
+
+                OFFSET_TO_PTR(gameState->orders, endOrderPtr, endOrder);
+
+                endOrder->nextExecutionOrder = newOrderPTr;
+                newOrder->prevExecutionOrder = endOrderPtr;
+                newOrder->nextExecutionOrder = OFFSET_NULL;
+            }
+
+            
+
+            newOrder->isCustom = true;
+
+        }   
+    }
+
+
+    if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(origSize.x, origSize.y - 50), 0, (ge_int2)(1000, 1000), &gui->guiState.scrollBoxes_x[0], &gui->guiState.scrollBoxes_y[0] ))
+    {
+
+    
+
+        offsetPtr firstOrder = machine->rootOrderPtr;
+        offsetPtr curOrder = machine->rootOrderPtr;
+        const entryHeight = 100;
+        int j = 0;
+        while( curOrder != OFFSET_NULL )   
+        {
+            USE_POINTER Order* order;
+            OFFSET_TO_PTR(gameState->orders, curOrder, order);
+
+            OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*entryHeight), (ge_int2)(origSize.x, entryHeight), 0,  order);
+          
+            if(order->valid)
+                j++;
+
+            curOrder = order->nextExecutionOrder;
+            if(curOrder == firstOrder)
+                break;
+        }
+
+        GUI_SCROLLBOX_END(GUIID_PASS);
+    }
+
+}
 
 
 
@@ -3598,59 +3796,70 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
         if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[1],
             &gui->guiState.windowSizes[1],0,  mw ))
         {
-
-            LOCAL_STRL(thinkingtxt2, "---", thinkingtxtLen); 
-            float perc = ((float)mach->tickProgess/desc->processingTime);
-            char* p = CL_ITOA(perc*100, thinkingtxt2, thinkingtxtLen, 10 );
-            *(p+2) = '%'; if(thinkingtxt2[1] == '\0') thinkingtxt2[1] = ' ';
-            GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(perc*gui->guiState.windowSizes[1].x,50), 0, thinkingtxt2, (float3)(0,0.7,0) );
-
             
 
-            int downDummy;
-            LOCAL_STR(stateStrStart, "Start"); 
-            LOCAL_STR(stateStrStop, "Stop"); 
-            char* stateStr = stateStrStart;
-            float3 btnColor;
-
-            if( mach->state == MachineState_Running )
+            if(desc->type == MachineTypes_COMMAND_CENTER)
             {
-                stateStr = stateStrStop;
-                btnColor = (float3)(1.0,0.0,0.0);
+                CommandCenterMachineGui(GUIID_PASS, (ge_int2)(0,0), gui->guiState.windowSizes[1],0, client, mach);
             }
-            else if( mach->state == MachineState_Idle )
+            else
             {
-                stateStr = stateStrStart;
-                btnColor = (float3)(0.0,0.7,0.0);
-            }
+                LOCAL_STRL(thinkingtxt2, "---", thinkingtxtLen); 
+                float perc = ((float)mach->tickProgess/desc->processingTime);
+                char* p = CL_ITOA(perc*100, thinkingtxt2, thinkingtxtLen, 10 );
+                *(p+2) = '%'; if(thinkingtxt2[1] == '\0') thinkingtxt2[1] = ' ';
+                GUI_LABEL(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(perc*gui->guiState.windowSizes[1].x,50), 0, thinkingtxt2, (float3)(0,0.7,0) );
 
-            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), GuiFlags_Beveled, btnColor, stateStr, &downDummy, NULL))
-            {
-                if(gui->passType == GuiStatePassType_Synced)
-                {    
-                    if( mach->state == MachineState_Running)
-                    {
-                        mach->state = MachineState_Idle;
-                    }
-                    else if( mach->state == MachineState_Idle)
-                    {
-                        mach->state = MachineState_Running;
-                    }
+                
+                int downDummy;
+                LOCAL_STR(stateStrStart, "Start"); 
+                LOCAL_STR(stateStrStop, "Stop"); 
+                char* stateStr = stateStrStart;
+                float3 btnColor;
 
-                    
-                }
-            }
-            if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), GuiFlags_Beveled,(float3)(0,0,1.0), NULL, &downDummy, NULL))
-            {
-                for(int i = 0; i < 8; i++)
+                if( mach->state == MachineState_Running )
                 {
-                    if(recip->inputTypes[i] != ItemType_INVALID_ITEM)
-                        mach->inventory.counts[recip->inputTypes[i]]+=20;
+                    stateStr = stateStrStop;
+                    btnColor = (float3)(1.0,0.0,0.0);
                 }
+                else if( mach->state == MachineState_Idle )
+                {
+                    stateStr = stateStrStart;
+                    btnColor = (float3)(0.0,0.7,0.0);
+                }
+
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(50,50), GuiFlags_Beveled, btnColor, stateStr, &downDummy, NULL))
+                {
+                    if(gui->passType == GuiStatePassType_Synced)
+                    {    
+                        if( mach->state == MachineState_Running)
+                        {
+                            mach->state = MachineState_Idle;
+                        }
+                        else if( mach->state == MachineState_Idle)
+                        {
+                            mach->state = MachineState_Running;
+                        }
+
+                        
+                    }
+                }
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2)(50,50), (ge_int2)(50,50), GuiFlags_Beveled,(float3)(0,0,1.0), NULL, &downDummy, NULL))
+                {
+                    for(int i = 0; i < 8; i++)
+                    {
+                        if(recip->inputTypes[i] != ItemType_INVALID_ITEM)
+                            mach->inventory.counts[recip->inputTypes[i]]+=20;
+                    }
+                }
+
+
+                InventoryGui(GUIID_PASS,  (ge_int2)(0,0), gui->guiState.windowSizes[1],0,&mach->inventory );        
             }
 
 
-            InventoryGui(GUIID_PASS,  (ge_int2)(0,0), gui->guiState.windowSizes[1],0,&mach->inventory );
+
+           
             GUI_END_WINDOW(GUIID_PASS);
         }
     }
@@ -4103,6 +4312,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
                         OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
                         newOrder->valid = true;
+                        newOrder->ptr = newOrderPtr;
                         newOrder->pendingDelete = false;
                         newOrder->mapDest_Coord = mapcoord;
                         newOrder->prevExecutionOrder = OFFSET_NULL;
@@ -4964,11 +5174,18 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
     // Get the index of the current element to be processed
     int globalid = get_global_id(0);
     int localid = get_local_id(0);
-    if (globalid < MAX_PEEPS) {
-        USE_POINTER Peep* p = &gameState->peeps[globalid]; 
-        PeepPreUpdate2(ALL_CORE_PARAMS_PASS, p);
-    }
 
+
+
+    cl_ulong chunkSize = (MAX_PEEPS) / GAME_UPDATE_WORKITEMS;
+    for (cl_ulong i = 0; i < chunkSize+1; i++)
+    {
+        cl_ulong idx = globalid+GAME_UPDATE_WORKITEMS*i;
+        if (idx < MAX_PEEPS) {
+            USE_POINTER Peep* p = &gameState->peeps[idx]; 
+            PeepPreUpdate2(ALL_CORE_PARAMS_PASS, p);
+        }
+    }
 
 
     
@@ -4992,22 +5209,38 @@ __kernel void game_update(ALL_CORE_PARAMS)
     int localid = get_local_id(0);
     
 
-    if (globalid < MAX_PEEPS) {
-        USE_POINTER Peep* p = &gameState->peeps[globalid]; 
-        PeepUpdate(ALL_CORE_PARAMS_PASS, p);
-        PeepDraw(ALL_CORE_PARAMS_PASS, p);
-    }
-
-    if ( globalid < MAX_MACHINES)
+    cl_ulong chunkSize = (MAX_PEEPS) / GAME_UPDATE_WORKITEMS;
+    for (cl_ulong i = 0; i < chunkSize+1; i++)
     {
-        USE_POINTER Machine* m = &gameState->machines[globalid]; 
-        MachineUpdate(ALL_CORE_PARAMS_PASS, m);
+        cl_ulong idx = globalid+GAME_UPDATE_WORKITEMS*i;
+        if (idx < MAX_PEEPS) {
+
+            USE_POINTER Peep* p = &gameState->peeps[idx]; 
+            PeepUpdate(ALL_CORE_PARAMS_PASS, p);
+            PeepDraw(ALL_CORE_PARAMS_PASS, p);
+        }
     }
 
-    if (globalid < MAX_PARTICLES) {
-        USE_POINTER Particle* p = &gameState->particles[globalid];
-        ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
-        ParticleDraw(ALL_CORE_PARAMS_PASS, p, globalid);
+    chunkSize = (MAX_MACHINES) / GAME_UPDATE_WORKITEMS;
+    for (cl_ulong i = 0; i < chunkSize+1; i++)
+    {
+        cl_ulong idx = globalid+GAME_UPDATE_WORKITEMS*i;
+        if ( idx < MAX_MACHINES)
+        {
+            USE_POINTER Machine* m = &gameState->machines[idx]; 
+            MachineUpdate(ALL_CORE_PARAMS_PASS, m);
+        }
+    }
+
+    chunkSize = (MAX_PARTICLES) / GAME_UPDATE_WORKITEMS;
+    for (cl_ulong i = 0; i < chunkSize+1; i++)
+    {
+        cl_ulong idx = globalid+GAME_UPDATE_WORKITEMS*i;
+        if (idx < MAX_PARTICLES) {
+            USE_POINTER Particle* p = &gameState->particles[idx];
+            ParticleUpdate(ALL_CORE_PARAMS_PASS, p);
+            ParticleDraw(ALL_CORE_PARAMS_PASS, p, idx);
+        }
     }
     
 
@@ -5017,7 +5250,7 @@ __kernel void game_update(ALL_CORE_PARAMS)
     if (ThisClient(ALL_CORE_PARAMS_PASS)->updateMap)
     {
         
-        cl_uint chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
+        cl_ulong chunkSize = (MAPDIM * MAPDIM) / GAME_UPDATE_WORKITEMS;
 
         for (cl_ulong i = 0; i < chunkSize+1; i++)
         {
@@ -5053,9 +5286,9 @@ __kernel void game_update2(ALL_CORE_PARAMS)
     USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if((search->state == AStarPathFindingProgress_Failed) || (search->state == AStarPathFindingProgress_Finished))
     {
-        cl_ulong chunks = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
+        cl_ulong chunkSize = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
     
-        for (cl_ulong i = 0; i < chunks+1; i++)
+        for (cl_ulong i = 0; i < chunkSize+1; i++)
         {
             cl_long xyzIdx = globalid+GAME_UPDATE_WORKITEMS*i;
             
@@ -5167,7 +5400,7 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
     }
 
 
-    int chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
+    cl_ulong chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
     for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
     {
         cl_ulong idx = globalid+(GAME_UPDATE_WORKITEMS)*pi;
@@ -5186,7 +5419,10 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
                 }
             }
 
-            order->pendingDelete = true;
+            if(order->valid && !order->isCustom)
+            {
+                order->pendingDelete = true;
+            }
         }
     }
 
@@ -5206,7 +5442,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
         return;
    
 
-    cl_uint chunkSize = (MAX_PEEPS) / GAME_UPDATE_WORKITEMS;
+    cl_ulong chunkSize = (MAX_PEEPS) / GAME_UPDATE_WORKITEMS;
     for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
     {
         cl_ulong idx = globalid+(GAME_UPDATE_WORKITEMS)*pi;

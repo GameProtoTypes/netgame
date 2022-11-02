@@ -65,7 +65,7 @@ void GameGPUCompute::BuildKernelRunSizes()
     else if(vendor == AMD)
         warpSize = 64;
 
-        GameUpdateWorkItems = warpSize * 1024 * 4;
+        GameUpdateWorkItems = warpSize*numComputeUnits*512;
         WorkItems[0] = static_cast<size_t>(GameUpdateWorkItems) ;
         WorkItemsInitMulti[0] =  0 ;
         WorkItems1Warp[0] =  warpSize ;
@@ -145,6 +145,17 @@ void GameGPUCompute::RunInitCompute0()
         printf("AMD DETECTED.\n");
         vendor = AMD;
     }
+
+
+    clGetDeviceInfo(device_id,
+    CL_DEVICE_MAX_COMPUTE_UNITS,
+    sizeof(numComputeUnits),
+    &numComputeUnits,
+    NULL);
+
+    std::cout << "CL_DEVICE_MAX_COMPUTE_UNITS: " << numComputeUnits << std::endl;
+
+
 }
 void GameGPUCompute::RunInitCompute1()
 {
@@ -376,6 +387,7 @@ void GameGPUCompute::RunInitCompute2()
 
 
 
+
     // Create the OpenCL update_kernel
         preupdate_kernel = clCreateKernel(gameProgram, "game_preupdate_1", &ret); CL_HOST_ERROR_CHECK(ret)
         preupdate_kernel_2 = clCreateKernel(gameProgram, "game_preupdate_2", &ret); CL_HOST_ERROR_CHECK(ret)
@@ -489,7 +501,7 @@ void GameGPUCompute::RunInitCompute2()
     ReadFullGameState();
 }
 
-void GameGPUCompute::Stage1()
+void GameGPUCompute::Stage1_Begin()
 {
     if (gameStateActions->pauseState != 0)
         return;
@@ -555,11 +567,17 @@ void GameGPUCompute::Stage1()
         WorkItems, NULL, 2, w, &postupdateEvent);
     CL_HOST_ERROR_CHECK(ret)
 
+    stage1_Running = true;
 
 
+
+}
+void GameGPUCompute::Stage1_End()
+{
+    if(!stage1_Running)
+        return;
 
     ReleaseAllGraphicsObjects();
-
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
@@ -576,8 +594,8 @@ void GameGPUCompute::Stage1()
     ret = clFinish(command_queue2);
     CL_HOST_ERROR_CHECK(ret)
 
+    stage1_Running = false;
 }
-
 void GameGPUCompute::ReadFullGameState()
 {
     std::cout << "Reading Game State..." << std::endl;
