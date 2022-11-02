@@ -3554,8 +3554,18 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
     {
         LOCAL_STR(descstr, "ORDER -----------")
         CL_ITOA(order->ptr, descstr+6, 6, 10 );
-        GUI_LABEL(GUIID_PASS, origPos, origSize - (ge_int2)(50,1), 0, descstr, (float3)(0,0,0));
+        GUI_LABEL(GUIID_PASS, origPos,(ge_int2)(origSize.x-50, origSize.y), 0, descstr, (float3)(0,0,0));
         
+        LOCAL_STR(nxtstr, "NEXT  -----------")
+        CL_ITOA(order->nextExecutionOrder, nxtstr+6, 6, 10 );
+        GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,20), origSize - (ge_int2)(50,1), 0, nxtstr, (float3)(0,0,0));
+        
+        LOCAL_STR(prevstr, "PREV  -----------")
+        CL_ITOA(order->prevExecutionOrder, prevstr+6, 6, 10 );
+        GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,40), origSize - (ge_int2)(50,1), 0, prevstr, (float3)(0,0,0));
+        
+
+
 
         LOCAL_STR(delStr, "DELETE")
         if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
@@ -3576,23 +3586,30 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
 
                 USE_POINTER Order* nextOrder;
                 OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextOrder);
-
+                
+                if(nextOrder == prevOrder && nextOrder != NULL)
+                {
+                    return false;//list of 2
+                }
 
                 if(prevOrder != NULL)
                 {
+                    order->prevExecutionOrder = prevOrder->prevExecutionOrder;
                     prevOrder->nextExecutionOrder = order->nextExecutionOrder;
                     order->nextExecutionOrder = prevOrder->ptr;
-                    order->prevExecutionOrder = prevOrder->prevExecutionOrder;
-                    prevOrder->prevExecutionOrder = order->ptr;
+                    
 
-
-                    if(prevOrder->prevExecutionOrder != OFFSET_NULL)
+                    if(prevOrder->prevExecutionOrder != OFFSET_NULL && prevOrder->prevExecutionOrder != order->ptr)
                     {
                         USE_POINTER Order* prevPrevOrder;
                         OFFSET_TO_PTR(gameState->orders, prevOrder->prevExecutionOrder, prevPrevOrder);
 
                         prevPrevOrder->nextExecutionOrder = order->ptr;
                     }
+                    prevOrder->prevExecutionOrder = order->ptr;
+
+
+                    
 
                     if(nextOrder != NULL)
                     {
@@ -3600,6 +3617,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
                     }
                 }
             }
+            printf("order moved Up.\n");
         }
         LOCAL_STR(downStr, "DOWN")
         if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,2*origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, downStr, NULL, NULL))
@@ -3612,23 +3630,29 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
                 USE_POINTER Order* nextOrder;
                 OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextOrder);
 
+                if(nextOrder == prevOrder && nextOrder != NULL)
+                {
+                    return false;//list of 2
+                }
 
                 if(nextOrder != NULL)
                 {
 
-                    nextOrder->nextExecutionOrder = order->ptr;
+                    nextOrder->prevExecutionOrder = order->prevExecutionOrder;
                     order->prevExecutionOrder = nextOrder->ptr;
                     order->nextExecutionOrder = nextOrder->nextExecutionOrder;
-                    nextOrder->prevExecutionOrder = order->prevExecutionOrder;
+                    
 
-
-                    if(nextOrder->nextExecutionOrder != OFFSET_NULL)
+                    if(nextOrder->nextExecutionOrder != OFFSET_NULL && nextOrder->nextExecutionOrder != order->ptr)
                     {
+
                         USE_POINTER Order* nextNextOrder;
                         OFFSET_TO_PTR(gameState->orders, nextOrder->nextExecutionOrder, nextNextOrder);
 
                         nextNextOrder->prevExecutionOrder = order->ptr;
                     }
+                    nextOrder->nextExecutionOrder = order->ptr;
+
 
                     if(prevOrder != NULL)
                     {
@@ -3645,6 +3669,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
 
 void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
+
         LOCAL_STR(orderWinStr, "Orders")
         if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[3],
         &gui->guiState.windowSizes[3] ,0,  orderWinStr ))
@@ -3684,6 +3709,7 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
     if(currentRootOrder == NULL || !currentRootOrder->valid)
     {
         machine->rootOrderPtr = OFFSET_NULL;
+        OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, currentRootOrder);
     }
 
 
@@ -3703,37 +3729,27 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
             USE_POINTER Order* newOrder;
             OFFSET_TO_PTR(gameState->orders, newOrderPTr, newOrder);
 
-            OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, currentRootOrder);
 
             if(currentRootOrder == NULL || !currentRootOrder->valid)
             {
                 printf("new standalone order\n");
                 machine->rootOrderPtr = newOrderPTr;
+                newOrder->nextExecutionOrder = newOrderPTr;
+                newOrder->prevExecutionOrder = newOrderPTr;
             }
             else
             {
-
-                offsetPtr endOrderPtr = machine->rootOrderPtr;
+                offsetPtr endOrderPtr = currentRootOrder->prevExecutionOrder;
                 USE_POINTER Order* endOrder;
-                OFFSET_TO_PTR(gameState->orders, endOrderPtr, endOrder);
-                
-                do
-                {
-                    OFFSET_TO_PTR(gameState->orders, endOrder->nextExecutionOrder, endOrder);
-                    
-                    if(endOrder==NULL)
-                    {
-                        break;
-                    }
-                    else
-                        endOrderPtr = endOrder->ptr;
-                } while(endOrderPtr != OFFSET_NULL);
-
                 OFFSET_TO_PTR(gameState->orders, endOrderPtr, endOrder);
 
                 endOrder->nextExecutionOrder = newOrderPTr;
-                newOrder->prevExecutionOrder = endOrderPtr;
-                newOrder->nextExecutionOrder = OFFSET_NULL;
+                currentRootOrder->prevExecutionOrder = newOrderPTr;
+
+                newOrder->nextExecutionOrder = machine->rootOrderPtr;
+                newOrder->prevExecutionOrder = endOrder->ptr;
+
+
             }
 
             
@@ -3743,32 +3759,34 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
         }   
     }
 
-
-    if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(origSize.x, origSize.y - 50), 0, (ge_int2)(1000, 1000), &gui->guiState.scrollBoxes_x[0], &gui->guiState.scrollBoxes_y[0] ))
+    if(machine->rootOrderPtr != OFFSET_NULL)
     {
-
-    
-
-        offsetPtr firstOrder = machine->rootOrderPtr;
-        offsetPtr curOrder = machine->rootOrderPtr;
-        const entryHeight = 100;
-        int j = 0;
-        while( curOrder != OFFSET_NULL )   
+        if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(origSize.x, origSize.y - 50), 0, (ge_int2)(1000, 1000), &gui->guiState.scrollBoxes_x[0], &gui->guiState.scrollBoxes_y[0] ))
         {
-            USE_POINTER Order* order;
-            OFFSET_TO_PTR(gameState->orders, curOrder, order);
+            offsetPtr firstOrder = machine->rootOrderPtr;
+            offsetPtr curOrder = machine->rootOrderPtr;
+            const entryHeight = 100;
+            int j = 0;
+            while( curOrder != OFFSET_NULL )   
+            {
+                USE_POINTER Order* order;
+                OFFSET_TO_PTR(gameState->orders, curOrder, order);
 
-            OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*entryHeight), (ge_int2)(origSize.x, entryHeight), 0,  order);
-          
-            if(order->valid)
-                j++;
+                OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*entryHeight), (ge_int2)(origSize.x, entryHeight), 0,  order);
+            
+                if(order->valid)
+                    j++;
+                else
+                    break;
 
-            curOrder = order->nextExecutionOrder;
-            if(curOrder == firstOrder)
-                break;
+                if(order->nextExecutionOrder == firstOrder)
+                    break;
+                curOrder = order->nextExecutionOrder;
+            
+            }
+
+            GUI_SCROLLBOX_END(GUIID_PASS);
         }
-
-        GUI_SCROLLBOX_END(GUIID_PASS);
     }
 
 }

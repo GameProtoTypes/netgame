@@ -568,7 +568,13 @@ struct Order
 
 } typedef Order;
 
-
+enum OrderManupAction
+{	
+	OrderManupAction_NONE,
+	OrderManupAction_Delete,
+	OrderManupAction_MoveUp,
+	OrderManupAction_MoveDown,
+}typedef OrderManupAction;
 
 
 
