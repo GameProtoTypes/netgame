@@ -65,9 +65,10 @@ __global cl_uint* mapTile2OtherAttrVBO, \
 __global float* guiVBO, \
 __global float* linesVBO
 
-#define ALL_CORE_PARAMS_PASS  staticData, \
-gameState, \
-gameStateActions, \
+#define ALL_CORE_PARAMS_PASS  \
+((__global StaticData*) staticData), \
+((__global GameState*) gameState), \
+((__global GameStateActions*) gameStateActions), \
 peepVBOBuffer, \
 particleVBOBuffer, \
 mapTile1VBO, \

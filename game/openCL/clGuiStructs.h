@@ -4,7 +4,18 @@
 #define SYNCGUI_MAX_WIDGETS (4096)
 #define SYNCGUI_MAX_DEPTH (8)
 
+
+
+
+#define COLOR_DARKDARKGRAY (float3)(0.2, 0.2, 0.2)
+#define COLOR_DARKGRAY (float3)(0.3, 0.3, 0.3)
+#define COLOR_GRAY2 (float3)(0.4,0.4,0.4)
+#define COLOR_GRAY (float3)(0.5,0.5,0.5)
+#define COLOR_LIGHTGRAY (float3)(0.7, 0.7, 0.7)
 #define COLOR_WHITE (float3)(1.0,1.0,1.0)
+
+
+
 #define COLOR_RED (float3)(1.0,0.0,0.0)
 #define COLOR_GREEN (float3)(0.0,1.0,0.0)
 #define COLOR_BLUE (float3)(0.0,0.0,1.0)

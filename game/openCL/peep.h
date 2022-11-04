@@ -520,6 +520,7 @@ struct Machine
 
 	//Command Center Sepecific
 	offsetPtr rootOrderPtr;
+	int orderLen;
 
 } typedef Machine;
 

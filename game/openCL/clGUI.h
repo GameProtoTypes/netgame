@@ -22,7 +22,7 @@
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
 #define GUI_AUTO_SIZE (ge_int2){-1,-1}
 
-#define GUI_COLOR_DEF (gameState->guiStyle.BUTTON_COLOR_TOGGLED)
+#define GUI_BUTTON_COLOR_DEF (gameState->guiStyle.BUTTON_COLOR_TOGGLED)
 
 void GUI_PushContainer(PARAM_GLOBAL_POINTER SyncedGui* gui, ge_int2 pos, ge_int2 size)
 {
@@ -245,16 +245,16 @@ void GUI_RESET_POST(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui)
 void GUI_INIT_STYLE(ALL_CORE_PARAMS)
 {
 
-    gameState->guiStyle.TEXT_COLOR = (float3)(1.0,1.0,1.0);
+    gameState->guiStyle.TEXT_COLOR = COLOR_WHITE;
 
     gameState->guiStyle.UV_WHITE = (float2)(40.0/255, 20.0/255);
 
-    gameState->guiStyle.BUTTON_COLOR_DEF            = (float3)(0.5, 0.5, 0.5);
-    gameState->guiStyle.BUTTON_COLOR_HOVER      = (float3)(0.7, 0.7, 0.7);
-    gameState->guiStyle.BUTTON_COLOR_ACTIVE     = (float3)(0.3, 0.3, 0.3);
-    gameState->guiStyle.BUTTON_COLOR_TOGGLED    = (float3)(0.4, 0.4, 0.4);
+    gameState->guiStyle.BUTTON_COLOR_DEF        =  COLOR_GRAY;
+    gameState->guiStyle.BUTTON_COLOR_HOVER      =  COLOR_LIGHTGRAY;
+    gameState->guiStyle.BUTTON_COLOR_ACTIVE     =  COLOR_DARKGRAY;
+    gameState->guiStyle.BUTTON_COLOR_TOGGLED    = COLOR_GRAY2;
 
-    gameState->guiStyle.SLIDER_COLOR_BACKGROUND = (float3)(0.2, 0.2, 0.2);
+    gameState->guiStyle.SLIDER_COLOR_BACKGROUND = COLOR_DARKDARKGRAY;
 
     gameState->guiStyle.WINDOW_PADDING = 5;
     gameState->guiStyle.WINDOW_HEADER_SIZE = 30;
@@ -975,7 +975,7 @@ cl_uchar GUI_SLIDER_INT_HORIZONTAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* valu
     
 
     int down;
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_COLOR_DEF, NULL, &down, NULL);
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_BUTTON_COLOR_DEF, NULL, &down, NULL);
 
     return 0;
 }
@@ -1017,9 +1017,8 @@ cl_uchar GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER int* value,
 
 
     int down;
-    LOCAL_STRL(valueTxt, "strofnoconsequence", valueTxtLen);
-    CL_ITOA(*value, valueTxt, valueTxtLen, 10); 
-    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_COLOR_DEF, valueTxt, &down, NULL);
+
+    GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, 0, GUI_BUTTON_COLOR_DEF, NULL, &down, NULL);
 
     return ret;
 }

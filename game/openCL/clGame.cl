@@ -1816,7 +1816,7 @@ void Triangle3D_Make2Face( Triangle3DHeavy* triangle1,  Triangle3DHeavy* triangl
 
 
 
-void MapTileConvexHull_From_TileData( ConvexHull* hull,  cl_int* tileData)
+void MapTileConvexHull_From_TileData( ConvexHull* hull,  cl_uint* tileData)
 {
     ge_int3 A = (ge_int3){ TO_Q16(-1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
     ge_int3 B = (ge_int3){ TO_Q16(1) >> 1, TO_Q16(-1) >> 1, TO_Q16(-1) >> 1 };
@@ -2032,7 +2032,7 @@ void PeepGetMapTile(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, ge_int3 of
  MapTile* out_map_tile, 
  ge_int3* out_tile_world_pos_center_Q16,
   ge_int3* out_map_tile_coord_whole, 
-   cl_int* out_tile_data)
+   cl_uint* out_tile_data)
 {
     (*out_map_tile_coord_whole).z = WHOLE_Q16(peep->posMap_Q16.z) + (offset.z);
     (*out_map_tile_coord_whole).x = WHOLE_Q16(peep->posMap_Q16.x) + (offset.x);
@@ -2154,7 +2154,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     MapTile tiles[26];
     ge_int3 tileCenters_Q16[26];
     ge_int3 dummy;
-    cl_int tileDatas[26];
+    cl_uint tileDatas[26];
 
 
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 1, 0, 0 }, & tiles[0], & tileCenters_Q16[0],&dummy, &tileDatas[0]);
@@ -2617,7 +2617,7 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
     //search up to z level 0
     ge_int3 offset, tilePWorldCen, tileMapCoordWhole;
     MapTile tile;
-    cl_int tileData;
+    cl_uint tileData;
     offset.x = 0;
     offset.y = 0;
     offset.z = 0;
@@ -2826,7 +2826,7 @@ void PeepUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
     //revert position to last good if needed
     MapTile curTile;
-    cl_int tileData;
+    cl_uint tileData;
     ge_int3 dummy;
     ge_int3 dummy2;
     PeepGetMapTile(ALL_CORE_PARAMS_PASS, peep, (ge_int3) { 0, 0, 0 }, &curTile, &dummy, & dummy2, & tileData);
@@ -3286,11 +3286,11 @@ float4 Matrix_Float4_Times_Vec4(global float mat[][4], float4 vec)
 void LINES_DrawLineWorld(ALL_CORE_PARAMS, float2 worldPosStart, float2 worldPosEnd, float3 color)
 {
     float4 worldPosStart4 = (float4)(worldPosStart.x, worldPosStart.y, 0.0f, 1.0f);
-    float4 screenPosStart4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix, worldPosStart4);
+    float4 screenPosStart4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix[0], worldPosStart4);
     float2 screenPosStart2 = (float2)(screenPosStart4.x, screenPosStart4.y);
 
     float4 worldPosEnd4 = (float4)(worldPosEnd.x, worldPosEnd.y, 0.0f, 1.0f);
-    float4 screenPosEnd4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix, worldPosEnd4);
+    float4 screenPosEnd4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix[0], worldPosEnd4);
     float2 screenPosEnd2 = (float2)(screenPosEnd4.x, screenPosEnd4.y);
 
     // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[0][0], gameStateActions->viewMatrix[0][1], gameStateActions->viewMatrix[0][2], gameStateActions->viewMatrix[0][3]);
@@ -3309,7 +3309,7 @@ ge_int2 GUI_TO_WORLD_Q16(ALL_CORE_PARAMS, ge_int2 guiCoord)
     v.y = guiCoord.y;
     v.z = 0.0;
     v.w = 1.0f;
-    float4 worldPos = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix_Inv, v);
+    float4 worldPos = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix_Inv[0], v);
 
     printf("%f, %f, %f, %f\n", worldPos.x, worldPos.y, worldPos.z, worldPos.w);
 
@@ -3552,23 +3552,31 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
 
     if(order->valid)
     {
+        GUI_DrawRectangle(ALL_CORE_PARAMS_PASS,
+         gui, pos.x, pos.y, origSize.x-50, origSize.y, COLOR_DARKGRAY,
+          gameState->guiStyle.UV_WHITE, gameState->guiStyle.UV_WHITE, false);
+
         LOCAL_STR(descstr, "ORDER -----------")
         CL_ITOA(order->ptr, descstr+6, 6, 10 );
-        GUI_LABEL(GUIID_PASS, origPos,(ge_int2)(origSize.x-50, origSize.y), 0, descstr, (float3)(0,0,0));
+        GUI_LABEL(GUIID_PASS, origPos,(ge_int2)(origSize.x-50, 20), 0, descstr, COLOR_GRAY);
         
-        LOCAL_STR(nxtstr, "NEXT  -----------")
-        CL_ITOA(order->nextExecutionOrder, nxtstr+6, 6, 10 );
-        GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,20), origSize - (ge_int2)(50,1), 0, nxtstr, (float3)(0,0,0));
+        // LOCAL_STR(nxtstr, "NEXT  -----------")
+        // CL_ITOA(order->nextExecutionOrder, nxtstr+6, 6, 10 );
+        // GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,20), origSize - (ge_int2)(50,1), 0, nxtstr, (float3)(0,0,0));
         
-        LOCAL_STR(prevstr, "PREV  -----------")
-        CL_ITOA(order->prevExecutionOrder, prevstr+6, 6, 10 );
-        GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,40), origSize - (ge_int2)(50,1), 0, prevstr, (float3)(0,0,0));
+        // LOCAL_STR(prevstr, "PREV  -----------")
+        // CL_ITOA(order->prevExecutionOrder, prevstr+6, 6, 10 );
+        // GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,40), origSize - (ge_int2)(50,1), 0, prevstr, (float3)(0,0,0));
         
+        LOCAL_STR(locStr, "LOCATION")
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_RED, locStr, NULL, NULL))
+        {
 
+        }
 
 
         LOCAL_STR(delStr, "DELETE")
-        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-75,origSize.y/3), (ge_int2)(75,origSize.y/3), GuiFlags_Beveled, COLOR_RED, delStr, NULL, NULL))
         {
             if(gui->passType == GuiStatePassType_Synced)
             {
@@ -3577,7 +3585,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
             }
         }
         LOCAL_STR(upStr, "UP")
-        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,0), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, upStr, NULL, NULL))
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-75,0), (ge_int2)(75,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, upStr, NULL, NULL))
         {
             if(gui->passType == GuiStatePassType_Synced)
             {
@@ -3620,7 +3628,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
             printf("order moved Up.\n");
         }
         LOCAL_STR(downStr, "DOWN")
-        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-50,2*origSize.y/3), (ge_int2)(50,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, downStr, NULL, NULL))
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(origSize.x-75,2*origSize.y/3), (ge_int2)(75,origSize.y/3), GuiFlags_Beveled, COLOR_ORANGE, downStr, NULL, NULL))
         {
             if(gui->passType == GuiStatePassType_Synced)
             {
@@ -3681,7 +3689,7 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
 
             }
 
-            const entryHeight = 100;
+            const int entryHeight = 100;
             int j = 0;
             for(int i = 0; i < MAX_ORDERS; i++)
             {
@@ -3758,22 +3766,28 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
 
         }   
     }
-
+    int numOrders = 0;
     if(machine->rootOrderPtr != OFFSET_NULL)
     {
-        if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(origSize.x, origSize.y - 50), 0, (ge_int2)(1000, 1000), &gui->guiState.scrollBoxes_x[0], &gui->guiState.scrollBoxes_y[0] ))
+        const int entryHeight = 100;
+        const int entryGap = 10;
+        int totalHeight = machine->orderLen*(entryHeight+entryGap);
+
+        if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, (ge_int2)(0,50), (ge_int2)(origSize.x, origSize.y - 50), 0, (ge_int2)(1000,  totalHeight), &gui->guiState.scrollBoxes_x[0], &gui->guiState.scrollBoxes_y[0] ))
         {
             offsetPtr firstOrder = machine->rootOrderPtr;
             offsetPtr curOrder = machine->rootOrderPtr;
-            const entryHeight = 100;
+
             int j = 0;
             while( curOrder != OFFSET_NULL )   
             {
                 USE_POINTER Order* order;
                 OFFSET_TO_PTR(gameState->orders, curOrder, order);
 
-                OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*entryHeight), (ge_int2)(origSize.x, entryHeight), 0,  order);
+                OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*(entryHeight+entryGap)), (ge_int2)(origSize.x, entryHeight), 0,  order);
             
+                numOrders++;
+
                 if(order->valid)
                     j++;
                 else
@@ -3787,6 +3801,8 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
 
             GUI_SCROLLBOX_END(GUIID_PASS);
         }
+            
+        machine->orderLen = numOrders;
     }
 
 }
@@ -3811,6 +3827,12 @@ void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOB
 
         LOCAL_STRL(mw, "Machine ------", mwlen); 
         CL_ITOA(client->selectedMachine, (mw)+8,mwlen-8, 10);
+
+
+        
+        gui->guiState.windowSizes[1] = (ge_int2)(600,600);
+
+
         if(GUI_BEGIN_WINDOW(GUIID_PASS, &gui->guiState.windowPositions[1],
             &gui->guiState.windowSizes[1],0,  mw ))
         {
@@ -3906,14 +3928,14 @@ int cliId)
 
 
     LOCAL_STR(noneTxt, "SELECT");
-    if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
     {
         client->curTool = EditorTools_Select;
 
         GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 0);
     }
     LOCAL_STR(deleteTxt, "DELETE");
-    if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},GuiFlags_Beveled, GUI_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){100 ,0}, (ge_int2){100, 50},GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, deleteTxt, &downDummy, &(gui->guiState.menuToggles[1])) == 1)
     {
         //printf("delete mode.");
         client->curTool = EditorTools_Delete;
@@ -3921,7 +3943,7 @@ int cliId)
     }
 
     LOCAL_STR(createTxt, "CREATE\nCRUSHER");
-    if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){200 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, createTxt, &downDummy, &(gui->guiState.menuToggles[2])) == 1)
     {
         //  printf("create mode");
         client->curTool = EditorTools_Create;
@@ -3930,7 +3952,7 @@ int cliId)
     }
 
     LOCAL_STR(createTxt3, "CREATE\nSMELTER");
-    if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt3, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){300 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, createTxt3, &downDummy, &(gui->guiState.menuToggles[3])) == 1)
     {
         // printf("create mode");
         client->curTool = EditorTools_Create;
@@ -3940,7 +3962,7 @@ int cliId)
     }
 
     LOCAL_STR(createTxt2, "CREATE\nCOMMAND CENTER");
-    if(GUI_BUTTON(GUIID_PASS, (ge_int2){400 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[4])) == 1)
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){400 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, createTxt2, &downDummy, &(gui->guiState.menuToggles[4])) == 1)
     {
         // printf("create mode");
         client->curTool = EditorTools_Create;
@@ -3984,7 +4006,7 @@ int cliId)
                 LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
                 GUI_LABEL(GUIID_PASS, (ge_int2){0 ,50*i}, (ge_int2){50, 50},0, header, (float3)(0.3,0.3,0.3));
         
-                if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},GuiFlags_Beveled,GUI_COLOR_DEF,  peeptxt, &downDummy, NULL))
+                if(GUI_BUTTON(GUIID_PASS, (ge_int2){50 ,50*i}, (ge_int2){50, 50},GuiFlags_Beveled,GUI_BUTTON_COLOR_DEF,  peeptxt, &downDummy, NULL))
                 {
                     client->selectedPeepPrimary = p->ptr;
                 }
@@ -4084,8 +4106,8 @@ __kernel void game_hover_gui(ALL_CORE_PARAMS_HOVER_GUI)
 
     int cliId = gameStateActions->clientId;
     USE_POINTER SynchronizedClientState* client =  ThisClient(ALL_CORE_PARAMS_PASS);
-    USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
-    USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
+    USE_POINTER const ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
+    USE_POINTER const ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
     USE_POINTER SyncedGui* gui = &gameState->fakePassGui;
     GuiStatePassType guiPass = GuiStatePassType_NoLogic;
     ge_int2 mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
@@ -4335,7 +4357,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         newOrder->mapDest_Coord = mapcoord;
                         newOrder->prevExecutionOrder = OFFSET_NULL;
                         newOrder->nextExecutionOrder = OFFSET_NULL;
-                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(gameState->paths.pathNodes);
+                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths.pathNodes);
                         
 
 
@@ -4764,7 +4786,7 @@ void StartupTests()
 
 
     ConvexHull hull;    
-    cl_int tileData = 1;
+    cl_uint tileData = 1;
     MapTileConvexHull_From_TileData(&hull, &tileData);
 
     printf("convex hull tris:\n");

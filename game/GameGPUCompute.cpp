@@ -65,12 +65,12 @@ void GameGPUCompute::BuildKernelRunSizes()
     else if(vendor == AMD)
         warpSize = 64;
 
-        GameUpdateWorkItems = warpSize*numComputeUnits*512;
-        WorkItems[0] = static_cast<size_t>(GameUpdateWorkItems) ;
-        WorkItemsInitMulti[0] =  0 ;
-        WorkItems1Warp[0] =  warpSize ;
-        SingleKernelWorkItems[0] =  1 ;
-        SingleKernelWorkItemsPerWorkGroup[0] = 1 ;
+    GameUpdateWorkItems = warpSize*numComputeUnits*512;
+    WorkItems[0] = static_cast<size_t>(GameUpdateWorkItems) ;
+    WorkItemsInitMulti[0] =  0 ;
+    WorkItems1Warp[0] =  warpSize ;
+    SingleKernelWorkItems[0] =  1 ;
+    SingleKernelWorkItemsPerWorkGroup[0] = 1 ;
 }
 
 void GameGPUCompute::AddCLSource(std::string path)
@@ -79,36 +79,36 @@ void GameGPUCompute::AddCLSource(std::string path)
     
 
 
-        clSourcePaths.push_back(path);
-        uint64_t size = std::filesystem::file_size(path);
+    clSourcePaths.push_back(path);
+    uint64_t size = std::filesystem::file_size(path);
+    
+    std::ifstream stream;
+    stream.open(path, std::ios::binary);
+    uint64_t chsum = 0;
+    std::vector<char> data;
+    int i = 0;
+    while(!stream.eof())
+    {
+        char byte;
+        stream.read(&byte, 1);
         
-        std::ifstream stream;
-        stream.open(path, std::ios::binary);
-        uint64_t chsum = 0;
-        std::vector<char> data;
-        int i = 0;
-        while(!stream.eof())
-        {
-            char byte;
-            stream.read(&byte, 1);
-            
-            data.push_back(byte);
-        }
-        printf("size: %d\n", data.size());
+        data.push_back(byte);
+    }
+    printf("size: %d\n", data.size());
 
-        for(uint64_t i = 0; i < data.size(); i++)
-            chsum += data[i];
-        
-        clSources.push_back(data);
-        
+    for(uint64_t i = 0; i < data.size(); i++)
+        chsum += data[i];
+    
+    clSources.push_back(data);
+    
 
 
-        std::ofstream dateModOUtFile(path + ".ldm", std::ios::trunc);
-        if(dateModOUtFile){
-            dateModOUtFile << chsum;
-        }
-        else
-            std::cout << "unable to write to dateModOUtFile" << std::endl;
+    std::ofstream dateModOUtFile(path + ".ldm", std::ios::trunc);
+    if(dateModOUtFile){
+        dateModOUtFile << chsum;
+    }
+    else
+        std::cout << "unable to write to dateModOUtFile" << std::endl;
 
     
 }
