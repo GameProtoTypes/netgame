@@ -51,19 +51,7 @@ __global float* guiVBO, \
 __global float* linesVBO
 
 
-#define ALL_CORE_PARAMS_HOVER_GUI  __global const StaticData* staticData, \
-__global const GameState* gameState,\
-__global const GameStateActions* gameStateActions, \
-__global float* peepVBOBuffer, \
-__global float* particleVBOBuffer, \
-__global cl_uchar* mapTile1VBO, \
-__global cl_uint* mapTile1AttrVBO, \
-__global cl_uint* mapTile1OtherAttrVBO, \
-__global cl_uchar* mapTile2VBO, \
-__global cl_uint* mapTile2AttrVBO, \
-__global cl_uint* mapTile2OtherAttrVBO, \
-__global float* guiVBO, \
-__global float* linesVBO
+
 
 #define ALL_CORE_PARAMS_PASS  \
 ((__global StaticData*) staticData), \

@@ -1510,6 +1510,8 @@ AStarPathFindingProgress AStarSearch_IDA_Continue(ALL_CORE_PARAMS, PARAM_GLOBAL_
         printf("AStarSearch_IDA_Continue Path Failed\n");
     }
     search->bound = search->t ;
+
+    return search->state;
 }
 
 
@@ -4101,13 +4103,13 @@ int cliId)
 
 
 
-__kernel void game_hover_gui(ALL_CORE_PARAMS_HOVER_GUI)
+__kernel void game_hover_gui(ALL_CORE_PARAMS)
 {
 
     int cliId = gameStateActions->clientId;
     USE_POINTER SynchronizedClientState* client =  ThisClient(ALL_CORE_PARAMS_PASS);
-    USE_POINTER const ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
-    USE_POINTER const ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
+    USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
+    USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
     USE_POINTER SyncedGui* gui = &gameState->fakePassGui;
     GuiStatePassType guiPass = GuiStatePassType_NoLogic;
     ge_int2 mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
@@ -4357,7 +4359,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         newOrder->mapDest_Coord = mapcoord;
                         newOrder->prevExecutionOrder = OFFSET_NULL;
                         newOrder->nextExecutionOrder = OFFSET_NULL;
-                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths.pathNodes);
+                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                         
 
 
@@ -5601,4 +5603,3 @@ __kernel void size_tests_kernel(PARAM_GLOBAL_POINTER SIZETESTSDATA* data)
     printf("SIZE_TESTS_KERNEL: sizeof(StaticData): %ul\n", sizeof(StaticData));
 
 }
-
