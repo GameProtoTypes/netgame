@@ -554,6 +554,12 @@ struct Order
 	bool pendingDelete;
 	bool isCustom;
 
+
+
+	bool selectingOrderLocation;
+
+
+
 	ge_int3 mapDest_Coord;
 	OrderActions action;
 	offsetPtr nextExecutionOrder;
@@ -595,7 +601,9 @@ enum EditorTools
 	EditorTools_None,
 	EditorTools_Select,
 	EditorTools_Delete,
-	EditorTools_Create
+	EditorTools_Create,
+
+	EditorTools_TileSelect
 } typedef EditorTools;
 
 

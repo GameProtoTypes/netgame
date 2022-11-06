@@ -440,7 +440,6 @@ int32_t main(int32_t argc, char* args[])
             rclientst->viewFrameDelta.y = float(rclientst->mousey - rclientst->mouse_dragBeginy);
             rclientst->viewX = rclientst->view_beginX + rclientst->viewFrameDelta.x;
             rclientst->viewY = rclientst->view_beginY + rclientst->viewFrameDelta.y;
-            
         }
         
 

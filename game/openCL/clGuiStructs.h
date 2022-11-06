@@ -78,6 +78,7 @@ struct SyncedGui
 	int mouseState;
 
 	int fakeDummyInt;
+	bool fakeDummyBool;
 
 	cl_uchar ignoreAll;//1 when mouse button pushed off-gui and then goes on gui while button(s) held
 	cl_uchar dragOff;//1 when gui held and then mouse dragged off.
@@ -97,6 +98,8 @@ struct SyncedGui
 
 	ge_int4 clipStack[SYNCGUI_MAX_DEPTH];
 	int clipStackIdx;
+
+
 
 	ge_int2 curBoundStart;
 	ge_int2 curBoundEnd;

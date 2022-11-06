@@ -3546,7 +3546,8 @@ offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
     return ptr;
 }
 
-bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
+bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
+ PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
     GUI_COMMON_WIDGET_START();
     if(!goodStart)
@@ -3570,10 +3571,23 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order)
         // CL_ITOA(order->prevExecutionOrder, prevstr+6, 6, 10 );
         // GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,40), origSize - (ge_int2)(50,1), 0, prevstr, (float3)(0,0,0));
         
-        LOCAL_STR(locStr, "LOCATION")
-        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_RED, locStr, NULL, NULL))
+        if(client->curTool != EditorTools_TileSelect)
         {
+            LOCAL_STR(locStr, "LOCATION")
+            USE_POINTER bool* toggle = &gui->fakeDummyBool;
+            gui->fakeDummyBool = order->selectingOrderLocation;
+            if(gui->passType == GuiStatePassType_Synced)
+                toggle = &order->selectingOrderLocation;
 
+            if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_RED, locStr, NULL, toggle))
+            {
+
+                if(gui->passType == GuiStatePassType_Synced && gui->hoverWidget == gui->nextId-2)
+                {
+
+                    
+                }
+            }
         }
 
 
@@ -3687,7 +3701,6 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
             LOCAL_STR(addstr, "ADD")
             if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GREEN, addstr, NULL, NULL))
             {
-                
 
             }
 
@@ -3697,7 +3710,7 @@ void OrderListGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GL
             {
                 USE_POINTER Order* order;
                 OFFSET_TO_PTR(gameState->orders, i, order);
-                OrderEntryGui(GUIID_PASS,(ge_int2)(0,(j+1)*entryHeight), (ge_int2)(gui->guiState.windowSizes[3].x, entryHeight), 0,  order);
+                OrderEntryGui(GUIID_PASS,(ge_int2)(0,(j+1)*entryHeight), (ge_int2)(gui->guiState.windowSizes[3].x, entryHeight), 0,  order, client);
                 if(order->valid)
                     j++;
                 
@@ -3786,7 +3799,7 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
                 USE_POINTER Order* order;
                 OFFSET_TO_PTR(gameState->orders, curOrder, order);
 
-                OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*(entryHeight+entryGap)), (ge_int2)(origSize.x, entryHeight), 0,  order);
+                OrderEntryGui(GUIID_PASS, (ge_int2)(0,(j)*(entryHeight+entryGap)), (ge_int2)(origSize.x, entryHeight), 0,  order, client);
             
                 numOrders++;
 
@@ -3811,7 +3824,9 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
 
 
 
-void MachineGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
+void MachineGui(ALL_CORE_PARAMS, 
+PARAM_GLOBAL_POINTER SyncedGui* gui,
+ PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
     if(client->selectedMachine != OFFSET_NULL)
     {
@@ -3915,12 +3930,11 @@ PARAM_GLOBAL_POINTER SyncedGui* gui,
 bool guiIsLocalClient, 
 ge_int2 mouseLoc,
 int mouseState,
-GuiStatePassType guiPass,
 int cliId)
 {
 
 
-    GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, guiPass, guiIsLocalClient);
+    GUI_RESET(ALL_CORE_PARAMS_PASS, gui, mouseLoc, mouseState, gui->passType, guiIsLocalClient);
 
     int downDummy;
     char btntxt[9] = "CLICK ME"; 
@@ -3933,7 +3947,6 @@ int cliId)
     if(GUI_BUTTON(GUIID_PASS, (ge_int2){0 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, noneTxt, &downDummy, &(gui->guiState.menuToggles[0])) == 1)
     {
         client->curTool = EditorTools_Select;
-
         GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 0);
     }
     LOCAL_STR(deleteTxt, "DELETE");
@@ -4023,7 +4036,7 @@ int cliId)
     }
 
     //hover stats
-    if((guiPass == GuiStatePassType_NoLogic) && (GUI_MOUSE_ON_GUI(gui) == 0))
+    if((gui->passType == GuiStatePassType_NoLogic) && (GUI_MOUSE_ON_GUI(gui) == 0))
     {
 
         ge_int2 world_Q16;
@@ -4085,7 +4098,7 @@ int cliId)
     OrderListGui(ALL_CORE_PARAMS_PASS, gui, client);
 
 
-    if(guiPass == GuiStatePassType_Synced)
+    if(gui->passType == GuiStatePassType_Synced)
         printf("cli: %d, mapz: %d\n", cliId, client->mapZView);
     else{
         //  printf("(fakepass) cli: %d, mapz: %d\n", cliId, client->mapZView);
@@ -4111,10 +4124,11 @@ __kernel void game_hover_gui(ALL_CORE_PARAMS)
     USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[cliId].action;
     USE_POINTER ActionTracking* actionTracking = &gameStateActions->clientActions[cliId].tracking;
     USE_POINTER SyncedGui* gui = &gameState->fakePassGui;
-    GuiStatePassType guiPass = GuiStatePassType_NoLogic;
+    gui->passType = GuiStatePassType_NoLogic;
     ge_int2 mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
     int mouseState = gameStateActions->mouseState;
     bool guiIsLocalClient = true;
+
 
     GuiCode(ALL_CORE_PARAMS_PASS, 
         client, 
@@ -4122,8 +4136,7 @@ __kernel void game_hover_gui(ALL_CORE_PARAMS)
         gui, 
         guiIsLocalClient, 
         mouseLoc, 
-        mouseState, 
-        guiPass, 
+        mouseState,  
         cliId);
 }
 
@@ -4138,12 +4151,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
         int b = a;
         GuiStatePassType guiPass = GuiStatePassType_Synced;
-        if(a == gameStateActions->numActions)
-        {
-            b = 0;//'local' client
-            guiPass = GuiStatePassType_NoLogic;
-  
-        }
 
 
         USE_POINTER ClientAction* clientAction = &gameStateActions->clientActions[b].action;
@@ -4158,43 +4165,23 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         {
             printf("New Client Connected!\n");
             gameState->numClients = cliId+1;
-
-            //reset the fake pass gui
-            if(cliId == gameStateActions->clientId)
-                gameState->fakePassGui = *gui;
-
         }
 
         ge_int2 mouseLoc;
         int mouseState;
         bool guiIsLocalClient = false;
-        if(guiPass == GuiStatePassType_NoLogic)//redirect pointers above so they reflect the local client only.
-        {
-            guiPass = GuiStatePassType_NoLogic;
-            mouseLoc = (ge_int2){gameStateActions->mouseLocx, gameStateActions->mouseLocy };
-            mouseState = gameStateActions->mouseState;
-            client = ThisClient(ALL_CORE_PARAMS_PASS);
-            cliId = gameStateActions->clientId;
-            clientAction= &gameStateActions->clientActions[cliId].action;
-            actionTracking= &gameStateActions->clientActions[cliId].tracking;
-            
-            gui = &gameState->fakePassGui;
+        
+        gui->passType = GuiStatePassType_Synced;
+        mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
+        mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
+        mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
+
+        if(client == ThisClient(ALL_CORE_PARAMS_PASS))
             guiIsLocalClient = true;
-            
-        }
-        else
-        {
-            guiPass = GuiStatePassType_Synced;
-            mouseLoc.x = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_X];
-            mouseLoc.y = clientAction->intParameters[CAC_MouseStateChange_Param_GUI_Y];
-            mouseState = clientAction->intParameters[CAC_MouseStateChange_Param_BUTTON_BITS];
 
-            if(client == ThisClient(ALL_CORE_PARAMS_PASS))
-                guiIsLocalClient = true;
-
-            PrintMouseState( mouseState);
-            printf("IsLocalClient: %d\n", guiIsLocalClient);
-        }
+        PrintMouseState( mouseState);
+        printf("IsLocalClient: %d\n", guiIsLocalClient);
+        printf("a = %d\n", a);
 
         GuiCode(ALL_CORE_PARAMS_PASS, 
         client, 
@@ -4203,7 +4190,6 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
         guiIsLocalClient, 
         mouseLoc, 
         mouseState, 
-        guiPass, 
         cliId);
 
         if(guiPass == GuiStatePassType_NoLogic)
@@ -4858,6 +4844,7 @@ void CLIENT_InitClientState(PARAM_GLOBAL_POINTER SynchronizedClientState* client
 {
     client->selectedMachine = OFFSET_NULL;
     client->selectedPeepPrimary = OFFSET_NULL;
+
 }
 
 

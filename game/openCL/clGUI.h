@@ -281,7 +281,7 @@ global SyncedGui* GetGuiState(ALL_CORE_PARAMS, int clientId)
 }
 int GrabGuiId(PARAM_GLOBAL_POINTER SyncedGui* gui)
 {
-    int id =  gui->nextId;;
+    int id =  gui->nextId;
     gui->nextId++;
     return id;
 }
