@@ -561,6 +561,9 @@ struct Order
 
 
 	ge_int3 mapDest_Coord;
+	bool destinationSet;
+
+
 	OrderActions action;
 	offsetPtr nextExecutionOrder;
 	offsetPtr prevExecutionOrder;
@@ -603,7 +606,7 @@ enum EditorTools
 	EditorTools_Delete,
 	EditorTools_Create,
 
-	EditorTools_TileSelect
+	EditorTools_TileTargetSelect
 } typedef EditorTools;
 
 
@@ -630,11 +633,19 @@ struct SynchronizedClientState {
 	bool updateMap;
 
 	EditorTools curTool;
+	EditorTools curTool_1;
+
 	MachineTypes curToolMachine;
 
 	ge_short3 selectedMapCoord;
 	offsetPtr selectedMachine;
 
+
+
+	offsetPtr curEditingOrderPtr;
+	bool curEditingOrder_targeting;
+	ge_int3 tileTargetMapCoord;
+	bool tileTargetFound;
 
 
 	

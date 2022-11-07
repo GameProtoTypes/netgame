@@ -3540,10 +3540,27 @@ offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
     order->prevExecutionOrder = OFFSET_NULL;
     order->nextExecutionOrder = OFFSET_NULL;
     order->pathToDestPtr = OFFSET_NULL;
-
+    order->selectingOrderLocation = false;
+    order->destinationSet = false;
 
 
     return ptr;
+}
+
+float ANIMATION_BLINK(ALL_CORE_PARAMS)
+{
+    return (sin(gameStateActions->tickIdx*0.2f)+1)*0.5;
+}
+
+
+void CLIENT_PushTool( PARAM_GLOBAL_POINTER SynchronizedClientState* client, EditorTools tool){
+    client->curTool_1 = client->curTool;
+    client->curTool = tool;
+}
+
+void CLIENT_PopTool( PARAM_GLOBAL_POINTER SynchronizedClientState* client)
+{
+    client->curTool = client->curTool_1;
 }
 
 bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
@@ -3571,24 +3588,72 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
         // CL_ITOA(order->prevExecutionOrder, prevstr+6, 6, 10 );
         // GUI_LABEL(GUIID_PASS, origPos + (ge_int2)(0,40), origSize - (ge_int2)(50,1), 0, prevstr, (float3)(0,0,0));
         
-        if(client->curTool != EditorTools_TileSelect)
+
+        LOCAL_STR(locStr, "SET TARGET")
+        LOCAL_STR(locStr2, "TARGETING..")
+        LOCAL_STR(locStr3, "ASSIGNED")
+
+
+
+
+
+        char* str;
+        float3 color = COLOR_ORANGE;
+        if(client->curEditingOrderPtr == order->ptr && client->curEditingOrder_targeting)
         {
-            LOCAL_STR(locStr, "LOCATION")
-            USE_POINTER bool* toggle = &gui->fakeDummyBool;
-            gui->fakeDummyBool = order->selectingOrderLocation;
-            if(gui->passType == GuiStatePassType_Synced)
-                toggle = &order->selectingOrderLocation;
+            str = locStr2;  
+            color = COLOR_RED * ANIMATION_BLINK(ALL_CORE_PARAMS_PASS);
 
-            if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_RED, locStr, NULL, toggle))
+            if(client->tileTargetFound )
             {
-
-                if(gui->passType == GuiStatePassType_Synced && gui->hoverWidget == gui->nextId-2)
-                {
-
-                    
-                }
+                order->mapDest_Coord = client->tileTargetMapCoord;
+                order->destinationSet = true;
+                client->curEditingOrderPtr = OFFSET_NULL;
+                client->curEditingOrder_targeting = false;
+                client->tileTargetFound = false;
             }
         }
+        else if(order->destinationSet)
+        {
+            str = locStr3;  
+            color = COLOR_GREEN;
+        }
+        else
+        {
+            str = locStr;
+        }
+        
+
+        USE_POINTER bool* toggle = &gui->fakeDummyBool;
+        gui->fakeDummyBool = order->selectingOrderLocation;
+        if(gui->passType == GuiStatePassType_Synced)
+            toggle = &order->selectingOrderLocation;
+
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(0,20), (ge_int2)(100,50), GuiFlags_Beveled, color, str, NULL, NULL))
+        {
+            if(gui->passType == GuiStatePassType_Synced && gui->hoverWidget == gui->nextId-2)
+            {
+                client->curEditingOrderPtr = order->ptr;
+                
+                if(!client->curEditingOrder_targeting)
+                {
+
+                    printf("Entering Tile Select Mode");
+
+                    CLIENT_PushTool(client, EditorTools_TileTargetSelect);
+                    client->curEditingOrder_targeting = true;
+                    
+                }
+                else
+                {
+                    CLIENT_PopTool(client);
+                    client->curEditingOrder_targeting = false;
+                }
+
+
+            }
+        }
+        
 
 
         LOCAL_STR(delStr, "DELETE")
@@ -3940,7 +4005,13 @@ int cliId)
     char btntxt[9] = "CLICK ME"; 
     btntxt[8] = '\0';
     
-    
+
+    //handle hidden tools
+    if(client->curTool == EditorTools_TileTargetSelect)
+    {
+        for(int i = 0; i < NUM_EDITOR_MENU_TABS; i++)
+            gui->guiState.menuToggles[0] = false;
+    }
 
 
     LOCAL_STR(noneTxt, "SELECT");
@@ -4216,7 +4287,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 client->mouseWorldBegin_Q16.y = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16];
 
             }
-            else if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (gui->draggedOff == 0))
+            else if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (gui->draggedOff == 0) && client->curTool == EditorTools_Select)
             {
                 printf("Ending Drag Selection..\n");
                 
@@ -4477,7 +4548,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
             //select tile
             if(BITGET(buttons, MouseButtonBits_PrimaryReleased) && (GUI_MOUSE_ON_GUI(gui) == 0) 
-            && (gui->draggedOff == 0) && client->curTool == EditorTools_Select)
+            && (gui->draggedOff == 0) && (client->curTool == EditorTools_Select || client->curTool == EditorTools_TileTargetSelect))
             {
                 ge_int2 world2DMouse;
                 world2DMouse.x = clientAction->intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16];
@@ -4491,16 +4562,28 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
                 offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
 
+
+
                 if(machinePtr != OFFSET_NULL)
                 {
                     USE_POINTER Machine* machine;
                     OFFSET_TO_PTR(gameState->machines, machinePtr, machine);
-
                     printf("machine selected\n");
                 }
-                client->selectedMachine = machinePtr;
+
+                if(client->curTool == EditorTools_Select)
+                    client->selectedMachine = machinePtr;
+
+                if(client->curTool == EditorTools_TileTargetSelect)
+                {
+                    printf("target selected.\n");
+                    client->tileTargetMapCoord = mapCoord;
+                    client->tileTargetFound = true;
+                }
 
             }
+
+
 
 
         }
