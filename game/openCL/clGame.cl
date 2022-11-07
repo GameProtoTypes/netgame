@@ -3483,24 +3483,47 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
 
                 if(machine != NULL)
                 {
-                    LOCAL_STR(transferStr, "Push Down"); 
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
-                     (float3)(0.4,0.4,0.4), transferStr, NULL, NULL ))
-                    {    
-                        if(gui->passType == GuiStatePassType_Synced)
-                        {
-                            TransferInventory(&peep->inventory, &machine->inventory);
-                        }
-                    }
-                    LOCAL_STR(transferStr2, "Pull Up"); 
-                    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),
-                     GuiFlags_Beveled, (float3)(0.4,0.4,0.4), transferStr2, NULL, NULL ))
+                    
+                    USE_POINTER MachineDesc* machDesc;
+                    OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, machDesc);
+
+                    if(machDesc->type == MachineTypes_COMMAND_CENTER)
                     {
-                        if(gui->passType == GuiStatePassType_Synced)
-                        {
-                            TransferInventory(&machine->inventory, &peep->inventory);
+                        LOCAL_STR(str, "Link"); 
+                        if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
+                        (float3)(0.4,0.4,0.4), str, NULL, NULL ))
+                        {    
+                            if(gui->passType == GuiStatePassType_Synced)
+                            {
+                                Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, machine->rootOrderPtr);
+                            }
                         }
                     }
+                    else
+                    {
+
+                
+                        LOCAL_STR(transferStr, "Push Down"); 
+                        if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
+                        (float3)(0.4,0.4,0.4), transferStr, NULL, NULL ))
+                        {    
+                            if(gui->passType == GuiStatePassType_Synced)
+                            {
+                                TransferInventory(&peep->inventory, &machine->inventory);
+                            }
+                        }
+                        LOCAL_STR(transferStr2, "Pull Up"); 
+                        if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),
+                        GuiFlags_Beveled, (float3)(0.4,0.4,0.4), transferStr2, NULL, NULL ))
+                        {
+                            if(gui->passType == GuiStatePassType_Synced)
+                            {
+                                TransferInventory(&machine->inventory, &peep->inventory);
+                            }
+                        }
+
+                    }
+
                 }
 
             }
