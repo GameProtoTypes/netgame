@@ -2219,8 +2219,24 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                     , TO_Q16(MAP_TILE_SIZE)
             });
 
-            nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
-            insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
+            if(0)
+            {
+                nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
+                insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
+            }
+            else
+            {
+                nearestPoint.x = clamp(peepPosLocalToHull_Q16.x,-(TO_Q16(1)>>1), (TO_Q16(1)>>1));
+                nearestPoint.y = clamp(peepPosLocalToHull_Q16.y,-(TO_Q16(1)>>1), (TO_Q16(1)>>1));
+                nearestPoint.z = clamp(peepPosLocalToHull_Q16.z,-(TO_Q16(1)>>1), (TO_Q16(1)>>1));
+
+                insideSolidRegion = false;
+                if(nearestPoint.x > -(TO_Q16(1)>>1) && nearestPoint.x < (TO_Q16(1)>>1))
+                    if(nearestPoint.y > -(TO_Q16(1)>>1) && nearestPoint.y < (TO_Q16(1)>>1))
+                        if(nearestPoint.z > -(TO_Q16(1)>>1) && nearestPoint.z < (TO_Q16(1)>>1))
+                            insideSolidRegion = true;
+            }
+
 
             peep->stateBasic.buriedGlitchState = insideSolidRegion;
 
