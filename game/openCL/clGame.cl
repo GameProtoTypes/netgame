@@ -10,7 +10,7 @@
 //#define PEEP_DISABLE_TILECORRECTIONS
 #define PEEP_PATH_CROWD (4)
 
-#define DEBUG_PATHS
+//#define DEBUG_PATHS
 
 #include "clGUI.h"
 
@@ -256,7 +256,10 @@ cl_uchar MapTileCoordStandInValid(ALL_CORE_PARAMS, ge_int3 mapcoord)
     else
     {
         if(MapDataLowCornerCount(*data) > 0)
+        {
             return 1;
+            printf("hmmmm\n");
+        }
     }
     return 0;
 }
@@ -269,21 +272,6 @@ cl_uchar MapTileCoordEnterable(ALL_CORE_PARAMS, ge_int3 mapcoord, ge_int3 enterD
     if (tile == MapTile_NONE)
     {   
         return 1;
-        //if(enterDirection.z < 0)
-        //    return 0;
-
-
-
-        ge_int3 downCoord = mapcoord;
-        downCoord.z--;
-        USE_POINTER cl_uint* downData = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, downCoord);
-        if( MapDataGetTile(*downData) != MapTile_NONE)
-            return 1;
-
-
-
-
-
     }
     else
         return 0;
@@ -499,8 +487,12 @@ void AStarSearch_BFS_InstantiateParrallel(PARAM_GLOBAL_POINTER AStarSearch_BFS* 
 {
 
     USE_POINTER AStarNode* node = &search->details[x][y][z];
-    AStarNodeInstantiate(node);
-    node->tileIdx = (ge_short3){x,y,z};
+    //AStarNodeInstantiate(node);
+    //node->tileIdx = (ge_short3){x,y,z};
+    node->g_Q16 = TO_Q16(0);
+    node->h_Q16 = TO_Q16(0);
+    node->nextOPtr = OFFSET_NULL_3D;  
+    node->prevOPtr = OFFSET_NULL_3D;
 
     search->closedMap[x][y][z] = 0;
     search->openMap[x][y][z] = 0;
@@ -510,14 +502,10 @@ void AStarSearch_BFS_InstantiateParrallel(PARAM_GLOBAL_POINTER AStarSearch_BFS* 
     if(idx < ASTARHEAPSIZE)
     {
         search->openHeap_OPtrs[idx] = OFFSET_NULL_3D;
-       
     }
     
     
-    search->startNodeOPtr = OFFSET_NULL_3D;
-    search->endNodeOPtr = OFFSET_NULL_3D;
-    search->openHeapSize = 0;
-    search->pathOPtr = OFFSET_NULL;
+
 
 
 }
@@ -545,34 +533,13 @@ cl_uchar AStarNode2NodeTraversible(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarNo
 
     ge_int3 delta = INT3_SUB(SHORT3_TO_INT3(node->tileIdx), SHORT3_TO_INT3( prevNode->tileIdx ));
     if (MapTileCoordEnterable(ALL_CORE_PARAMS_PASS, SHORT3_TO_INT3(node->tileIdx), delta) == 0)
-        return 0;
-
-    //must be adjacent to 
-    bool adjacent = false;
-    for(int i = 0; i < 26; i++)
-    {
-        ge_int3 worldCoord = staticData->directionalOffsets[i] + SHORT3_TO_INT3(node->tileIdx);
-        MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, worldCoord);
-        if(tile != MapTile_NONE)
-        {
-            adjacent = true;
-            break;
-        }
-    }
-    if(adjacent == false)
-        return 0;
-
-
-    if(delta.z > 0)
     {
 
-
-      //  if(MapDataGetTile(*fromTileData) == MapTile_NONE)
-     //       return 0;
-        //else could be a ramp
-
-    
+        return 0;
     }
+
+
+
 
 
     return 1;
@@ -1251,8 +1218,15 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
             USE_POINTER AStarNode* prospectiveNode;
             OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
 
+
+
             if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current) == 0) || (AStarNodeInClosed(search, prospectiveNode)))
             {
+
+                if(VECTOR3_EQUAL(prospectiveNode->tileIdx , targetNode->tileIdx))
+                {
+                    printf("skippping obvious bullshit. %d, %d\n", AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current), AStarNodeInClosed(search, prospectiveNode));
+                }
                 continue;
             }
 
@@ -1662,7 +1636,8 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
             printf("cannot service job %d because pathfinder is not ready (%d)\n", gameState->curMapSearchJobPtr, gameState->mapSearchers[0].state);
         }
     } 
-    else if (job->status == AStarJobStatus_Working) 
+    
+    if (job->status == AStarJobStatus_Working) 
     {
         if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Finished)
         {
@@ -1679,7 +1654,8 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
             job->status = AStarJobStatus_Done;
         }
     }
-    else if (job->status == AStarJobStatus_Done)
+    
+    if (job->status == AStarJobStatus_Done)
     {
         printf("Job %d Finished, advancing..\n", gameState->curMapSearchJobPtr);
         job->status = AStarJobStatus_Disabled;
@@ -1706,6 +1682,12 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
 	search->state == AStarPathFindingProgress_Failed)
     {
         gameState->mapSearchers[0].state = AStarPathFindingProgress_ResetReady;
+
+        
+        gameState->mapSearchers[0].startNodeOPtr = OFFSET_NULL_3D;
+        gameState->mapSearchers[0].endNodeOPtr = OFFSET_NULL_3D;
+        gameState->mapSearchers[0].openHeapSize = 0;
+        gameState->mapSearchers[0].pathOPtr = OFFSET_NULL;
     }
 }
 
@@ -2604,28 +2586,27 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     {
         USE_POINTER AStarPathNode* targetPathNode;
         OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-   
-        //cl_uint* mapData = AStarPathNode_GetMapData(ALL_CORE_PARAMS_PASS, targetPathNode);
-        
-        //CL_CHECK_NULL(mapData);
-        ge_int3 coord = GE_INT3_WHOLE_Q16(targetPathNode->mapCoord_Q16);
-        int peepCnt = gameState->map.levels[coord.z].peepCounts[coord.x][coord.y];
 
-        //if(peepCnt < PEEP_PATH_CROWD /*|| WHOLE_Q16(len) > 10 */)
+        if(targetPathNode->completed)
         {
-            targetVelocity.x = d.x >> 2;
-            targetVelocity.y = d.y >> 2;
-            targetVelocity.z = d.z >> 2;
+            //cl_uint* mapData = AStarPathNode_GetMapData(ALL_CORE_PARAMS_PASS, targetPathNode);
+            
+            //CL_CHECK_NULL(mapData);
+            ge_int3 coord = GE_INT3_WHOLE_Q16(targetPathNode->mapCoord_Q16);
+            int peepCnt = gameState->map.levels[coord.z].peepCounts[coord.x][coord.y];
 
-            ge_int3 error = INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
+            //if(peepCnt < PEEP_PATH_CROWD /*|| WHOLE_Q16(len) > 10 */)
+            {
+                targetVelocity.x = d.x >> 2;
+                targetVelocity.y = d.y >> 2;
+                targetVelocity.z = d.z >> 2;
 
-            peep->physics.base.vel_add_Q16.x += error.x;
-            peep->physics.base.vel_add_Q16.y += error.y;
-            peep->physics.base.vel_add_Q16.z += error.z;
-        }
-        //else
-        {
-         //   printf("pc: %d, ",peepCnt);
+                ge_int3 error = INT3_SUB( targetVelocity, peep->physics.base.v_Q16 );
+
+                peep->physics.base.vel_add_Q16.x += error.x;
+                peep->physics.base.vel_add_Q16.y += error.y;
+                peep->physics.base.vel_add_Q16.z += error.z;
+            }
         }
     }
 
@@ -5604,15 +5585,17 @@ __kernel void game_updatepre1(ALL_CORE_PARAMS)
     }
 
 
-    
-        
-    LINES_ClearAll(ALL_CORE_PARAMS_PASS);
-
     if(globalid == 0)
-    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
     {
-        ThisClient(ALL_CORE_PARAMS_PASS)->updateMap = true;
-        ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
+        
+        LINES_ClearAll(ALL_CORE_PARAMS_PASS);
+
+
+        if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView != ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1)
+        {
+            ThisClient(ALL_CORE_PARAMS_PASS)->updateMap = true;
+            ThisClient(ALL_CORE_PARAMS_PASS)->mapZView_1 = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView;
+        }
     }
 }
 
@@ -5725,7 +5708,7 @@ __kernel void game_update2(ALL_CORE_PARAMS)
                 if(z > MAPDEPTH)
                     printf("Z>MAPDEPTH\n");
 
-                if(xyzIdx == 0)
+                if(xyzIdx == (MAPDIM * MAPDIM* MAPDEPTH)-1)
                     printf("RESETING SEARCH\n");
 
                 AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
@@ -5813,10 +5796,10 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
             }
         }
 
-
+        #endif
     }
 
-    #endif
+
 
     cl_ulong chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
     for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
