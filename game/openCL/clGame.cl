@@ -2422,8 +2422,13 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
 void Peep_DetachFromOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
-    peep->stateBasic.orderPtr = OFFSET_NULL;
-
+    if(peep->stateBasic.orderPtr != OFFSET_NULL)
+    {
+        USE_POINTER Order* order;
+        OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr , order);
+        order->refCount--;
+        peep->stateBasic.orderPtr = OFFSET_NULL;
+    }
 
 
     peep->physics.drive.targetPathNodeOPtr = OFFSET_NULL;
@@ -2480,12 +2485,369 @@ void Order_DeleteOrder(ALL_CORE_PARAMS, offsetPtr orderPtr)
         OFFSET_TO_PTR(gameState->orders, order->prevExecutionOrder, prevExecOrder);
 
         prevExecOrder->nextExecutionOrder = order->nextExecutionOrder;
+        prevExecOrder->dirtyPathing = true;
     }
 
     //next new pointer can be this one
     gameState->nextOrderIdx = orderPtr;
 }
 
+USE_POINTER Machine* MachineGetFromMapCoord(ALL_CORE_PARAMS, ge_int3 mapCoord)
+{
+    offsetPtr ptr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
+    USE_POINTER Machine* machine;
+    OFFSET_TO_PTR(gameState->machines, ptr, machine);
+
+    return machine;
+}
+
+void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
+{
+    ge_int3 coord = (ge_int3){x,y,ThisClient(ALL_CORE_PARAMS_PASS)->mapZView };
+    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+    MapTile tile = MapDataGetTile(*data);
+    MapTile tileUp;
+    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView < MAPDEPTH-1)
+    {
+        coord.z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1;
+        USE_POINTER cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+
+
+        tileUp = MapDataGetTile(*dataup);
+
+    }
+    else
+    {
+        tileUp = MapTile_NONE;
+    }
+
+    mapTile1AttrVBO[y * MAPDIM + x] = 0;
+
+
+    //look down...
+
+    int vz = 0;
+    while (tile == MapTile_NONE)
+    {
+        data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
+        tile = MapDataGetTile(*data);
+        if (tile == MapTile_NONE) {
+            coord.z--;
+            #ifndef NO_ZSHADING
+                vz++;
+            #endif
+        }
+    }
+
+
+
+    if(BITGET(*data, MapTileFlags_Explored) == 0)
+    {
+        mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;//or "Haze"
+        return;
+    }
+
+
+    cl_uint finalAttr=0;
+
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT)       ;//A
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT)  << 1;//B
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)  << 2;//C
+    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) << 3;//D
+
+    cl_uint dataCpy = *data;
+    uint xlev = MapDataXLevel(&dataCpy);
+    finalAttr |= (2-xlev) << 4;//X
+
+
+    finalAttr |= (clamp(15-vz-1, 0, 15) << 6);
+
+
+    mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
+    mapTile1OtherAttrVBO[ y * MAPDIM + x ] |= BITBANK_GET_SUBNUMBER_UINT(*data, MapTileFlags_RotBit1, 2);
+    
+    if (tileUp != MapTile_NONE)//view obstructed by foottile above.
+    {
+
+        //if next to visible show it as "wall view"
+        mapTile1AttrVBO[y * MAPDIM + x ] = 0;
+        cl_uchar isWall = 0;
+        int dirOffsets[8] = {0,1,2,3,22,23,24,25}; 
+        int orthflags[4] = {0,0,0,0};
+        for(int i = 0; i < 4; i++)
+        {
+            ge_int3 offset = staticData->directionalOffsets[dirOffsets[i]];
+            ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1 };
+
+            if(MapTileCoordValid(mapCoord,0))
+            {
+            
+                USE_POINTER cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+                MapTile tileoffup = MapDataGetTile(*dataoffup);
+                
+                if(tileoffup == MapTile_NONE)
+                {
+                    isWall = 1;
+
+                    //test against mouse world coord
+                    // ge_int3 mouseMapCoord;
+                    // int occluded;
+                    // ge_int3 mouseWorld_Q16 = (ge_int3){gameStateActions->mouseLocWorldx_Q16, gameStateActions->mouseLocWorldy_Q16, mapCoord.z};
+                   
+                    // WorldToMap(mouseWorld_Q16, &mouseMapCoord);
+                    // mouseMapCoord = GE_INT3_WHOLE_ONLY_Q16(mouseMapCoord);
+                    
+                    // if(VECTOR3_EQUAL(mouseMapCoord , mapCoord))
+                    // {
+                    //     mapTile1VBO[y * MAPDIM + x ] = tile;
+                        
+                    // }
+                    // else
+                    // {
+                        mapTile1VBO[y * MAPDIM + x ] = tileUp;
+                        
+                    //}
+
+
+
+
+                    if( i <=3 )
+                        orthflags[i] = 1;
+
+                    //fade out effect
+                    
+
+
+                    if((orthflags[0] + orthflags[1] + orthflags[2] + orthflags[3]) == 0)
+                    {
+
+                        //TODO better corner effect
+                        // mapTile1AttrVBO[ y * MAPDIM + x ] |= 1<<4;
+
+                        // if(dirOffsets[i] == 22) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 0;
+                        // if(dirOffsets[i] == 23) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 1;
+                        // if(dirOffsets[i] == 24) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 2;
+                        // if(dirOffsets[i] == 25) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 3;
+                    }
+
+
+                    mapTile1AttrVBO[y * MAPDIM + x ] |= (clamp(15-vz, 0, 15) << 6);//base shade
+                    mapTile1AttrVBO[y * MAPDIM + x ] |= (1 << 10);//corners fade to nothing
+
+
+                    
+
+                }
+            }
+        }
+
+
+
+
+        if(isWall == 0)
+            mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;
+    }
+    else
+    {
+        mapTile1VBO[y * MAPDIM + x] = tile;
+    }
+}
+
+void MapBuildTileView3Area(ALL_CORE_PARAMS, int x, int y)
+{
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y+1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y+1);
+
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y-1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y-1);
+
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y+1);
+    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y-1);
+}
+
+void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
+{
+    if ((x < 1) || (x >= MAPDIM - 1) || (y < 1) || (y >= MAPDIM - 1))
+    {
+        return;
+    }
+
+
+    MapTile tile = MapTile_NONE;
+    mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
+
+
+    int shadowIntensity;
+    for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView+1; z >= 0; z--)
+    {       
+        if(z >= MAPDEPTH) continue;
+
+        USE_POINTER cl_uint* data = &gameState->map.levels[z].data[x][y];
+        MapTile center =MapDataGetTile(*data);
+
+        if (center != MapTile_NONE)
+            return;
+
+
+        // b | c | d
+        // e |cen| f
+        // g | h | i
+        //MapTile b = gameState->map.levels[z].data[x-1][y-1]; 
+        //MapTile c = gameState->map.levels[z].data[x][y-1];
+        ////MapTile d = gameState->map.levels[z].data[x+1][y-1];
+        //MapTile e = gameState->map.levels[z].data[x-1][y];
+        //MapTile f = gameState->map.levels[z].data[x + 1][y];
+        ////MapTile g = gameState->map.levels[z].data[x - 1][y+1];
+        //MapTile h = gameState->map.levels[z].data[x][y + 1];
+        ////MapTile i = gameState->map.levels[z].data[x+1][y + 1];
+
+
+        cl_uchar f = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x + 1, y, z }, (ge_int3) { 1, 0, 0 });
+        cl_uchar h = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x , y+1, z }, (ge_int3) { 0, 1, 0 });
+        cl_uchar e = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x - 1, y, z }, (ge_int3) { -1, 0, 0 });
+        cl_uchar c = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x, y-1, z }, (ge_int3) { 0, -1, 0 });
+
+
+        if ((f != 0) && (c == 0) && (e == 0) && (h == 0))
+            tile = MapTile_Shadow_0;
+
+        if ((f == 0) && (c == 0) && (e != 0) && (h == 0))
+            tile = MapTile_Shadow_2;
+
+        if ((f == 0) && (c != 0) && (e == 0) && (h == 0))
+            tile = MapTile_Shadow_1;
+
+        if ((f == 0) && (c == 0) && (e == 0) && (h != 0))
+            tile = MapTile_Shadow_3;
+
+        //-------------
+
+        if ((f != 0) && (c != 0) && (e == 0) && (h == 0))
+            tile = MapTile_Shadow_5;
+
+        if ((f == 0) && (c != 0) && (e != 0) && (h == 0))
+            tile = MapTile_Shadow_6;
+
+        if ((f == 0) && (c == 0) && (e != 0) && (h != 0))
+            tile = MapTile_Shadow_7;
+
+        if ((f != 0) && (c == 0) && (e == 0) && (h != 0))
+            tile = MapTile_Shadow_4;
+
+        //-------------------------
+
+        if ((f != 0) && (c != 0) && (e != 0) && (h == 0))
+            tile = MapTile_Shadow_14;
+
+        if ((f != 0) && (c != 0) && (e == 0) && (h != 0))
+            tile = MapTile_Shadow_15;
+
+        if ((f != 0) && (c == 0) && (e != 0) && (h != 0))
+            tile = MapTile_Shadow_12;
+
+        if ((f == 0) && (c != 0) && (e != 0) && (h != 0))
+            tile = MapTile_Shadow_10;
+        //----------------------------
+        if ((f != 0) && (c == 0) && (e != 0) && (h == 0))
+            tile = MapTile_Shadow_16;
+
+        if ((f == 0) && (c != 0) && (e == 0) && (h != 0))
+            tile = MapTile_Shadow_8;
+
+        //------------------------------
+        if ((f != 0) && (c != 0) && (e != 0) && (h != 0))
+            tile = MapTile_Shadow_11;
+
+
+        mapTile2VBO[y * MAPDIM + x] = tile;
+        
+        cl_uint finalAttr = (clamp(15-0, 0, 15) << 6);
+        mapTile2AttrVBO[ y * MAPDIM + x ] = finalAttr;
+    }
+
+
+}
+
+void MapDeleteTile(ALL_CORE_PARAMS, ge_int3 mapCoord)
+{
+    if (mapCoord.z > 0) 
+    {
+        gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
+        
+
+        offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
+        if(machinePtr != OFFSET_NULL)
+        {
+            USE_POINTER Machine* mach;
+            OFFSET_TO_PTR(gameState->machines, machinePtr, mach);
+            mach->valid = false;
+        }
+        gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y] = OFFSET_NULL;
+
+
+        MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
+        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
+    }
+}
+
+void PeepDrill(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
+    mapCoord.z--;
+
+    MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+    USE_POINTER Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+
+    printf("digging...\n");
+
+    if(downTile == MapTile_IronOre)
+    {
+        peep->inventory.counts[ItemType_IRON_ORE]+=10;
+    }
+    else if(downTile == MapTile_Rock)
+    {
+        peep->inventory.counts[ItemType_ROCK_DUST]+=100;
+    }
+
+
+    MapDeleteTile(ALL_CORE_PARAMS_PASS,  mapCoord);
+}
+void TransferInventory(PARAM_GLOBAL_POINTER Inventory* invFrom, PARAM_GLOBAL_POINTER Inventory* invTo)
+{
+    for(int i = 0; i < ItemTypes_NUMITEMS; i++)
+    {
+        invTo->counts[i] += invFrom->counts[i];
+        invFrom->counts[i] = 0;
+    }
+}
+
+void PeepPull(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
+    mapCoord.z--;
+
+    MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+    USE_POINTER Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+
+    TransferInventory(&machine->inventory, &peep->inventory);
+}
+void PeepPush(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
+    mapCoord.z--;
+
+    MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+    USE_POINTER Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+
+    TransferInventory(&peep->inventory, &machine->inventory);
+}
 
 void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
@@ -2509,6 +2871,8 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     USE_POINTER Order* order;
     OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr, order);
 
+    if(!order->valid)
+        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
 
 
     if (WHOLE_Q16(len) < 2)//within range of current target
@@ -2557,6 +2921,24 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
                     if( order != NULL )
                     {
+
+                        //do the order action
+                        if(order->action == OrderAction_MINE)
+                        {
+                            PeepDrill(ALL_CORE_PARAMS_PASS, peep);
+                        }
+                        else if(order->action == OrderAction_DROPOFF_MACHINE)
+                        {
+                            PeepPush(ALL_CORE_PARAMS_PASS, peep);
+                        }
+                        else if(order->action == OrderAction_PICKUP_MACHINE)
+                        {
+                            PeepPull(ALL_CORE_PARAMS_PASS, peep);
+                        }
+                        
+
+
+
                         //delete single orders
                         if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
                         {
@@ -3102,284 +3484,14 @@ void ParticleUpdate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Particle* p)
 
 
 
-void MapUpdateShadow(ALL_CORE_PARAMS, int x, int y)
-{
-    if ((x < 1) || (x >= MAPDIM - 1) || (y < 1) || (y >= MAPDIM - 1))
-    {
-        return;
-    }
 
 
-    MapTile tile = MapTile_NONE;
-    mapTile2VBO[y * MAPDIM + x] = MapTile_NONE;
 
 
-    int shadowIntensity;
-    for (int z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView+1; z >= 0; z--)
-    {       
-        if(z >= MAPDEPTH) continue;
 
-        USE_POINTER cl_uint* data = &gameState->map.levels[z].data[x][y];
-        MapTile center =MapDataGetTile(*data);
 
-        if (center != MapTile_NONE)
-            return;
 
 
-        // b | c | d
-        // e |cen| f
-        // g | h | i
-        //MapTile b = gameState->map.levels[z].data[x-1][y-1]; 
-        //MapTile c = gameState->map.levels[z].data[x][y-1];
-        ////MapTile d = gameState->map.levels[z].data[x+1][y-1];
-        //MapTile e = gameState->map.levels[z].data[x-1][y];
-        //MapTile f = gameState->map.levels[z].data[x + 1][y];
-        ////MapTile g = gameState->map.levels[z].data[x - 1][y+1];
-        //MapTile h = gameState->map.levels[z].data[x][y + 1];
-        ////MapTile i = gameState->map.levels[z].data[x+1][y + 1];
-
-
-        cl_uchar f = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x + 1, y, z }, (ge_int3) { 1, 0, 0 });
-        cl_uchar h = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x , y+1, z }, (ge_int3) { 0, 1, 0 });
-        cl_uchar e = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x - 1, y, z }, (ge_int3) { -1, 0, 0 });
-        cl_uchar c = MapRidgeType(ALL_CORE_PARAMS_PASS, (ge_int3) { x, y-1, z }, (ge_int3) { 0, -1, 0 });
-
-
-        if ((f != 0) && (c == 0) && (e == 0) && (h == 0))
-            tile = MapTile_Shadow_0;
-
-        if ((f == 0) && (c == 0) && (e != 0) && (h == 0))
-            tile = MapTile_Shadow_2;
-
-        if ((f == 0) && (c != 0) && (e == 0) && (h == 0))
-            tile = MapTile_Shadow_1;
-
-        if ((f == 0) && (c == 0) && (e == 0) && (h != 0))
-            tile = MapTile_Shadow_3;
-
-        //-------------
-
-        if ((f != 0) && (c != 0) && (e == 0) && (h == 0))
-            tile = MapTile_Shadow_5;
-
-        if ((f == 0) && (c != 0) && (e != 0) && (h == 0))
-            tile = MapTile_Shadow_6;
-
-        if ((f == 0) && (c == 0) && (e != 0) && (h != 0))
-            tile = MapTile_Shadow_7;
-
-        if ((f != 0) && (c == 0) && (e == 0) && (h != 0))
-            tile = MapTile_Shadow_4;
-
-        //-------------------------
-
-        if ((f != 0) && (c != 0) && (e != 0) && (h == 0))
-            tile = MapTile_Shadow_14;
-
-        if ((f != 0) && (c != 0) && (e == 0) && (h != 0))
-            tile = MapTile_Shadow_15;
-
-        if ((f != 0) && (c == 0) && (e != 0) && (h != 0))
-            tile = MapTile_Shadow_12;
-
-        if ((f == 0) && (c != 0) && (e != 0) && (h != 0))
-            tile = MapTile_Shadow_10;
-        //----------------------------
-        if ((f != 0) && (c == 0) && (e != 0) && (h == 0))
-            tile = MapTile_Shadow_16;
-
-        if ((f == 0) && (c != 0) && (e == 0) && (h != 0))
-            tile = MapTile_Shadow_8;
-
-        //------------------------------
-        if ((f != 0) && (c != 0) && (e != 0) && (h != 0))
-            tile = MapTile_Shadow_11;
-
-
-        mapTile2VBO[y * MAPDIM + x] = tile;
-        
-        cl_uint finalAttr = (clamp(15-0, 0, 15) << 6);
-        mapTile2AttrVBO[ y * MAPDIM + x ] = finalAttr;
-    }
-
-
-}
-
-
-
-
-
-
-
-
-
-void MapBuildTileView(ALL_CORE_PARAMS, int x, int y)
-{
-    ge_int3 coord = (ge_int3){x,y,ThisClient(ALL_CORE_PARAMS_PASS)->mapZView };
-    USE_POINTER cl_uint* data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
-    MapTile tile = MapDataGetTile(*data);
-    MapTile tileUp;
-    if (ThisClient(ALL_CORE_PARAMS_PASS)->mapZView < MAPDEPTH-1)
-    {
-        coord.z = ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1;
-        USE_POINTER cl_uint* dataup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
-
-
-        tileUp = MapDataGetTile(*dataup);
-
-    }
-    else
-    {
-        tileUp = MapTile_NONE;
-    }
-
-    mapTile1AttrVBO[y * MAPDIM + x] = 0;
-
-
-    //look down...
-
-    int vz = 0;
-    while (tile == MapTile_NONE)
-    {
-        data = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, coord);
-        tile = MapDataGetTile(*data);
-        if (tile == MapTile_NONE) {
-            coord.z--;
-            #ifndef NO_ZSHADING
-                vz++;
-            #endif
-        }
-    }
-
-
-
-    if(BITGET(*data, MapTileFlags_Explored) == 0)
-    {
-        mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;//or "Haze"
-        return;
-    }
-
-
-    cl_uint finalAttr=0;
-
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPLEFT)       ;//A
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerTPRIGHT)  << 1;//B
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMLEFT)  << 2;//C
-    finalAttr |= BITGET_MF(*data, MapTileFlags_LowCornerBTMRIGHT) << 3;//D
-
-    cl_uint dataCpy = *data;
-    uint xlev = MapDataXLevel(&dataCpy);
-    finalAttr |= (2-xlev) << 4;//X
-
-
-    finalAttr |= (clamp(15-vz-1, 0, 15) << 6);
-
-
-    mapTile1AttrVBO[ y * MAPDIM + x ] = finalAttr;
-    mapTile1OtherAttrVBO[ y * MAPDIM + x ] |= BITBANK_GET_SUBNUMBER_UINT(*data, MapTileFlags_RotBit1, 2);
-    
-    if (tileUp != MapTile_NONE)//view obstructed by foottile above.
-    {
-
-        //if next to visible show it as "wall view"
-        mapTile1AttrVBO[y * MAPDIM + x ] = 0;
-        cl_uchar isWall = 0;
-        int dirOffsets[8] = {0,1,2,3,22,23,24,25}; 
-        int orthflags[4] = {0,0,0,0};
-        for(int i = 0; i < 4; i++)
-        {
-            ge_int3 offset = staticData->directionalOffsets[dirOffsets[i]];
-            ge_int3 mapCoord = (ge_int3){x +offset.x, y + offset.y, ThisClient(ALL_CORE_PARAMS_PASS)->mapZView + 1 };
-
-            if(MapTileCoordValid(mapCoord,0))
-            {
-            
-                USE_POINTER cl_uint* dataoffup = MapGetDataPointerFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
-                MapTile tileoffup = MapDataGetTile(*dataoffup);
-                
-                if(tileoffup == MapTile_NONE)
-                {
-                    isWall = 1;
-
-                    //test against mouse world coord
-                    // ge_int3 mouseMapCoord;
-                    // int occluded;
-                    // ge_int3 mouseWorld_Q16 = (ge_int3){gameStateActions->mouseLocWorldx_Q16, gameStateActions->mouseLocWorldy_Q16, mapCoord.z};
-                   
-                    // WorldToMap(mouseWorld_Q16, &mouseMapCoord);
-                    // mouseMapCoord = GE_INT3_WHOLE_ONLY_Q16(mouseMapCoord);
-                    
-                    // if(VECTOR3_EQUAL(mouseMapCoord , mapCoord))
-                    // {
-                    //     mapTile1VBO[y * MAPDIM + x ] = tile;
-                        
-                    // }
-                    // else
-                    // {
-                        mapTile1VBO[y * MAPDIM + x ] = tileUp;
-                        
-                    //}
-
-
-
-
-                    if( i <=3 )
-                        orthflags[i] = 1;
-
-                    //fade out effect
-                    
-
-
-                    if((orthflags[0] + orthflags[1] + orthflags[2] + orthflags[3]) == 0)
-                    {
-
-                        //TODO better corner effect
-                        // mapTile1AttrVBO[ y * MAPDIM + x ] |= 1<<4;
-
-                        // if(dirOffsets[i] == 22) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 0;
-                        // if(dirOffsets[i] == 23) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 1;
-                        // if(dirOffsets[i] == 24) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 2;
-                        // if(dirOffsets[i] == 25) mapTile1AttrVBO[ y * MAPDIM + x ] |= 1 << 3;
-                    }
-
-
-                    mapTile1AttrVBO[y * MAPDIM + x ] |= (clamp(15-vz, 0, 15) << 6);//base shade
-                    mapTile1AttrVBO[y * MAPDIM + x ] |= (1 << 10);//corners fade to nothing
-
-
-                    
-
-                }
-            }
-        }
-
-
-
-
-        if(isWall == 0)
-            mapTile1VBO[y * MAPDIM + x ] = MapTile_NONE;
-    }
-    else
-    {
-        mapTile1VBO[y * MAPDIM + x] = tile;
-    }
-}
-
-
-void MapBuildTileView3Area(ALL_CORE_PARAMS, int x, int y)
-{
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y+1);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y+1);
-
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x,  y-1);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y-1);
-
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x-1,  y+1);
-    MapBuildTileView(ALL_CORE_PARAMS_PASS,  x+1,  y-1);
-}
 
 
 void PrintSelectionPeepStats(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* p)
@@ -3608,49 +3720,44 @@ void InventoryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Inventory* inventory)
         }
     }
 }
-void MapDeleteTile(ALL_CORE_PARAMS, ge_int3 mapCoord)
-{
-    if (mapCoord.z > 0) 
-    {
-        gameState->map.levels[mapCoord.z].data[mapCoord.x][mapCoord.y] = MapTile_NONE;
-        
 
-        offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
-        if(machinePtr != OFFSET_NULL)
+
+offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
+{
+    offsetPtr ptr = gameState->nextOrderIdx;
+    gameState->nextOrderIdx++;
+    bool loopCheck = false;
+    while( gameState->orders[gameState->nextOrderIdx].valid)
+    {
+        gameState->nextOrderIdx++;
+        if(gameState->nextOrderIdx >= MAX_ORDERS)
         {
-            USE_POINTER Machine* mach;
-            OFFSET_TO_PTR(gameState->machines, machinePtr, mach);
-            mach->valid = false;
+            gameState->nextOrderIdx = 0;
+            if(loopCheck)
+            {
+                printf("Out of Order Space! (MAX_ORDERS)\n");
+            }
+            loopCheck = true;
         }
-        gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y] = OFFSET_NULL;
-
-
-        MapBuildTileView3Area(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y);
-        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x + 1, mapCoord.y);
-        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x - 1, mapCoord.y);
-        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y + 1);
-        MapUpdateShadow(ALL_CORE_PARAMS_PASS, mapCoord.x, mapCoord.y - 1);
     }
+
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, ptr, order);
+
+    order->valid = true;
+    order->ptr = ptr;
+    order->pendingDelete = false;
+    order->refCount = 0;
+    order->prevExecutionOrder = OFFSET_NULL;
+    order->nextExecutionOrder = OFFSET_NULL;
+    order->pathToDestPtr = OFFSET_NULL;
+    order->selectingOrderLocation = false;
+    order->destinationSet = false;
+    order->aStarJobPtr = OFFSET_NULL;
+
+    return ptr;
 }
 
-USE_POINTER Machine* MachineGetFromMapCoord(ALL_CORE_PARAMS, ge_int3 mapCoord)
-{
-    offsetPtr ptr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
-    USE_POINTER Machine* machine;
-    OFFSET_TO_PTR(gameState->machines, ptr, machine);
-
-    return machine;
-}
-
-void TransferInventory(PARAM_GLOBAL_POINTER Inventory* invFrom, PARAM_GLOBAL_POINTER Inventory* invTo)
-{
-    for(int i = 0; i < ItemTypes_NUMITEMS; i++)
-    {
-        invTo->counts[i] += invFrom->counts[i];
-        invFrom->counts[i] = 0;
-    }
-}
 
 void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
 {
@@ -3695,19 +3802,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                 {
                     if(gui->passType == GuiStatePassType_Synced)
                     {
-                        printf("digging...\n");
-
-                        if(downTile == MapTile_IronOre)
-                        {
-                            peep->inventory.counts[ItemType_IRON_ORE]+=10;
-                        }
-                        else if(downTile == MapTile_Rock)
-                        {
-                            peep->inventory.counts[ItemType_ROCK_DUST]+=100;
-                        }
-
-
-                        MapDeleteTile(ALL_CORE_PARAMS_PASS,  mapCoord);
+                        PeepDrill(ALL_CORE_PARAMS_PASS, peep);
                     }
                 }
 
@@ -3725,7 +3820,35 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         {    
                             if(gui->passType == GuiStatePassType_Synced)
                             {
-                                Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, machine->rootOrderPtr);
+
+                                USE_POINTER Order* machineRootOrder;
+                                OFFSET_TO_PTR(gameState->orders,machine->rootOrderPtr,  machineRootOrder);
+
+                                //make path to the first machine order
+
+                                USE_POINTER Order* newOrder;
+                                offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                                OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
+                                newOrder->valid = true;
+                                newOrder->ptr = newOrderPtr;
+                                newOrder->pendingDelete = false;
+                                newOrder->mapDest_Coord = machineRootOrder->mapDest_Coord;
+                                newOrder->prevExecutionOrder = OFFSET_NULL;
+                                newOrder->nextExecutionOrder = machine->rootOrderPtr;
+                                newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                                newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+
+                                newOrder->refCount++;
+
+
+                                USE_POINTER AStarJob* job;
+                                OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
+                                job->startLoc = GE_INT3_WHOLE_Q16(peep->posMap_Q16);
+                                job->endLoc = machineRootOrder->mapDest_Coord;
+                                job->pathPtr = newOrder->pathToDestPtr;
+
+
+                                Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, newOrderPtr);
                             }
                         }
                     }
@@ -3739,7 +3862,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         {    
                             if(gui->passType == GuiStatePassType_Synced)
                             {
-                                TransferInventory(&peep->inventory, &machine->inventory);
+                                PeepPush(ALL_CORE_PARAMS_PASS, peep);
                             }
                         }
                         LOCAL_STR(transferStr2, "Pull Up"); 
@@ -3748,7 +3871,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         {
                             if(gui->passType == GuiStatePassType_Synced)
                             {
-                                TransferInventory(&machine->inventory, &peep->inventory);
+                                PeepPull(ALL_CORE_PARAMS_PASS, peep);
                             }
                         }
 
@@ -3762,42 +3885,6 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
             GUI_END_WINDOW(GUIID_PASS);
         }
     }
-}
-
-offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
-{
-    offsetPtr ptr = gameState->nextOrderIdx;
-    gameState->nextOrderIdx++;
-    bool loopCheck = false;
-    while( gameState->orders[gameState->nextOrderIdx].valid)
-    {
-        gameState->nextOrderIdx++;
-        if(gameState->nextOrderIdx >= MAX_ORDERS)
-        {
-            gameState->nextOrderIdx = 0;
-            if(loopCheck)
-            {
-                printf("Out of Order Space! (MAX_ORDERS)\n");
-            }
-            loopCheck = true;
-        }
-    }
-
-    USE_POINTER Order* order;
-    OFFSET_TO_PTR(gameState->orders, ptr, order);
-
-    order->valid = true;
-    order->ptr = ptr;
-    order->pendingDelete = false;
-    order->isCustom = false;
-    order->prevExecutionOrder = OFFSET_NULL;
-    order->nextExecutionOrder = OFFSET_NULL;
-    order->pathToDestPtr = OFFSET_NULL;
-    order->selectingOrderLocation = false;
-    order->destinationSet = false;
-    order->aStarJobPtr = OFFSET_NULL;
-
-    return ptr;
 }
 
 float ANIMATION_BLINK(ALL_CORE_PARAMS)
@@ -3920,6 +4007,48 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
             }
         }
         
+
+        LOCAL_STR(drillStr, "DRILL")
+        LOCAL_STR(pushStr, "PUSH")
+        LOCAL_STR(pullStr, "PULL")
+
+
+        if(order->action == OrderAction_MINE)
+            gui->fakeDummyBool = true;
+        else
+            gui->fakeDummyBool = false;
+
+        toggle = &gui->fakeDummyBool;
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(100,20), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GRAY, drillStr, NULL, toggle))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+                order->action = OrderAction_MINE;
+        }
+
+        if(order->action == OrderAction_DROPOFF_MACHINE)
+            gui->fakeDummyBool = true;
+        else
+            gui->fakeDummyBool = false;
+
+        toggle = &gui->fakeDummyBool;
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(150,20), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GRAY, pushStr, NULL, toggle))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+                order->action = OrderAction_DROPOFF_MACHINE;
+        }
+
+        
+        if(order->action == OrderAction_PICKUP_MACHINE)
+            gui->fakeDummyBool = true;
+        else
+            gui->fakeDummyBool = false;
+
+        toggle = &gui->fakeDummyBool;
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(200,20), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GRAY, pullStr, NULL, toggle))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+                order->action = OrderAction_PICKUP_MACHINE;
+        }
 
 
         LOCAL_STR(delStr, "DELETE")
@@ -4128,7 +4257,7 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
 
             
 
-            newOrder->isCustom = true;
+            newOrder->refCount = 1;
 
 
 
@@ -4683,24 +4812,24 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     printf("end: ");  Print_GE_INT3(mapcoord);
 
                     //create order imeddiate, and queue up path creation.
-                    USE_POINTER Order* newOrder;
+                    USE_POINTER Order* newMainOrder;
                     offsetPtr mainPathOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                    OFFSET_TO_PTR(gameState->orders, mainPathOrderPtr, newOrder);
-                    newOrder->valid = true;
-                    newOrder->ptr = mainPathOrderPtr;
-                    newOrder->pendingDelete = false;
-                    newOrder->mapDest_Coord = mapcoord;
-                    newOrder->prevExecutionOrder = OFFSET_NULL;
-                    newOrder->nextExecutionOrder = OFFSET_NULL;
-                    newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
-                    newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-                    newOrder->isCustom = true;
+                    OFFSET_TO_PTR(gameState->orders, mainPathOrderPtr, newMainOrder);
+                    newMainOrder->valid = true;
+                    newMainOrder->ptr = mainPathOrderPtr;
+                    newMainOrder->pendingDelete = false;
+                    newMainOrder->mapDest_Coord = mapcoord;
+                    newMainOrder->prevExecutionOrder = OFFSET_NULL;
+                    newMainOrder->nextExecutionOrder = OFFSET_NULL;
+                    newMainOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                    newMainOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+                    
 
                     USE_POINTER AStarJob* job;
-                    OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
+                    OFFSET_TO_PTR(gameState->mapSearchJobQueue, newMainOrder->aStarJobPtr, job);
                     job->startLoc = start;
                     job->endLoc = mapcoord;
-                    job->pathPtr = newOrder->pathToDestPtr;
+                    job->pathPtr = newMainOrder->pathToDestPtr;
 
 
 
@@ -4731,6 +4860,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                         newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
 
+                        newOrder->refCount++;
+                        newMainOrder->refCount++;
 
                         USE_POINTER AStarJob* job;
                         OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
@@ -5820,7 +5951,7 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
                 }
             }
 
-            if(order->valid && !order->isCustom)
+            if(order->valid && order->refCount <= 0)
             {
                 order->pendingDelete = true;
             }

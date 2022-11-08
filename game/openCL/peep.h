@@ -579,7 +579,7 @@ struct Order
 	offsetPtr ptr;
 	bool valid;
 	bool pendingDelete;
-	bool isCustom;
+	int refCount;
 
 
 	ge_int3 mapDest_Coord;
