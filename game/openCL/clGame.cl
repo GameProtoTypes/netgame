@@ -1318,10 +1318,11 @@ cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSear
         return AStarPathFindingProgress_Failed;
     }
 
-    printf("starting search\n");
+    printf("starting search from");
     search->state = AStarPathFindingProgress_Searching;
     search->startNodeOPtr = (offsetPtr3){startTile.x,startTile.y,startTile.z};
     search->endNodeOPtr = (offsetPtr3){destTile.x,destTile.y,destTile.z};
+    Print_GE_UINT3(search->startNodeOPtr); printf(" to "); Print_GE_UINT3(search->endNodeOPtr);
     
     search->pathOPtr = futurePathPtr;
     USE_POINTER AStarPathNode* path;
@@ -1644,10 +1645,16 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
             if(prog == AStarPathFindingProgress_Failed)
             {
                 job->status = AStarJobStatus_Done;
+                printf("job failed\n");
             }
             else if(prog == AStarPathFindingProgress_Searching)
             {
                 job->status = AStarJobStatus_Working;
+            }
+            else if(prog == AStarPathFindingProgress_Finished)
+            {
+                job->status = AStarJobStatus_Done;
+                printf("job finished instantly\n");
             }
         }
         else
@@ -1663,10 +1670,13 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
             job->status = AStarJobStatus_Done;
 
             printf("Job %d Done\n", gameState->curMapSearchJobPtr);
+
+
         }
         else if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Failed)
         {
             printf("Job %d Failed\n", gameState->curMapSearchJobPtr);
+            job->status = AStarJobStatus_Done;
         }
     }
     else if (job->status == AStarJobStatus_Done)
@@ -1692,9 +1702,10 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
     {
         AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
     }
-    else if(search->state != AStarPathFindingProgress_Ready)
+    else if(	search->state == AStarPathFindingProgress_Finished ||
+	search->state == AStarPathFindingProgress_Failed)
     {
-        search->state = AStarPathFindingProgress_Ready;
+        gameState->mapSearchers[0].state = AStarPathFindingProgress_ResetReady;
     }
 }
 
@@ -2536,42 +2547,47 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
             
             //advance
-            if(targetPathNode->nextOPtr != OFFSET_NULL)
+            if(targetPathNode->completed)
             {
-                peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
-                peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
-
-                if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
+                if(targetPathNode->nextOPtr != OFFSET_NULL)
                 {
-                    USE_POINTER AStarPathNode* targetPathNode;
-                    OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-                    CL_CHECK_NULL(targetPathNode);
+                    peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
+                    peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
 
-                    ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
-                    MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+                    if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
+                    {
+                        USE_POINTER AStarPathNode* targetPathNode;
+                        OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+                        CL_CHECK_NULL(targetPathNode);
 
-                    peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
-                    peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
-                    peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                        ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
+                        MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+
+                        peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                        peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                        peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                    }
                 }
-            }
-            else
-            {
-                //final dest reached.
-                peep->comms.message_TargetReached_pending = 255;//send the message
-
-                if( order != NULL )
+                else
                 {
-                    //delete single orders
-                    if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
+                    //final dest reached.
+                    peep->comms.message_TargetReached_pending = 255;//send the message
+
+                    if( order != NULL )
                     {
-                        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                        //delete single orders
+                        if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
+                        {
+                            printf("peep detach from order\n");
+                            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                        }
+                        else//advance order
+                        {
+                            printf("peep advancing order\n");
+                            Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
+                        }
+                        
                     }
-                    else//advance order
-                    {
-                        Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
-                    }
-                    
                 }
             }
         }
@@ -4672,49 +4688,78 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                     int occluded;
 
                     GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2D, &mapcoord, &occluded, client->mapZView);
+                    mapcoord.z++;
+                   
+                    ge_int3 firstPeepMapCoord = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
+
+
+
 
                     ge_int3 start;
-                    start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
-                    mapcoord.z++;
-                    ge_int3 end = mapcoord;
+                    start = firstPeepMapCoord;
+                    
                     printf("start: ");Print_GE_INT3(start);
-                    printf("end: ");Print_GE_INT3(end);
-
-                    //AStarSearch_BFS_Instantiate(&gameState->mapSearchers[0]);
-
-
-                    ge_int3 worldloc;
-                    MapToWorld(GE_INT3_TO_Q16(end), &worldloc);
-
-
+                    printf("end: ");  Print_GE_INT3(mapcoord);
 
                     //create order imeddiate, and queue up path creation.
                     USE_POINTER Order* newOrder;
-                    offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                    OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
+                    offsetPtr mainPathOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                    OFFSET_TO_PTR(gameState->orders, mainPathOrderPtr, newOrder);
                     newOrder->valid = true;
-                    newOrder->ptr = newOrderPtr;
+                    newOrder->ptr = mainPathOrderPtr;
                     newOrder->pendingDelete = false;
                     newOrder->mapDest_Coord = mapcoord;
                     newOrder->prevExecutionOrder = OFFSET_NULL;
                     newOrder->nextExecutionOrder = OFFSET_NULL;
                     newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                     newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-
+                    newOrder->isCustom = true;
 
                     USE_POINTER AStarJob* job;
                     OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
                     job->startLoc = start;
-                    job->endLoc = end;
+                    job->endLoc = mapcoord;
                     job->pathPtr = newOrder->pathToDestPtr;
+
+
+
+
+
+
+
+
 
 
                     while (curPeepIdx != OFFSET_NULL)
                     {
                         USE_POINTER Peep* curPeep = &gameState->peeps[curPeepIdx];
-                        {
-                            Peep_AssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
-                        }
+                        
+
+                        start = GE_INT3_WHOLE_Q16(curPeep->posMap_Q16);
+                        
+                        //create order for local paths
+                        USE_POINTER Order* newOrder;
+                        offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                        OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
+                        newOrder->valid = true;
+                        newOrder->ptr = newOrderPtr;
+                        newOrder->pendingDelete = false;
+                        newOrder->mapDest_Coord = firstPeepMapCoord;
+                        newOrder->prevExecutionOrder = OFFSET_NULL;
+                        newOrder->nextExecutionOrder = mainPathOrderPtr;
+                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                        newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+
+
+                        USE_POINTER AStarJob* job;
+                        OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
+                        job->startLoc = start;
+                        job->endLoc = firstPeepMapCoord;
+                        job->pathPtr = newOrder->pathToDestPtr;
+
+
+                        Peep_AssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
+                        
                         curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
                     }
 
@@ -5655,7 +5700,7 @@ __kernel void game_update2(ALL_CORE_PARAMS)
 
     //reset searches
     USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
-    if((search->state == AStarPathFindingProgress_Failed) || (search->state == AStarPathFindingProgress_Finished))
+    if(search->state == AStarPathFindingProgress_ResetReady)
     {
         cl_ulong chunkSize = (MAPDIM * MAPDIM * MAPDEPTH) / GAME_UPDATE_WORKITEMS;
     
@@ -5680,7 +5725,9 @@ __kernel void game_update2(ALL_CORE_PARAMS)
                 if(z > MAPDEPTH)
                     printf("Z>MAPDEPTH\n");
 
-                
+                if(xyzIdx == 0)
+                    printf("RESETING SEARCH\n");
+
                 AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
             }
         }
@@ -5715,6 +5762,9 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
             curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
         }
 
+        //should be reset after gameupdate_2
+        if(gameState->mapSearchers[0].state == AStarPathFindingProgress_ResetReady)
+            gameState->mapSearchers[0].state = AStarPathFindingProgress_Ready;
 
         //update jobs
         AStarJob_UpdateJobs(ALL_CORE_PARAMS_PASS);
@@ -5766,6 +5816,7 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
 
     }
 
+    #endif
 
     cl_ulong chunkSize = (MAX_ORDERS) / GAME_UPDATE_WORKITEMS;
     for (cl_ulong pi = 0; pi < chunkSize+1; pi++)
@@ -5797,7 +5848,7 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
 
 
 
-    #endif
+
 }
 
 __kernel void game_preupdate_1(ALL_CORE_PARAMS) {

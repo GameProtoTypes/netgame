@@ -387,7 +387,9 @@ enum AStarPathFindingProgress
 	AStarPathFindingProgress_Ready,
 	AStarPathFindingProgress_Searching,
 	AStarPathFindingProgress_Finished,
-	AStarPathFindingProgress_Failed
+	AStarPathFindingProgress_Failed,
+
+	AStarPathFindingProgress_ResetReady
 
 
 } typedef AStarPathFindingProgress;
@@ -487,6 +489,7 @@ enum MachineTypes
 	MachineTypes_CRUSHER,
 	MachineTypes_SMELTER,
 	MachineTypes_COMMAND_CENTER,
+	MachineTypes_MINING_SITE,
 
 	MachineTypes_NUMTYPES
 } typedef MachineTypes;
