@@ -755,6 +755,7 @@ offsetPtr AStarPathStepsNextFreePathNode(PARAM_GLOBAL_POINTER AStarPathSteps* li
         }
     }
     list->nextListIdx = ptr+1;
+
     return ptr;
 }
 
@@ -884,11 +885,14 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
  offsetPtr startingPathPtr
  )
 {
-    //grab a unused Node from pathNodes, and start building the list .
+    //start building the list .
     offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
     USE_POINTER AStarNode* curNode;
     OFFSET_TO_PTR_3D(search->details, curNodeOPtr, curNode);
     CL_CHECK_NULL(curNode);
+
+
+
 
     offsetPtr startNodeOPtr = OFFSET_NULL;
     USE_POINTER AStarPathNode* pNP = NULL;
@@ -909,7 +913,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
 
         pN->valid = true;
         pN->processing = false;
-        
+        pN->completed = true;
 
         if (i == 0)
             startNodeOPtr = index;
@@ -1168,6 +1172,8 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
 
             endNode->nextOPtr = OFFSET_NULL_3D;
             startNode->prevOPtr = OFFSET_NULL_3D;
+
+
 
             //form next links
             USE_POINTER AStarNode* curNode = targetNode;
@@ -1588,6 +1594,118 @@ offsetPtr AStarPathNode_LastPathNode(PARAM_GLOBAL_POINTER AStarPathSteps* steps,
     }
     return curNodeOPtr;
 }
+
+
+offsetPtr AStarJob_EnqueueJob(ALL_CORE_PARAMS)
+{
+    offsetPtr ptr = gameState->lastMapSearchJobPtr;
+
+    if(gameState->lastMapSearchJobPtr+1 == gameState->curMapSearchJobPtr)
+    {
+        printf("AStarJob_EnqueueJob: out of queue space (ASTAR_MAX_JOBS)");
+        return ptr;
+    }
+
+
+    gameState->lastMapSearchJobPtr++;
+    if(gameState->lastMapSearchJobPtr >= ASTAR_MAX_JOBS)
+    {
+        if(gameState->curMapSearchJobPtr == 0)
+        {
+            printf("AStarJob_EnqueueJob: out of queue space (ASTAR_MAX_JOBS)");
+            return ptr;
+        }
+        gameState->lastMapSearchJobPtr = 0;
+    }
+
+    USE_POINTER AStarJob* job;
+    OFFSET_TO_PTR(gameState->mapSearchJobQueue, ptr, job);
+    job->status = AStarJobStatus_Pending;
+
+    printf("created new job: %d\n", ptr);
+
+    return ptr;
+}
+
+void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
+{
+    USE_POINTER AStarJob* job;
+    OFFSET_TO_PTR(gameState->mapSearchJobQueue,gameState->curMapSearchJobPtr, job);
+
+    if(job->status == AStarJobStatus_Pending)
+    {
+        if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
+        {
+            printf("Starting Search For AStarJob %d\n", gameState->curMapSearchJobPtr);
+
+            AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0],
+            job->startLoc, job->endLoc, 1, job->pathPtr);
+
+            if(prog == AStarPathFindingProgress_Failed)
+            {
+                job->status = AStarJobStatus_Done;
+            }
+            else if(prog == AStarPathFindingProgress_Searching)
+            {
+                job->status = AStarJobStatus_Working;
+            }
+        }
+        else
+        {
+            printf("cannot service job %d because pathfinder is not ready (%d)\n", gameState->curMapSearchJobPtr, gameState->mapSearchers[0].state);
+        }
+    } 
+    else if (job->status == AStarJobStatus_Working) 
+    {
+        if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Finished)
+        {
+            job->pathPtr = gameState->mapSearchers[0].pathOPtr;
+            job->status = AStarJobStatus_Done;
+
+            printf("Job %d Done\n", gameState->curMapSearchJobPtr);
+        }
+        else if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Failed)
+        {
+            printf("Job %d Failed\n", gameState->curMapSearchJobPtr);
+        }
+    }
+    else if (job->status == AStarJobStatus_Done)
+    {
+        printf("Job %d Finished, advancing..\n", gameState->curMapSearchJobPtr);
+        job->status = AStarJobStatus_Disabled;
+
+        //advance
+        offsetPtr tmp = gameState->curMapSearchJobPtr;
+        gameState->curMapSearchJobPtr++;
+        if(gameState->curMapSearchJobPtr >= ASTAR_MAX_JOBS)
+        {
+            gameState->curMapSearchJobPtr = 0;
+        }
+
+    }
+
+
+
+    //update AStarPath Searchers
+    USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
+    if(search->state == AStarPathFindingProgress_Searching)
+    {
+        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
+    }
+    else if(search->state != AStarPathFindingProgress_Ready)
+    {
+        search->state = AStarPathFindingProgress_Ready;
+    }
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2211,7 +2329,7 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
             ge_int3 nearestPoint;
             cl_uchar insideSolidRegion;
   
-            MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
+            
             ge_int3 peepPosLocalToHull_Q16 = INT3_SUB(futurePos, tileCenters_Q16[i]);
 
             peepPosLocalToHull_Q16 = GE_INT3_DIV_Q16(peepPosLocalToHull_Q16, (ge_int3) {
@@ -2219,8 +2337,9 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                     , TO_Q16(MAP_TILE_SIZE)
             });
 
-            if(0)
+            if(MapTileData_TileSolid(tileDatas[i]) == 0)
             {
+                MapTileConvexHull_From_TileData(&hull, &tileDatas[i]);
                 nearestPoint = MapTileConvexHull_ClosestPointToPoint(&hull, peepPosLocalToHull_Q16);
                 insideSolidRegion = MapTileConvexHull_PointInside(&hull, peepPosLocalToHull_Q16);
             }
@@ -2319,6 +2438,9 @@ void Peep_DetachFromOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
 void Peep_AssignOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, offsetPtr orderPtr)
 {
+    if(peep->stateBasic.orderPtr != OFFSET_NULL)
+        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+
     peep->stateBasic.orderPtr = orderPtr;
     peep->stateBasic.orderInProgress = true;
 
@@ -2356,6 +2478,7 @@ void Order_DeleteOrder(ALL_CORE_PARAMS, offsetPtr orderPtr)
         OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextExecOrder);
 
         nextExecOrder->prevExecutionOrder = order->prevExecutionOrder;
+        nextExecOrder->dirtyPathing = true;
     }
 
     if(order->prevExecutionOrder != OFFSET_NULL)
@@ -2733,8 +2856,102 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
             }
             
         }
-        
     }
+
+
+
+    //update command center order sequences
+   if(desc->type == MachineTypes_COMMAND_CENTER)
+   {
+        if(machine->orderLen > 1)
+        {
+
+
+            USE_POINTER Order* order;
+            OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
+
+            offsetPtr curOrderPtr = machine->rootOrderPtr;
+
+
+            while(curOrderPtr != OFFSET_NULL)
+            {
+                USE_POINTER Order* curOrder;
+                OFFSET_TO_PTR(gameState->orders, curOrderPtr, curOrder);
+
+                if(curOrder->destinationSet)
+                {
+                    USE_POINTER Order* nextOrder;
+                    OFFSET_TO_PTR(gameState->orders, curOrder->nextExecutionOrder, nextOrder);
+
+                    if(nextOrder != NULL)
+                    {
+                        if(nextOrder->destinationSet)
+                        {
+                            if(nextOrder->dirtyPathing)
+                            {
+                                if(nextOrder->pathToDestPtr != OFFSET_NULL)
+                                {
+                                    AStarPathSteps_DeletePath(ALL_CORE_PARAMS_PASS, nextOrder->pathToDestPtr);
+                                    nextOrder->pathToDestPtr = OFFSET_NULL;
+                                }
+                                nextOrder->dirtyPathing = false;
+                            }
+                            if(nextOrder->pathToDestPtr == OFFSET_NULL)
+                            {
+                                nextOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                            }
+
+                            USE_POINTER AStarPathNode* pathNode;
+                            OFFSET_TO_PTR(gameState->paths.pathNodes, nextOrder->pathToDestPtr, pathNode);
+                            
+                            if((!pathNode->completed && !pathNode->processing))
+                            {
+
+
+
+                                printf("path: %d\n", nextOrder->pathToDestPtr);
+
+                                pathNode->processing = true;
+
+                                //enqueue job for path from previous order to this order
+                                nextOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+
+                                USE_POINTER AStarJob* job;
+                                OFFSET_TO_PTR(gameState->mapSearchJobQueue, nextOrder->aStarJobPtr, job);
+
+
+                                job->startLoc = curOrder->mapDest_Coord;
+                                job->endLoc = nextOrder->mapDest_Coord;
+                                job->pathPtr = nextOrder->pathToDestPtr;
+
+                                nextOrder->pathToDestPtr = job->pathPtr;
+                            }
+
+                        }        
+                    }
+                }
+
+
+                curOrderPtr = curOrder->nextExecutionOrder;
+
+
+                if(curOrderPtr == machine->rootOrderPtr)
+                   break;
+            }
+
+
+        }
+
+
+
+        
+
+
+   }
+
+
+
+
 }
 
 
@@ -3581,7 +3798,7 @@ offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
     order->pathToDestPtr = OFFSET_NULL;
     order->selectingOrderLocation = false;
     order->destinationSet = false;
-
+    order->aStarJobPtr = OFFSET_NULL;
 
     return ptr;
 }
@@ -3647,6 +3864,19 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
             {
                 order->mapDest_Coord = client->tileTargetMapCoord;
                 order->destinationSet = true;
+
+                order->dirtyPathing = true;
+
+                if(order->nextExecutionOrder != OFFSET_NULL)
+                {
+                    USE_POINTER Order* nextOrder;
+                    OFFSET_TO_PTR(gameState->orders, order->nextExecutionOrder, nextOrder);
+                    nextOrder->dirtyPathing = true;
+                }
+                
+
+
+
                 client->curEditingOrderPtr = OFFSET_NULL;
                 client->curEditingOrder_targeting = false;
                 client->tileTargetFound = false;
@@ -3681,7 +3911,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
 
                     CLIENT_PushTool(client, EditorTools_TileTargetSelect);
                     client->curEditingOrder_targeting = true;
-                    
+                    client->tileTargetFound = false;
                 }
                 else
                 {
@@ -3719,6 +3949,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
                 {
                     return false;//list of 2
                 }
+                order->dirtyPathing = true;
 
                 if(prevOrder != NULL)
                 {
@@ -3733,15 +3964,17 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
                         OFFSET_TO_PTR(gameState->orders, prevOrder->prevExecutionOrder, prevPrevOrder);
 
                         prevPrevOrder->nextExecutionOrder = order->ptr;
+                        prevPrevOrder->dirtyPathing = true;
                     }
                     prevOrder->prevExecutionOrder = order->ptr;
-
+                    prevOrder->dirtyPathing = true;
 
                     
 
                     if(nextOrder != NULL)
                     {
                         nextOrder->prevExecutionOrder = prevOrder->ptr;
+                        nextOrder->dirtyPathing = true;
                     }
                 }
             }
@@ -3762,7 +3995,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
                 {
                     return false;//list of 2
                 }
-
+                order->dirtyPathing = true;
                 if(nextOrder != NULL)
                 {
 
@@ -3778,13 +4011,15 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
                         OFFSET_TO_PTR(gameState->orders, nextOrder->nextExecutionOrder, nextNextOrder);
 
                         nextNextOrder->prevExecutionOrder = order->ptr;
+                        nextNextOrder->dirtyPathing = true;
                     }
                     nextOrder->nextExecutionOrder = order->ptr;
-
+                    nextOrder->dirtyPathing = true;
 
                     if(prevOrder != NULL)
                     {
                         prevOrder->nextExecutionOrder = nextOrder->ptr;
+                        prevOrder->dirtyPathing = true;
                     }
                 }
             }
@@ -3841,13 +4076,28 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
 
 
 
+    LOCAL_STR(rstr, "Refresh")
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2)(100,0), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_RED, rstr, NULL, NULL))
+    {
+            offsetPtr curOrderPtr = machine->rootOrderPtr;
+
+            while(curOrderPtr != OFFSET_NULL)
+            {
+                USE_POINTER Order* curOrder;
+                OFFSET_TO_PTR(gameState->orders, curOrderPtr, curOrder);
+
+                curOrder->dirtyPathing = true;
+
+                if(curOrder->nextExecutionOrder == machine->rootOrderPtr)
+                    break;
+                
+                curOrderPtr = curOrder->nextExecutionOrder;
+            }
+    }
+
+
+
     LOCAL_STR(addstr, "New Order")
-
-
-
-
-
-
     if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,0), (ge_int2)(100,50), GuiFlags_Beveled, COLOR_GREEN, addstr, NULL, NULL))
     {
         if(gui->passType == GuiStatePassType_Synced)
@@ -3871,17 +4121,19 @@ void CommandCenterMachineGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER SynchronizedCli
                 OFFSET_TO_PTR(gameState->orders, endOrderPtr, endOrder);
 
                 endOrder->nextExecutionOrder = newOrderPTr;
+                endOrder->dirtyPathing = true;
                 currentRootOrder->prevExecutionOrder = newOrderPTr;
-
+                currentRootOrder->dirtyPathing = true;
+                
                 newOrder->nextExecutionOrder = machine->rootOrderPtr;
                 newOrder->prevExecutionOrder = endOrder->ptr;
-
-
             }
 
             
 
             newOrder->isCustom = true;
+
+
 
         }   
     }
@@ -4436,71 +4688,36 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
 
 
 
+                    //create order imeddiate, and queue up path creation.
+                    USE_POINTER Order* newOrder;
+                    offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                    OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
+                    newOrder->valid = true;
+                    newOrder->ptr = newOrderPtr;
+                    newOrder->pendingDelete = false;
+                    newOrder->mapDest_Coord = mapcoord;
+                    newOrder->prevExecutionOrder = OFFSET_NULL;
+                    newOrder->nextExecutionOrder = OFFSET_NULL;
+                    newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                    newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
 
-                    if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
+
+                    USE_POINTER AStarJob* job;
+                    OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
+                    job->startLoc = start;
+                    job->endLoc = end;
+                    job->pathPtr = newOrder->pathToDestPtr;
+
+
+                    while (curPeepIdx != OFFSET_NULL)
                     {
-                        printf("Starting Search for selected peeps..\n");
-
-
-                        
-
-
-                        //create order imeddiate, and queue up path creation.
-                        USE_POINTER Order* newOrder;
-                        offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                        OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
-                        newOrder->valid = true;
-                        newOrder->ptr = newOrderPtr;
-                        newOrder->pendingDelete = false;
-                        newOrder->mapDest_Coord = mapcoord;
-                        newOrder->prevExecutionOrder = OFFSET_NULL;
-                        newOrder->nextExecutionOrder = OFFSET_NULL;
-                        newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
-                        
-
-
-
-
-                        AStarPathFindingProgress prog = AStarSearch_BFS_Routine(ALL_CORE_PARAMS_PASS, &gameState->mapSearchers[0], (start), (end), 0, newOrder->pathToDestPtr);
-
-                        if(prog == AStarPathFindingProgress_Searching)
-                        { 
-
-                            while (curPeepIdx != OFFSET_NULL)
-                            {
-                                
-                                USE_POINTER Peep* curPeep = &gameState->peeps[curPeepIdx];
-                                {
-                                    if(curPeep->stateBasic.orderPtr != OFFSET_NULL)
-                                    {
-                                       
-                                        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, curPeep);
-                                    }
-                                    Peep_AssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
-                                }
-  
-
-                                //tmp
-                                //curPeep->stateBasic.aStarSearchPtr = 0;
-
-
-                                //tmp
-                                //curPeep->physics.drive.target_x_Q16 = worldloc.x;
-                                //curPeep->physics.drive.target_y_Q16 = worldloc.y;
-                                //curPeep->physics.drive.target_z_Q16 = worldloc.z;
-
-
-
-
-                                curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
-
-                            }
+                        USE_POINTER Peep* curPeep = &gameState->peeps[curPeepIdx];
+                        {
+                            Peep_AssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
                         }
+                        curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
                     }
-                    else
-                    {
-                        printf("path finder busy..%d\n", gameState->mapSearchers[0].state);
-                    }
+
                 }
 
 
@@ -4597,6 +4814,8 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 int occluded;
                 GetMapTileCoordFromWorld2D(ALL_CORE_PARAMS_PASS, world2DMouse, &mapCoord, &occluded, client->mapZView+1);
                 
+
+                
                 client->selectedMapCoord = INT3_TO_SHORT3(mapCoord);
 
                 offsetPtr machinePtr = gameState->map.levels[mapCoord.z].machinePtr[mapCoord.x][mapCoord.y];
@@ -4617,6 +4836,7 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                 {
                     printf("target selected.\n");
                     client->tileTargetMapCoord = mapCoord;
+                    client->tileTargetMapCoord.z++;
                     client->tileTargetFound = true;
                 }
 
@@ -5495,17 +5715,13 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
             curPeepIdx = p->prevSelectionPeepPtr[gameStateActions->clientId];
         }
 
-        USE_POINTER AStarSearch_BFS* search = &gameState->mapSearchers[0];
-        //update AStarPath Searchers
-        if(search->state == AStarPathFindingProgress_Searching)
-        {
-            AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
-        }
-        else if(search->state != AStarPathFindingProgress_Ready)
-        {
-        // printf("going to ready..");
-            search->state = AStarPathFindingProgress_Ready;
-        }
+
+        //update jobs
+        AStarJob_UpdateJobs(ALL_CORE_PARAMS_PASS);
+
+
+
+
 
 
         //draw debug lines on paths

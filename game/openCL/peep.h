@@ -119,7 +119,9 @@ struct AStarPathNode
 	offsetPtr nextOPtr;
 	offsetPtr prevOPtr;
 
+	bool completed;
 	bool processing;
+
 }typedef AStarPathNode;
 
 struct DrivePhysics
@@ -437,7 +439,7 @@ struct AStarSearch_IDA {
 
 
 #define ASTARPATHSTEPSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
-#define ASTAR_MAX_PATHS (16)
+#define ASTAR_MAX_PATHS (1024)
 struct AStarPathSteps
 {
 	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
@@ -447,6 +449,28 @@ struct AStarPathSteps
 	int nextPathStartIdx;
 
 }typedef AStarPathSteps;
+
+
+enum AStarJobStatus
+{
+	AStarJobStatus_Disabled,
+	AStarJobStatus_Pending,
+	AStarJobStatus_Working,
+	AStarJobStatus_Done
+} typedef AStarJobStatus;
+
+#define ASTAR_MAX_JOBS (128)
+struct AStarJob
+{
+	ge_int3 startLoc;
+	ge_int3 endLoc;
+
+	AStarJobStatus status;
+	offsetPtr pathPtr;
+} typedef AStarJob;
+
+
+
 
 struct PeepRenderSupport {
 	cl_int render_selectedByClient;
@@ -555,14 +579,12 @@ struct Order
 	bool isCustom;
 
 
-
-	bool selectingOrderLocation;
-
-
-
 	ge_int3 mapDest_Coord;
 	bool destinationSet;
-
+	offsetPtr aStarJobPtr;
+	offsetPtr pathToDestPtr;
+	bool selectingOrderLocation;
+	bool dirtyPathing;
 
 	OrderActions action;
 	offsetPtr nextExecutionOrder;
@@ -573,8 +595,10 @@ struct Order
 
 
 
+	
 
-	offsetPtr pathToDestPtr;
+
+
 
 } typedef Order;
 
@@ -673,6 +697,11 @@ struct GameState {
 	MapSector sectors[SQRT_MAXSECTORS][SQRT_MAXSECTORS];
 	
 	AStarSearch_BFS mapSearchers[1];
+
+	AStarJob mapSearchJobQueue[ASTAR_MAX_JOBS];
+	offsetPtr curMapSearchJobPtr;
+	offsetPtr lastMapSearchJobPtr;
+	
 
 	AStarPathSteps paths;
 
