@@ -220,7 +220,7 @@ int32_t main(int32_t argc, char* args[])
 //     gameCompute.OverlapTest();
 // std::cout << "Overlap Test Finished" << std::endl;
 
-
+    // return 0;
     GameGraphics gameGraphics(&gameCompute);      
     gameGraphics.Init();  
     gameCompute.graphics = &gameGraphics;    
