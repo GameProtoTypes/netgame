@@ -2851,6 +2851,7 @@ void PeepPush(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
 void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
+
     ge_int3 targetVelocity;
 
     ge_int3 d;
@@ -2867,97 +2868,98 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
         d.z = MUL_PAD_Q16(d.z, len);
     }
 
-
-    USE_POINTER Order* order;
-    OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr, order);
-
-    if(!order->valid)
-        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
-
-
-    if (WHOLE_Q16(len) < 2)//within range of current target
+    if(peep->stateBasic.orderPtr != OFFSET_NULL)
     {
+        USE_POINTER Order* order;
+        OFFSET_TO_PTR(gameState->orders, peep->stateBasic.orderPtr, order);
 
+        if(!order->valid)
+            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+    
 
-
-        if(peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL)
+        if (WHOLE_Q16(len) < 2)//within range of current target
         {
 
-            //advance if theres room
-            USE_POINTER AStarPathNode* targetPathNode;
-            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-            CL_CHECK_NULL(targetPathNode);
 
-            USE_POINTER AStarPathNode* prevpathNode;
-            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
 
-            
-            //advance
-            if(targetPathNode->completed)
+            if(peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL)
             {
-                if(targetPathNode->nextOPtr != OFFSET_NULL)
+
+                //advance if theres room
+                USE_POINTER AStarPathNode* targetPathNode;
+                OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+                CL_CHECK_NULL(targetPathNode);
+
+                USE_POINTER AStarPathNode* prevpathNode;
+                OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.prevPathNodeOPtr,prevpathNode);
+
+                
+                //advance
+                if(targetPathNode->completed)
                 {
-                    peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
-                    peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
-
-                    if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
+                    if(targetPathNode->nextOPtr != OFFSET_NULL)
                     {
-                        USE_POINTER AStarPathNode* targetPathNode;
-                        OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
-                        CL_CHECK_NULL(targetPathNode);
+                        peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
+                        peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
 
-                        ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
-                        MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+                        if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
+                        {
+                            USE_POINTER AStarPathNode* targetPathNode;
+                            OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
+                            CL_CHECK_NULL(targetPathNode);
 
-                        peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
-                        peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
-                        peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                            ge_int3 nextTarget_Q16 = targetPathNode->mapCoord_Q16;
+                            MapToWorld(nextTarget_Q16, &nextTarget_Q16);
+
+                            peep->physics.drive.target_x_Q16 = nextTarget_Q16.x;
+                            peep->physics.drive.target_y_Q16 = nextTarget_Q16.y;
+                            peep->physics.drive.target_z_Q16 = nextTarget_Q16.z;
+                        }
                     }
-                }
-                else
-                {
-                    //final dest reached.
-                    peep->comms.message_TargetReached_pending = 255;//send the message
-
-                    if( order != NULL )
+                    else
                     {
+                        //final dest reached.
+                        peep->comms.message_TargetReached_pending = 255;//send the message
 
-                        //do the order action
-                        if(order->action == OrderAction_MINE)
+                        if( order != NULL )
                         {
-                            PeepDrill(ALL_CORE_PARAMS_PASS, peep);
-                        }
-                        else if(order->action == OrderAction_DROPOFF_MACHINE)
-                        {
-                            PeepPush(ALL_CORE_PARAMS_PASS, peep);
-                        }
-                        else if(order->action == OrderAction_PICKUP_MACHINE)
-                        {
-                            PeepPull(ALL_CORE_PARAMS_PASS, peep);
-                        }
-                        
+
+                            //do the order action
+                            if(order->action == OrderAction_MINE)
+                            {
+                                PeepDrill(ALL_CORE_PARAMS_PASS, peep);
+                            }
+                            else if(order->action == OrderAction_DROPOFF_MACHINE)
+                            {
+                                PeepPush(ALL_CORE_PARAMS_PASS, peep);
+                            }
+                            else if(order->action == OrderAction_PICKUP_MACHINE)
+                            {
+                                PeepPull(ALL_CORE_PARAMS_PASS, peep);
+                            }
+                            
 
 
 
-                        //delete single orders
-                        if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
-                        {
-                            printf("peep detach from order\n");
-                            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                            //delete single orders
+                            if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
+                            {
+                                printf("peep detach from order\n");
+                                Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                            }
+                            else//advance order
+                            {
+                                printf("peep advancing order\n");
+                                Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
+                            }
+                            
                         }
-                        else//advance order
-                        {
-                            printf("peep advancing order\n");
-                            Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
-                        }
-                        
                     }
                 }
             }
+            
         }
-        
     }
-
    
 
     //advacne if theres room

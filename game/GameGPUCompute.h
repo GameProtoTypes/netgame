@@ -57,7 +57,7 @@ public:
 	GameGPUCompute();
 	~GameGPUCompute();
 
-
+	void OverlapTest();
 
 	void AddCLSource(std::string path);
 

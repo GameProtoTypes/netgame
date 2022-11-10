@@ -53,6 +53,82 @@ GameGPUCompute::~GameGPUCompute()
     ret = clReleaseContext(context); CL_HOST_ERROR_CHECK(ret)
 }
 
+void GameGPUCompute::OverlapTest()
+{
+    const char source[] =
+"__kernel void test_rotate(__global ulong *d_count, ulong loops, ulong patt)"
+"{"
+"  ulong n = patt;"
+"  for (ulong i = 0; i<loops; i++)"
+"    n &= (107 << (patt+(i%7)));"
+"  d_count[0] = n + loops;"
+"}"
+;
+    int argc = 3;
+    int numLoops = 100000;
+    unsigned long ts =  SDL_GetTicks64();
+
+
+  cl_platform_id platform;
+  cl_device_id device;
+  cl_context context;
+  cl_command_queue queue1, queue2;
+  cl_program program;
+  cl_mem mem1, mem2;
+  cl_kernel kernel;
+  bool two_kernels = false;
+  unsigned long long loops = 1000;
+  if (argc > 1) loops *= numLoops;
+  if (argc > 2) two_kernels = true;
+  if (two_kernels) printf("running two kernels\n");
+  else printf("running one kernel\n");
+  printf("running  %lu loops\n", loops);
+  unsigned long long pattern = 1;
+  clGetPlatformIDs(1, &platform, NULL);
+  clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
+  context = clCreateContext(NULL, 1, &device, NULL, NULL, NULL);
+  queue1 = clCreateCommandQueue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, NULL);
+  queue2 = clCreateCommandQueue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, NULL);
+  const char *sources[1] = {source};
+  program = clCreateProgramWithSource(context, 1, sources, NULL, NULL);
+  clBuildProgram(program, 1, &device, NULL, NULL, NULL);
+  mem1 = clCreateBuffer(context, CL_MEM_READ_WRITE, 1*sizeof(cl_ulong), NULL, NULL);
+  mem2 = clCreateBuffer(context, CL_MEM_READ_WRITE, 1*sizeof(cl_ulong), NULL, NULL);
+  kernel = clCreateKernel(program, "test_rotate", NULL);
+  const size_t work_size[1] = {1};
+  clSetKernelArg(kernel, 0, sizeof(mem1), &mem1);
+  clSetKernelArg(kernel, 1, sizeof(loops), &loops);
+  clSetKernelArg(kernel, 2, sizeof(pattern), &pattern);
+  clEnqueueNDRangeKernel(queue1, kernel, 1, NULL, work_size, work_size, 0, NULL, NULL);
+  if (two_kernels){
+    clSetKernelArg(kernel, 0, sizeof(mem1), &mem1);
+    clSetKernelArg(kernel, 1, sizeof(loops), &loops);
+    clSetKernelArg(kernel, 2, sizeof(pattern), &pattern);
+    clEnqueueNDRangeKernel(queue2, kernel, 1, NULL, work_size, work_size, 0, NULL, NULL);
+    }
+  cl_ulong *buf1 = (cl_ulong *)clEnqueueMapBuffer(queue1, mem1, true, CL_MAP_READ, 0, 1*sizeof(cl_ulong), 0, NULL, NULL, NULL);
+  cl_ulong *buf2 = (cl_ulong *)clEnqueueMapBuffer(queue2, mem2, true, CL_MAP_READ, 0, 1*sizeof(cl_ulong), 0, NULL, NULL, NULL);
+  printf("result1: %lu\n", buf1[0]);
+  printf("result2: %lu\n", buf2[0]);
+  clEnqueueUnmapMemObject(queue1, mem1, buf1, 0, NULL, NULL);
+  clEnqueueUnmapMemObject(queue2, mem2, buf2, 0, NULL, NULL);
+
+
+  printf("time: %lu\n", SDL_GetTicks64() - ts);
+  return;
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 void GameGPUCompute::AddCompileDefinition(std::string name, GPUCompileVariant val)
 {
@@ -277,6 +353,7 @@ void GameGPUCompute::RunInitCompute1()
 
 
         clWaitForEvents(1, &sizeTestEvent);
+        clFinish(command_queue);
 
         std::cout << "GAMESTATE SIZE: " << structSizes.gameStateStructureSize << std::endl;
         std::cout << "STATICDATA SIZE: " << structSizes.staticDataStructSize << std::endl;
@@ -532,8 +609,8 @@ void GameGPUCompute::Stage1_Begin()
         SingleKernelWorkItems, NULL, 0, NULL, &guiEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-    clFlush(command_queue);
-    clFlush(command_queue2);
+
+
 
     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
          WorkItems, NULL, 1, &actionEvent, &preUpdateEvent1);
@@ -551,11 +628,12 @@ void GameGPUCompute::Stage1_Begin()
         WorkItems, NULL, 1, &preUpdateEvent2, &updatepre1Event);
     CL_HOST_ERROR_CHECK(ret)
 
+
+
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
         WorkItems, NULL, 1, &updatepre1Event, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
     
-
 
 
     ret = clEnqueueNDRangeKernel(command_queue, update2_kernel, 1, NULL,
@@ -578,6 +656,11 @@ void GameGPUCompute::Stage1_End()
 {
     if(!stage1_Running)
         return;
+
+    ret = clFinish(command_queue);
+    CL_HOST_ERROR_CHECK(ret)
+    ret = clFinish(command_queue2);
+    CL_HOST_ERROR_CHECK(ret)
 
     ReleaseAllGraphicsObjects();
 

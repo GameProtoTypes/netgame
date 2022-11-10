@@ -215,6 +215,12 @@ int32_t main(int32_t argc, char* args[])
 
 
     GameGPUCompute gameCompute;
+
+// std::cout << "Running OverlapTest" << std::endl;
+//     gameCompute.OverlapTest();
+// std::cout << "Overlap Test Finished" << std::endl;
+
+
     GameGraphics gameGraphics(&gameCompute);      
     gameGraphics.Init();  
     gameCompute.graphics = &gameGraphics;    
