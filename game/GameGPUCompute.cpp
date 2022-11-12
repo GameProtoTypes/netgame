@@ -600,21 +600,19 @@ void GameGPUCompute::Stage1_Begin()
     ret = clFinish(command_queue2);
     CL_HOST_ERROR_CHECK(ret)
 
+
     ret = clEnqueueNDRangeKernel(command_queue, action_kernel, 1, NULL,
         SingleKernelWorkItems, NULL, 0, NULL, &actionEvent);
     CL_HOST_ERROR_CHECK(ret)
 
-
     ret = clEnqueueNDRangeKernel(command_queue2, gui_kernel, 1, NULL,
-        SingleKernelWorkItems, NULL, 0, NULL, &guiEvent);
-    CL_HOST_ERROR_CHECK(ret)
-
-
-
+    SingleKernelWorkItems, NULL, 0, NULL, &guiEvent);
 
     ret = clEnqueueNDRangeKernel(command_queue, preupdate_kernel, 1, NULL,
          WorkItems, NULL, 1, &actionEvent, &preUpdateEvent1);
     CL_HOST_ERROR_CHECK(ret)
+
+
 
 
 
@@ -633,7 +631,6 @@ void GameGPUCompute::Stage1_Begin()
     ret = clEnqueueNDRangeKernel(command_queue, update_kernel, 1, NULL,
         WorkItems, NULL, 1, &updatepre1Event, &updateEvent);
     CL_HOST_ERROR_CHECK(ret)
-    
 
 
     ret = clEnqueueNDRangeKernel(command_queue, update2_kernel, 1, NULL,
@@ -900,11 +897,11 @@ void GameGPUCompute::AquireAllGraphicsObjects()
     {
         if(obj != graphics_guiVBO_obj)
         {
-            ret = clEnqueueAcquireGLObjects(command_queue, 1, &obj, 0, 0, 0);
+            ret = clEnqueueAcquireGLObjects(command_queue, 1, &obj, 0, NULL, &glBindEventCommandQue1);
             CL_HOST_ERROR_CHECK(ret)
         }
         else{
-            ret = clEnqueueAcquireGLObjects(command_queue2, 1, &obj, 0, 0, 0);
+            ret = clEnqueueAcquireGLObjects(command_queue2, 1, &obj, 0, NULL, &glBindEventCommandQue2);
             CL_HOST_ERROR_CHECK(ret)
         }
 

@@ -1605,8 +1605,8 @@ offsetPtr AStarJob_EnqueueJob(ALL_CORE_PARAMS)
 void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
 {
     USE_POINTER AStarJob* job;
-    OFFSET_TO_PTR(gameState->mapSearchJobQueue,gameState->curMapSearchJobPtr, job);
-
+    OFFSET_TO_PTR(gameState->mapSearchJobQueue, gameState->curMapSearchJobPtr, job);
+    CL_CHECK_NULL(job);
     if(job->status == AStarJobStatus_Pending)
     {
         if(gameState->mapSearchers[0].state == AStarPathFindingProgress_Ready)
@@ -5942,7 +5942,7 @@ __kernel void game_post_update( ALL_CORE_PARAMS )
         {
             USE_POINTER Order* order;
             CL_CHECKED_ARRAY_GET_PTR(gameState->orders, MAX_ORDERS, idx, order)
-
+            
 
             if(order->valid && order->pendingDelete)
             {

@@ -132,6 +132,10 @@ public:
 	cl_event initMultiEvent;
 	cl_event initMultiEvent2;
 	cl_event init2Event;
+
+	cl_event glBindEventCommandQue1;
+	cl_event glBindEventCommandQue2;
+
 	cl_event preUpdateEvent1;
 	cl_event preUpdateEvent2;
 	cl_event updatepre1Event;    
@@ -142,6 +146,7 @@ public:
 	cl_event guiEvent;
 	cl_event readEvent;
 	cl_event writeEvent;    
+
 	
 
 
