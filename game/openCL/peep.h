@@ -395,7 +395,7 @@ enum AStarPathFindingProgress
 } typedef AStarPathFindingProgress;
 
 
-#define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/10)
+#define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/100)
 struct AStarSearch_BFS {
 	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
 	
@@ -413,30 +413,6 @@ struct AStarSearch_BFS {
 	offsetPtr pathOPtr;
 
 } typedef AStarSearch_BFS;
-
-struct AStarNode_IDA
-{
-	ge_short3 tileLoc;
-	bool searchedSuccessors[26];
-	int gCost;
-
-} typedef AStarNode_IDA;
-
-#define ASTARSEARCH_IDA_PATHMAXSIZE ((MAPDIM*2))
-struct AStarSearch_IDA {
-
-	ge_short3 startLoc;
-	ge_short3 endLoc;
-
-	AStarNode_IDA path[ASTARSEARCH_IDA_PATHMAXSIZE];
-	int pathEndIdx;
-
-	int bound;
-	int t;
-
-	AStarPathFindingProgress state;
-	offsetPtr pathOPtr;
-} typedef AStarSearch_IDA;
 
 
 
@@ -543,7 +519,9 @@ struct Machine
 
 	int tickProgess;
 	MachineState state;
-	Inventory inventory;
+
+	Inventory inventoryIn;
+	Inventory inventoryOut;
 
 	//Command Center Sepecific
 	offsetPtr rootOrderPtr;
@@ -682,7 +660,7 @@ struct SynchronizedClientState {
 
 
 
-
+#define HEAPSIZE (1024*100)
 
 struct GameState {
 
@@ -719,6 +697,7 @@ struct GameState {
 
 	Order orders[MAX_ORDERS];
 	int nextOrderIdx;
+	
 
 	int s[32];
 
