@@ -377,8 +377,8 @@ struct AStarNode {
 	int h_Q16;
 	int g_Q16;
 
-	offsetPtr3 nextOPtr;
-	offsetPtr3 prevOPtr;
+	offsetPtr nextOPtr;
+	offsetPtr prevOPtr;
 
 } typedef AStarNode;
 
@@ -396,17 +396,19 @@ enum AStarPathFindingProgress
 
 
 #define ASTARHEAPSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/100)
+#define ASTARDETAILSSIZE ((MAPDIM*MAPDIM*MAPDEPTH)/100)
 struct AStarSearch_BFS {
-	AStarNode details[MAPDIM][MAPDIM][MAPDEPTH];
+	AStarNode details[ASTARDETAILSSIZE];
+	offsetPtr nextDetailNodePtr;
 	
-	offsetPtr3 openHeap_OPtrs[ASTARHEAPSIZE];
+	offsetPtr openHeap_OPtrs[ASTARHEAPSIZE];
 	cl_int openHeapSize;
 	
-	offsetPtr3 endNodeOPtr;
-	offsetPtr3 startNodeOPtr;
+	offsetPtr endNodeOPtr;
+	offsetPtr startNodeOPtr;
 
-	cl_uchar closedMap[MAPDIM][MAPDIM][MAPDEPTH];
-	cl_uchar openMap[MAPDIM][MAPDIM][MAPDEPTH];
+	offsetPtr closedMap[MAPDIM][MAPDIM][MAPDEPTH];
+	offsetPtr openMap[MAPDIM][MAPDIM][MAPDEPTH];
 	
 	AStarPathFindingProgress state;
 

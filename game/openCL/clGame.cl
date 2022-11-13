@@ -435,8 +435,8 @@ inline void AStarNodeInstantiate(PARAM_GLOBAL_POINTER AStarNode* node)
     
     node->g_Q16 = TO_Q16(0);
     node->h_Q16 = TO_Q16(0);
-    node->nextOPtr = OFFSET_NULL_3D;  
-    node->prevOPtr = OFFSET_NULL_3D;
+    node->nextOPtr = OFFSET_NULL;  
+    node->prevOPtr = OFFSET_NULL;
     node->tileIdx.x = -1;
     node->tileIdx.y = -1;
     node->tileIdx.z = -1;
@@ -459,12 +459,6 @@ void AStarSearch_BFS_Instantiate(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
         {
             for (int z = 0; z < MAPDEPTH; z++)
             {
-                USE_POINTER AStarNode* node = &search->details[x][y][z];
-                AStarNodeInstantiate(node);
-
-
-                node->tileIdx = (ge_short3){x,y,z};
-
                 search->closedMap[x][y][z] = 0;
                 search->openMap[x][y][z] = 0;
             }
@@ -473,11 +467,13 @@ void AStarSearch_BFS_Instantiate(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 
     for(int i = 0; i < ASTARHEAPSIZE; i++)
     {
-        search->openHeap_OPtrs[i] = OFFSET_NULL_3D;
+        search->openHeap_OPtrs[i] = OFFSET_NULL;
     }
     
-    search->startNodeOPtr = OFFSET_NULL_3D;
-    search->endNodeOPtr = OFFSET_NULL_3D;
+    search->nextDetailNodePtr = 0;
+
+    search->startNodeOPtr = OFFSET_NULL;
+    search->endNodeOPtr = OFFSET_NULL;
     
     search->openHeapSize = 0;
     search->pathOPtr = OFFSET_NULL;
@@ -486,22 +482,15 @@ void AStarSearch_BFS_Instantiate(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 void AStarSearch_BFS_InstantiateParrallel(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_ulong idx, int x, int y, int z)
 {
 
-    USE_POINTER AStarNode* node = &search->details[x][y][z];
-    //AStarNodeInstantiate(node);
-    //node->tileIdx = (ge_short3){x,y,z};
-    node->g_Q16 = TO_Q16(0);
-    node->h_Q16 = TO_Q16(0);
-    node->nextOPtr = OFFSET_NULL_3D;  
-    node->prevOPtr = OFFSET_NULL_3D;
 
     search->closedMap[x][y][z] = 0;
     search->openMap[x][y][z] = 0;
 
-
+    search->nextDetailNodePtr = 0;
 
     if(idx < ASTARHEAPSIZE)
     {
-        search->openHeap_OPtrs[idx] = OFFSET_NULL_3D;
+        search->openHeap_OPtrs[idx] = OFFSET_NULL;
     }
     
     
@@ -591,8 +580,8 @@ void AStarOpenHeapTrickleDown(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_i
 {
     cl_int largerChild;
     USE_POINTER AStarNode* top;
-    offsetPtr3 topOPtr = search->openHeap_OPtrs[index];
-    OFFSET_TO_PTR_3D(search->details, topOPtr, top);
+    offsetPtr topOPtr = search->openHeap_OPtrs[index];
+    OFFSET_TO_PTR(search->details, topOPtr, top);
 
 
     while (index < search->openHeapSize / 2)
@@ -601,9 +590,9 @@ void AStarOpenHeapTrickleDown(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_i
         int rightChild = leftChild + 1;
 
         USE_POINTER AStarNode* leftChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[leftChild], leftChildNode)
+        OFFSET_TO_PTR(search->details, search->openHeap_OPtrs[leftChild], leftChildNode)
         USE_POINTER AStarNode* rightChildNode;
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[rightChild], rightChildNode)
+        OFFSET_TO_PTR(search->details, search->openHeap_OPtrs[rightChild], rightChildNode)
 
         if ((rightChild < search->openHeapSize) && (AStarOpenHeapKey(search, leftChildNode) > AStarOpenHeapKey(search, rightChildNode)))
             largerChild = rightChild;
@@ -612,7 +601,7 @@ void AStarOpenHeapTrickleDown(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_i
 
         USE_POINTER AStarNode* largerChildNode;
 
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[largerChild], largerChildNode)
+        OFFSET_TO_PTR(search->details, search->openHeap_OPtrs[largerChild], largerChildNode)
 
         if (AStarOpenHeapKey(search, top) <= AStarOpenHeapKey(search, largerChildNode))
             break;
@@ -626,9 +615,9 @@ void AStarOpenHeapTrickleDown(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_i
     search->openHeap_OPtrs[index] = topOPtr;
 }
 
-offsetPtr3 AStarOpenHeapRemove(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
+offsetPtr AStarOpenHeapRemove(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 {
-    offsetPtr3 rootOPtr = search->openHeap_OPtrs[0];
+    offsetPtr rootOPtr = search->openHeap_OPtrs[0];
 
     search->openHeap_OPtrs[0] = search->openHeap_OPtrs[search->openHeapSize-1];
     search->openHeapSize--;
@@ -639,56 +628,60 @@ offsetPtr3 AStarOpenHeapRemove(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
     return rootOPtr;
 }
 
-offsetPtr3 AStarRemoveFromOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
+offsetPtr AStarRemoveFromOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search)
 {
 
-    offsetPtr3 nodeOPtr = AStarOpenHeapRemove(search);
+    offsetPtr nodeOPtr = AStarOpenHeapRemove(search);
     
 
     USE_POINTER AStarNode* node;
-    OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
+    OFFSET_TO_PTR(search->details, nodeOPtr, node);
 
     search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 0;
     return nodeOPtr;
 }
-void AStarAddToClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node)
+void AStarAddToClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node, offsetPtr ptr)
 {
-    search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
+    search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = ptr;
 }
-cl_uchar AStarNodeInClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node)
+bool AStarNodeInClosed(PARAM_GLOBAL_POINTER AStarSearch_BFS* search,PARAM_GLOBAL_POINTER AStarNode* node)
 {
-    return search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
+    return (bool)search->closedMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
 }
 
-cl_uchar AStarNodeInOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* node)
+bool AStarNodeInOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode* node)
 {
-    return search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
+    return (bool)search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z];
+}
+bool AStarCoordInOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_short3 tile)
+{
+    return (bool)search->openMap[tile.x][tile.y][tile.z];
 }
 
 
 void AStarOpenHeapTrickleUp(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, cl_int index)
 {
     cl_int prev = (index - 1) / 2;
-    offsetPtr3 bottomOPtr = search->openHeap_OPtrs[index];
+    offsetPtr bottomOPtr = search->openHeap_OPtrs[index];
 
     USE_POINTER AStarNode* bottomNode;
-    OFFSET_TO_PTR_3D(search->details, bottomOPtr, bottomNode);
+    OFFSET_TO_PTR(search->details, bottomOPtr, bottomNode);
 
     USE_POINTER AStarNode* prevNode;
-    OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[prev], prevNode);
+    OFFSET_TO_PTR(search->details, search->openHeap_OPtrs[prev], prevNode);
 
     while (index > 0 && AStarOpenHeapKey(search, prevNode) > AStarOpenHeapKey(search, bottomNode))
     {
         search->openHeap_OPtrs[index] = search->openHeap_OPtrs[prev];
         index = prev;
         prev = (prev - 1) / 2;
-        OFFSET_TO_PTR_3D(search->details, search->openHeap_OPtrs[prev], prevNode);
+        OFFSET_TO_PTR(search->details, search->openHeap_OPtrs[prev], prevNode);
     }
     search->openHeap_OPtrs[index] = bottomOPtr;
 }
 
 
-void AStarOpenHeapInsert(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
+void AStarOpenHeapInsert(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr nodeOPtr)
 {
     search->openHeap_OPtrs[search->openHeapSize] = nodeOPtr;
     AStarOpenHeapTrickleUp(search, search->openHeapSize);
@@ -697,13 +690,13 @@ void AStarOpenHeapInsert(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr
         printf("ERROR: AStarHeap Size Greater than ASTARHEAPSIZE!\n");
 
 }
-void AStarAddToOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr3 nodeOPtr)
+void AStarAddToOpen(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, offsetPtr nodeOPtr)
 {
     AStarOpenHeapInsert(search, nodeOPtr);
 
     USE_POINTER AStarNode* node;
-    OFFSET_TO_PTR_3D(search->details, nodeOPtr, node);
-    search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = 1;
+    OFFSET_TO_PTR(search->details, nodeOPtr, node);
+    search->openMap[node->tileIdx.x][node->tileIdx.y][node->tileIdx.z] = nodeOPtr;
 }
 
 offsetPtr AStarPathStepsNextFreePathNode(PARAM_GLOBAL_POINTER AStarPathSteps* list)
@@ -751,24 +744,8 @@ void AStarPrintPathNodeStats(PARAM_GLOBAL_POINTER AStarPathNode* node)
     printf("Node: Loc: ");
     Print_GE_INT3_Q16(node->mapCoord_Q16);
 }
-void AStarPrintSearchPathTo(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 destTile)
-{
-    USE_POINTER AStarNode* curNode = &search->details[destTile.x][destTile.y][destTile.z];
-    while (curNode != NULL)
-    {
-        AStarPrintNodeStats(curNode);
-        OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, curNode);
-    }
-}
-void AStarPrintSearchPathFrom(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, ge_int3 startTile)
-{
-    USE_POINTER AStarNode* curNode = &search->details[startTile.x][startTile.y][startTile.z];
-    while (curNode != NULL)
-    {
-        AStarPrintNodeStats(curNode);
-        OFFSET_TO_PTR_3D(search->details, curNode->nextOPtr, curNode);
-    }
-}
+
+
 
 void AStarPrintPath(PARAM_GLOBAL_POINTER AStarPathSteps* paths, offsetPtr startNodeOPtr)
 {
@@ -850,9 +827,9 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
  )
 {
     //start building the list .
-    offsetPtr3 curNodeOPtr =  search->startNodeOPtr;
+    offsetPtr curNodeOPtr =  search->startNodeOPtr;
     USE_POINTER AStarNode* curNode;
-    OFFSET_TO_PTR_3D(search->details, curNodeOPtr, curNode);
+    OFFSET_TO_PTR(search->details, curNodeOPtr, curNode);
     CL_CHECK_NULL(curNode);
 
 
@@ -900,10 +877,10 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
         }
         pNP = pN;
 
-        if (!VECTOR3_EQUAL(curNode->nextOPtr, OFFSET_NULL_3D)) 
+        if (curNode->nextOPtr != OFFSET_NULL)
         {
 
-            OFFSET_TO_PTR_3D(search->details, curNode->nextOPtr, curNode);
+            OFFSET_TO_PTR(search->details, curNode->nextOPtr, curNode);
 
             if(0)
             {
@@ -912,7 +889,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
                 USE_POINTER AStarNode* n2 = curNode;
                 do
                 {
-                    OFFSET_TO_PTR_3D(search->details, n2->nextOPtr, n2);
+                    OFFSET_TO_PTR(search->details, n2->nextOPtr, n2);
 
                     if (n2 != NULL) {
                         delta = INT3_ADD(SHORT3_TO_INT3(n2->tileIdx), INT3_NEG(holdTileCoord));
@@ -925,7 +902,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
                 if (n2 != NULL) 
                 {
                     USE_POINTER AStarNode* n2Prev;
-                    OFFSET_TO_PTR_3D(search->details, n2->prevOPtr, n2Prev);
+                    OFFSET_TO_PTR(search->details, n2->prevOPtr, n2Prev);
 
                     if (curNode != n2Prev)
                         curNode = n2Prev;
@@ -934,7 +911,7 @@ offsetPtr AStarFormPathSteps(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSearch_B
                 }
                 else
                 {
-                    OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, curNode);
+                    OFFSET_TO_PTR(search->details, search->endNodeOPtr, curNode);
                 }
             }
         }
@@ -1022,15 +999,35 @@ void AStarPathSteps_DeletePath(ALL_CORE_PARAMS, offsetPtr pathStartPtr)
 
 }
 
+offsetPtr AStarGrabDetailNode(PARAM_GLOBAL_POINTER AStarSearch_BFS* search, PARAM_GLOBAL_POINTER AStarNode** node_out)
+{
+    offsetPtr ptr = search->nextDetailNodePtr;
 
+    search->nextDetailNodePtr++;
+    if(search->nextDetailNodePtr >= ASTARDETAILSSIZE)
+    {
+        printf("AStarGrabDetailNode Out of Nodes. (ASTARDETAILSSIZE)\n");
+    }
+
+    USE_POINTER AStarNode* node;
+    OFFSET_TO_PTR(search->details, ptr, node);
+
+    AStarNodeInstantiate(node);
+
+
+    *node_out = node;
+    
+
+    return ptr;
+}
 
 
 AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER AStarSearch_BFS* search, int iterations)
 {
     USE_POINTER AStarNode* startNode;
     USE_POINTER AStarNode* targetNode;
-    OFFSET_TO_PTR_3D(search->details, search->startNodeOPtr,startNode);
-    OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr,targetNode);
+    OFFSET_TO_PTR(search->details, search->startNodeOPtr,startNode);
+    OFFSET_TO_PTR(search->details, search->endNodeOPtr,targetNode);
 
 
     //printf("AStarSearch_BFS_Continue..openHeapSize: %d\n", search->openHeapSize);
@@ -1038,44 +1035,45 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
     {
         //printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
         //find node in open with lowest f cost
-        offsetPtr3 currentOPtr = AStarRemoveFromOpen(search);
+        offsetPtr currentOPtr = AStarRemoveFromOpen(search);
 
 
         USE_POINTER AStarNode* current;
-        OFFSET_TO_PTR_3D(search->details, currentOPtr, current);
+        OFFSET_TO_PTR(search->details, currentOPtr, current);
 
         //printf("G: "); PrintQ16(current->g_Q16); printf(" H: "); PrintQ16(current->h_Q16);
 
-        AStarAddToClosed(search, current);//visited
-        if (VECTOR3_EQUAL(SHORT3_TO_INT3( current->tileIdx ), search->endNodeOPtr) )
+        AStarAddToClosed(search, current, currentOPtr);//visited
+        if (VECTOR3_EQUAL(current->tileIdx , targetNode->tileIdx) )
         {
             printf("AStarSearch_BFS_Continue AStarPathFindingProgress_Finished\n");
+            printf("Details Array Size: %d\n", search->nextDetailNodePtr);
+            printf("target node ptr: %d\n", search->endNodeOPtr);
+
 
             search->state = AStarPathFindingProgress_Finished;
             
-            USE_POINTER AStarNode* endNode;
-            OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr, endNode);
-            CL_CHECK_NULL(endNode);
 
-            endNode->nextOPtr = OFFSET_NULL_3D;
-            startNode->prevOPtr = OFFSET_NULL_3D;
+            targetNode->nextOPtr = OFFSET_NULL;
+            startNode->prevOPtr = OFFSET_NULL;
 
-
+            targetNode->prevOPtr = current->prevOPtr;
 
             //form next links
             USE_POINTER AStarNode* curNode = targetNode;
-            offsetPtr3 curNodeOPtr = search->endNodeOPtr;
+            offsetPtr curNodeOPtr = search->endNodeOPtr;
 
             while (curNode != NULL)
             {
                 USE_POINTER AStarNode* p;
-                OFFSET_TO_PTR_3D(search->details, curNode->prevOPtr, p);
+                OFFSET_TO_PTR(search->details, curNode->prevOPtr, p);
 
                 if(p != NULL)
                     p->nextOPtr = curNodeOPtr;
 
                 curNodeOPtr = curNode->prevOPtr;
                 curNode = p;
+
             }
 
             //form a simplified path
@@ -1092,51 +1090,34 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
         //5 neighbors
         for (int i = 0; i <= 5; i++)
         { 
-            ge_int3 prospectiveTileCoord;
+            ge_short3 prospectiveTileCoord;
             ge_int3 dir = staticData->directionalOffsets[i];
             prospectiveTileCoord.x = current->tileIdx.x + dir.x;
             prospectiveTileCoord.y = current->tileIdx.y + dir.y;
             prospectiveTileCoord.z = current->tileIdx.z + dir.z;
  
-            if (MapTileCoordValid(prospectiveTileCoord, 1)==0)
+            if (MapTileCoordValid(VECTOR3_CAST(prospectiveTileCoord, ge_int3), 1)==0)
             {
                 continue;
             }
 
 
-            
-            //if lateral dyagonol, check adjacents a for traversability as well. if all traverible - diagonoal is traversible.
-            // if(GE_INT3_ENTRY_COUNT(dir) == 2 && dir.z == 0)
-            // {
-            //     ge_int3 dirNoX = dir;
-            //     dirNoX.x=0;
-            //     ge_int3 dirNoY = dir;
-            //     dirNoX.y=0;
-
-            //     ge_int3 XCheckCoord;
-            //     ge_int3 YCheckCoord;
-
-
-            //     offsetPtr3 XCheckNodeOPtr = (offsetPtr3){XCheckCoord.x,XCheckCoord.y,XCheckCoord.z};
-            //     AStarNode* XCheckNode;
-            //     OFFSET_TO_PTR_3D(search->details, XCheckNodeOPtr, XCheckNode);
-            //     if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  XCheckNode, current) == 0))
-            //     {
-            //         continue;
-            //     }
-
-            //     offsetPtr3 YCheckNodeOPtr = (offsetPtr3){YCheckCoord.x,YCheckCoord.y,YCheckCoord.z};
-            //     AStarNode* YCheckNode;
-            //     OFFSET_TO_PTR_3D(search->details, YCheckNodeOPtr, YCheckNode);
-            //     if ((AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  YCheckNode, current) == 0))
-            //     {
-            //         continue;
-            //     }
-            // }
-
-            offsetPtr3 prospectiveNodeOPtr = (offsetPtr3){prospectiveTileCoord.x,prospectiveTileCoord.y,prospectiveTileCoord.z};
             USE_POINTER AStarNode* prospectiveNode;
-            OFFSET_TO_PTR_3D(search->details, prospectiveNodeOPtr, prospectiveNode);
+            offsetPtr prospectiveNodeOPtr;
+            if(AStarCoordInOpen(search, prospectiveTileCoord))
+            {
+                prospectiveNodeOPtr = search->openMap[prospectiveTileCoord.x][prospectiveTileCoord.y][prospectiveTileCoord.z];
+                OFFSET_TO_PTR(search->details, prospectiveNodeOPtr, prospectiveNode);
+            }
+            else
+            {
+                //printf("grabbing new prospective node\n");
+                prospectiveNodeOPtr = AStarGrabDetailNode(search, &prospectiveNode);
+                prospectiveNode->tileIdx = prospectiveTileCoord;
+            }
+
+
+
 
 
 
@@ -1155,7 +1136,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
 
             int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
            // PrintQ16(totalMoveCost); PrintQ16(current->g_Q16); PrintQ16(prospectiveNode->g_Q16);
-            if (((totalMoveCost < prospectiveNode->g_Q16) || AStarNodeInOpen(search, prospectiveNode) == 0) )
+            if (((totalMoveCost < prospectiveNode->g_Q16) || !AStarNodeInOpen(search, prospectiveNode)) )
             {
                 
 
@@ -1165,6 +1146,9 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,PARAM_GLOBAL_P
                 prospectiveNode->prevOPtr = currentOPtr;
 
                 //printf("G: "); PrintQ16(prospectiveNode->g_Q16); printf("H: ");  PrintQ16(prospectiveNode->h_Q16);
+                
+                //printf("Adding pn %d, with prevoptr of %d\n", prospectiveNodeOPtr, prospectiveNode->prevOPtr);
+                
                 AStarAddToOpen(search, prospectiveNodeOPtr);
             }
         }
@@ -1214,22 +1198,34 @@ cl_uchar AStarSearch_BFS_Routine(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER AStarSear
 
     printf("starting search from");
     search->state = AStarPathFindingProgress_Searching;
-    search->startNodeOPtr = (offsetPtr3){startTile.x,startTile.y,startTile.z};
-    search->endNodeOPtr = (offsetPtr3){destTile.x,destTile.y,destTile.z};
-    Print_GE_UINT3(search->startNodeOPtr); printf(" to "); Print_GE_UINT3(search->endNodeOPtr);
+    
+
+
+    USE_POINTER AStarNode* startNode;    
+    {
+    //grab a extra node so offset 0 isnt valid.
+    AStarGrabDetailNode(search, &startNode);
+    }
+    search->startNodeOPtr = AStarGrabDetailNode(search, &startNode);
+    startNode->tileIdx = (ge_short3){startTile.x,startTile.y,startTile.z};
+
+    USE_POINTER AStarNode* endNode;
+    search->endNodeOPtr = AStarGrabDetailNode(search, &endNode);
+    endNode->tileIdx = (ge_short3){destTile.x,destTile.y,destTile.z};
+    
+    
+    
+    Print_GE_SHORT3(startNode->tileIdx); printf(" to "); Print_GE_SHORT3(endNode->tileIdx);
     
     search->pathOPtr = futurePathPtr;
     USE_POINTER AStarPathNode* path;
     OFFSET_TO_PTR(gameState->paths.pathNodes, search->pathOPtr, path);
     path->processing = true;
 
-    USE_POINTER AStarNode* startNode;
-    USE_POINTER AStarNode* targetNode;
-    OFFSET_TO_PTR_3D(search->details, search->startNodeOPtr,startNode);
-    OFFSET_TO_PTR_3D(search->details, search->endNodeOPtr,targetNode);
+
 
     //add start to openList
-    startNode->h_Q16 = AStarNodeDistanceHuristic(search, startNode, targetNode);
+    startNode->h_Q16 = AStarNodeDistanceHuristic(search, startNode, endNode);
     AStarAddToOpen(search, search->startNodeOPtr );
 
 
@@ -1389,8 +1385,8 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
         gameState->mapSearchers[0].state = AStarPathFindingProgress_ResetReady;
 
         
-        gameState->mapSearchers[0].startNodeOPtr = OFFSET_NULL_3D;
-        gameState->mapSearchers[0].endNodeOPtr = OFFSET_NULL_3D;
+        gameState->mapSearchers[0].startNodeOPtr = OFFSET_NULL;
+        gameState->mapSearchers[0].endNodeOPtr = OFFSET_NULL;
         gameState->mapSearchers[0].openHeapSize = 0;
         gameState->mapSearchers[0].pathOPtr = OFFSET_NULL;
     }
