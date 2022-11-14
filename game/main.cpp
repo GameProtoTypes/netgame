@@ -18,6 +18,7 @@
 #include <SDL.h>
 #include "SDL_opengl.h"
 
+#include "implot.h"
 
 #include <angelscript.h>
 #include <scriptstdstring/scriptstdstring.h>
@@ -96,7 +97,7 @@ void print(std::string &msg)
 }
 
 
-void ProfileEvent(cl_event event, std::string label, cl_ulong* startNanoSec, bool isFirst = false)
+float ProfileEvent(cl_event event, std::string label, cl_ulong* startNanoSec, bool isFirst = false)
 {
     cl_ulong time_start;
     cl_ulong time_end;
@@ -125,8 +126,10 @@ void ProfileEvent(cl_event event, std::string label, cl_ulong* startNanoSec, boo
     nanoStartLocal / 1000000.0,
     nanoEndLocal/ 1000000.0);
 
-
+    return nanoEndLocal / 1000000.0;
 }
+
+
 
 
 int32_t main(int32_t argc, char* args[]) 
@@ -288,6 +291,16 @@ int32_t main(int32_t argc, char* args[])
 
     std::vector<ActionWrap> clientActions;
 
+
+
+    std::vector<float> t;
+    std::vector<float> profiles[9];
+
+    for(int i = 0; i < 9; i++)
+    {
+        profiles[i].reserve(500);
+    }
+
     while (!quit)
     {
         timerStartMs = SDL_GetTicks64();
@@ -297,12 +310,9 @@ int32_t main(int32_t argc, char* args[])
         
 
 
-
-
         if (gameNetworking.fullyConnectedToHost)
         {
             gameNetworking.CLIENT_SendActionUpdate_ToHost(clientActions);
-
         }
         gameNetworking.Update();
 
@@ -317,30 +327,9 @@ int32_t main(int32_t argc, char* args[])
 
 
         gameCompute.Stage1_Begin();
-        gameCompute.Stage1_End();
+        // gameCompute.Stage1_End();
         
         GSCS(A)
-
-        ImGui::Begin("Profiling");
-                
-        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        // double nanoSeconds = static_cast<double>(time_end - time_start);
-        // ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-        cl_ulong nanoSec;
-        cl_ulong nanoSec2;
-        ProfileEvent(gameCompute.actionEvent, "actionEvent", &nanoSec, true);
-        ProfileEvent(gameCompute.guiEvent, "guiEvent", &nanoSec2, true);
-
-        ProfileEvent(gameCompute.preUpdateEvent1, "preUpdateEvent1", &nanoSec);
-        ProfileEvent(gameCompute.preUpdateEvent2, "preUpdateEvent2", &nanoSec);
-        ProfileEvent(gameCompute.updatepre1Event, "updatepre1Event", &nanoSec);
-        ProfileEvent(gameCompute.updateEvent, "updateEvent", &nanoSec);
-        ProfileEvent(gameCompute.update2Event, "update2Event", &nanoSec);
-        ProfileEvent(gameCompute.postupdateEvent, "postupdateEvent", &nanoSec);
-
-        //ProfileEvent(gameCompute.writeEvent, "writeEvent (CPU->GPU)");
-        //ProfileEvent(gameCompute.readEvent, "readEvent (GPU->CPU)");
 
 
 
@@ -366,7 +355,7 @@ int32_t main(int32_t argc, char* args[])
             {
                 quit = true;
             }
-            else if (e.type == SDL_MOUSEWHEEL)
+            else if (e.type == SDL_MOUSEWHEEL && !ImGui::GetIO().WantCaptureMouse)
             {
                 if (e.wheel.y > 0) // scroll up
                 {
@@ -380,7 +369,7 @@ int32_t main(int32_t argc, char* args[])
                     rclientst->mousescroll--;
                 }
             }
-            else if (e.type == SDL_MOUSEBUTTONDOWN)
+            else if (e.type == SDL_MOUSEBUTTONDOWN && !ImGui::GetIO().WantCaptureMouse)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
@@ -394,7 +383,7 @@ int32_t main(int32_t argc, char* args[])
                     rclientst->mouseSecondaryPressed = 1;
                 }
             }
-            else if (e.type == SDL_MOUSEBUTTONUP)
+            else if (e.type == SDL_MOUSEBUTTONUP && !ImGui::GetIO().WantCaptureMouse)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
@@ -542,7 +531,6 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("PAUSE"))
             {
-                gameCompute.Stage1_End();
                 gameStateActions->pauseState = 1;
                 if(gameNetworking.serverRunning)
                     gameNetworking.HOST_SendPauseAll_ToClients();
@@ -553,7 +541,6 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("RESUME"))
             {
-                gameCompute.Stage1_End();
                 gameStateActions->pauseState = 0;
                 if(gameNetworking.serverRunning)
                     gameNetworking.HOST_SendResumeAll_ToClients();
@@ -576,14 +563,12 @@ int32_t main(int32_t argc, char* args[])
         if(!gameNetworking.serverRunning && !gameNetworking.connectedToHost)
             if (ImGui::Button("Start Server"))
             {
-                gameCompute.Stage1_End();
                 gameNetworking.StartServer(port);
             }
         
         if(gameNetworking.serverRunning)
             if(ImGui::Button("Stop Server"))
             {
-                gameCompute.Stage1_End();
                 gameNetworking.StopServer();
             }
 
@@ -604,12 +589,10 @@ int32_t main(int32_t argc, char* args[])
         {
             if (ImGui::Button("CLIENT_HardDisconnect"))
             {
-                gameCompute.Stage1_End();
                 gameNetworking.CLIENT_HardDisconnect();
             }
             if (ImGui::Button("CLIENT_SoftDisconnect"))
             {
-                gameCompute.Stage1_End();
                 gameNetworking.CLIENT_SoftDisconnect();
             }
         }
@@ -654,7 +637,7 @@ int32_t main(int32_t argc, char* args[])
                 
         if (ImGui::Button("Save GameState To File"))
         {   
-            gameCompute.Stage1_End();
+
             gameCompute.ReadFullGameState();
             std::ofstream myfile;
             myfile.open("gamestate.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
@@ -669,7 +652,7 @@ int32_t main(int32_t argc, char* args[])
         }
         if (ImGui::Button("Load GameState From File"))
         {
-            gameCompute.Stage1_End();
+
             std::ifstream myfile;
             myfile.open("gamestate.bin", std::ifstream::binary);
             if (!myfile.is_open())
@@ -708,7 +691,6 @@ int32_t main(int32_t argc, char* args[])
         
 
         //-----------------------------------------------------------------------------------
-        gameCompute.Stage1_End();
 
 
 
@@ -839,14 +821,72 @@ int32_t main(int32_t argc, char* args[])
 
 
         GSCS(D)
+        gameCompute.Stage1_End();
 
 
+        ImGui::Begin("Profiling");
+                
+        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+        // double nanoSeconds = static_cast<double>(time_end - time_start);
+        // ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
+        cl_ulong nanoSec;
+        cl_ulong nanoSec2;
+        if(gameStateActions->pauseState == 0)
+        {
+            profiles[0].push_back(ProfileEvent(gameCompute.actionEvent, "actionEvent", &nanoSec, true));
+            profiles[1].push_back(ProfileEvent(gameCompute.guiEvent, "guiEvent", &nanoSec2, true));
 
+            profiles[2].push_back(ProfileEvent(gameCompute.preUpdateEvent1, "preUpdateEvent1", &nanoSec));
+            profiles[3].push_back(ProfileEvent(gameCompute.preUpdateEvent2, "preUpdateEvent2", &nanoSec));
+            profiles[4].push_back(ProfileEvent(gameCompute.updatepre1Event, "updatepre1Event", &nanoSec));
+            profiles[5].push_back(ProfileEvent(gameCompute.updateEvent, "updateEvent", &nanoSec));
+            profiles[6].push_back(ProfileEvent(gameCompute.update2Event, "update2Event", &nanoSec));
+            profiles[7].push_back(ProfileEvent(gameCompute.postupdateEvent, "postupdateEvent", &nanoSec));
+            profiles[8].push_back(gameNetworking.lastFrameTimeMs);
+        }
+        if(profiles[0].size() > 500)
+        {
+            for(int i = 0; i < 9; i++)
+            {
+                profiles[i].clear();
+                profiles[i].reserve(500);
+                
+            }
+        }
 
+        //ProfileEvent(gameCompute.writeEvent, "writeEvent (CPU->GPU)");
+        //ProfileEvent(gameCompute.readEvent, "readEvent (GPU->CPU)");
 
 
 
         ImGui::Text("TickIdx: %d", gameStateActions->tickIdx);
+
+                
+        if (ImPlot::BeginPlot("Times")) {
+
+            ImPlot::SetupAxes("Tick","Time");
+            ImPlot::SetupAxesLimits(0,500,0,gameNetworking.targetTickTimeMs*2);
+
+            
+            ImPlot::PlotLine("actionEvent", profiles[0].data(),      500);
+            ImPlot::PlotLine("guiEvent", profiles[1].data(),         500);
+            ImPlot::PlotLine("preUpdateEvent1", profiles[2].data(),  500);
+            ImPlot::PlotLine("preUpdateEvent2", profiles[3].data(),  500);
+            ImPlot::PlotLine("updatepre1Event", profiles[4].data(),  500);
+            ImPlot::PlotLine("updateEvent", profiles[5].data(),      500);
+            ImPlot::PlotLine("update2Event", profiles[6].data(),     500);
+            ImPlot::PlotLine("postupdateEvent", profiles[7].data(),  500);
+            ImPlot::PlotLine("FrameTime", profiles[8].data(),  500);
+
+            
+            ImPlot::PlotInfLines("LIMIT",&gameNetworking.targetTickTimeMs,1,ImPlotInfLinesFlags_Horizontal);
+
+
+            ImPlot::EndPlot();
+        }
+
+
         ImGui::End();
 
 

@@ -667,9 +667,9 @@ void GameGPUCompute::Stage1_End()
     CL_HOST_ERROR_CHECK(ret)
 
     // Read the memory buffer C on the device to the local variable C
-    ret = clEnqueueReadBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
-        sizeof(GameStateActions), gameStateActions.get(), 0, NULL, &readEvent);
-    CL_HOST_ERROR_CHECK(ret)
+    // ret = clEnqueueReadBuffer(command_queue, gamestateB_mem_obj, CL_TRUE, 0,
+    //     sizeof(GameStateActions), gameStateActions.get(), 0, NULL, &readEvent);
+    // CL_HOST_ERROR_CHECK(ret)
 
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
@@ -680,7 +680,10 @@ void GameGPUCompute::Stage1_End()
 }
 void GameGPUCompute::ReadFullGameState()
 {
+
     std::cout << "Reading Game State..." << std::endl;
+    Stage1_End();
+
     ret = clFinish(command_queue);
     CL_HOST_ERROR_CHECK(ret)
 
@@ -703,6 +706,8 @@ void GameGPUCompute::ReadFullGameState()
 void GameGPUCompute::WriteFullGameState()
 {
     std::cout << "Writing Game State..." << std::endl;
+    Stage1_End();
+
     ret = clEnqueueWriteBuffer(command_queue, gamestate_mem_obj, CL_TRUE, 0,
         structSizes.gameStateStructureSize, gameState.get()->data, 0, NULL, &writeEvent);
     CL_HOST_ERROR_CHECK(ret)

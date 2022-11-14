@@ -71,7 +71,7 @@ public:
 	void Stage1_Begin();
 	void Stage1_End();
 
-	bool stage1_Running;
+	bool stage1_Running = false;
 
 	void ReadFullGameState();
 	void WriteFullGameState();

@@ -24,6 +24,10 @@ add_library(imgui
     # Main Imgui files
     ./imgui/imgui.cpp ./imgui/imgui_draw.cpp
     ./imgui/imgui_tables.cpp ./imgui/imgui_widgets.cpp
+
+    #implot
+    ./imgui/implot.cpp ./imgui/implot_items.cpp ./imgui/implot_demo.cpp
+
     # SDL2+OpenGL-specific files
     ./imgui/backends/imgui_impl_sdl.cpp
     ./imgui/backends/imgui_impl_opengl3.cpp)

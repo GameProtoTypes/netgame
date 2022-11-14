@@ -18,7 +18,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
+#include "implot.h"
 
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
@@ -95,6 +95,7 @@ void GameGraphics::Init()
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     imguicontext = ImGui::CreateContext();
+    ImPlot::CreateContext();
 
     // Setup Dear ImGui style
     ImGui::StyleColorsLight();
@@ -526,7 +527,7 @@ GameGraphics::~GameGraphics()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-
+    ImPlot::DestroyContext();
 
 }
 

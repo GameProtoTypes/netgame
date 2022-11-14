@@ -286,6 +286,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_draw.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_tables.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_items.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_demo.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\backends\imgui_impl_sdl.cpp" />
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\backends\imgui_impl_opengl3.cpp" />
   </ItemGroup>

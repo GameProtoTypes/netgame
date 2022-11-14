@@ -1368,7 +1368,6 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
         {
             gameState->curMapSearchJobPtr = 0;
         }
-
     }
 
 
@@ -5088,7 +5087,7 @@ __kernel void game_init_single(ALL_CORE_PARAMS)
     printf("Game Initializing...\n");
 
 
-
+    printf("ASTARBFS Size: %d\n", sizeof(AStarSearch_BFS));
 
     printf("Initializing StaticData Buffers..\n");
     MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);

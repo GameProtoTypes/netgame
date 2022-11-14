@@ -13,6 +13,15 @@
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_items.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\backends\imgui_impl_sdl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
