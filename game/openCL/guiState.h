@@ -1,5 +1,5 @@
 
-#define NUM_EDITOR_MENU_TABS (5)
+#define NUM_EDITOR_MENU_TABS (6)
 
 #define GUI_MAX_WINDOWS (10)
 struct GuiState

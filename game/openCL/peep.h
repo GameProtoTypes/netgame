@@ -315,6 +315,7 @@ enum MapTile {
 	MapTile_Shadow_8,
 	MapTile_Shadow_9,
 	MapTile_MACHINE_COMMAND_CENTER = 35,
+	MapTile_MACHINE_MINING_SITE,
 	MapTile_Shadow_10 = 41,
 	MapTile_Shadow_11,
 	MapTile_Shadow_12,
@@ -525,9 +526,11 @@ struct Machine
 	Inventory inventoryIn;
 	Inventory inventoryOut;
 
-	//Command Center Sepecific
+	
 	offsetPtr rootOrderPtr;
 	int orderLen;
+
+	offsetPtrShort3 scanMapTile;
 
 } typedef Machine;
 

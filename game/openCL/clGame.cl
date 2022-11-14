@@ -10,7 +10,7 @@
 //#define PEEP_DISABLE_TILECORRECTIONS
 #define PEEP_PATH_CROWD (4)
 
-#define DEBUG_PATHS
+//#define DEBUG_PATHS
 
 #include "clGUI.h"
 
@@ -356,6 +356,11 @@ void Machine_InitDescriptions(ALL_CORE_PARAMS)
     m->type = MachineTypes_COMMAND_CENTER;
     m->tile = MapTile_MACHINE_COMMAND_CENTER;
     m->processingTime = 100;
+
+    m = &gameState->machineDescriptions[MachineTypes_MINING_SITE];
+    m->type = MachineTypes_MINING_SITE;
+    m->tile = MapTile_MACHINE_MINING_SITE;
+    m->processingTime = 10;
 }
 
 void InitItemTypeTiles(ALL_CORE_PARAMS)
@@ -2886,6 +2891,41 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
     }
     
 }
+offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
+{
+    offsetPtr ptr = gameState->nextOrderIdx;
+    gameState->nextOrderIdx++;
+    bool loopCheck = false;
+    while( gameState->orders[gameState->nextOrderIdx].valid)
+    {
+        gameState->nextOrderIdx++;
+        if(gameState->nextOrderIdx >= MAX_ORDERS)
+        {
+            gameState->nextOrderIdx = 0;
+            if(loopCheck)
+            {
+                printf("Out of Order Space! (MAX_ORDERS)\n");
+            }
+            loopCheck = true;
+        }
+    }
+
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, ptr, order);
+
+    order->valid = true;
+    order->ptr = ptr;
+    order->pendingDelete = false;
+    order->refCount = 0;
+    order->prevExecutionOrder = OFFSET_NULL;
+    order->nextExecutionOrder = OFFSET_NULL;
+    order->pathToDestPtr = OFFSET_NULL;
+    order->selectingOrderLocation = false;
+    order->destinationSet = false;
+    order->aStarJobPtr = OFFSET_NULL;
+
+    return ptr;
+}
 
 
 void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
@@ -2947,7 +2987,6 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
         if(machine->orderLen > 1)
         {
 
-
             USE_POINTER Order* order;
             OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
 
@@ -2988,8 +3027,6 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
                             if((!pathNode->completed && !pathNode->processing))
                             {
 
-
-
                                 printf("path: %d\n", nextOrder->pathToDestPtr);
 
                                 pathNode->processing = true;
@@ -3022,15 +3059,60 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
 
 
         }
+   }
+   else if(desc->type == MachineTypes_MINING_SITE)
+   {
+        if(machine->rootOrderPtr == OFFSET_NULL)
+        {
+            //prepare new order for next peep.
+            if(VECTOR3_EQUAL( machine->scanMapTile , OFFSET_NULL_SHORT_3D))
+            {
+                machine->scanMapTile = machine->mapTilePtr;
+                machine->scanMapTile.x++;
+            }
+            const int blockRadius = 5;
+
+
+            //advance
+            MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, VECTOR3_CAST(machine->scanMapTile, ge_int3));
+            if(tile == MapTile_NONE)
+            {   
+                machine->scanMapTile.z--;
+            }
+            else
+            {
+                //make order to navigate to tile.
+                USE_POINTER Order* order;
+                machine->rootOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
+                order->mapDest_Coord = VECTOR3_CAST( machine->scanMapTile, ge_int3);
+                order->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                order->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+
+                USE_POINTER AStarJob* job;
+                OFFSET_TO_PTR(gameState->mapSearchJobQueue, order->aStarJobPtr, job);
+
+                job->startLoc = VECTOR3_CAST( machine->mapTilePtr, ge_int3);
+                job->endLoc = VECTOR3_CAST( machine->scanMapTile, ge_int3);
+                job->pathPtr = order->pathToDestPtr;
+
+
+            }
 
 
 
-        
+
+
+
+        }
+
+
+
 
 
    }
 
-
+    
 
 
 }
@@ -3424,41 +3506,6 @@ void InventoryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Inventory* inventory)
 }
 
 
-offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
-{
-    offsetPtr ptr = gameState->nextOrderIdx;
-    gameState->nextOrderIdx++;
-    bool loopCheck = false;
-    while( gameState->orders[gameState->nextOrderIdx].valid)
-    {
-        gameState->nextOrderIdx++;
-        if(gameState->nextOrderIdx >= MAX_ORDERS)
-        {
-            gameState->nextOrderIdx = 0;
-            if(loopCheck)
-            {
-                printf("Out of Order Space! (MAX_ORDERS)\n");
-            }
-            loopCheck = true;
-        }
-    }
-
-    USE_POINTER Order* order;
-    OFFSET_TO_PTR(gameState->orders, ptr, order);
-
-    order->valid = true;
-    order->ptr = ptr;
-    order->pendingDelete = false;
-    order->refCount = 0;
-    order->prevExecutionOrder = OFFSET_NULL;
-    order->nextExecutionOrder = OFFSET_NULL;
-    order->pathToDestPtr = OFFSET_NULL;
-    order->selectingOrderLocation = false;
-    order->destinationSet = false;
-    order->aStarJobPtr = OFFSET_NULL;
-
-    return ptr;
-}
 
 
 void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_GLOBAL_POINTER SynchronizedClientState* client)
@@ -3552,6 +3599,15 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
 
                                 Peep_AssignOrder(ALL_CORE_PARAMS_PASS, peep, newOrderPtr);
                             }
+                        }
+                    }
+                    else if(machDesc->type == MachineTypes_MINING_SITE)
+                    {
+                        LOCAL_STR(str, "Mine"); 
+                        if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
+                        (float3)(0.4,0.4,0.4), str, NULL, NULL ))
+                        {
+                            
                         }
                     }
                     else
@@ -4043,6 +4099,10 @@ PARAM_GLOBAL_POINTER SyncedGui* gui,
             {
                 CommandCenterMachineGui(GUIID_PASS, (ge_int2)(0,0), gui->guiState.windowSizes[1],0, client, mach);
             }
+            else if(desc->type == MachineTypes_MINING_SITE)
+            {
+
+            }
             else
             {
                 LOCAL_STRL(thinkingtxt2, "---", thinkingtxtLen); 
@@ -4175,6 +4235,15 @@ int cliId)
         client->curToolMachine = MachineTypes_COMMAND_CENTER;
 
         GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 4);
+    }
+    LOCAL_STR(createTxt4, "CREATE\nMINING SITE");
+    if(GUI_BUTTON(GUIID_PASS, (ge_int2){500 ,0}, (ge_int2){100, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF, createTxt4, &downDummy, &(gui->guiState.menuToggles[5])) == 1)
+    {
+        // printf("create mode");
+        client->curTool = EditorTools_Create;
+        client->curToolMachine = MachineTypes_MINING_SITE;
+
+        GUI_UpdateToggleGroup(gui->guiState.menuToggles, NUM_EDITOR_MENU_TABS, 5);
     }
 
 
