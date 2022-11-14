@@ -59,7 +59,7 @@ enum PeepState_BitFlags
 	PeepState_BitFlags_visible
 };
 
-
+#define PEEP_ORDER_STACK_SIZE (10)
 struct PeepState_Basic
 {
 	cl_uint bitflags0;
@@ -73,8 +73,9 @@ struct PeepState_Basic
 	cl_int buriedGlitchState;
 
 
-	offsetPtr orderPtr;
-	bool orderInProgress;
+	offsetPtr orderPtrStack[PEEP_ORDER_STACK_SIZE];
+	int orderStackIdx;
+
 
 }typedef PeepState_Basic;
 
