@@ -546,8 +546,11 @@ enum OrderActions
 	OrderAction_MINE,
 	OrderAction_DROPOFF_MACHINE,
 	OrderAction_PICKUP_MACHINE,
+	OrderAction_OPERATE_MACHINE,
 	OrderAction_WAYPOINT,
 	OrderAction_JUMP_TO_ORDER
+	
+
 } typedef OrderActions;
 
 

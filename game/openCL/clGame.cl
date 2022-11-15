@@ -403,6 +403,8 @@ offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
 
     machine->rootOrderPtr = OFFSET_NULL;
 
+    machine->scanMapTile = OFFSET_NULL_SHORT_3D;
+
 
     return ptr;
 }
@@ -2124,7 +2126,6 @@ void PeepMapTileCollisions(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     //'game gravity'
     //peep->physics.base.v_Q16.z += (TO_Q16(-1) >> 3);
 }
-
 offsetPtr PeepCurrentOrder(PARAM_GLOBAL_POINTER Peep* peep)
 {
     if(peep->stateBasic.orderStackIdx >= 0)
@@ -2133,7 +2134,33 @@ offsetPtr PeepCurrentOrder(PARAM_GLOBAL_POINTER Peep* peep)
         return OFFSET_NULL;
 
 }
+void PeepStartOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, PeepCurrentOrder(peep), order);
+    if(order != NULL)
+    {
+        peep->physics.drive.targetPathNodeOPtr = order->pathToDestPtr;
+    }
+    else
+    {
+        peep->physics.drive.targetPathNodeOPtr = OFFSET_NULL;
+    }
+}
 
+
+void Peep_DetachFromAllOrders(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    while(PeepCurrentOrder(peep) != OFFSET_NULL)
+    {
+        USE_POINTER Order* order;
+        OFFSET_TO_PTR(gameState->orders, PeepCurrentOrder(peep) , order);
+        order->refCount--;
+        peep->stateBasic.orderStackIdx--;
+    }
+    PeepStartOrder(ALL_CORE_PARAMS_PASS, peep);
+}
 void Peep_DetachFromOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
     if(PeepCurrentOrder(peep) != OFFSET_NULL)
@@ -2143,21 +2170,20 @@ void Peep_DetachFromOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
         order->refCount--;
         peep->stateBasic.orderStackIdx--;
     }
+    PeepStartOrder(ALL_CORE_PARAMS_PASS, peep);
 
-
-    peep->physics.drive.targetPathNodeOPtr = OFFSET_NULL;
-    
 }
 
 void Peep_PushAssignOrder(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, offsetPtr orderPtr)
 {
     peep->stateBasic.orderStackIdx++;
     peep->stateBasic.orderPtrStack[peep->stateBasic.orderStackIdx] = orderPtr;
-
+    
     USE_POINTER Order* order;
-    OFFSET_TO_PTR(gameState->orders, orderPtr, order);
-
-    peep->physics.drive.targetPathNodeOPtr = order->pathToDestPtr;
+    OFFSET_TO_PTR(gameState->orders, PeepCurrentOrder(peep) , order);
+    order->refCount++;
+    
+    PeepStartOrder(ALL_CORE_PARAMS_PASS, peep);
 }
 
 
@@ -2559,7 +2585,29 @@ void PeepPush(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
     TransferInventory(&peep->inventory, &machine->inventoryIn);
 }
+void PeepOperate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+{
+    ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
+    mapCoord.z--;
 
+    MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+    USE_POINTER Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
+
+    USE_POINTER MachineDesc* desc;
+    OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, desc);
+    if(desc->type == MachineTypes_MINING_SITE )
+    {
+        if(machine->rootOrderPtr != OFFSET_NULL)
+        {
+            USE_POINTER Order* order;
+            OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
+
+            order->refCount=0;
+            Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, machine->rootOrderPtr);
+            machine->rootOrderPtr = OFFSET_NULL;
+        }
+    }
+}
 void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
 
@@ -2583,7 +2631,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     {
         USE_POINTER Order* order;
         OFFSET_TO_PTR(gameState->orders, PeepCurrentOrder(peep), order);
-        printf("has order..\n");
+
         if(!order->valid)
             Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
     
@@ -2606,16 +2654,16 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                 //advance
                 if(targetPathNode->completed)
                 {
-                     printf("advacne %d\n", peep->physics.drive.targetPathNodeOPtr );
+
                     if(targetPathNode->nextOPtr != OFFSET_NULL)
                     {
-                         printf("advacne2 %d\n", targetPathNode->nextOPtr);
+
                         peep->physics.drive.prevPathNodeOPtr = peep->physics.drive.targetPathNodeOPtr;        
                         peep->physics.drive.targetPathNodeOPtr = targetPathNode->nextOPtr;
 
                         if (peep->physics.drive.targetPathNodeOPtr != OFFSET_NULL ) 
                         {
-                             printf("advacne3 %d\n", peep->physics.drive.targetPathNodeOPtr );
+
                             USE_POINTER AStarPathNode* targetPathNode;
                             OFFSET_TO_PTR(gameState->paths.pathNodes, peep->physics.drive.targetPathNodeOPtr,targetPathNode);
                             CL_CHECK_NULL(targetPathNode);
@@ -2649,21 +2697,23 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                             {
                                 PeepPull(ALL_CORE_PARAMS_PASS, peep);
                             }
-                            
+                            else if(order->action == OrderAction_OPERATE_MACHINE)
+                            {
+
+                            }
 
 
-                            printf("dest reached\n");
 
-                            
+                            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
                             if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
                             {
                                // printf("peep detach from order\n");
-                               Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                               
                             }
                             else//advance order
                             {
-                                Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
-                                printf("peep advancing to order %d\n", order->nextExecutionOrder);
+
+                                //printf("peep advancing to order %d\n", order->nextExecutionOrder);
                                 Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
                             }
                             
@@ -3073,14 +3123,11 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
             const int blockRadius = 5;
 
 
-            //advance
-            MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, VECTOR3_CAST(machine->scanMapTile, ge_int3));
-            if(tile == MapTile_NONE)
-            {   
-                machine->scanMapTile.z--;
-            }
-            else
+
             {
+
+
+
                 //make order to navigate to tile.
                 USE_POINTER Order* order;
                 machine->rootOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
@@ -3088,15 +3135,19 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
                 order->mapDest_Coord = VECTOR3_CAST( machine->scanMapTile, ge_int3);
                 order->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                 order->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+                order->refCount = 1;//keep alive for next peep
+                order->action = OrderAction_MINE;
 
                 USE_POINTER AStarJob* job;
                 OFFSET_TO_PTR(gameState->mapSearchJobQueue, order->aStarJobPtr, job);
 
                 job->startLoc = VECTOR3_CAST( machine->mapTilePtr, ge_int3);
+                job->startLoc.z++;
                 job->endLoc = VECTOR3_CAST( machine->scanMapTile, ge_int3);
                 job->pathPtr = order->pathToDestPtr;
 
-
+                printf("mining site order created.  site loc:"); Print_GE_INT3(VECTOR3_CAST( machine->mapTilePtr, ge_int3)); printf(" dest loc:");
+                Print_GE_INT3(job->endLoc);
             }
 
 
@@ -3607,7 +3658,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
                         (float3)(0.4,0.4,0.4), str, NULL, NULL ))
                         {
-                            
+                            PeepOperate(ALL_CORE_PARAMS_PASS, peep);
                         }
                     }
                     else
@@ -4628,12 +4679,10 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         newOrder->pendingDelete = false;
                         newOrder->mapDest_Coord = firstPeepMapCoord;
                         newOrder->prevExecutionOrder = OFFSET_NULL;
-                        newOrder->nextExecutionOrder = mainPathOrderPtr;
+                        newOrder->nextExecutionOrder = OFFSET_NULL;
                         newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                         newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
 
-                        newOrder->refCount++;
-                        newMainOrder->refCount++;
 
                         USE_POINTER AStarJob* job;
                         OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
@@ -4641,9 +4690,10 @@ __kernel void game_apply_actions(ALL_CORE_PARAMS)
                         job->endLoc = firstPeepMapCoord;
                         job->pathPtr = newOrder->pathToDestPtr;
 
-                        Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, curPeep);
+                        Peep_DetachFromAllOrders(ALL_CORE_PARAMS_PASS, curPeep);
+                        Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, curPeep, mainPathOrderPtr);
                         Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, curPeep, newOrderPtr);
-                        
+
                         curPeepIdx = curPeep->prevSelectionPeepPtr[cliId];
                     }
 

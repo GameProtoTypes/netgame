@@ -880,8 +880,9 @@ int32_t main(int32_t argc, char* args[])
             ImPlot::PlotLine("FrameTime", profiles[8].data(),  500);
 
             
-            ImPlot::PlotInfLines("LIMIT",&gameNetworking.targetTickTimeMs,1,ImPlotInfLinesFlags_Horizontal);
-
+            ImPlot::PlotInfLines("Limit",&gameNetworking.targetTickTimeMs,1,ImPlotInfLinesFlags_Horizontal);
+            int d = gameStateActions->tickIdx%501;
+            ImPlot::PlotInfLines("Tick",&d,1);
 
             ImPlot::EndPlot();
         }
