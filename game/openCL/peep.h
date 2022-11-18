@@ -512,6 +512,8 @@ enum MachineState
 } typedef MachineState;
 
 
+
+
 #define MAX_MACHINES (1024*4)
 struct Machine
 {
@@ -531,7 +533,7 @@ struct Machine
 	offsetPtr rootOrderPtr;
 	int orderLen;
 
-	offsetPtrShort3 scanMapTile;
+
 
 } typedef Machine;
 
@@ -539,7 +541,7 @@ struct Machine
 
 
 
-#define MAX_ORDERS (1024)
+#define MAX_ORDERS (4096)
 enum OrderActions
 {
 	OrderAction_NONE,

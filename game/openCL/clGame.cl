@@ -403,7 +403,7 @@ offsetPtr Machine_CreateMachine(ALL_CORE_PARAMS)
 
     machine->rootOrderPtr = OFFSET_NULL;
 
-    machine->scanMapTile = OFFSET_NULL_SHORT_3D;
+
 
 
     return ptr;
@@ -2585,7 +2585,46 @@ void PeepPush(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
     TransferInventory(&peep->inventory, &machine->inventoryIn);
 }
-void PeepOperate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
+
+
+offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
+{
+    offsetPtr ptr = gameState->nextOrderIdx;
+    gameState->nextOrderIdx++;
+    bool loopCheck = false;
+    while( gameState->orders[gameState->nextOrderIdx].valid)
+    {
+        gameState->nextOrderIdx++;
+        if(gameState->nextOrderIdx >= MAX_ORDERS)
+        {
+            gameState->nextOrderIdx = 0;
+            if(loopCheck)
+            {
+                printf("Out of Order Space! (MAX_ORDERS)\n");
+            }
+            loopCheck = true;
+        }
+    }
+
+    USE_POINTER Order* order;
+    OFFSET_TO_PTR(gameState->orders, ptr, order);
+
+    order->valid = true;
+    order->ptr = ptr;
+    order->pendingDelete = false;
+    order->refCount = 0;
+    order->prevExecutionOrder = OFFSET_NULL;
+    order->nextExecutionOrder = OFFSET_NULL;
+    order->pathToDestPtr = OFFSET_NULL;
+    order->selectingOrderLocation = false;
+    order->destinationSet = false;
+    order->aStarJobPtr = OFFSET_NULL;
+
+    return ptr;
+}
+
+
+offsetPtr PeepOperate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, offsetPtr nextOrderPtr)
 {
     ge_int3 mapCoord = SHORT3_TO_INT3(peep->mapCoord);
     mapCoord.z--;
@@ -2597,16 +2636,78 @@ void PeepOperate(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
     OFFSET_TO_PTR(gameState->machineDescriptions, machine->MachineDescPtr, desc);
     if(desc->type == MachineTypes_MINING_SITE )
     {
-        if(machine->rootOrderPtr != OFFSET_NULL)
-        {
-            USE_POINTER Order* order;
-            OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
+            printf("peep operating mining site\n");
+            ge_int3 coord = VECTOR3_CAST(machine->mapTilePtr, ge_int3);
+            coord.x += RandomRange(gameStateActions->tickIdx, -2,3);
+                        coord.y += RandomRange(gameStateActions->tickIdx+1, -2,3);
+            if(coord.x == machine->mapTilePtr.x && coord.y == machine->mapTilePtr.y)
+            {
+             coord.x++;
+             coord.y++;
+            }
 
-            order->refCount=0;
-            Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, machine->rootOrderPtr);
-            machine->rootOrderPtr = OFFSET_NULL;
-        }
+
+            MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, coord);
+            while(tile == MapTile_NONE)
+            {
+                coord.z--;
+                tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, coord);
+            }
+            coord.z++;
+
+            {
+                USE_POINTER Order* nextOrder;
+                OFFSET_TO_PTR(gameState->orders, nextOrderPtr, nextOrder);
+
+                //make order to return to next order destination after finish
+                USE_POINTER Order* returnOrder;
+                offsetPtr returnOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                OFFSET_TO_PTR(gameState->orders, returnOrderPtr, returnOrder);
+                returnOrder->mapDest_Coord = nextOrder->mapDest_Coord;
+                returnOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                returnOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+                returnOrder->nextExecutionOrder = nextOrder->nextExecutionOrder;
+                returnOrder->action = nextOrder->action;
+
+                USE_POINTER AStarJob* returnJob;
+                OFFSET_TO_PTR(gameState->mapSearchJobQueue, returnOrder->aStarJobPtr, returnJob);
+
+                returnJob->startLoc = VECTOR3_CAST( coord, ge_int3);
+                returnJob->endLoc = nextOrder->mapDest_Coord;
+                returnJob->pathPtr = returnOrder->pathToDestPtr;
+
+
+
+
+
+                //make order to navigate to tile.
+                USE_POINTER Order* order;
+                offsetPtr orderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                OFFSET_TO_PTR(gameState->orders, orderPtr, order);
+                order->mapDest_Coord = coord;
+                order->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                order->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+                order->nextExecutionOrder = returnOrderPtr;
+                order->action = OrderAction_MINE;
+
+                USE_POINTER AStarJob* job;
+                OFFSET_TO_PTR(gameState->mapSearchJobQueue, order->aStarJobPtr, job);
+
+                job->startLoc = VECTOR3_CAST( machine->mapTilePtr, ge_int3);
+                job->startLoc.z++;
+                job->endLoc = coord;
+                job->pathPtr = order->pathToDestPtr;
+
+
+
+
+
+
+                return orderPtr;
+            }
     }
+
+    return OFFSET_NULL;
 }
 void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 {
@@ -2683,6 +2784,10 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
 
                         if( order != NULL)
                         {
+                            offsetPtr nextOrder = order->nextExecutionOrder;
+
+                            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+
 
                             //do the order action
                             if(order->action == OrderAction_MINE)
@@ -2699,12 +2804,12 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                             }
                             else if(order->action == OrderAction_OPERATE_MACHINE)
                             {
-
+                                nextOrder = PeepOperate(ALL_CORE_PARAMS_PASS, peep, nextOrder);
                             }
 
 
 
-                            Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                            
                             if((order->nextExecutionOrder == OFFSET_NULL && order->prevExecutionOrder == OFFSET_NULL))
                             {
                                // printf("peep detach from order\n");
@@ -2714,7 +2819,7 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep)
                             {
 
                                 //printf("peep advancing to order %d\n", order->nextExecutionOrder);
-                                Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, order->nextExecutionOrder);
+                                Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, nextOrder);
                             }
                             
                         }
@@ -2941,42 +3046,6 @@ int PeepMapVisiblity(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER Peep* peep, int mapZV
     }
     
 }
-offsetPtr Order_GetNewOrder(ALL_CORE_PARAMS)
-{
-    offsetPtr ptr = gameState->nextOrderIdx;
-    gameState->nextOrderIdx++;
-    bool loopCheck = false;
-    while( gameState->orders[gameState->nextOrderIdx].valid)
-    {
-        gameState->nextOrderIdx++;
-        if(gameState->nextOrderIdx >= MAX_ORDERS)
-        {
-            gameState->nextOrderIdx = 0;
-            if(loopCheck)
-            {
-                printf("Out of Order Space! (MAX_ORDERS)\n");
-            }
-            loopCheck = true;
-        }
-    }
-
-    USE_POINTER Order* order;
-    OFFSET_TO_PTR(gameState->orders, ptr, order);
-
-    order->valid = true;
-    order->ptr = ptr;
-    order->pendingDelete = false;
-    order->refCount = 0;
-    order->prevExecutionOrder = OFFSET_NULL;
-    order->nextExecutionOrder = OFFSET_NULL;
-    order->pathToDestPtr = OFFSET_NULL;
-    order->selectingOrderLocation = false;
-    order->destinationSet = false;
-    order->aStarJobPtr = OFFSET_NULL;
-
-    return ptr;
-}
-
 
 void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
 {
@@ -3112,50 +3181,7 @@ void MachineUpdate(ALL_CORE_PARAMS,PARAM_GLOBAL_POINTER Machine* machine)
    }
    else if(desc->type == MachineTypes_MINING_SITE)
    {
-        if(machine->rootOrderPtr == OFFSET_NULL)
-        {
-            //prepare new order for next peep.
-            if(VECTOR3_EQUAL( machine->scanMapTile , OFFSET_NULL_SHORT_3D))
-            {
-                machine->scanMapTile = machine->mapTilePtr;
-                machine->scanMapTile.x++;
-            }
-            const int blockRadius = 5;
-
-
-
-            {
-
-
-
-                //make order to navigate to tile.
-                USE_POINTER Order* order;
-                machine->rootOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                OFFSET_TO_PTR(gameState->orders, machine->rootOrderPtr, order);
-                order->mapDest_Coord = VECTOR3_CAST( machine->scanMapTile, ge_int3);
-                order->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
-                order->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-                order->refCount = 1;//keep alive for next peep
-                order->action = OrderAction_MINE;
-
-                USE_POINTER AStarJob* job;
-                OFFSET_TO_PTR(gameState->mapSearchJobQueue, order->aStarJobPtr, job);
-
-                job->startLoc = VECTOR3_CAST( machine->mapTilePtr, ge_int3);
-                job->startLoc.z++;
-                job->endLoc = VECTOR3_CAST( machine->scanMapTile, ge_int3);
-                job->pathPtr = order->pathToDestPtr;
-
-                printf("mining site order created.  site loc:"); Print_GE_INT3(VECTOR3_CAST( machine->mapTilePtr, ge_int3)); printf(" dest loc:");
-                Print_GE_INT3(job->endLoc);
-            }
-
-
-
-
-
-
-        }
+       
 
 
 
@@ -3638,7 +3664,6 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                                 newOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                                 newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
 
-                                newOrder->refCount++;
 
 
                                 USE_POINTER AStarJob* job;
@@ -3647,7 +3672,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                                 job->endLoc = machineRootOrder->mapDest_Coord;
                                 job->pathPtr = newOrder->pathToDestPtr;
 
-                                Peep_DetachFromOrder(ALL_CORE_PARAMS_PASS, peep);
+                                Peep_DetachFromAllOrders(ALL_CORE_PARAMS_PASS, peep);
                                 Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, newOrderPtr);
                             }
                         }
@@ -3658,7 +3683,7 @@ void PeepCommandGui(ALL_CORE_PARAMS, PARAM_GLOBAL_POINTER SyncedGui* gui, PARAM_
                         if(GUI_BUTTON(GUIID_PASS, (ge_int2)(0,50+50), (ge_int2)(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
                         (float3)(0.4,0.4,0.4), str, NULL, NULL ))
                         {
-                            PeepOperate(ALL_CORE_PARAMS_PASS, peep);
+                            PeepOperate(ALL_CORE_PARAMS_PASS, peep, OFFSET_NULL);
                         }
                     }
                     else
@@ -3820,6 +3845,7 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
         LOCAL_STR(drillStr, "DRILL")
         LOCAL_STR(pushStr, "PUSH")
         LOCAL_STR(pullStr, "PULL")
+        LOCAL_STR(operateStr, "OPERATE")
 
 
         if(order->action == OrderAction_MINE)
@@ -3858,6 +3884,22 @@ bool OrderEntryGui(GUIID_DEF_ALL, PARAM_GLOBAL_POINTER Order* order,
             if(gui->passType == GuiStatePassType_Synced)
                 order->action = OrderAction_PICKUP_MACHINE;
         }
+
+
+        if(order->action == OrderAction_OPERATE_MACHINE)
+            gui->fakeDummyBool = true;
+        else
+            gui->fakeDummyBool = false;
+
+        toggle = &gui->fakeDummyBool;
+        if(GUI_BUTTON(GUIID_PASS, origPos + (ge_int2)(250,20), (ge_int2)(50,50), GuiFlags_Beveled, COLOR_GRAY, operateStr, NULL, toggle))
+        {
+            if(gui->passType == GuiStatePassType_Synced)
+                order->action = OrderAction_OPERATE_MACHINE;
+        }
+
+
+
 
 
         LOCAL_STR(delStr, "DELETE")
