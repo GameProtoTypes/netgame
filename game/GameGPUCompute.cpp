@@ -25,9 +25,6 @@
 
 GameGPUCompute::GameGPUCompute()
 {
-
-
-
 }
 
 GameGPUCompute::~GameGPUCompute()

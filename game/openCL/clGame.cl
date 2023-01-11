@@ -5862,7 +5862,7 @@ __kernel void game_preupdate_1(ALL_CORE_PARAMS) {
     }
 
 
-    //parrellel order Pre update
+    //parrallel order Pre update
 
 
 
