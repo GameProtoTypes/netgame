@@ -40,6 +40,71 @@ void StartupTests()
     GE_PRINT_Q<16>(length);
     //GE_PRINT(GE_SIGNED_SHIFT<ge_int, -1>(a));
 
+
+
+
+    printf("(Q2F)  1: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(1)));
+    printf("(Q2F) -1: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(-1)));
+    printf("(Q2F) -10: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(-10)));
+    printf("(D2Q) -1: %d\n", GE_TO_Q(-1));
+
+    printf(" (-2.2) %#x\n", GE_TO_Q(-2.2f));
+    printf("-1.4: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(-1.414185f)));
+    printf("1.7: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(1.748077f)));
+
+
+    printf("-0.5: %f\n", GE_Q_TO_FLOAT(GE_DIV_Q(GE_TO_Q(-1), GE_TO_Q(2))));
+    printf("-0.823529: %f\n", GE_Q_TO_FLOAT(GE_DIV_Q(GE_TO_Q(-1.4), GE_TO_Q(1.7))));
+
+    printf("sqrt(0) = 0: %d\n", GE_SQRT_ULONG(0));
+
+
+
+    ge_int2 p0 = ge_int2(GE_TO_Q(0), GE_TO_Q(0));
+    ge_int2 p1 = ge_int2(GE_TO_Q(1), GE_TO_Q(1));
+    ge_int2 p2 = ge_int2(GE_TO_Q(2), GE_TO_Q(-2));
+    ge_int2 p3 = ge_int2(GE_TO_Q(3), GE_TO_Q(4));
+
+
+
+    ge_int3 test = (ge_int3)(42);
+    printf("%d,%d,%d\n", test);
+
+    v = (ge_int2)(GE_TO_Q(1), GE_TO_Q(1));
+    ge_int len;
+
+    v = GE2_NORMALIZED_Q(v, len);
+
+    printf("x: %f, y: %f, len: %f\n", GE_Q_TO_FLOAT(v.x), GE_Q_TO_FLOAT(v.y), GE_Q_TO_FLOAT(len));
+
+
+    v = ge_int2(GE_TO_Q(1), GE_TO_Q(1));
+    ge_int2 proj = ge_int2(GE_TO_Q(4), GE_TO_Q(5));
+    ge_int scalar;
+   
+    v = GE2_PROJECTED_Q(v, proj, scalar);
+    printf("[1,1] projected onto [4,5]: x: %f, y: %f, scalar: %f\n", GE_Q_TO_FLOAT(v.x), GE_Q_TO_FLOAT(v.y), GE_Q_TO_FLOAT(scalar));
+
+
+    printf("Sign of -10: %f\n", GE_Q_TO_FLOAT(GE_SIGN_MAG_Q(GE_TO_Q(-10))));
+    printf("Sign of 10: %f\n", GE_Q_TO_FLOAT(GE_SIGN_MAG_Q(GE_TO_Q(10))));
+    printf("Sign of 0: %f\n", GE_Q_TO_FLOAT(GE_SIGN_MAG_Q(GE_TO_Q(0))));
+
+
+    printf("GE_INT* FUNC TESTS:\n");
+
+    ge_int3 A;
+    A.z = GE_TO_Q(10);
+    ge_int3 B;
+    B.x = GE_TO_Q(10);
+    B.y = GE_TO_Q(1);
+
+
+    GE3_PRINT_Q(A);
+    GE3_PRINT_Q(B);
+
+
+
 }
 
 
