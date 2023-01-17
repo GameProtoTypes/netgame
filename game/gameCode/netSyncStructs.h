@@ -1,17 +1,5 @@
 #pragma once
-
-
-
-struct SIZETESTSDATA {
-
-	cl_uint gameStateStructureSize;
-	cl_uint staticDataStructSize;
-
-
-
-} typedef SIZETESTSDATA;
-
-
+#include "glm.hpp"
 
 enum ClientActionCode {
 	ClientActionCode_MouseStateChange,
@@ -35,7 +23,7 @@ enum ClientActionCode_KeyStateChange_IntParams {
 
 
 struct ClientAction {
-	cl_uint scheduledTickIdx;//when it is scheduled to take effect on all clients
+	int scheduledTickIdx;//when it is scheduled to take effect on all clients
 
 
 
@@ -47,14 +35,14 @@ struct ClientAction {
 
 struct ActionTracking {
 
-	cl_int clientId;
+	int clientId;
 
-	cl_uint hostGivenId;
-	cl_uint clientGivenId;
-	cl_int ticksLate;//action could not be applied on client at scheduled tickId;
+	uint32_t hostGivenId;
+	uint32_t clientGivenId;
+	int32_t ticksLate;//action could not be applied on client at scheduled tickId;
 	bool finalActionVerified;
 	bool clientApplied;
-	cl_uint sentTickIdx;//when the action was sent by client
+	uint32_t sentTickIdx;//when the action was sent by client
 
 } typedef ActionTracking;
 
@@ -69,30 +57,30 @@ struct ActionWrap {
 #define MAX_ACTIONS_PER_TICK (MAX_CLIENTS)
 struct GameStateActions {
 	ActionWrap clientActions[MAX_ACTIONS_PER_TICK];
-	cl_int numActions;
+	int32_t numActions;
 
 
 
 
-	cl_uint tickIdx;
+	uint32_t tickIdx;
 	int32_t pauseState;
 
 
 	//ClientSide only stuff that is processed in cl but not strictly gamestate and driven by host.
-	cl_uint clientId;
+	uint32_t clientId;
 
 
 
-	cl_int mouseLocx;
-	cl_int mouseLocy;
-	cl_int mouseLocWorldx_Q16;
-	cl_int mouseLocWorldy_Q16;
-	cl_int mouseState;
+	int32_t mouseLocx;
+	int32_t mouseLocy;
+	int32_t mouseLocWorldx_Q16;
+	int32_t mouseLocWorldy_Q16;
+	int32_t mouseState;
 
 	float viewMatrix[4][4];
 	float viewMatrix_Inv[4][4];
 
-	cl_int dummyVars[32];
+	int32_t dummyVars[32];
 
 }typedef GameStateActions;
 

@@ -1,5 +1,3 @@
-#include "GameNetworking.h"
-
 
 
 
@@ -12,8 +10,9 @@
 #include <algorithm>
 #include <functional>
 #include <string>
-
 #include <cmath>
+
+#include "GameNetworking.h"
 
  void GameNetworking::Init()
 {

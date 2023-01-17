@@ -1,51 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\main.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\cmake_pch.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShader.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GEShaderProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGraphics.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GEShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameGraphics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameNetworking.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameCompute.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameNetworking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.cpp">
+      <Filter>Game Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GEShaderProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShader.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GEShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGraphics.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameGraphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameCompute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameNetworking.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameNetworking.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\gameCodeCommon.h">
+      <Filter>Game Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\netSyncStructs.h">
+      <Filter>Game Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Debug\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Release\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\MinSizeRel\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\RelWithDebInfo\cmake_pch.hxx">
+      <Filter>Precompile Header File</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\casht\repos\opencltest\game\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\casht\repos\netgame\game\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="Game Header Files">
+      <UniqueIdentifier>{25D507F7-BDD7-3894-8B37-475C9A0F7380}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game Source Files">
+      <UniqueIdentifier>{EC33B6E4-711F-37C1-8D7B-497E2B8E8798}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{F968F0C1-1657-3D46-A1B5-0CFFA0436291}</UniqueIdentifier>
+      <UniqueIdentifier>{B65147BB-9782-3532-9107-04CF7FD529E5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Precompile Header File">
+      <UniqueIdentifier>{1CF1C870-DA69-3FF1-B806-AD4ED00F1DB3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{FEF97670-C656-31A4-A612-A9A219331289}</UniqueIdentifier>
+      <UniqueIdentifier>{4442BB9E-3CDD-3969-A4BA-A5C23CB92DD8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

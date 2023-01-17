@@ -1,822 +1,822 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Base64Encoder.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Base64Encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\BitStream.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\BitStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CCRakNetSlidingWindow.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CCRakNetSlidingWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CCRakNetUDT.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CCRakNetUDT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CheckSum.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CheckSum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CloudClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CloudClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CloudCommon.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CloudCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CloudServer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CloudServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\CommandParserInterface.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\CommandParserInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ConnectionGraph2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ConnectionGraph2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ConsoleServer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ConsoleServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DR_SHA1.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DR_SHA1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DS_BytePool.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DS_BytePool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DS_ByteQueue.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DS_ByteQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DS_HuffmanEncodingTree.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DS_HuffmanEncodingTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DS_Table.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DS_Table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DataCompressor.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DataCompressor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DirectoryDeltaTransfer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DirectoryDeltaTransfer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\DynDNS.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\DynDNS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\EmailSender.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\EmailSender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\EpochTimeToString.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\EpochTimeToString.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\FileList.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\FileList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\FileListTransfer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\FileListTransfer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\FileOperations.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\FileOperations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\FormatString.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\FormatString.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\FullyConnectedMesh2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\FullyConnectedMesh2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\GetTime.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\GetTime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Getche.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Getche.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Gets.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Gets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\GridSectorizer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\GridSectorizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\HTTPConnection.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\HTTPConnection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\HTTPConnection2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\HTTPConnection2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\IncrementalReadInterface.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\IncrementalReadInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Itoa.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Itoa.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\LinuxStrings.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\LinuxStrings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\LocklessTypes.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\LocklessTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\LogCommandParser.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\LogCommandParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\MessageFilter.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\MessageFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NatPunchthroughClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NatPunchthroughClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NatPunchthroughServer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NatPunchthroughServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NatTypeDetectionClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NatTypeDetectionClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NatTypeDetectionCommon.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NatTypeDetectionCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NatTypeDetectionServer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NatTypeDetectionServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NetworkIDManager.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NetworkIDManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\NetworkIDObject.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\NetworkIDObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PS4Includes.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PS4Includes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PacketConsoleLogger.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PacketConsoleLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PacketFileLogger.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PacketFileLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PacketLogger.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PacketLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PacketOutputWindowLogger.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PacketOutputWindowLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PacketizedTCP.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PacketizedTCP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\PluginInterface2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\PluginInterface2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RPC4Plugin.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RPC4Plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Rackspace.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Rackspace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakMemoryOverride.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakMemoryOverride.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetCommandParser.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetCommandParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_360_720.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_360_720.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_Berkley.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_Berkley.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_Berkley_NativeClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_Berkley_NativeClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_NativeClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_NativeClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_PS3_PS4.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_PS3_PS4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_PS4.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_PS4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_Vita.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_Vita.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_WindowsStore8.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_WindowsStore8.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_Windows_Linux.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_Windows_Linux.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetSocket2_Windows_Linux_360.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetSocket2_Windows_Linux_360.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetStatistics.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetStatistics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetTransport2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetTransport2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakNetTypes.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakNetTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakPeer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakPeer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakSleep.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakSleep.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakString.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakString.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakThread.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RakWString.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RakWString.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Rand.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Rand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RandSync.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RandSync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ReadyEvent.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ReadyEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\RelayPlugin.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\RelayPlugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ReliabilityLayer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ReliabilityLayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ReplicaManager3.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ReplicaManager3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\Router2.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\Router2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SecureHandshake.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SecureHandshake.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SendToThread.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SendToThread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SignaledEvent.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SignaledEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SimpleMutex.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SimpleMutex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SocketLayer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SocketLayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\StatisticsHistory.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\StatisticsHistory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\StringCompressor.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\StringCompressor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\StringTable.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\StringTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\SuperFastHash.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\SuperFastHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TCPInterface.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TCPInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TableSerializer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TableSerializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TeamBalancer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TeamBalancer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TeamManager.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TeamManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TelnetTransport.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TelnetTransport.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\ThreadsafePacketLogger.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\ThreadsafePacketLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\TwoWayAuthentication.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\TwoWayAuthentication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\UDPForwarder.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\UDPForwarder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\UDPProxyClient.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\UDPProxyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\UDPProxyCoordinator.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\UDPProxyCoordinator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\UDPProxyServer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\UDPProxyServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\VariableDeltaSerializer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\VariableDeltaSerializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\VariableListDeltaTracker.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\VariableListDeltaTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\VariadicSQLParser.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\VariadicSQLParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\VitaIncludes.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\VitaIncludes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\WSAStartupSingleton.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\WSAStartupSingleton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\_FindFirst.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\_FindFirst.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\gettimeofday.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\gettimeofday.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\linux_adapter.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\linux_adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\src\osx_adapter.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\SLikeNet\Source\src\osx_adapter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\AutopatcherPatchContext.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\AutopatcherPatchContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\AutopatcherRepositoryInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\AutopatcherRepositoryInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Base64Encoder.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Base64Encoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\BitStream.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\BitStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CCRakNetSlidingWindow.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CCRakNetSlidingWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CCRakNetUDT.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CCRakNetUDT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CheckSum.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CheckSum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CloudClient.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CloudClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CloudCommon.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CloudCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CloudServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CloudServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\CommandParserInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\CommandParserInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ConnectionGraph2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ConnectionGraph2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ConsoleServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ConsoleServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DR_SHA1.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DR_SHA1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_BPlusTree.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_BPlusTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_BinarySearchTree.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_BinarySearchTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_BytePool.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_BytePool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_ByteQueue.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_ByteQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Hash.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Hash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Heap.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Heap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTree.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTreeFactory.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTreeFactory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTreeNode.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_HuffmanEncodingTreeNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_LinkedList.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_LinkedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_List.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_List.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Map.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_MemoryPool.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_MemoryPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Multilist.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Multilist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_OrderedChannelHeap.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_OrderedChannelHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_OrderedList.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_OrderedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Queue.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_QueueLinkedList.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_QueueLinkedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_RangeList.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_RangeList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Table.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_ThreadsafeAllocatingQueue.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_ThreadsafeAllocatingQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_Tree.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_Tree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DS_WeightedGraph.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DS_WeightedGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DataCompressor.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DataCompressor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DirectoryDeltaTransfer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DirectoryDeltaTransfer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\DynDNS.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\DynDNS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\EmailSender.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\EmailSender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\EmptyHeader.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\EmptyHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\EpochTimeToString.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\EpochTimeToString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Export.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Export.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FileList.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FileList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FileListNodeContext.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FileListNodeContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FileListTransfer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FileListTransfer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FileListTransferCBInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FileListTransferCBInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FileOperations.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FileOperations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FormatString.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FormatString.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\FullyConnectedMesh2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\FullyConnectedMesh2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\GetTime.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\GetTime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Getche.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Getche.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Gets.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Gets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\GridSectorizer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\GridSectorizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\HTTPConnection.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\HTTPConnection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\HTTPConnection2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\HTTPConnection2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\IncrementalReadInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\IncrementalReadInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\InternalPacket.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\InternalPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Itoa.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Itoa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Kbhit.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Kbhit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\LinuxStrings.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\LinuxStrings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\LocklessTypes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\LocklessTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\LogCommandParser.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\LogCommandParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\MTUSize.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\MTUSize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\MessageFilter.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\MessageFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\MessageIdentifiers.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\MessageIdentifiers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NatPunchthroughClient.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NatPunchthroughClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NatPunchthroughServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NatPunchthroughServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NatTypeDetectionClient.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NatTypeDetectionClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NatTypeDetectionCommon.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NatTypeDetectionCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NatTypeDetectionServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NatTypeDetectionServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NativeFeatureIncludes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NativeFeatureIncludes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NativeFeatureIncludesOverrides.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NativeFeatureIncludesOverrides.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NativeTypes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NativeTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NetworkIDManager.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NetworkIDManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\NetworkIDObject.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\NetworkIDObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PS3Includes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PS3Includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PS4Includes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PS4Includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketConsoleLogger.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketConsoleLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketFileLogger.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketFileLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketLogger.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketOutputWindowLogger.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketOutputWindowLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketPool.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketPriority.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketPriority.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PacketizedTCP.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PacketizedTCP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\PluginInterface2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\PluginInterface2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\RPC4Plugin.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\RPC4Plugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Rackspace.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Rackspace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Rand.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Rand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\RandSync.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\RandSync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ReadyEvent.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ReadyEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\RefCountedObj.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\RefCountedObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\RelayPlugin.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\RelayPlugin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ReliabilityLayer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ReliabilityLayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ReplicaEnums.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ReplicaEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ReplicaManager3.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ReplicaManager3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\Router2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\Router2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SecureHandshake.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SecureHandshake.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SendToThread.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SendToThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SignaledEvent.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SignaledEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SimpleMutex.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SimpleMutex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SimpleTCPServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SimpleTCPServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SingleProducerConsumer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SingleProducerConsumer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SocketDefines.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SocketDefines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SocketIncludes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SocketIncludes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SocketLayer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SocketLayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\StatisticsHistory.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\StatisticsHistory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\StringCompressor.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\StringCompressor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\StringTable.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\StringTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\SuperFastHash.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\SuperFastHash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TCPInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TCPInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TableSerializer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TableSerializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TeamBalancer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TeamBalancer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TeamManager.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TeamManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TelnetTransport.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TelnetTransport.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ThreadPool.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ThreadPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\ThreadsafePacketLogger.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\ThreadsafePacketLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TransportInterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TransportInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\TwoWayAuthentication.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\TwoWayAuthentication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\UDPForwarder.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\UDPForwarder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\UDPProxyClient.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\UDPProxyClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\UDPProxyCommon.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\UDPProxyCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\UDPProxyCoordinator.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\UDPProxyCoordinator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\UDPProxyServer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\UDPProxyServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\VariableDeltaSerializer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\VariableDeltaSerializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\VariableListDeltaTracker.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\VariableListDeltaTracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\VariadicSQLParser.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\VariadicSQLParser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\VitaIncludes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\VitaIncludes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\WSAStartupSingleton.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\WSAStartupSingleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\WindowsIncludes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\WindowsIncludes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\XBox360Includes.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\XBox360Includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\_FindFirst.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\_FindFirst.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\alloca.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\alloca.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\assert.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\commandparser.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\commandparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\defineoverrides.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\defineoverrides.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\defines.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\gettimeofday.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\gettimeofday.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\linux_adapter.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\linux_adapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\memoryoverride.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\memoryoverride.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\osx_adapter.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\osx_adapter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\peer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\peer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\peerinterface.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\peerinterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\sleep.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\sleep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\smartptr.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\smartptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\socket.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\socket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\socket2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\socket2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\statistics.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\statistics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\string.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\thread.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\time.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\transport2.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\transport2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\types.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\version.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\SLikeNet\Source\include\slikenet\wstring.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\SLikeNet\Source\include\slikenet\wstring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\casht\repos\opencltest\SLikeNet\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\casht\repos\netgame\SLikeNet\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{F968F0C1-1657-3D46-A1B5-0CFFA0436291}</UniqueIdentifier>
+      <UniqueIdentifier>{B65147BB-9782-3532-9107-04CF7FD529E5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{FEF97670-C656-31A4-A612-A9A219331289}</UniqueIdentifier>
+      <UniqueIdentifier>{4442BB9E-3CDD-3969-A4BA-A5C23CB92DD8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

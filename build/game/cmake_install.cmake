@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/casht/repos/opencltest/game
+# Install script for directory: C:/Users/casht/repos/netgame/game
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

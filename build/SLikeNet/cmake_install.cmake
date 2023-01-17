@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/casht/repos/opencltest/SLikeNet
+# Install script for directory: C:/Users/casht/repos/netgame/SLikeNet
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

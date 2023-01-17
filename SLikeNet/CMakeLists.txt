@@ -81,5 +81,6 @@ target_include_directories(SLikeNet
 
 if (WIN32)
     target_link_libraries(SLikeNet PUBLIC iphlpapi ws2_32)
+
 endif ()
 

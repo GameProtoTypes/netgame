@@ -21,12 +21,12 @@
 #define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
 
 //graphics resources/buffers access
-class GameGPUCompute;
+class GameCompute;
 class GameGraphics
 {
 public:
 
-	GameGraphics(GameGPUCompute* gameCompute);
+	GameGraphics(GameCompute* gameCompute);
 	~GameGraphics();
 
 	void Init();
@@ -116,6 +116,6 @@ public:
 
 	float viewScaleInterp = 0.0f;
 
-	GameGPUCompute* gameCompute;
+	GameCompute* gameCompute;
 };
 

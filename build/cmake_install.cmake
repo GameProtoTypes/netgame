@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/casht/repos/opencltest
+# Install script for directory: C:/Users/casht/repos/netgame
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,17 +34,17 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/casht/repos/opencltest/build/game/cmake_install.cmake")
+  include("C:/Users/casht/repos/netgame/build/game/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/casht/repos/opencltest/build/SLikeNet/cmake_install.cmake")
+  include("C:/Users/casht/repos/netgame/build/SLikeNet/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/casht/repos/opencltest/build/angelscriptsdk/angelscript/projects/cmake/cmake_install.cmake")
+  include("C:/Users/casht/repos/netgame/build/angelscriptsdk/angelscript/projects/cmake/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -55,5 +55,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/casht/repos/opencltest/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/casht/repos/netgame/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

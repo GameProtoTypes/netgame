@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -22,7 +22,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{34EFB1D4-3308-3362-B511-67ABF8B31051}</ProjectGuid>
+    <ProjectGuid>{C44C1397-E3A8-3FBE-AE59-35E9C843683A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -60,26 +60,26 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\opencltest\build\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\netgame\build\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">imgui.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">imgui</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\opencltest\build\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\netgame\build\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">imgui.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">imgui</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\opencltest\build\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\netgame\build\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">imgui.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">imgui</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\opencltest\build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\netgame\build\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">imgui.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">imgui</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -96,14 +96,14 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -116,7 +116,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -133,14 +133,14 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -153,7 +153,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -170,14 +170,14 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -190,7 +190,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -206,14 +206,14 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -225,11 +225,11 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\casht\repos\opencltest\CMakeLists.txt">
+    <CustomBuild Include="C:\Users\casht\repos\netgame\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/casht/repos/netgame/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -237,12 +237,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCXXCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeRCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\opencltest\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\netgame\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/casht/repos/netgame/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -250,12 +250,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCXXCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeRCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\opencltest\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\netgame\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/casht/repos/netgame/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -263,12 +263,12 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCXXCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeRCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\opencltest\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\netgame\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/casht/repos/netgame/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -276,25 +276,25 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.23\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeCXXCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeRCCompiler.cmake;C:\Users\casht\repos\opencltest\build\CMakeFiles\3.23.2\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\opencltest\build\CMakeFiles\generate.stamp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.25\Modules\Platform\WindowsPaths.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeCXXCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeRCCompiler.cmake;C:\Users\casht\repos\netgame\build\CMakeFiles\3.25.1\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\netgame\build\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_draw.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_tables.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_items.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\implot_demo.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\backends\imgui_impl_sdl.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\imgui.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\imgui_draw.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\imgui_tables.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\implot.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\implot_items.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\implot_demo.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\imgui\backends\imgui_impl_opengl3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\ZERO_CHECK.vcxproj">
-      <Project>{F13798D9-A751-35DE-B4D3-3D55FA4EC0E1}</Project>
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\ZERO_CHECK.vcxproj">
+      <Project>{54DF16DA-D22B-3044-9E7D-7BFE854C8976}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

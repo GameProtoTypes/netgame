@@ -24,10 +24,7 @@
 #endif
 
 
-#include "Common.h"
-#include "GameGPUCompute.h"
-
-
+#include "GameCompute.h"
 
 
 #define GAMESERVERPORT (50010)
@@ -61,7 +58,7 @@
 class GameNetworking
 {
 public:
-	GameNetworking(std::shared_ptr<GameState_Pointer> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameGPUCompute* gameCompute) {
+	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameCompute* gameCompute) {
 	
 		this->gameState = gameState;
 		this->gameStateActions = gameStateActions;
@@ -219,9 +216,9 @@ public:
 
 	SLNet::RakNetGUID hostPeer;
 
-	GameGPUCompute* gameCompute = nullptr;
+	GameCompute* gameCompute = nullptr;
 
-	std::shared_ptr<GameState_Pointer> gameState;
+	std::shared_ptr<GameState> gameState;
 	std::shared_ptr<GameStateActions> gameStateActions;
 
 	std::vector<char> CLIENT_gameStateTransfer;

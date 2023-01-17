@@ -30,12 +30,13 @@ set(CMAKE_CXX_STANDARD 20)
 # Source groups
 ################################################################################
 set(Header_Files
-
+    
     "GEShaderProgram.h"
     "GEShader.h"
     "GameGraphics.h"
-    "GameGPUCompute.h"
+    "GameCompute.h"
     "GameNetworking.h" 
+    
 
 )
 source_group("Header Files" FILES ${Header_Files})
@@ -45,7 +46,7 @@ set(Source_Files
     "GEShaderProgram.cpp"
     "GEShader.cpp"
     "GameGraphics.cpp"
-    "GameGPUCompute.cpp"
+    "GameCompute.cpp"
     "GameNetworking.cpp"
 
     
@@ -72,33 +73,44 @@ source_group("Shader Files" FILES ${Shader_Files})
 
 
 set(OPENCL_Source_Files
-    "openCL/clGame.c"
 )
 source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 
 set(OPENCL_Header_Files
-    "openCL/peep.h"
-    "openCL/PeepFuncs.h"
-    "openCL/cpu_gpu_structs.h"
-
-    "openCL/gpuvectortypes.h"
-    "openCL/fixedpoint_opencl.h"
-    "openCL/perlincl.h"
-    "openCL/randomcl.h"
-    "openCL/clLimits.h"
-    "openCL/cl_type_glue.h"
 )
 source_group("CL Header Files" FILES ${OPENCL_Header_Files})
+
+
+set(Game_Source_Files
+    "gameCode/Game.cpp"
+)
+source_group("Game Source Files" FILES ${Game_Source_Files})
+
+set(Game_Header_Files
+    "gameCode/gameCodeCommon.h"
+    "gameCode/netSyncStructs.h"
+)
+source_group("Game Header Files" FILES ${Game_Header_Files})
+
+
+
 
 set(ALL_FILES
     ${Header_Files}
     ${Source_Files}
+    
     ${OPENCL_Source_Files}
     ${OPENCL_Header_Files}
+
+    ${Game_Source_Files}
+    ${Game_Header_Files}
 )
 set(COMPILE_FILES
     ${Header_Files}
     ${Source_Files}
+
+    ${Game_Source_Files}
+    ${Game_Header_Files}
 )
 
 
@@ -163,7 +175,15 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
 )
 
 
+target_compile_options(${PROJECT_NAME} PRIVATE 
+#"/showIncludes" 
+"$<$<CONFIG:RELEASE>: /O2>"
+"$<$<CONFIG:RELEASE>: /fp:fast>"
+"$<$<CONFIG:RELEASE>: /arch:AVX512>")
+
 target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE "gameCode/gameCodeCommon.h")
 
 
 
@@ -195,12 +215,7 @@ add_custom_command(
         ${CMAKE_CURRENT_SOURCE_DIR}/shaders
         ${CMAKE_CURRENT_BINARY_DIR}/Debug/shaders)
        
-add_custom_command(
-            TARGET MinerTycoon POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_CURRENT_SOURCE_DIR}/openCL
-                ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL)
-        
+
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -232,11 +247,11 @@ add_custom_command(
 
 
 #COPY THINGS FROM RUNTIME BACK INTO SOURCE (FOR EDITOR NESSECITIES AND SUCH STRANGE THINGS)
-add_custom_command(
-    TARGET MinerTycoon POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/dynamicDefines.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/openCL/dynamicDefines.h)
+#add_custom_command(
+#    TARGET MinerTycoon POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy
+#            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/dynamicDefines.h
+#            ${CMAKE_CURRENT_SOURCE_DIR}/openCL/dynamicDefines.h)
 
 
 

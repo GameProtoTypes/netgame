@@ -34,7 +34,7 @@
 
 #include "GameNetworking.h"
 #include "GameGraphics.h"
-#include "GameGPUCompute.h"
+#include "GameCompute.h"
 
 
 #include "GEShader.h"
@@ -94,39 +94,6 @@ void MessageCallback(const asSMessageInfo *msg, void *param)
 void print(std::string &msg)
 {
   printf("AS: %s", msg.c_str());
-}
-
-
-float ProfileEvent(cl_event event, std::string label, cl_ulong* startNanoSec, bool isFirst = false)
-{
-    cl_ulong time_start;
-    cl_ulong time_end;
-
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-    double nanoSeconds = static_cast<double>(time_end - time_start);
-
-    cl_ulong nanoStartLocal = time_start;
-    cl_ulong nanoEndLocal = time_end;
-    if(isFirst == true)
-    {
-        time_end = time_end - time_start;
-        nanoEndLocal = time_end;
-        nanoStartLocal = 0;
-        *startNanoSec = time_start;
-    }
-    else
-    {
-        nanoStartLocal -= *startNanoSec;
-        nanoEndLocal -= *startNanoSec;
-    }
-
-    ImGui::Text("%s Execution time is: %0.3f milliseconds, ST: %f, ET: %f", label.data(), 
-    nanoSeconds / 1000000.0,
-    nanoStartLocal / 1000000.0,
-    nanoEndLocal/ 1000000.0);
-
-    return nanoEndLocal / 1000000.0;
 }
 
 
@@ -217,7 +184,7 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-    GameGPUCompute gameCompute;
+    GameCompute gameCompute;
 
 // std::cout << "Running OverlapTest" << std::endl;
 //     gameCompute.OverlapTest();
@@ -228,30 +195,14 @@ int32_t main(int32_t argc, char* args[])
     gameGraphics.Init();  
     gameCompute.graphics = &gameGraphics;    
 
-    gameCompute.RunInitCompute0();
-    gameCompute.BuildKernelRunSizes();
+
     
-    gameCompute.AddCompileDefinition("PEEP_VBO_INSTANCE_SIZE", gameGraphics.peepInstanceSIZE);
-    gameCompute.AddCompileDefinition("PARTICLE_VBO_INSTANCE_SIZE", gameGraphics.particleInstanceSIZE);
-    gameCompute.AddCompileDefinition("MAX_PEEPS", gameCompute.maxPeeps);
-    gameCompute.AddCompileDefinition("MAX_PARTICLES", gameCompute.maxParticles);
-    gameCompute.AddCompileDefinition("MAPDIM", gameCompute.mapDim);
-    gameCompute.AddCompileDefinition("MAPDEPTH", gameCompute.mapDepth);
-    gameCompute.AddCompileDefinition("WARPSIZE", gameCompute.warpSize);
-    gameCompute.AddCompileDefinition("GAME_UPDATE_WORKITEMS", gameCompute.GameUpdateWorkItems);
-    gameCompute.AddCompileDefinition("MAX_CLIENTS", MAX_CLIENTS);
-    gameCompute.AddCompileDefinition("MAP_TILE_SIZE", gameCompute.mapTileSize);
-    gameCompute.AddCompileDefinition("MAX_GUI_RECTS", gameCompute.maxGuiRects);
-    gameCompute.AddCompileDefinition("MAX_LINES", gameCompute.maxLines);
-    gameCompute.RunInitCompute1();
-    
-    std::shared_ptr<GameState_Pointer> gameState = std::make_shared<GameState_Pointer>(gameCompute.structSizes.gameStateStructureSize);
+    std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
     std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
     gameCompute.gameState = gameState;
     gameCompute.gameStateActions = gameStateActions;
 
-    gameCompute.RunInitCompute2();
 
     //at this point gamestate is at baseline for the game options.
     gameCompute.SaveGameStateBase();
@@ -275,7 +226,7 @@ int32_t main(int32_t argc, char* args[])
 
     gameStateActions->tickIdx = 0;
 
-    std::cout << "GameState Size (bytes): " << gameCompute.structSizes.gameStateStructureSize << std::endl;
+    std::cout << "GameState Size (bytes): " << sizeof(GameState) << std::endl;
 
     uint64_t timerStartMs = SDL_GetTicks64();
 
@@ -322,7 +273,7 @@ int32_t main(int32_t argc, char* args[])
             gameStateActions->tickIdx++;
         }
 
-        gameCompute.WriteGameStateB();
+
         clientActions.clear();
 
 
@@ -330,11 +281,6 @@ int32_t main(int32_t argc, char* args[])
         // gameCompute.Stage1_End();
         
         GSCS(A)
-
-
-
-
-
 
 
         GameGraphics::RenderClientState* rclientst = &gameGraphics.renderClientState;
@@ -637,15 +583,13 @@ int32_t main(int32_t argc, char* args[])
                 
         if (ImGui::Button("Save GameState To File"))
         {   
-
-            gameCompute.ReadFullGameState();
             std::ofstream myfile;
             myfile.open("gamestate.bin", std::ofstream::binary | std::ofstream::out | std::ofstream::trunc);
             if (!myfile.is_open())
                 std::cout << "Error Saving File!" << std::endl;
             else
             {
-                myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
+                myfile.write(reinterpret_cast<char*>(gameNetworking.gameState.get()), sizeof(GameState));
             }
             
             myfile.close();
@@ -658,8 +602,8 @@ int32_t main(int32_t argc, char* args[])
             if (!myfile.is_open())
                 std::cout << "Error Reading File!" << std::endl;
             else {
-                std::cout << "Reading " << gameCompute.structSizes.gameStateStructureSize << " bytes" << std::endl;
-                myfile.read(reinterpret_cast<char*>(gameCompute.gameState.get()->data), gameCompute.structSizes.gameStateStructureSize);
+                std::cout << "Reading " <<  sizeof(GameState) << " bytes" << std::endl;
+                myfile.read(reinterpret_cast<char*>(gameCompute.gameState.get()),  sizeof(GameState));
             
                 if (myfile)
                     std::cout << "all characters read successfully.";
@@ -668,8 +612,6 @@ int32_t main(int32_t argc, char* args[])
             
             }
             myfile.close();
-
-            gameCompute.WriteFullGameState();
         }
         if(ImGui::Button("Save Diff"))
         {
@@ -700,51 +642,7 @@ int32_t main(int32_t argc, char* args[])
         glActiveTexture(GL_TEXTURE0); // Texture unit 0
         glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
 
-        //draw map
-        gameGraphics.pMapTileShadProgram->Use();
-        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
-        glm::mat4 mapTransform(1.0f);
-        mapTransform = glm::scale(mapTransform, glm::vec3(gameCompute.mapTileSize, gameCompute.mapTileSize, 1));
-        mapTransform = glm::translate(mapTransform, glm::vec3(-gameCompute.mapDim * 0.5f, -gameCompute.mapDim * 0.5f, 0));
         
-        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
-        glm::ivec2 mapSize = { gameCompute.mapDim , gameCompute.mapDim };
-        gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
-
-        glBindVertexArray(gameGraphics.mapTile1VAO);
-        glDrawArrays(GL_POINTS, 0, gameCompute.mapDim* gameCompute.mapDim);
-        glBindVertexArray(0);
-
-
-        //draw map shadows
-        gameGraphics.pMapTileShadProgram->Use();
-        glBindVertexArray(gameGraphics.mapTile2VAO);
-        glDrawArrays(GL_POINTS, 0, gameCompute.mapDim * gameCompute.mapDim);
-        glBindVertexArray(0);
-
-        //draw all peeps
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        gameGraphics.pPeepShadProgram->Use();
-        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
-
-        glBindVertexArray(gameGraphics.peepVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxPeeps);
-        glBindVertexArray(0);
-
-
-        //draw all particles
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        gameGraphics.pParticleShadProgram->Use();
-        gameGraphics.pParticleShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
-
-        glBindVertexArray(gameGraphics.particleVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, gameCompute.maxParticles);
-        glBindVertexArray(0);
-
         //draw mouse
         {
 
@@ -787,35 +685,6 @@ int32_t main(int32_t argc, char* args[])
             glDeleteBuffers(1, &mouseVBO);
         }
 
-        //draw lines 
-        glBindVertexArray(gameGraphics.linesVAO);
-        glDrawArrays(GL_LINES, 0, gameCompute.maxLines);
-        glBindVertexArray(0);
-
-
-        //draw gui
-        glActiveTexture(GL_TEXTURE0); // Texture unit 0
-        glBindTexture(GL_TEXTURE_2D, gameGraphics.lettersTileTexId);
-        glActiveTexture(GL_TEXTURE1); // Texture unit 0
-        glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
-
-        gameGraphics.pGuiShadProgram->Use();
-        glm::mat4 identity(1.0);
-        glm::vec3 c(1.0f, 1.0f, 1.0f);
-        gameGraphics.pGuiShadProgram->SetUniform_Mat4("WorldToScreenTransform", identity);
-        gameGraphics.pGuiShadProgram->SetUniform_Vec3("OverallColor", c);
-        gameGraphics.pGuiShadProgram->SetUniform_Mat4("LocalTransform", identity);
-        gameGraphics.pGuiShadProgram->SetUniform_Int("texture0", 0);
-        gameGraphics.pGuiShadProgram->SetUniform_Int("texture1", 1);
-
-
-
-
-        glBindVertexArray(gameGraphics.guiRectVAO);
-        glDrawArrays(GL_TRIANGLES, 0, gameCompute.maxGuiRects*6);
-        glBindVertexArray(0);
-
-
 
 
 
@@ -825,38 +694,6 @@ int32_t main(int32_t argc, char* args[])
 
 
         ImGui::Begin("Profiling");
-                
-        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-        // clGetEventProfilingInfo(gameCompute.actionEvent, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-        // double nanoSeconds = static_cast<double>(time_end - time_start);
-        // ImGui::Text("actionEvent Execution time is: %0.3f milliseconds", nanoSeconds / 1000000.0);
-        cl_ulong nanoSec;
-        cl_ulong nanoSec2;
-        if(gameStateActions->pauseState == 0)
-        {
-            profiles[0].push_back(ProfileEvent(gameCompute.actionEvent, "actionEvent", &nanoSec, true));
-            profiles[1].push_back(ProfileEvent(gameCompute.guiEvent, "guiEvent", &nanoSec2, true));
-
-            profiles[2].push_back(ProfileEvent(gameCompute.preUpdateEvent1, "preUpdateEvent1", &nanoSec));
-            profiles[3].push_back(ProfileEvent(gameCompute.preUpdateEvent2, "preUpdateEvent2", &nanoSec));
-            profiles[4].push_back(ProfileEvent(gameCompute.updatepre1Event, "updatepre1Event", &nanoSec));
-            profiles[5].push_back(ProfileEvent(gameCompute.updateEvent, "updateEvent", &nanoSec));
-            profiles[6].push_back(ProfileEvent(gameCompute.update2Event, "update2Event", &nanoSec));
-            profiles[7].push_back(ProfileEvent(gameCompute.postupdateEvent, "postupdateEvent", &nanoSec));
-            profiles[8].push_back(gameNetworking.lastFrameTimeMs);
-        }
-        if(profiles[0].size() > 500)
-        {
-            for(int i = 0; i < 9; i++)
-            {
-                profiles[i].clear();
-                profiles[i].reserve(500);
-                
-            }
-        }
-
-        //ProfileEvent(gameCompute.writeEvent, "writeEvent (CPU->GPU)");
-        //ProfileEvent(gameCompute.readEvent, "readEvent (GPU->CPU)");
 
 
 
@@ -893,9 +730,6 @@ int32_t main(int32_t argc, char* args[])
 
         gameGraphics.Swap();
         WaitTickTime(timerStartMs, gameNetworking.targetTickTimeMs, &gameNetworking.lastFrameTimeMs);
-
-        if (gameCompute.errorState)
-            quit = true;
     }
 
 

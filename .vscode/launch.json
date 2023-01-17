@@ -5,17 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C++ Launch (Windows)",
+            "name": "C++ Launch (Windows, Debug)",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\build\\game\\Debug\\MinerTycoon.exe",
             "symbolSearchPath": "${workspaceFolder}\\build\\game\\Debug",
-            "externalConsole": true,
+            "console": true,
             "logging": {
               "moduleLoad": false,
               "trace": true
             },
             "cwd" : "${workspaceFolder}\\build\\game\\Debug\\"
+          },
+          {
+            "name": "C++ Launch (Windows, RelWithDebInfo)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\game\\RelWithDebInfo\\MinerTycoon.exe",
+            "symbolSearchPath": "${workspaceFolder}\\build\\game\\RelWithDebInfo",
+            "console": true,
+            "logging": {
+              "moduleLoad": false,
+              "trace": true
+            },
+            "cwd" : "${workspaceFolder}\\build\\game\\RelWithDebInfo\\"
           }
     ]
 }

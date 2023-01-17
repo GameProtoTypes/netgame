@@ -109,7 +109,10 @@
 			"__functional_base_03": "c",
 			"__tuple": "c",
 			"gpuvectortypes.h": "c",
-			"clgui.h": "c"
+			"clgui.h": "c",
+			"codecvt": "cpp",
+			"ranges": "cpp",
+			"span": "cpp"
 		},
 		"gitdoc.enabled": false
 	}

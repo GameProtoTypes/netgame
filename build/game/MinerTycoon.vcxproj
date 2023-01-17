@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -22,7 +22,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{ED1CE357-7C37-383E-97FB-026688C294B9}</ProjectGuid>
+    <ProjectGuid>{BFD80D59-8F51-38E0-8112-C7ADD0007AFC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
@@ -60,25 +60,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\opencltest\build\game\Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\netgame\build\game\Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MinerTycoon.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MinerTycoon</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\opencltest\build\game\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\netgame\build\game\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinerTycoon.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MinerTycoon</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\opencltest\build\game\MinSizeRel\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\netgame\build\game\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">MinerTycoon.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">MinerTycoon</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\opencltest\build\game\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\netgame\build\game\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">MinerTycoon.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">MinerTycoon</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
@@ -87,15 +87,19 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/casht/repos/netgame/SLikeNet/Source/include"</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>Disabled</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/Debug/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
@@ -105,14 +109,14 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -120,9 +124,9 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>								</Message>
+      <Message>						</Message>
       <Command>setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/netgame/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -131,7 +135,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/opencltest/build/game/Debug/glew32.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/netgame/build/game/Debug/glew32.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -140,7 +144,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/shaders C:/Users/casht/repos/opencltest/build/game/Debug/shaders
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/shaders C:/Users/casht/repos/netgame/build/game/Debug/shaders
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -149,7 +153,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/openCL C:/Users/casht/repos/opencltest/build/game/Debug/openCL
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/angelScript C:/Users/casht/repos/netgame/build/game/Debug/angelScript
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -158,7 +162,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/angelScript C:/Users/casht/repos/opencltest/build/game/Debug/angelScript
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/windows_binaries C:/Users/casht/repos/netgame/build/game/Debug/windows_binaries
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -167,7 +171,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/windows_binaries C:/Users/casht/repos/opencltest/build/game/Debug/windows_binaries
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/TileSet.png C:/Users/casht/repos/netgame/build/game/Debug/TileSet.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -176,25 +180,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/16x16_sm_ascii.png C:/Users/casht/repos/opencltest/build/game/Debug/16x16_sm_ascii.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/16x16_sm_ascii.png C:/Users/casht/repos/netgame/build/game/Debug/16x16_sm_ascii.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -205,12 +191,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Debug\imgui.lib;..\SLikeNet\Debug\SLikeNet.lib;..\angelscriptsdk\angelscript\projects\cmake\Debug\angelscriptd.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/netgame/GLFW/lib;C:/Users/casht/repos/netgame/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/casht/repos/opencltest/build/game/Debug/MinerTycoon.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/casht/repos/opencltest/build/game/Debug/MinerTycoon.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/casht/repos/netgame/build/game/Debug/MinerTycoon.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/casht/repos/netgame/build/game/Debug/MinerTycoon.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -219,13 +205,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/casht/repos/netgame/SLikeNet/Source/include" " /O2" " /fp:fast" " /arch:AVX512"</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/Release/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
@@ -237,14 +227,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -252,9 +242,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>								</Message>
+      <Message>						</Message>
       <Command>setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/netgame/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -263,7 +253,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/opencltest/build/game/Debug/glew32.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/netgame/build/game/Debug/glew32.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -272,7 +262,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/shaders C:/Users/casht/repos/opencltest/build/game/Debug/shaders
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/shaders C:/Users/casht/repos/netgame/build/game/Debug/shaders
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -281,7 +271,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/openCL C:/Users/casht/repos/opencltest/build/game/Debug/openCL
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/angelScript C:/Users/casht/repos/netgame/build/game/Debug/angelScript
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -290,7 +280,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/angelScript C:/Users/casht/repos/opencltest/build/game/Debug/angelScript
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/windows_binaries C:/Users/casht/repos/netgame/build/game/Debug/windows_binaries
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -299,7 +289,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/windows_binaries C:/Users/casht/repos/opencltest/build/game/Debug/windows_binaries
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/TileSet.png C:/Users/casht/repos/netgame/build/game/Debug/TileSet.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -308,25 +298,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/16x16_sm_ascii.png C:/Users/casht/repos/opencltest/build/game/Debug/16x16_sm_ascii.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/16x16_sm_ascii.png C:/Users/casht/repos/netgame/build/game/Debug/16x16_sm_ascii.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -337,12 +309,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\Release\imgui.lib;..\SLikeNet\Release\SLikeNet.lib;..\angelscriptsdk\angelscript\projects\cmake\Release\angelscript.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/netgame/GLFW/lib;C:/Users/casht/repos/netgame/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/casht/repos/opencltest/build/game/Release/MinerTycoon.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/casht/repos/opencltest/build/game/Release/MinerTycoon.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/casht/repos/netgame/build/game/Release/MinerTycoon.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/casht/repos/netgame/build/game/Release/MinerTycoon.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -351,13 +323,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/casht/repos/netgame/SLikeNet/Source/include"</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MinSpace</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/MinSizeRel/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
@@ -369,14 +345,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -384,9 +360,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>								</Message>
+      <Message>						</Message>
       <Command>setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/netgame/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -395,7 +371,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/opencltest/build/game/Debug/glew32.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/netgame/build/game/Debug/glew32.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -404,7 +380,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/shaders C:/Users/casht/repos/opencltest/build/game/Debug/shaders
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/shaders C:/Users/casht/repos/netgame/build/game/Debug/shaders
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -413,7 +389,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/openCL C:/Users/casht/repos/opencltest/build/game/Debug/openCL
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/angelScript C:/Users/casht/repos/netgame/build/game/Debug/angelScript
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -422,7 +398,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/angelScript C:/Users/casht/repos/opencltest/build/game/Debug/angelScript
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/windows_binaries C:/Users/casht/repos/netgame/build/game/Debug/windows_binaries
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -431,7 +407,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/windows_binaries C:/Users/casht/repos/opencltest/build/game/Debug/windows_binaries
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/TileSet.png C:/Users/casht/repos/netgame/build/game/Debug/TileSet.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -440,25 +416,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/16x16_sm_ascii.png C:/Users/casht/repos/opencltest/build/game/Debug/16x16_sm_ascii.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/16x16_sm_ascii.png C:/Users/casht/repos/netgame/build/game/Debug/16x16_sm_ascii.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -469,12 +427,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\MinSizeRel\imgui.lib;..\SLikeNet\MinSizeRel\SLikeNet.lib;..\angelscriptsdk\angelscript\projects\cmake\MinSizeRel\angelscript.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/netgame/GLFW/lib;C:/Users/casht/repos/netgame/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/casht/repos/opencltest/build/game/MinSizeRel/MinerTycoon.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/casht/repos/opencltest/build/game/MinSizeRel/MinerTycoon.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/casht/repos/netgame/build/game/MinSizeRel/MinerTycoon.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/casht/repos/netgame/build/game/MinSizeRel/MinerTycoon.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -483,14 +441,18 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "C:/Users/casht/repos/netgame/SLikeNet/Source/include"</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/RelWithDebInfo/cmake_pch.pch</PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
@@ -500,14 +462,14 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
-      <IncludePaths>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
+      <IncludePaths>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\casht\repos\opencltest\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\opencltest\game\..\GLFW;C:\Users\casht\repos\opencltest\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\opencltest\game\..\glm-master\glm;C:\Users\casht\repos\opencltest\game\..\SLikeNet\Source\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\opencltest\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\opencltest\.\SDL2-2.0.22\include;C:\Users\casht\repos\opencltest\.\GLFW;C:\Users\casht\repos\opencltest\.\glew-2.1.0\include;C:\Users\casht\repos\opencltest\.\imgui;C:\Users\casht\repos\opencltest\.\imgui\backends;C:\Users\casht\repos\opencltest\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -515,9 +477,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
     <PostBuildEvent>
-      <Message>								</Message>
+      <Message>						</Message>
       <Command>setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/opencltest/build/game/Debug/SDL2.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/SDL2.dll C:/Users/casht/repos/netgame/build/game/Debug/SDL2.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -526,7 +488,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/opencltest/build/game/Debug/glew32.dll
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/glew-2.1.0/bin/Release/x64/glew32.dll C:/Users/casht/repos/netgame/build/game/Debug/glew32.dll
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -535,7 +497,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/shaders C:/Users/casht/repos/opencltest/build/game/Debug/shaders
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/shaders C:/Users/casht/repos/netgame/build/game/Debug/shaders
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -544,7 +506,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/openCL C:/Users/casht/repos/opencltest/build/game/Debug/openCL
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/angelScript C:/Users/casht/repos/netgame/build/game/Debug/angelScript
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -553,7 +515,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/angelScript C:/Users/casht/repos/opencltest/build/game/Debug/angelScript
+"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/netgame/game/windows_binaries C:/Users/casht/repos/netgame/build/game/Debug/windows_binaries
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -562,7 +524,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy_directory C:/Users/casht/repos/opencltest/game/windows_binaries C:/Users/casht/repos/opencltest/build/game/Debug/windows_binaries
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/TileSet.png C:/Users/casht/repos/netgame/build/game/Debug/TileSet.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -571,25 +533,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/TileSet.png C:/Users/casht/repos/opencltest/build/game/Debug/TileSet.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/game/16x16_sm_ascii.png C:/Users/casht/repos/opencltest/build/game/Debug/16x16_sm_ascii.png
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/opencltest/build/game/Debug/openCL/dynamicDefines.h C:/Users/casht/repos/opencltest/game/openCL/dynamicDefines.h
+"C:\Program Files\CMake\bin\cmake.exe" -E copy C:/Users/casht/repos/netgame/game/16x16_sm_ascii.png C:/Users/casht/repos/netgame/build/game/Debug/16x16_sm_ascii.png
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -600,12 +544,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>OpenCL.lib;SDL2.lib;SDL2main.lib;Opengl32.lib;glew32.lib;glfw3.lib;..\RelWithDebInfo\imgui.lib;..\SLikeNet\RelWithDebInfo\SLikeNet.lib;..\angelscriptsdk\angelscript\projects\cmake\RelWithDebInfo\angelscript.lib;iphlpapi.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/opencltest/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/opencltest/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/opencltest/GLFW/lib;C:/Users/casht/repos/opencltest/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64;C:/Users/casht/repos/netgame/SDL2-2.0.22/lib/x64/$(Configuration);C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64;C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/$(Configuration);C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64;C:/Users/casht/repos/netgame/glew-2.1.0/lib/Release/x64/$(Configuration);C:/Users/casht/repos/netgame/GLFW/lib;C:/Users/casht/repos/netgame/GLFW/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>C:/Users/casht/repos/opencltest/build/game/RelWithDebInfo/MinerTycoon.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/casht/repos/opencltest/build/game/RelWithDebInfo/MinerTycoon.pdb</ProgramDataBaseFile>
+      <ImportLibrary>C:/Users/casht/repos/netgame/build/game/RelWithDebInfo/MinerTycoon.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/Users/casht/repos/netgame/build/game/RelWithDebInfo/MinerTycoon.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -613,11 +557,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\casht\repos\opencltest\game\CMakeLists.txt">
+    <CustomBuild Include="C:\Users\casht\repos\netgame\game\CMakeLists.txt">
       <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/game/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/casht/repos/netgame/game/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/game/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/game/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -626,11 +570,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\opencltest\build\game\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\casht\repos\netgame\build\game\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/game/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/casht/repos/netgame/game/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/game/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/game/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -639,11 +583,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\opencltest\build\game\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\casht\repos\netgame\build\game\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/game/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/casht/repos/netgame/game/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/game/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/game/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -652,11 +596,11 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\opencltest\build\game\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\casht\repos\netgame\build\game\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/casht/repos/opencltest/game/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/casht/repos/netgame/game/CMakeLists.txt</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/opencltest -BC:/Users/casht/repos/opencltest/build --check-stamp-file C:/Users/casht/repos/opencltest/build/game/CMakeFiles/generate.stamp
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/casht/repos/netgame -BC:/Users/casht/repos/netgame/build --check-stamp-file C:/Users/casht/repos/netgame/build/game/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -665,40 +609,100 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\opencltest\build\game\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\casht\repos\netgame\build\game\CMakeFiles\generate.stamp</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GEShader.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGraphics.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.h" />
-    <ClInclude Include="C:\Users\casht\repos\opencltest\game\GameNetworking.h" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\main.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShaderProgram.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GEShader.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGraphics.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameGPUCompute.cpp" />
-    <ClCompile Include="C:\Users\casht\repos\opencltest\game\GameNetworking.cpp" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\cmake_pch.cxx">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/Debug/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/Release/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/MinSizeRel/cmake_pch.pch</PrecompiledHeaderOutputFile>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/MinerTycoon.dir/RelWithDebInfo/cmake_pch.pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GEShaderProgram.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GEShader.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameGraphics.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameCompute.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GameNetworking.h" />
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\main.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GEShaderProgram.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GEShader.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameGraphics.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameCompute.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GameNetworking.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.cpp">
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Debug/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/Release/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/MinSizeRel/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/casht/repos/netgame/build/game/CMakeFiles/MinerTycoon.dir/RelWithDebInfo/cmake_pch.hxx;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\gameCodeCommon.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\netSyncStructs.h" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Debug\cmake_pch.hxx" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Release\cmake_pch.hxx" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\MinSizeRel\cmake_pch.hxx" />
+    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\RelWithDebInfo\cmake_pch.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\ZERO_CHECK.vcxproj">
-      <Project>{F13798D9-A751-35DE-B4D3-3D55FA4EC0E1}</Project>
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\ZERO_CHECK.vcxproj">
+      <Project>{54DF16DA-D22B-3044-9E7D-7BFE854C8976}</Project>
       <Name>ZERO_CHECK</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\SLikeNet\SLikeNet.vcxproj">
-      <Project>{E4C6DE75-1FE7-38EF-AA94-355FCBC3249F}</Project>
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\SLikeNet\SLikeNet.vcxproj">
+      <Project>{EF43F793-5AD9-3715-9EEB-BF3AA4F214F3}</Project>
       <Name>SLikeNet</Name>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\angelscriptsdk\angelscript\projects\cmake\angelscript.vcxproj">
-      <Project>{2203E162-0A72-3778-AAD8-D3858D6A6730}</Project>
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\angelscriptsdk\angelscript\projects\cmake\angelscript.vcxproj">
+      <Project>{8371F37C-85F7-3BA7-850C-CE3531240C09}</Project>
       <Name>angelscript</Name>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\opencltest\build\imgui.vcxproj">
-      <Project>{34EFB1D4-3308-3362-B511-67ABF8B31051}</Project>
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\imgui.vcxproj">
+      <Project>{C44C1397-E3A8-3FBE-AE59-35E9C843683A}</Project>
       <Name>imgui</Name>
     </ProjectReference>
   </ItemGroup>

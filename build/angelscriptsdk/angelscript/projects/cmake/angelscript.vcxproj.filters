@@ -1,279 +1,279 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_atomic.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_atomic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_builder.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_builder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_bytecode.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_bytecode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_mips.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_mips.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_x86.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_x86.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_x64_gcc.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_x64_gcc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_x64_msvc.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_x64_msvc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_x64_mingw.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_x64_mingw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_compiler.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_compiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_configgroup.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_configgroup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_context.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_context.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_datatype.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_datatype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_gc.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_gc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_generic.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_generic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_globalproperty.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_globalproperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_memory.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_module.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_objecttype.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_objecttype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_outputbuffer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_outputbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_parser.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_restore.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_restore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptcode.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptcode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptengine.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptengine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptfunction.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptfunction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptnode.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptnode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptobject.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptobject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_string.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_string_util.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_string_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_thread.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_tokenizer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_tokenizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_typeinfo.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_typeinfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_variablescope.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_variablescope.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptbuilder\scriptbuilder.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptbuilder\scriptbuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptdictionary\scriptdictionary.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptdictionary\scriptdictionary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptfile\scriptfile.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptfile\scriptfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptfile\scriptfilesystem.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptfile\scriptfilesystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scripthelper\scripthelper.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scripthelper\scripthelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptmath\scriptmath.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptmath\scriptmath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring_utils.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\serializer\serializer.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\serializer\serializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\weakref\weakref.cpp">
+    <ClCompile Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\weakref\weakref.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\include\angelscript.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\include\angelscript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_array.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_builder.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_builder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_bytecode.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_bytecode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_compiler.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_compiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_config.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_configgroup.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_configgroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_context.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_criticalsection.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_criticalsection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_datatype.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_datatype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_debug.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_generic.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_generic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_map.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_memory.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_module.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_objecttype.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_objecttype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_outputbuffer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_outputbuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_parser.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_property.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_property.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_restore.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_restore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptcode.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptcode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptengine.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptengine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptfunction.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptfunction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptnode.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptnode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_scriptobject.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_scriptobject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_string.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_string_util.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_string_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_texts.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_texts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_thread.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_tokendef.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_tokendef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_tokenizer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_tokenizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_typeinfo.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_typeinfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_variablescope.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_variablescope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptbuilder\scriptbuilder.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptbuilder\scriptbuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptdictionary\scriptdictionary.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptdictionary\scriptdictionary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptfile\scriptfile.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptfile\scriptfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptfile\scriptfilesystem.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptfile\scriptfilesystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scripthelper\scripthelper.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scripthelper\scripthelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptmath\scriptmath.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptmath\scriptmath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\scriptstdstring\scriptstdstring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\serializer\serializer.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\serializer\serializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\weakref\weakref.h">
+    <ClInclude Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\weakref\weakref.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\projects\cmake\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\projects\cmake\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="C:\Users\casht\repos\opencltest\angelscriptsdk\angelscript\source\as_callfunc_x64_msvc_asm.asm" />
+    <MASM Include="C:\Users\casht\repos\netgame\angelscriptsdk\angelscript\source\as_callfunc_x64_msvc_asm.asm" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{F968F0C1-1657-3D46-A1B5-0CFFA0436291}</UniqueIdentifier>
+      <UniqueIdentifier>{B65147BB-9782-3532-9107-04CF7FD529E5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{FEF97670-C656-31A4-A612-A9A219331289}</UniqueIdentifier>
+      <UniqueIdentifier>{4442BB9E-3CDD-3969-A4BA-A5C23CB92DD8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
