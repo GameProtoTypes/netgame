@@ -20,11 +20,7 @@
 
 #include "implot.h"
 
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+
 
 #include "glm.hpp"
 #include <gtc/matrix_transform.hpp>

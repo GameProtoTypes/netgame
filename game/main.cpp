@@ -6,11 +6,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif
+
 
 #include "glew.h"
 #include "glfw3native.h"
