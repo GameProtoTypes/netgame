@@ -163,7 +163,7 @@ set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBui
 
 
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
-    "OpenCL;"
+#    "OpenCL;"
     "SDL2;"
     "SDL2main;"
     "Opengl32;"
