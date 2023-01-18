@@ -1,7 +1,8 @@
 #pragma once
 
 #include <type_traits>
-
+#include <numbers>
+#include <gcem.hpp>
 
 #define DEFAULT_Q (16)
 
@@ -12,6 +13,8 @@ typedef uint32_t ge_uint;
 typedef int64_t ge_long;
 typedef uint64_t ge_ulong;
 typedef float ge_float;
+
+
 
 struct ge_int2
 {
@@ -127,14 +130,6 @@ constexpr bool GE2_ISZERO(const T& ge2)
 {
     return (ge2.x == 0 && ge2.y == 0);
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -311,6 +306,22 @@ constexpr GE2_T GE_TO_GE2_ZERO_PAD(const FROMT& ge)
 #endif
 
 
+template <typename Q_T = ge_int>
+constexpr int GE_BIGGEST_Q(ge_float magnitude)
+{
+    ge_float maxMag = gcem::abs(magnitude);
+    int WHOLE_BITS = (int)gcem::ceil( gcem::log2( gcem::floor(maxMag)));
+    if(WHOLE_BITS == 0)
+        WHOLE_BITS = 1;
+    
+    if(std::is_signed<Q_T>())
+        WHOLE_BITS++;
+
+
+    return sizeof(Q_T)*8 - WHOLE_BITS;
+}
+
+
 template <int Q = DEFAULT_Q, typename T = ge_int, typename Q_T = ge_int>
 constexpr Q_T GE_TO_Q(const T& val)
 {
@@ -320,62 +331,61 @@ constexpr Q_T GE_TO_Q(const T& val)
         return static_cast<Q_T>(val * (1 << Q));
 }
 
-template <int Q = DEFAULT_Q, typename T= ge_int, typename SafeType = ge_long>
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int, typename PADDED_T = ge_long>
 constexpr T GE_MUL_Q(const T& valA, const T& valB)
 {
-    return T((((SafeType)valA)*((SafeType)valB)) >> Q);
+    return T((((PADDED_T)valA)*((PADDED_T)valB)) >> ((Q_A+Q_B)-Q_OUT));
 }
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int, typename SafeType = ge_long>
-constexpr T GE_MUL_Q(const T& valA, const T& valB)
-{
-    return T((((SafeType)valA)*((SafeType)valB)) >> ((Q_A+Q_B)-Q_OUT));
-}
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int2, typename SafeType = ge_long>
+
+
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int2, typename PADDED_T = ge_long>
 constexpr T GE2_MUL_Q(const T& ge2A, const T& ge2B)
 {
-    return T( (((SafeType)ge2A.x)*((SafeType)ge2B.x)) >> ((Q_A+Q_B)-Q_OUT), 
-              (((SafeType)ge2A.y)*((SafeType)ge2B.y)) >> ((Q_A+Q_B)-Q_OUT) );
+    return T( (((PADDED_T)ge2A.x)*((PADDED_T)ge2B.x)) >> ((Q_A+Q_B)-Q_OUT), 
+              (((PADDED_T)ge2A.y)*((PADDED_T)ge2B.y)) >> ((Q_A+Q_B)-Q_OUT) );
 }
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int2,  typename SCALAR_T= ge_int, typename SafeType = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int2,  typename SCALAR_T= ge_int, typename PADDED_T = ge_long>
 constexpr T GE2_MUL_Q(const T& ge2A, const SCALAR_T& scalar)
 {
-    return T( (((SafeType)ge2A.x)*((SafeType)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
-              (((SafeType)ge2A.y)*((SafeType)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
+    return T( (((PADDED_T)ge2A.x)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
+              (((PADDED_T)ge2A.y)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
 }
 
 
-// template <int Q = DEFAULT_Q, typename T= ge_int, typename SafeType = ge_long>
+// template <int Q = DEFAULT_Q, typename T= ge_int, typename PADDED_T = ge_long>
 // constexpr T GE_DIV_Q(const T& valA, const T& valB)
 // {
-//     return T((((SafeType)valA)<<Q)/((SafeType)valB));
+//     return T((((PADDED_T)valA)<<Q)/((PADDED_T)valB));
 // }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int, typename SafeType = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int, typename PADDED_T = ge_long>
 constexpr T GE_DIV_Q(const T& valA, const T& valB)
 {
-    return T(GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)valA)<<(Q_B))/(SafeType(valB)))) );
+    return T(GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)valA)<<(Q_B))/(PADDED_T(valB)))) );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename SafeType = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename PADDED_T = ge_long>
 constexpr T GE2_DIV_Q(const T& ge2A, const T& ge2B)
 {
-    return T( GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge2A.x)<<(Q_B))/(SafeType(ge2B.x)))),
-              GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge2A.y)<<(Q_B))/(SafeType(ge2B.y))))  );
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.x)<<(Q_B))/(PADDED_T(ge2B.x)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.y)<<(Q_B))/(PADDED_T(ge2B.y))))  );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename SCALAR_T = ge_int, typename SafeType = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename SCALAR_T = ge_int, typename PADDED_T = ge_long>
 constexpr T GE2_DIV_Q(const T& ge2A, const SCALAR_T& scalar)
 {
-    return T( GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge2A.x)<<(Q_B))/(SafeType(scalar)))),
-              GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge2A.y)<<(Q_B))/(SafeType(scalar))))  );
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.x)<<(Q_B))/(PADDED_T(scalar)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.y)<<(Q_B))/(PADDED_T(scalar))))  );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename SCALAR_T = ge_int, typename SafeType = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename SCALAR_T = ge_int, typename PADDED_T = ge_long>
 constexpr T GE3_DIV_Q(const T& ge3A, const SCALAR_T& scalar)
 {
-    return T( GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge3A.x)<<(Q_B))/(SafeType(scalar)))),
-              GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge3A.y)<<(Q_B))/(SafeType(scalar)))),
-              GE_SIGNED_SHIFT<SafeType,-(Q_OUT - Q_A)>(((((SafeType)ge3A.z)<<(Q_B))/(SafeType(scalar))))   );
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(scalar)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(scalar)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(scalar))))   );
 }
 
 

@@ -171,7 +171,8 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "glfw3;"
     "imgui;"
     "SLikeNet;"
-    "angelscript"
+    "angelscript;"
+    "gcem"
 )
 
 

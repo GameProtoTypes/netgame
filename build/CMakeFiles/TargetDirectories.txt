@@ -10,3 +10,5 @@ C:/Users/casht/repos/netgame/build/SLikeNet/CMakeFiles/INSTALL.dir
 C:/Users/casht/repos/netgame/build/angelscriptsdk/angelscript/projects/cmake/CMakeFiles/angelscript.dir
 C:/Users/casht/repos/netgame/build/angelscriptsdk/angelscript/projects/cmake/CMakeFiles/INSTALL.dir
 C:/Users/casht/repos/netgame/build/angelscriptsdk/angelscript/projects/cmake/CMakeFiles/ALL_BUILD.dir
+C:/Users/casht/repos/netgame/build/gcem/CMakeFiles/INSTALL.dir
+C:/Users/casht/repos/netgame/build/gcem/CMakeFiles/ALL_BUILD.dir

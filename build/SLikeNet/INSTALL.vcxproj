@@ -192,7 +192,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
-    <ProjectReference Include="C:\Users\casht\repos\netgame\build\ALL_BUILD.vcxproj">
+    <ProjectReference Include="C:\Users\casht\repos\netgame\build\gcem\ALL_BUILD.vcxproj">
       <Project>{250315FC-310F-3AFA-9589-60EB9C48B28C}</Project>
       <Name>ALL_BUILD</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

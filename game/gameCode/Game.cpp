@@ -33,14 +33,19 @@ void StartupTests()
     
     ge_int2 v_n = GE2_NORMALIZED_Q(v, length);
 
-
-    ge_int a = GE_TO_Q<24>(1.0f);
-    ge_int b = GE_TO_Q<24>(2.0f);
-    ge_int c = GE_DIV_Q<16,24,24>(a,b);
-    GE_PRINT_Q<16>(length);
+    const int constQ = 24;
+    ge_int a = GE_TO_Q<constQ>(1.0f);
+    ge_int b = GE_TO_Q<constQ>(2.0f);
+    const int someQ = constQ-5;
+    ge_int c = GE_DIV_Q<someQ,constQ,constQ>(a,b);
+    GE_PRINT_Q<someQ>(length);
     //GE_PRINT(GE_SIGNED_SHIFT<ge_int, -1>(a));
 
-
+    const float fltToRepresent = -123.32f;
+    constexpr int testQ = GE_BIGGEST_Q(fltToRepresent);
+    constexpr ge_int n = GE_TO_Q<testQ>(fltToRepresent);
+    constexpr float nF = GE_Q_TO_FLOAT<testQ>(n);
+    printf("(GE_BIGGEST_Q) %f, is %f\n", fltToRepresent, nF);
 
 
     printf("(Q2F)  1: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(1)));
