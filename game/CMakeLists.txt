@@ -1,6 +1,8 @@
-project(MinerTycoon)
-cmake_minimum_required(VERSION 3.20)
+project(MinerTycoon CXX)
+cmake_minimum_required(VERSION 3.25)
 set(CMAKE_CXX_STANDARD 20)
+
+#include("cxx-modules-rules.cmake")
 
 
 
@@ -48,9 +50,6 @@ set(Source_Files
     "GameGraphics.cpp"
     "GameCompute.cpp"
     "GameNetworking.cpp"
-
-    
-
 )
 source_group("Source Files" FILES ${Source_Files})
 
@@ -82,15 +81,30 @@ source_group("CL Header Files" FILES ${OPENCL_Header_Files})
 
 
 set(Game_Source_Files
-    "gameCode/Game.cpp"
+    #"gameCode/Game.cpp"
 )
 source_group("Game Source Files" FILES ${Game_Source_Files})
 
 set(Game_Header_Files
-    "gameCode/gameCodeCommon.h"
-    "gameCode/netSyncStructs.h"
+
 )
 source_group("Game Header Files" FILES ${Game_Header_Files})
+
+set(Game_Module_Files
+    "gameCode/GE.Basic-FixedPoint.cpp"
+    "gameCode/GE.Basic.ixx"
+    "gameCode/GE.Basic-Types.ixx"
+    "gameCode/GE.Basic-FixedPoint.ixx"
+
+    "gameCode/GE.ImGui.cpp"
+    "gameCode/GE.ImGui.ixx"
+
+    "gameCode/Game.ixx"
+    "gameCode/Game.cpp"
+)
+source_group("Game Module Files" FILES ${Game_Module_Files})
+
+
 
 
 
@@ -104,6 +118,7 @@ set(ALL_FILES
 
     ${Game_Source_Files}
     ${Game_Header_Files}
+    ${Game_Module_Files}
 )
 set(COMPILE_FILES
     ${Header_Files}
@@ -111,15 +126,24 @@ set(COMPILE_FILES
 
     ${Game_Source_Files}
     ${Game_Header_Files}
+    ${Game_Module_Files}
 )
 
 
 ################################################################################
 # Target
 ################################################################################
+
+
 add_executable(${PROJECT_NAME} ${COMPILE_FILES})
-
-
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_include_directories(${PROJECT_NAME} PRIVATE "gameCode")
+# target_sources(${PROJECT_NAME}
+#   PRIVATE
+#     FILE_SET CXX_MODULES
+#       TYPE CXX_MODULES
+#       FILES
+#       ${Game_Module_Files})
 
 
 
@@ -183,8 +207,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 "$<$<CONFIG:RELEASE>: /arch:AVX512>")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE "gameCode/gameCodeCommon.h")
 
 
 

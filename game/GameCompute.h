@@ -11,7 +11,7 @@
 
 #include "assert.h"
 
-
+import Game;
 
 class GameGraphics;
 class GameCompute
@@ -37,10 +37,10 @@ public:
 
 
 
-	std::shared_ptr<GameState> gameState;
-	std::shared_ptr<GameStateActions> gameStateActions;
+	std::shared_ptr<Game::GameState> gameState;
+	std::shared_ptr<Game::GameStateActions> gameStateActions;
 	GameGraphics* graphics = nullptr;
 
-	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
+	//void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
 };
 

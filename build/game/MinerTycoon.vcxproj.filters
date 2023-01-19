@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\cmake_pch.cxx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -22,8 +19,29 @@
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GameNetworking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-FixedPoint.cpp">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-Types.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-FixedPoint.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.ImGui.cpp">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.ImGui.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.cpp">
-      <Filter>Game Source Files</Filter>
+      <Filter>Game Module Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,40 +60,16 @@
     <ClInclude Include="C:\Users\casht\repos\netgame\game\GameNetworking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\gameCodeCommon.h">
-      <Filter>Game Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\game\gameCode\netSyncStructs.h">
-      <Filter>Game Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Debug\cmake_pch.hxx">
-      <Filter>Precompile Header File</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\Release\cmake_pch.hxx">
-      <Filter>Precompile Header File</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\MinSizeRel\cmake_pch.hxx">
-      <Filter>Precompile Header File</Filter>
-    </ClInclude>
-    <ClInclude Include="C:\Users\casht\repos\netgame\build\game\CMakeFiles\MinerTycoon.dir\RelWithDebInfo\cmake_pch.hxx">
-      <Filter>Precompile Header File</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\casht\repos\netgame\game\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Game Header Files">
-      <UniqueIdentifier>{25D507F7-BDD7-3894-8B37-475C9A0F7380}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Game Source Files">
-      <UniqueIdentifier>{EC33B6E4-711F-37C1-8D7B-497E2B8E8798}</UniqueIdentifier>
+    <Filter Include="Game Module Files">
+      <UniqueIdentifier>{7906D657-598D-3038-A480-2DC6B1996E6A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{B65147BB-9782-3532-9107-04CF7FD529E5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Precompile Header File">
-      <UniqueIdentifier>{1CF1C870-DA69-3FF1-B806-AD4ED00F1DB3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4442BB9E-3CDD-3969-A4BA-A5C23CB92DD8}</UniqueIdentifier>

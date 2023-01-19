@@ -48,6 +48,7 @@
 #define LOCAL_QUICK_CONNECT
 #define LOCAL_AUTO_CONNECT
 
+using namespace Game;
 
 class GameNetworking
 {

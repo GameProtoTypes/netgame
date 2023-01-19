@@ -22,6 +22,9 @@
 #include "glew.h"
 #include "GameGraphics.h"
 
+import Game;
+
+using namespace Game;
 
 GameCompute::GameCompute()
 {
@@ -31,21 +34,28 @@ GameCompute::~GameCompute()
 {
 }
 
-void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc)
-{
+// void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc)
+// {
 
-    //run game tick
-    std::thread threads[64];
-    for(int t=0; t<64; t++)
-    {
-        threads[t] = std::thread(kernelFunc, gameState.get(), gameStateActions.get(), t, 64);
-    }
-    for(int t=0; t<64; t++)
-    {
-        threads[t].join();
-    }
+//     //run game tick
+//     std::thread threads[64];
+//     for(int t=0; t<64; t++)
+//     {
+//         threads[t] = std::thread(kernelFunc, gameState.get(), gameStateActions.get(), graphics, t, 64);
 
-}
+
+
+
+
+
+
+//     }
+//     for(int t=0; t<64; t++)
+//     {
+//         threads[t].join();
+//     }
+
+// }
 
 void GameCompute::Stage1_Begin()
 {
@@ -54,17 +64,17 @@ void GameCompute::Stage1_Begin()
 
 
     //run game tick
-    std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Kernel_A;
-    RunGameKernel(kernel);
+  //  std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Kernel_A;
+   // RunGameKernel(kernel);
 
-    kernel = Kernel_B;
-    RunGameKernel(kernel);
+    // kernel = Kernel_B;
+    // RunGameKernel(kernel);
 
-    kernel = Kernel_C;
-    RunGameKernel(kernel);
+    // kernel = Kernel_C;
+    // RunGameKernel(kernel);
 
-    kernel = Kernel_D;
-    RunGameKernel(kernel);
+    // kernel = Kernel_D;
+    // RunGameKernel(kernel);
 
 
     stage1_Running = true;
@@ -75,7 +85,7 @@ void GameCompute::Stage1_End()
         return;
 
     //end game tick
-    gameState->tickidx++;
+    gameStateActions->tickIdx++;
     stage1_Running = false;
 }
 

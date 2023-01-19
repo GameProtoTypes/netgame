@@ -36,6 +36,10 @@
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
+import GE.Basic;
+import GE.ImGui;
+import Game;
+
 void ActionTrackingInit(ActionTracking* actionTracking)
 {
     actionTracking->clientId = 0;
@@ -97,6 +101,9 @@ void print(std::string &msg)
 
 int32_t main(int32_t argc, char* args[]) 
 {
+    GE::ge_int2 k,l;
+    Game::GameState someGameState;
+    Game::RunFrame();
 
 
     asIScriptEngine *engine = asCreateScriptEngine();
@@ -439,8 +446,8 @@ int32_t main(int32_t argc, char* args[])
             actionWrap.tracking.sentTickIdx = gameStateActions->tickIdx;
 
             actionWrap.action.actionCode = ClientActionCode_MouseStateChange;
-            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_X] = int(GUI_PXPERSCREEN_F*(float(mousex) / gameGraphics.SCREEN_WIDTH));
-            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_HEIGHT));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_X] = int(GE::GUI_PXPERSCREEN_F*(float(mousex) / gameGraphics.SCREEN_WIDTH));
+            actionWrap.action.intParameters[CAC_MouseStateChange_Param_GUI_Y] = int(GE::GUI_PXPERSCREEN_F*(float(mousey) / gameGraphics.SCREEN_HEIGHT));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_X_Q16] = int(worldMouseEnd.x*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_WORLD_Y_Q16] = int(worldMouseEnd.y*(1<<16));
             actionWrap.action.intParameters[CAC_MouseStateChange_Param_BUTTON_BITS] = buttonBits;
@@ -453,8 +460,8 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GUI_PXPERSCREEN_F;
-        gameStateActions->mouseLocy = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GE::GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLocy = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GE::GUI_PXPERSCREEN_F;
 
         gameStateActions->mouseLocWorldx_Q16 = int(worldMouseEnd.x*(1<<16));
         gameStateActions->mouseLocWorldy_Q16 = int(worldMouseEnd.y*(1<<16));
