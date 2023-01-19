@@ -101,9 +101,6 @@ void print(std::string &msg)
 
 int32_t main(int32_t argc, char* args[]) 
 {
-    GE::ge_int2 k,l;
-    Game::GameState someGameState;
-    Game::RunFrame();
 
 
     asIScriptEngine *engine = asCreateScriptEngine();
