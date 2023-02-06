@@ -1,5 +1,7 @@
 export module Game;
 
+export import :Graphics;
+
 import GE.Basic;
 import GE.ImGui;
 using namespace GE; 
@@ -8,7 +10,7 @@ export namespace Game {
 
 const int MAX_ACTIONS_PER_TICK = 8;
 const int MAX_CLIENTS = 1024;
-
+const int GAME_UPDATE_WORKITEMS = 64;
 const	int warpSize = 32;
 const	int maxPeeps = 1024*8;
 const	int maxParticles = 32;
@@ -18,6 +20,10 @@ const	int mapTileSize = 5;
 const   int maxGuiRects = 1024*16;
 const	int maxLines = 1024*64;
 const	int maxExplorers = 1024;
+
+int PEEP_VBO_INSTANCE_SIZE;
+
+const ge_int MAP_TILE_SIZE = GE_TO_Q(5.0);
 const int SQRT_MAXSECTORS = (mapDim/2);
 const int SECTOR_SIZE = (10);
 
@@ -331,7 +337,7 @@ struct Map {
 
 } typedef Map;
 
-#define MAX_PEEPS_PER_SECTOR (16)
+const int MAX_PEEPS_PER_SECTOR  = (16);
 struct MapSector {
 	ge_offsetPtr peepPtrs[MAX_PEEPS_PER_SECTOR];
 	ge_int ptrIterator;
@@ -366,8 +372,8 @@ enum AStarPathFindingProgress
 } typedef AStarPathFindingProgress;
 
 
-#define ASTARHEAPSIZE ((mapDim*mapDim*mapDepth)/100)
-#define ASTARDETAILSSIZE ((mapDim*mapDim*mapDepth)/100)
+const int ASTARHEAPSIZE = ((mapDim*mapDim*mapDepth)/100);
+const int ASTARDETAILSSIZE = ((mapDim*mapDim*mapDepth)/100);
 struct AStarSearch_BFS {
 	AStarNode details[ASTARDETAILSSIZE];
 	ge_offsetPtr nextDetailNodePtr;
@@ -389,8 +395,8 @@ struct AStarSearch_BFS {
 
 
 
-#define ASTARPATHSTEPSSIZE ((mapDim*mapDim*mapDepth)/10)
-#define ASTAR_MAX_PATHS (1024)
+const int ASTARPATHSTEPSSIZE = ((mapDim*mapDim*mapDepth)/10);
+const int ASTAR_MAX_PATHS = (1024);
 struct AStarPathSteps
 {
 	AStarPathNode pathNodes[ASTARPATHSTEPSSIZE];
@@ -410,7 +416,7 @@ enum AStarJobStatus
 	AStarJobStatus_Done
 } typedef AStarJobStatus;
 
-#define ASTAR_MAX_JOBS (128)
+const int ASTAR_MAX_JOBS = (128);
 struct AStarJob
 {
 	ge_int3 startLoc;
@@ -483,7 +489,7 @@ enum MachineState
 
 
 
-#define MAX_MACHINES (1024*4)
+const int MAX_MACHINES = (1024*4);
 struct Machine
 {
 	bool valid;
@@ -510,7 +516,7 @@ struct Machine
 
 
 
-#define MAX_ORDERS (4096)
+const int MAX_ORDERS = (4096);
 enum OrderActions
 {
 	OrderAction_NONE,
@@ -786,17 +792,12 @@ struct GameStateActions
 };
 
 
-enum MouseButtonBits {
-	MouseButtonBits_PrimaryPressed,
-	MouseButtonBits_SecondaryPressed,
-	MouseButtonBits_PrimaryReleased,
-	MouseButtonBits_SecondaryReleased,
-	MouseButtonBits_PrimaryDown,
-	MouseButtonBits_SecondaryDown
-} typedef MouseButtonBits;
+
 
 
 void RunFrame();
+
+
 }
 
 

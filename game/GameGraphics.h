@@ -2,23 +2,16 @@
 #include <string>
 #include <iostream>
 
-#include <SDL.h>
-#include "SDL_opengl.h"
-
-#ifdef WIN32
-#include <windows.h>
-#endif
-
-
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
-
 
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
+#include "GE.Includes.h"
+
 #define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
+
+
+
 
 //graphics resources/buffers access
 class GameCompute;
@@ -90,21 +83,18 @@ public:
 	std::shared_ptr<GEShaderProgram> pPeepShadProgram;
 	std::shared_ptr<GEShaderProgram> pParticleShadProgram;
 	std::shared_ptr<GEShaderProgram> pMapTileShadProgram;
-
-
-
+	
 	std::shared_ptr<GEShaderProgram> pBasicShadProgram;
 	std::shared_ptr<GEShaderProgram> pTileShadProgram;
 	std::shared_ptr<GEShaderProgram> pGuiShadProgram;
 	
 	uint32_t peepVAO, peepQuadVBO, peepQuadUVVBO, peepInstanceVBO;
-	int peepInstanceSIZE = 0;
+
 
 	uint32_t particleVAO, particleQuadVBO, particleQuadUVVBO, particleInstanceVBO;
 	int particleInstanceSIZE = 0;
 
 	uint32_t guiRectVAO, guiRectInstanceVBO;
-
 	uint32_t linesVAO, linesVBO;
 
 

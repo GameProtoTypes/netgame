@@ -19,25 +19,31 @@
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GameNetworking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-FixedPoint.cpp">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic.ixx">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic.ixx">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-Types.ixx">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-Types.ixx">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.Basic-FixedPoint.ixx">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint.ixx">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.ImGui.cpp">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint_InterestingMath.ixx">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\GE.ImGui.ixx">
-      <Filter>Game Module Files</Filter>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.ImGui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.ImGui.ixx">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.ixx">
+      <Filter>Game Module Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.Graphics.ixx">
       <Filter>Game Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.cpp">
@@ -58,6 +64,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="C:\Users\casht\repos\netgame\game\GameNetworking.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GE.Basic.Macro.defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\casht\repos\netgame\game\GE.Includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

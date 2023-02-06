@@ -40,6 +40,9 @@ import GE.Basic;
 import GE.ImGui;
 import Game;
 
+
+using namespace GE;
+
 void ActionTrackingInit(ActionTracking* actionTracking)
 {
     actionTracking->clientId = 0;

@@ -38,8 +38,8 @@ set(Header_Files
     "GameGraphics.h"
     "GameCompute.h"
     "GameNetworking.h" 
-    
-
+    "GE.Basic.Macro.defines.h"
+    "GE.Includes.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
@@ -91,18 +91,26 @@ set(Game_Header_Files
 source_group("Game Header Files" FILES ${Game_Header_Files})
 
 set(Game_Module_Files
-    "gameCode/GE.Basic-FixedPoint.cpp"
-    "gameCode/GE.Basic.ixx"
-    "gameCode/GE.Basic-Types.ixx"
-    "gameCode/GE.Basic-FixedPoint.ixx"
-
-    "gameCode/GE.ImGui.cpp"
-    "gameCode/GE.ImGui.ixx"
-
     "gameCode/Game.ixx"
+    "gameCode/Game.Graphics.ixx"
     "gameCode/Game.cpp"
 )
 source_group("Game Module Files" FILES ${Game_Module_Files})
+
+set(Engine_Module_Files 
+"GE.Basic-FixedPoint.cpp"
+"GE.Basic.ixx"
+
+"GE.Basic-Types.ixx"
+"GE.Basic-FixedPoint.ixx"
+"GE.Basic-FixedPoint_InterestingMath.ixx"
+
+"GE.ImGui.cpp"
+"GE.ImGui.ixx"
+
+
+
+)
 
 
 
@@ -116,6 +124,8 @@ set(ALL_FILES
     ${OPENCL_Source_Files}
     ${OPENCL_Header_Files}
 
+    ${Engine_Module_Files}
+
     ${Game_Source_Files}
     ${Game_Header_Files}
     ${Game_Module_Files}
@@ -123,6 +133,8 @@ set(ALL_FILES
 set(COMPILE_FILES
     ${Header_Files}
     ${Source_Files}
+
+    ${Engine_Module_Files}
 
     ${Game_Source_Files}
     ${Game_Header_Files}
@@ -137,7 +149,9 @@ set(COMPILE_FILES
 
 add_executable(${PROJECT_NAME} ${COMPILE_FILES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
-target_include_directories(${PROJECT_NAME} PRIVATE "gameCode")
+target_include_directories(${PROJECT_NAME} PRIVATE "gameCode" )
+target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL")
+#target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../stb/stb_image.h")
 # target_sources(${PROJECT_NAME}
 #   PRIVATE
 #     FILE_SET CXX_MODULES

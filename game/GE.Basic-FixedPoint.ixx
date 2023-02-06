@@ -1,3 +1,5 @@
+module;
+
 #include <type_traits>
 #include <numbers>
 #include <gcem.hpp>
@@ -7,7 +9,6 @@
 export module GE.Basic:FixedPoint;
 
 import :Types;
-
 
 export namespace GE {
 
@@ -37,10 +38,41 @@ constexpr Q_T GE_TO_Q(const T& val)
 }
 
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int, typename PADDED_T = ge_long>
-constexpr T GE_MUL_Q(const T& valA, const T& valB)
+template <int Q = DEFAULT_Q, typename GE3_T = ge_int3, typename GE3_Q_T = ge_int3, typename GE_Q_T = ge_int>
+constexpr GE3_Q_T GE3_TO_Q(const GE3_T& ge3)
 {
-    return T((((PADDED_T)valA)*((PADDED_T)valB)) >> ((Q_A+Q_B)-Q_OUT));
+    // if constexpr (std::is_integral<GE3_T::x>::value)
+    //     return GE3_Q_T(
+    //         ge3.x << Q, 
+    //         ge3.y << Q,
+    //         ge3.z << Q);
+    // else if constexpr (std::is_floating_point<GE3_T::x>::value)
+    //     return GE3_Q_T<Q, ge_float3, GE3_Q_T, GE_Q_T>(
+    //         ge3.x * (1 << Q),
+    //         ge3.y * (1 << Q),
+    //         ge3.z * (1 << Q));
+}
+template <int Q = DEFAULT_Q, typename GE3_Q_T = ge_int3, typename GE_Q_T = ge_int>
+constexpr GE3_Q_T GE3_TO_Q(const ge_float3& ge3)
+{
+        return GE3_Q_(
+            ge3.x * (1 << Q),
+            ge3.y * (1 << Q),
+            ge3.z * (1 << Q));
+}
+template <int Q = DEFAULT_Q, typename GE3_Q_T = ge_int3, typename GE_Q_T = ge_int>
+constexpr GE3_Q_T GE3_TO_Q(const ge_int3& ge3)
+{
+        return GE3_Q_T(
+            ge3.x << Q, 
+            ge3.y << Q,
+            ge3.z << Q);
+}
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename GE_Q_TA = ge_int, typename GE_Q_TB = ge_int, typename PADDED_T = ge_long>
+constexpr GE_Q_TA GE_MUL_Q(const GE_Q_TA& valA, const GE_Q_TB& valB)
+{
+    return GE_Q_TA((((PADDED_T)valA)*((PADDED_T)valB)) >> ((Q_A+Q_B)-Q_OUT));
 }
 
 
@@ -57,6 +89,24 @@ constexpr T GE2_MUL_Q(const T& ge2A, const SCALAR_T& scalar)
     return T( (((PADDED_T)ge2A.x)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
               (((PADDED_T)ge2A.y)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
 }
+
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int3, typename PADDED_T = ge_long>
+constexpr T GE3_MUL_Q(const T& ge3A, const T& ge3B)
+{
+    return T( (((PADDED_T)ge3A.x)*((PADDED_T)ge3B.x)) >> ((Q_A+Q_B)-Q_OUT), 
+              (((PADDED_T)ge3A.y)*((PADDED_T)ge3B.y)) >> ((Q_A+Q_B)-Q_OUT),
+              (((PADDED_T)ge3A.z)*((PADDED_T)ge3B.z)) >> ((Q_A+Q_B)-Q_OUT) );
+}
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int3,  typename SCALAR_T= ge_int, typename PADDED_T = ge_long>
+constexpr T GE3_MUL_Q(const T& ge3A, const SCALAR_T& scalar)
+{
+    return T( (((PADDED_T)ge3A.x)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
+              (((PADDED_T)ge3A.y)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT),
+              (((PADDED_T)ge3A.z)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
+}
+
 
 
 // template <int Q = DEFAULT_Q, typename T= ge_int, typename PADDED_T = ge_long>
@@ -92,6 +142,13 @@ constexpr T GE3_DIV_Q(const T& ge3A, const SCALAR_T& scalar)
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(scalar)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(scalar))))   );
 }
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename PADDED_T = ge_long>
+constexpr T GE3_DIV_Q(const T& ge3A, const T& ge3B)
+{
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(ge3B.x)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(ge3B.y)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(ge3B.z))))   );
+}
 
 
 //whole part of a Q* as an int.
@@ -100,11 +157,35 @@ constexpr T GE_WHOLE_Q(const T& valA)
 {
     return (valA>>Q);
 }
+
+//whole part of a Q* as an int.
+template <int Q = DEFAULT_Q, typename GE2_Q_T= ge_int2>
+constexpr GE2_Q_T GE2_WHOLE_Q(const GE2_Q_T& ge2)
+{
+    return GE2_Q_T(ge2.x>>Q, ge2.y>>Q);
+}
+
+//whole part of a Q* as an int.
+template <int Q = DEFAULT_Q, typename GE3_Q_T= ge_int3>
+constexpr GE3_Q_T GE3_WHOLE_Q(const GE3_Q_T& ge3)
+{
+    return GE3_Q_T(ge3.x>>Q,ge3.y>>Q,ge3.z>>Q);
+}
+
+
+
 //x with 0 fractional part
 template <int Q = DEFAULT_Q, typename T= ge_int>
 constexpr T GE_WHOLE_ONLY_Q(const T& valA)
 {
     return ((valA>>Q) << Q);
+}
+
+//x with 0 fractional part
+template <int Q = DEFAULT_Q, typename GE2_Q_T= ge_int2>
+constexpr GE2_Q_T GE2_WHOLE_ONLY_Q(const GE2_Q_T& ge2)
+{
+    return ((ge2.x>>Q) << Q, (ge2.y>>Q) << Q);
 }
 
 
@@ -182,7 +263,7 @@ template <int Q = DEFAULT_Q, typename GE3_Q_T= ge_int3, typename T = ge_int>
 T GE3_LENGTH_Q(const GE3_Q_T& ge3)
 {
     ge_long3 v_1 = ge_long3(ge3.x, ge3.y, ge3.z);
-    ge_long3 squared = GE3_MUL_Q<Q, ge_long3>(v_1, v_1, v_1);
+    ge_long3 squared = GE3_MUL_Q<Q, Q,Q, ge_long3, ge_long>(v_1, v_1);
 
     ge_long innerSum = squared.x + squared.y + squared.z;
     ge_long len = GE_SQRT_ULONG(innerSum) << (Q/2);
@@ -213,7 +294,7 @@ template <int Q = DEFAULT_Q, typename GE3_Q_T = ge_int3, typename GE_LEN_Q_T = g
 GE3_Q_T GE3_NORMALIZED_Q(const GE3_Q_T& ge3, GE_LEN_Q_T& length)
 {
     length = GE3_LENGTH_Q<Q, GE3_Q_T, GE_LEN_Q_T>(ge3);
-    GE3_Q_T normalized = GE3_DIV_Q<Q,Q,Q, GE3_Q_T>(GE3_ADD, length);
+    GE3_Q_T normalized = GE3_DIV_Q<Q,Q,Q, GE3_Q_T, GE_LEN_Q_T, ge_long>(ge3, length);
     return normalized;
 }
 
@@ -238,7 +319,7 @@ Q_T GE2_DOT_PRODUCT_Q(GE2_Q_T ge2A, GE2_Q_T ge2B) {
 
 
 template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename GE3_Q_T = ge_int3>
-GE3_Q_T GE3_DOT_PRODUCT_Q(GE3_Q_T ge3A, GE3_Q_T ge3B) {
+decltype(GE3_Q_T::x) GE3_DOT_PRODUCT_Q(GE3_Q_T ge3A, GE3_Q_T ge3B) {
     return  GE_MUL_Q<Q_OUT,Q_A, Q_B>(ge3A.x, ge3B.x) +
             GE_MUL_Q<Q_OUT,Q_A, Q_B>(ge3A.y, ge3B.y) + 
             GE_MUL_Q<Q_OUT,Q_A, Q_B>(ge3A.z, ge3B.z);
@@ -294,6 +375,27 @@ inline GE3_Q_T GE3_ROTATE_ABOUT_AXIS_POS90_Q(GE3_Q_T v, GE3_Q_T axis)
 
     return v_rot;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

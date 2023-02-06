@@ -17,12 +17,11 @@
  
 #include "GameCompute.h"
 
-
-
-#include "glew.h"
 #include "GameGraphics.h"
 
+
 import Game;
+
 
 using namespace Game;
 

@@ -1,8 +1,3 @@
-#include "glew.h"
-
-
-#include "GameGraphics.h"
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,24 +5,19 @@
 #include <iostream>
 
 
-#include "glfw3native.h"
-
-#include <SDL.h>
-#include "SDL_opengl.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-#include "implot.h"
-
-
-
-#include "glm.hpp"
-#include <gtc/matrix_transform.hpp>
-#include <gtx/transform2.hpp>
-#include <gtx/string_cast.hpp>
-
+#include "GameGraphics.h"
 #include "GameCompute.h"
+
+
+
+
+
+
+import Game;
+import GE.Basic;
+
+using namespace GE;
+using namespace Game;
 
 GameGraphics::GameGraphics(GameCompute* gameCompute)
 {
@@ -180,7 +170,7 @@ void GameGraphics::Init()
 
     GL_HOST_ERROR_CHECK()
 
-/*
+
     float quadVertices[] = {
     // positions    
     -1.0f,  1.0f,
@@ -315,16 +305,16 @@ void GameGraphics::Init()
 
 
     // also set instance data
-    peepInstanceSIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
+    PEEP_VBO_INSTANCE_SIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
     glGenBuffers(1, &peepInstanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, peepInstanceSIZE * maxPeeps, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, PEEP_VBO_INSTANCE_SIZE * maxPeeps, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)0);//position
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, PEEP_VBO_INSTANCE_SIZE, (void*)0);//position
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)sizeof(glm::vec2));//color
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, PEEP_VBO_INSTANCE_SIZE, (void*)sizeof(glm::vec2));//color
     glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, peepInstanceSIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
+    glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, PEEP_VBO_INSTANCE_SIZE, (void*)(sizeof(glm::vec2) + sizeof(glm::vec3)));//angle
 
 
     glVertexAttribDivisor(3, 1); // tell OpenGL this is an instanced vertex attribute.
@@ -496,15 +486,11 @@ void GameGraphics::Init()
 
 
 
-
-
-
-
     glFinish();
 
     stbi_image_free(stbimg);
     stbi_image_free(stbimg_letters);
-*/
+
 }
 
 GameGraphics::~GameGraphics()

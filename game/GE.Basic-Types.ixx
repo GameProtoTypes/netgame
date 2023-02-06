@@ -1,7 +1,13 @@
+module;
+
 #include <type_traits>
 #include <numbers>
 #include <gcem.hpp>
-#include <glm.hpp>
+
+
+#include <ext.hpp>
+
+
 
 
 export module GE.Basic:Types; // defines a module partition, Point, that's part of the module BasicPlane.Figures
@@ -105,17 +111,82 @@ typedef ge_uint2 ge_offsetPtr2;
 typedef ge_uint3 ge_offsetPtr3;
 typedef ge_ushort3 ge_offsetPtrShort3;
 
-#define GE_OFFSET_NULL (0xFFFFFFFF)
-#define GE_OFFSET_NULL_2D  ((offsetPtr2){0xFFFFFFFF , 0xFFFFFFFF})
-#define GE_OFFSET_NULL_3D  ((offsetPtr3){0xFFFFFFFF , 0xFFFFFFFF,  0xFFFFFFFF})
+const ge_offsetPtr GE_OFFSET_NULL = (0xFFFFFFFF);
+const ge_offsetPtr2 GE_OFFSET_NULL_2D  = {0xFFFFFFFF , 0xFFFFFFFF};
+const ge_offsetPtr3 GE_OFFSET_NULL_3D  {0xFFFFFFFF , 0xFFFFFFFF,  0xFFFFFFFF};
 
-#define GE_OFFSET_NULL_SHORT_3D  ((offsetPtrShort3){0xFFFF , 0xFFFF,  0xFFFF})
+const ge_offsetPtrShort3 GE_OFFSET_NULL_SHORT_3D = {0xFFFF , 0xFFFF,  0xFFFF};
+
+
+
+
+
+const ge_int perlin_hash_numbers[] = { 208,34,231,213,32,248,233,56,161,78,24,140,71,48,140,254,245,255,247,247,40,
+                     185,248,251,245,28,124,204,204,76,36,1,107,28,234,163,202,224,245,128,167,204,
+                     9,92,217,54,239,174,173,102,193,189,190,121,100,108,167,44,43,77,180,204,8,81,
+                     70,223,11,38,24,254,210,210,177,32,81,195,243,125,8,169,112,32,97,53,195,13,
+                     203,9,47,104,125,117,114,124,165,203,181,235,193,206,70,180,174,0,167,181,41,
+                     164,30,116,127,198,245,146,87,224,149,206,57,4,192,210,65,210,129,240,178,105,
+                     228,108,245,148,140,40,35,195,38,58,65,207,215,253,65,85,208,76,62,3,237,55,89,
+                     232,50,217,64,244,157,199,121,252,90,17,212,203,149,152,140,187,234,177,73,174,
+                     193,100,192,143,97,53,145,135,19,103,13,90,135,151,199,91,239,247,33,39,145,
+                     101,120,99,3,186,86,99,41,237,203,111,79,220,135,158,42,30,154,120,67,87,167,
+                     135,176,183,191,253,115,184,21,233,58,129,233,142,39,128,211,118,137,139,255,
+                     114,20,218,113,154,27,127,246,250,1,8,198,250,209,92,222,173,21,88,102,219 };
+
+
+
+
+
 
 template <class T>
 constexpr T GE_CLAMP(const T& ge, const T& min, const T& max)
 {
     return glm::clamp<T>(ge,min,max);
 }
+
+template <class T>
+constexpr T GE_MAX(const T& geA, const T& geB)
+{
+    return glm::max<T>(geA,geB);
+}
+template <class T>
+constexpr T GE_MIN(const T& geA, const T& geB)
+{
+    return glm::min<T>(geA,geB);
+}
+
+template <class T>
+constexpr T GE_ABS(const T& geX)
+{
+    return glm::abs<T>(geX);
+}
+
+template <class T>
+constexpr T GE_SIN(const T& geX)
+{
+    return glm::sin(geX);
+}
+
+
+template <class T>
+constexpr T GE_ATAN(const T& geX, const T& geY)
+{
+    return glm::atan<T>(geX,geY);
+}
+
+template < class T >
+T GE_UNIFORM_RANDOM_RANGE( int seed, const T& min, const T& max)
+{
+    int stupidRandomNumber = perlin_hash_numbers[seed%256]*((max-min));
+    stupidRandomNumber = stupidRandomNumber%(max-min);
+    return stupidRandomNumber+min;
+}
+
+
+
+
+
 
 template <class T>
 constexpr T GE2_ADD(const T& a, const T& b)
@@ -148,6 +219,24 @@ constexpr bool GE2_ISZERO(const T& ge2)
     return (ge2.x == 0 && ge2.y == 0);
 }
 
+template <class GE2_T = ge_int2>
+constexpr ge_int GE_FAST_NOISE_2D(GE2_T v, ge_int seed)
+{
+    int tmp = perlin_hash_numbers[(v.y + seed) % 256];
+    return perlin_hash_numbers[(tmp + v.x) % 256];
+}
+
+
+template <class GE2_T>
+GE2_T operator+(const GE2_T& ge2A,const GE2_T& ge2B)
+{
+    return GE2_ADD(ge2A,ge2B);
+}
+
+
+
+
+
 
 
 
@@ -166,6 +255,12 @@ constexpr T GE3_MUL(const T& a, const T& b)
 {
     return T{a.x*b.x, a.y*b.y, a.z*b.z};
 }
+template <class T, typename SCALAR_T>
+constexpr T GE3_MUL(const T& a, const SCALAR_T& scalar)
+{
+    return T{a.x*scalar, a.y*scalar, a.z*scalar};
+}
+
 template <class T>
 constexpr T GE3_DIV(const T& a, const T& b)
 {
@@ -181,6 +276,20 @@ constexpr bool GE3_ISZERO(const T& ge3)
 {
     return (ge3.x == 0 && ge3.y == 0 && ge3.z == 0);
 }
+
+template <class GE3_T>
+GE3_T operator*(const GE3_T& ge3A,const GE3_T& ge3B)
+{
+    return GE3_MUL(ge3A,ge3B);
+}
+template <class GE3_T, class GE_T>
+GE3_T operator*(const GE3_T& ge3A,const GE_T& ge)
+{
+    return GE3_MUL(ge3A,ge);
+}
+
+
+
 
 template <class T>
 constexpr T GE4_ADD(const T& a, const T& b)
@@ -275,7 +384,16 @@ constexpr T GE_SIGNED_SHIFT(const T& ge)
         return T{ge >> shift};
 }
 
-
+template <typename GE2_T_A = ge_int2, typename GE2_T_B = ge_int2>
+constexpr bool GE2_EQUAL(const GE2_T_A& a, const GE2_T_B& b)
+{
+    return ((a.x == b.x) && (a.y == b.y));
+}
+template <typename GE3_T_A = ge_int3, typename GE3_T_B = ge_int3>
+constexpr bool GE3_EQUAL(const GE3_T_A& a, const GE3_T_B& b)
+{
+    return ((a.x == b.x) && (a.y == b.y) && (a.z == b.z));
+}
 
 template <typename GE4_T= ge_int4>
 constexpr bool GE4_EQUAL(const GE4_T& a, const GE4_T& b)
@@ -326,46 +444,69 @@ constexpr GE2_T GE_TO_GE2_ZERO_PAD(const FROMT& ge)
 
 
 
-template <typename Q_T>
-void GE_PRINT(Q_T v)
+template <typename GE_T>
+void GE_PRINT(GE_T v)
 {
-    if constexpr (std::is_same<Q_T, ge_int>())
+    if constexpr (std::is_same<GE_T, ge_int>())
     {
         printf("{%d}\n", v);
     }
-    else if constexpr (std::is_same<Q_T, ge_long>())
+    else if constexpr (std::is_same<GE_T, ge_long>())
     {
         printf("{%d}\n", v);
     }
-    else if constexpr (std::is_same<Q_T, ge_short>())
+    else if constexpr (std::is_same<GE_T, ge_short>())
     {
         printf("{%d}\n", v);
     }
-    else if constexpr (std::is_same<Q_T, ge_float>())
+    else if constexpr (std::is_same<GE_T, ge_float>())
     {
         printf("{%f}\n", v);
     }
 }
 
-template <typename Q_T>
-void GE2_PRINT(Q_T v)
+template <typename GE_T>
+void GE2_PRINT(GE_T v)
 {
-    if constexpr (std::is_same<Q_T, ge_int2>())
+    if constexpr (std::is_same<GE_T, ge_int2>())
     {
         printf("{%d,%d}\n", v.x, v.y);
     }
-    else if constexpr (std::is_same<Q_T, ge_long2>())
+    else if constexpr (std::is_same<GE_T, ge_long2>())
     {
         printf("{%d,%d}\n", v.x, v.y);
     }
-    else if constexpr (std::is_same<Q_T, ge_short2>())
+    else if constexpr (std::is_same<GE_T, ge_short2>())
     {
         printf("{%d,%d}\n", v.x, v.y);
     }
-    else if constexpr (std::is_same<Q_T, ge_float2>())
+    else if constexpr (std::is_same<GE_T, ge_float2>())
     {
         printf("{%f,%f}\n", v.x, v.y);
     }
 }
+
+template <typename GE_T>
+void GE3_PRINT(GE_T v)
+{
+    if constexpr (std::is_same<GE_T, ge_int3>())
+    {
+        printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+    }
+    else if constexpr (std::is_same<GE_T, ge_long3>())
+    {
+        printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+    }
+    else if constexpr (std::is_same<GE_T, ge_short3>())
+    {
+        printf("{%d,%d,%d}\n", v.x, v.y, v.z);
+    }
+    else if constexpr (std::is_same<GE_T, ge_float3>())
+    {
+        printf("{%f,%f,%f}\n", v.x, v.y, v.z);
+    }
+}
+
+
 
 }
