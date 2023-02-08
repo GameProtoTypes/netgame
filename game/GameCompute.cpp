@@ -21,9 +21,27 @@
 
 
 import Game;
+namespace Game {
+void game_apply_actions(ALL_CORE_PARAMS);
+void game_hover_gui(ALL_CORE_PARAMS);
+void game_preupdate_1(ALL_CORE_PARAMS);
+void game_preupdate_2(ALL_CORE_PARAMS);
+void game_updatepre1(ALL_CORE_PARAMS);
+void game_update(ALL_CORE_PARAMS);
+void game_update2(ALL_CORE_PARAMS);
+void game_post_update(ALL_CORE_PARAMS);
+
+void dumbfunc(ALL_CORE_PARAMS_TYPES
+){}
+}
+
+
+
 
 
 using namespace Game;
+
+
 
 GameCompute::GameCompute()
 {
@@ -33,28 +51,40 @@ GameCompute::~GameCompute()
 {
 }
 
-// void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc)
-// {
+void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc)
+{
+    const int numThreads = std::thread::hardware_concurrency();
+    //run game tick
+    std::vector<std::thread> threads;
 
-//     //run game tick
-//     std::thread threads[64];
-//     for(int t=0; t<64; t++)
-//     {
-//         threads[t] = std::thread(kernelFunc, gameState.get(), gameStateActions.get(), graphics, t, 64);
+    Game::StaticData data;
+    for(int t = 0; t < numThreads; t++)
+    {
+        threads.push_back(std::thread(kernelFunc,
+        &data,
+        gameState.get(),
+        gameStateActions.get(),
+        &guiStyle,
+        peepVBOBuffer,
+        particleVBOBuffer,
+        mapTile1VBO,
+        mapTile1AttrVBO,
+        mapTile1OtherAttrVBO,
+        mapTile2VBO,
+        mapTile2AttrVBO,
+        mapTile2OtherAttrVBO,
+        guiVBO,
+        linesVBO,
+        t, 
+        numThreads
+        ));
+    }
+    for(int t=0; t < numThreads; t++)
+    {
+        threads[t].join();
+    }
 
-
-
-
-
-
-
-//     }
-//     for(int t=0; t<64; t++)
-//     {
-//         threads[t].join();
-//     }
-
-// }
+}
 
 void GameCompute::Stage1_Begin()
 {
@@ -62,18 +92,32 @@ void GameCompute::Stage1_Begin()
         return;
 
 
+
+
     //run game tick
-  //  std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Kernel_A;
-   // RunGameKernel(kernel);
+    std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Game::game_apply_actions;
+    RunGameKernel(kernel);
 
-    // kernel = Kernel_B;
-    // RunGameKernel(kernel);
+    kernel = game_hover_gui;
+    RunGameKernel(kernel);
 
-    // kernel = Kernel_C;
-    // RunGameKernel(kernel);
+    kernel = game_preupdate_1;
+    RunGameKernel(kernel);
 
-    // kernel = Kernel_D;
-    // RunGameKernel(kernel);
+    kernel = game_preupdate_2;
+    RunGameKernel(kernel);
+
+    kernel = game_updatepre1;
+    RunGameKernel(kernel);
+
+    kernel = game_update;
+    RunGameKernel(kernel);
+
+    kernel = game_update2;
+    RunGameKernel(kernel);
+
+    kernel = game_post_update;
+    RunGameKernel(kernel);
 
 
     stage1_Running = true;

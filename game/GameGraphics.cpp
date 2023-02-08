@@ -8,10 +8,15 @@
 #include "GameGraphics.h"
 #include "GameCompute.h"
 
+#include "stb_include.h"
+#include "stb_image.h"
+
+#include "GE.Includes.h"
 
 
-
-
+#include "implot.h"
+#include  "imgui_impl_sdl.h"
+#include  "imgui_impl_opengl3.h"
 
 import Game;
 import GE.Basic;
@@ -65,7 +70,7 @@ void GameGraphics::Init()
         }
 
 
-        sdlGLContext = SDL_GL_CreateContext(gWindow);
+        sdlGLContext = static_cast<SDL_GLContext>( SDL_GL_CreateContext(gWindow) );
         std::cout << " SDL GL CONTEXT ERRORS: " << SDL_GetError() << std::endl;
         //swap buffer at the monitors rate
         SDL_GL_SetSwapInterval(1);
@@ -517,15 +522,20 @@ GameGraphics::~GameGraphics()
 
 void GameGraphics::BeginDraw()
 {
-            //Clear screen
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
+    //Clear screen
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-            // Start the Dear ImGui frame
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplSDL2_NewFrame(gWindow);
-            ImGui::NewFrame();
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
 
+}
+
+void GameGraphics::ProcessEventsBegin(SDL_Event e)
+{
+    ImGui_ImplSDL2_ProcessEvent(&e);
 }
 
 void GameGraphics::Swap()

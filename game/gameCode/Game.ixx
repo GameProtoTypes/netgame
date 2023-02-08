@@ -1,5 +1,7 @@
 export module Game;
 
+
+
 export import :Graphics;
 
 import GE.Basic;
@@ -23,7 +25,7 @@ const	int maxExplorers = 1024;
 
 int PEEP_VBO_INSTANCE_SIZE;
 
-const ge_int MAP_TILE_SIZE = GE_TO_Q(5.0);
+constexpr ge_int MAP_TILE_SIZE = 5;
 const int SQRT_MAXSECTORS = (mapDim/2);
 const int SECTOR_SIZE = (10);
 
@@ -790,7 +792,6 @@ struct GameStateActions
 
 	ge_int dummyVars[32];
 };
-
 
 
 

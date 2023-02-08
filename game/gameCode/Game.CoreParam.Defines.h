@@ -15,6 +15,22 @@ ge_float* guiVBO, \
 ge_float* linesVBO, \
 int threadIdx, int numThreads
 
+#define ALL_CORE_PARAMS_TYPES \
+StaticData*, \
+GameState*, \
+GameStateActions*, \
+GuiStyle*, \
+ge_float*, \
+ge_float*, \
+ge_ubyte*, \
+ge_ubyte*, \
+ge_ubyte*, \
+ge_ubyte*, \
+ge_ubyte*, \
+ge_ubyte*, \
+ge_float*, \
+ge_float*, \
+int , int 
 
 
 

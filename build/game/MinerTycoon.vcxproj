@@ -102,15 +102,15 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
       <IncludePaths>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
@@ -216,17 +216,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
       <IncludePaths>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
@@ -332,17 +332,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <DebugInformationFormat>
       </DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
       <IncludePaths>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>
@@ -449,15 +449,15 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <UseFullPaths>false</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <MASM>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;GLM_ENABLE_EXPERIMENTAL;IMGUI_DISABLE_OBSOLETE_FUNCTIONS;IMGUI_IMPL_OPENGL_LOADER_CUSTOM=&lt;glfw3native.h&gt;;GL_GLEXT_PROTOTYPES=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
       <IncludePaths>C:\Users\casht\repos\netgame\game\gameCode;C:\Users\casht\repos\netgame\game\..\glew-2.1.0\include\GL;C:\Users\casht\repos\netgame\game\..\GLFW;C:\Users\casht\repos\netgame\game\..\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\game\..\stb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include;C:\Users\casht\repos\netgame\game\..\glm-master\glm;C:\Users\casht\repos\netgame\game\..\SLikeNet\Source\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\include;C:\Users\casht\repos\netgame\game\..\angelscriptsdk\angelscript\source;C:\Users\casht\repos\netgame\.\SDL2-2.0.22\include;C:\Users\casht\repos\netgame\.\GLFW;C:\Users\casht\repos\netgame\.\glew-2.1.0\include;C:\Users\casht\repos\netgame\.\imgui;C:\Users\casht\repos\netgame\.\imgui\backends;C:\Users\casht\repos\netgame\gcem\include;C:\Users\casht\repos\netgame\SLikeNet\Source\include;%(IncludePaths)</IncludePaths>
     </MASM>
     <Midl>

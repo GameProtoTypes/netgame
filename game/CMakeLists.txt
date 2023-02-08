@@ -150,7 +150,7 @@ set(COMPILE_FILES
 add_executable(${PROJECT_NAME} ${COMPILE_FILES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE "gameCode" )
-target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
 #target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../stb/stb_image.h")
 # target_sources(${PROJECT_NAME}
 #   PRIVATE

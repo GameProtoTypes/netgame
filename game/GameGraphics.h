@@ -6,14 +6,19 @@
 #include "GEShader.h"
 #include "GEShaderProgram.h"
 
-#include "GE.Includes.h"
+
 
 #define GL_HOST_ERROR_CHECK() {GLenum err = glGetError();  if(err != 0){printf("[GRAPHICS] GLERROR: %d", int(err)); assert(0);}}
 
 
-
+#include "SDL_events.h"
 
 //graphics resources/buffers access
+
+struct SDL_Window;
+struct SDL_Renderer;
+struct ImGuiContext;
+struct SDL_Texture;
 class GameCompute;
 class GameGraphics
 {
@@ -66,7 +71,9 @@ public:
 
 	void Swap();
 
-	SDL_GLContext sdlGLContext;
+	void ProcessEventsBegin(SDL_Event e);
+
+	void* sdlGLContext;
 
 	SDL_Window* gWindow = nullptr;
 

@@ -11,7 +11,16 @@
 
 #include "assert.h"
 
+#include "Game.CoreParam.Defines.h"
+
+import GE.Basic;
 import Game;
+import GE.ImGui;
+
+using namespace Game;
+using namespace GE;
+
+
 
 class GameGraphics;
 class GameCompute
@@ -42,5 +51,22 @@ public:
 	GameGraphics* graphics = nullptr;
 
 	//void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
+	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
+
+
+
+	GE::GuiStyle guiStyle;
+	ge_float peepVBOBuffer[Game::maxPeeps];
+	ge_float particleVBOBuffer[Game::maxParticles];
+	ge_ubyte mapTile1VBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile1AttrVBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile1OtherAttrVBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile2VBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile2AttrVBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile2OtherAttrVBO[Game::SQRT_MAXSECTORS];
+	ge_float guiVBO[Game::maxGuiRects];
+	ge_float linesVBO[Game::maxLines];
+
+
 };
 

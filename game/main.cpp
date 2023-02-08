@@ -14,7 +14,6 @@
 #include <SDL.h>
 #include "SDL_opengl.h"
 
-#include "implot.h"
 
 #include <angelscript.h>
 #include <scriptstdstring/scriptstdstring.h>
@@ -35,6 +34,13 @@
 
 #include "GEShader.h"
 #include "GEShaderProgram.h"
+
+#include "implot.h"
+
+//#include  "imgui_impl_sdl.h"
+//#include  "imgui_impl_opengl3.h"
+
+
 
 import GE.Basic;
 import GE.ImGui;
@@ -297,7 +303,7 @@ int32_t main(int32_t argc, char* args[])
         while (SDL_PollEvent(&e) != 0)//build sdl from source and fix window dragging freezing the host....  or have clients sense it?
         {
 
-            ImGui_ImplSDL2_ProcessEvent(&e);
+            gameGraphics.ProcessEventsBegin(e);
 
             //User requests quit
             if (e.type == SDL_QUIT)
@@ -460,8 +466,8 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-        gameStateActions->mouseLocx = (float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GE::GUI_PXPERSCREEN_F;
-        gameStateActions->mouseLocy = (float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GE::GUI_PXPERSCREEN_F;
+        gameStateActions->mouseLocx = int((float(rclientst->mousex)/gameGraphics.SCREEN_WIDTH)*GE::GUI_PXPERSCREEN_F);
+        gameStateActions->mouseLocy = int((float(rclientst->mousey)/gameGraphics.SCREEN_HEIGHT)*GE::GUI_PXPERSCREEN_F);
 
         gameStateActions->mouseLocWorldx_Q16 = int(worldMouseEnd.x*(1<<16));
         gameStateActions->mouseLocWorldy_Q16 = int(worldMouseEnd.y*(1<<16));
