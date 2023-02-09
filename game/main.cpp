@@ -193,32 +193,33 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-    GameCompute gameCompute;
+    std::shared_ptr<GameCompute> gameCompute = std::make_shared<GameCompute>();
 
 // std::cout << "Running OverlapTest" << std::endl;
 //     gameCompute.OverlapTest();
 // std::cout << "Overlap Test Finished" << std::endl;
 
     // return 0;
-    GameGraphics gameGraphics(&gameCompute);      
+    GameGraphics gameGraphics(gameCompute.get());      
     gameGraphics.Init();  
-    gameCompute.graphics = &gameGraphics;    
+    gameCompute->graphics = &gameGraphics;    
 
 
     
     std::shared_ptr<GameState> gameState = std::make_shared<GameState>();
     std::shared_ptr<GameStateActions> gameStateActions = std::make_shared<GameStateActions>();
 
-    gameCompute.gameState = gameState;
-    gameCompute.gameStateActions = gameStateActions;
+    gameCompute->gameState = gameState;
+    gameCompute->gameStateActions = gameStateActions;
 
 
+    gameCompute->GameInit();
     //at this point gamestate is at baseline for the game options.
-    gameCompute.SaveGameStateBase();
+    gameCompute->SaveGameStateBase();
 
 
 
-    GameNetworking gameNetworking(gameState, gameStateActions, &gameCompute);
+    GameNetworking gameNetworking(gameState, gameStateActions, gameCompute.get());
         
 
     gameNetworking.Init();
@@ -286,7 +287,7 @@ int32_t main(int32_t argc, char* args[])
         clientActions.clear();
 
 
-        gameCompute.Stage1_Begin();
+        gameCompute->Stage1_Begin();
         // gameCompute.Stage1_End();
         
         GSCS(A)
@@ -612,7 +613,7 @@ int32_t main(int32_t argc, char* args[])
                 std::cout << "Error Reading File!" << std::endl;
             else {
                 std::cout << "Reading " <<  sizeof(GameState) << " bytes" << std::endl;
-                myfile.read(reinterpret_cast<char*>(gameCompute.gameState.get()),  sizeof(GameState));
+                myfile.read(reinterpret_cast<char*>(gameCompute->gameState.get()),  sizeof(GameState));
             
                 if (myfile)
                     std::cout << "all characters read successfully.";
@@ -625,15 +626,15 @@ int32_t main(int32_t argc, char* args[])
         if(ImGui::Button("Save Diff"))
         {
             std::vector<char> data;
-            gameCompute.Stage1_End();
-            gameCompute.SaveGameStateDiff(&data, false);
+            gameCompute->Stage1_End();
+            gameCompute->SaveGameStateDiff(&data, false);
         }
         static int loadtickIdx = 0;
         ImGui::InputInt("Load Tick",&loadtickIdx);
         if(ImGui::Button("Load Diff ^"))
         {
-            gameCompute.Stage1_End();
-            gameCompute.LoadGameStateFromDiff(loadtickIdx);
+            gameCompute->Stage1_End();
+            gameCompute->LoadGameStateFromDiff(loadtickIdx);
         }
 
         ImGui::End();
@@ -644,12 +645,64 @@ int32_t main(int32_t argc, char* args[])
         //-----------------------------------------------------------------------------------
 
 
+        //update gpu data
+        glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.mapTile1VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim*mapDim*sizeof(ge_ubyte), gameCompute.get()->mapTile1VBO );
 
+        glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.peepInstanceVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, maxPeeps*sizeof(PEEP_VBO_INSTANCE_SIZE), gameCompute.get()->peepVBOBuffer );
 
+        glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.guiRectInstanceVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, maxGuiRects*sizeof(MAX_GUI_VBO_INSTANCE_SIZE), gameCompute.get()->guiVBO );
 
         
         glActiveTexture(GL_TEXTURE0); // Texture unit 0
         glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
+
+        //draw map
+        gameGraphics.pMapTileShadProgram->Use();
+        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("projection", view);
+        glm::mat4 mapTransform(1.0f);
+        mapTransform = glm::scale(mapTransform, glm::vec3(mapTileSize, mapTileSize, 1));
+        mapTransform = glm::translate(mapTransform, glm::vec3(-mapDim * 0.5f, -mapDim * 0.5f, 0));
+        
+        gameGraphics.pMapTileShadProgram->SetUniform_Mat4("localTransform", mapTransform);
+        glm::ivec2 mapSize = { mapDim , mapDim };
+        gameGraphics.pMapTileShadProgram->SetUniform_IVec2("mapSize", mapSize);
+
+        glBindVertexArray(gameGraphics.mapTile1VAO);
+        glDrawArrays(GL_POINTS, 0, mapDim*mapDim);
+        glBindVertexArray(0);
+
+
+        //draw map shadows
+        gameGraphics.pMapTileShadProgram->Use();
+        glBindVertexArray(gameGraphics.mapTile2VAO);
+        glDrawArrays(GL_POINTS, 0, mapDim * mapDim);
+        glBindVertexArray(0);
+
+        //draw all peeps
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        gameGraphics.pPeepShadProgram->Use();
+        gameGraphics.pPeepShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
+        glBindVertexArray(gameGraphics.peepVAO);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, maxPeeps);
+        glBindVertexArray(0);
+
+
+        //draw all particles
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        gameGraphics.pParticleShadProgram->Use();
+        gameGraphics.pParticleShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+
+        glBindVertexArray(gameGraphics.particleVAO);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, maxParticles);
+        glBindVertexArray(0);
 
         
         //draw mouse
@@ -694,12 +747,39 @@ int32_t main(int32_t argc, char* args[])
             glDeleteBuffers(1, &mouseVBO);
         }
 
+        //draw lines 
+        glBindVertexArray(gameGraphics.linesVAO);
+        glDrawArrays(GL_LINES, 0, maxLines);
+        glBindVertexArray(0);
+
+
+        //draw gui
+        glActiveTexture(GL_TEXTURE0); // Texture unit 0
+        glBindTexture(GL_TEXTURE_2D, gameGraphics.lettersTileTexId);
+        glActiveTexture(GL_TEXTURE1); // Texture unit 0
+        glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
+
+        gameGraphics.pGuiShadProgram->Use();
+        glm::mat4 identity(1.0);
+        glm::vec3 c(1.0f, 1.0f, 1.0f);
+        gameGraphics.pGuiShadProgram->SetUniform_Mat4("WorldToScreenTransform", identity);
+        gameGraphics.pGuiShadProgram->SetUniform_Vec3("OverallColor", c);
+        gameGraphics.pGuiShadProgram->SetUniform_Mat4("LocalTransform", identity);
+        gameGraphics.pGuiShadProgram->SetUniform_Int("texture0", 0);
+        gameGraphics.pGuiShadProgram->SetUniform_Int("texture1", 1);
+
+
+
+
+        glBindVertexArray(gameGraphics.guiRectVAO);
+        glDrawArrays(GL_TRIANGLES, 0, maxGuiRects*6);
+        glBindVertexArray(0);
 
 
 
 
         GSCS(D)
-        gameCompute.Stage1_End();
+        gameCompute->Stage1_End();
 
 
         ImGui::Begin("Profiling");

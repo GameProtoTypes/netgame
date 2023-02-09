@@ -406,14 +406,14 @@ void GameGraphics::Init()
 
     glGenBuffers(1, &guiRectInstanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, guiRectInstanceVBO);
-    const int stride = sizeof(glm::vec2)+sizeof(glm::vec3)+sizeof(glm::vec2);
-    glBufferData(GL_ARRAY_BUFFER, stride*maxGuiRects, nullptr, GL_DYNAMIC_DRAW);
+    MAX_GUI_VBO_INSTANCE_SIZE = sizeof(glm::vec2)+sizeof(glm::vec3)+sizeof(glm::vec2);
+    glBufferData(GL_ARRAY_BUFFER, MAX_GUI_VBO_INSTANCE_SIZE*maxGuiRects, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,stride, (void*)0);//position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,MAX_GUI_VBO_INSTANCE_SIZE, (void*)0);//position
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)sizeof(glm::vec2));//color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, MAX_GUI_VBO_INSTANCE_SIZE, (void*)sizeof(glm::vec2));//color
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec2)+sizeof(glm::vec3)));//UV
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, MAX_GUI_VBO_INSTANCE_SIZE, (void*)(sizeof(glm::vec2)+sizeof(glm::vec3)));//UV
 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

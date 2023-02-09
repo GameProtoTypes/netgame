@@ -6,8 +6,7 @@ module;
 
 
 #include <ext.hpp>
-
-
+#include <cstdlib>
 
 
 export module GE.Basic:Types; // defines a module partition, Point, that's part of the module BasicPlane.Figures
@@ -175,12 +174,21 @@ constexpr T GE_ATAN(const T& geX, const T& geY)
     return glm::atan<T>(geX,geY);
 }
 
-template < class T >
-T GE_UNIFORM_RANDOM_RANGE( int seed, const T& min, const T& max)
+
+#define TYCHE_ROT(a,b,bits) (((a) << (b)) | ((a) >> (bits - (b))))
+template < class T, class UNSIGNED_T >
+T GE_UNIFORM_RANDOM_RANGE( UNSIGNED_T seed, const T& min, const T& max)
 {
-    int stupidRandomNumber = perlin_hash_numbers[seed%256]*((max-min));
-    stupidRandomNumber = stupidRandomNumber%(max-min);
-    return stupidRandomNumber+min;
+    UNSIGNED_T a = seed;
+	a = TYCHE_ROT(a * a, 16, sizeof(UNSIGNED_T)*8);
+    a = TYCHE_ROT(a * a, 12, sizeof(UNSIGNED_T)*8);
+    a = TYCHE_ROT(a * a, 8 , sizeof(UNSIGNED_T)*8);
+    a = TYCHE_ROT(a * a, 7 , sizeof(UNSIGNED_T)*8);
+    // a = TYCHE_ROT(a * a, 5 , sizeof(UNSIGNED_T)*8);
+    // a = TYCHE_ROT(a * a, 3 , sizeof(UNSIGNED_T)*8);
+    // a = TYCHE_ROT(a * a, 2 , sizeof(UNSIGNED_T)*8);
+
+    return T(UNSIGNED_T(a)%(max-min)) + min;
 }
 
 

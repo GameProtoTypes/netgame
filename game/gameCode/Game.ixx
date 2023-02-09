@@ -12,18 +12,19 @@ export namespace Game {
 
 const int MAX_ACTIONS_PER_TICK = 8;
 const int MAX_CLIENTS = 1024;
-const int GAME_UPDATE_WORKITEMS = 64;
-const	int warpSize = 32;
-const	int maxPeeps = 1024*8;
-const	int maxParticles = 32;
-const	int mapDim = 1024;
-const	int mapDepth = 32;
-const	int mapTileSize = 5;
-const   int maxGuiRects = 1024*16;
-const	int maxLines = 1024*64;
-const	int maxExplorers = 1024;
+const int GAME_UPDATE_WORKITEMS = 16;
+const int warpSize = 32;
+const int maxPeeps = 1024*32;
+const int maxParticles = 32;
+const int mapDim = 1024;
+const int mapDepth = 32;
+const int mapTileSize = 5;
+const int maxGuiRects = 1024*16;
+const int maxLines = 1024*64;
+const int maxExplorers = 1024;
 
 int PEEP_VBO_INSTANCE_SIZE;
+int MAX_GUI_VBO_INSTANCE_SIZE;
 
 constexpr ge_int MAP_TILE_SIZE = 5;
 const int SQRT_MAXSECTORS = (mapDim/2);

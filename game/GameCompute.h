@@ -31,6 +31,7 @@ public:
 	GameCompute();
 	~GameCompute();
 
+	void GameInit();
 	void Stage1_Begin();
 	void Stage1_End();
 
@@ -51,19 +52,19 @@ public:
 	GameGraphics* graphics = nullptr;
 
 	//void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
-	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
+	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc, int numThreads = Game::GAME_UPDATE_WORKITEMS);
 
 
 
-	GE::GuiStyle guiStyle;
+
 	ge_float peepVBOBuffer[Game::maxPeeps];
 	ge_float particleVBOBuffer[Game::maxParticles];
-	ge_ubyte mapTile1VBO[Game::SQRT_MAXSECTORS];
-	ge_ubyte mapTile1AttrVBO[Game::SQRT_MAXSECTORS];
-	ge_ubyte mapTile1OtherAttrVBO[Game::SQRT_MAXSECTORS];
-	ge_ubyte mapTile2VBO[Game::SQRT_MAXSECTORS];
-	ge_ubyte mapTile2AttrVBO[Game::SQRT_MAXSECTORS];
-	ge_ubyte mapTile2OtherAttrVBO[Game::SQRT_MAXSECTORS];
+	ge_ubyte mapTile1VBO[Game::mapDim*Game::mapDim];
+	ge_ubyte mapTile1AttrVBO[Game::mapDim*Game::mapDim];
+	ge_ubyte mapTile1OtherAttrVBO[Game::mapDim*Game::mapDim];
+	ge_ubyte mapTile2VBO[Game::mapDim*Game::mapDim];
+	ge_ubyte mapTile2AttrVBO[Game::mapDim*Game::mapDim];
+	ge_ubyte mapTile2OtherAttrVBO[Game::mapDim*Game::mapDim];
 	ge_float guiVBO[Game::maxGuiRects];
 	ge_float linesVBO[Game::maxLines];
 

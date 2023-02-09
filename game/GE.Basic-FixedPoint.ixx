@@ -294,6 +294,8 @@ template <int Q = DEFAULT_Q, typename GE3_Q_T = ge_int3, typename GE_LEN_Q_T = g
 GE3_Q_T GE3_NORMALIZED_Q(const GE3_Q_T& ge3, GE_LEN_Q_T& length)
 {
     length = GE3_LENGTH_Q<Q, GE3_Q_T, GE_LEN_Q_T>(ge3);
+    if(length == 0)
+        return GE3_Q_T(0,0,0);
     GE3_Q_T normalized = GE3_DIV_Q<Q,Q,Q, GE3_Q_T, GE_LEN_Q_T, ge_long>(ge3, length);
     return normalized;
 }

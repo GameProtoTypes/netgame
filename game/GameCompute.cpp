@@ -22,6 +22,13 @@
 
 import Game;
 namespace Game {
+
+void game_init_single(ALL_CORE_PARAMS);
+void game_init_multi(ALL_CORE_PARAMS);
+void game_init_multi2(ALL_CORE_PARAMS);
+void game_init_single2(ALL_CORE_PARAMS);
+
+
 void game_apply_actions(ALL_CORE_PARAMS);
 void game_hover_gui(ALL_CORE_PARAMS);
 void game_preupdate_1(ALL_CORE_PARAMS);
@@ -51,9 +58,10 @@ GameCompute::~GameCompute()
 {
 }
 
-void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc)
+void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc,
+                                int numThreads)
 {
-    const int numThreads = std::thread::hardware_concurrency();
+
     //run game tick
     std::vector<std::thread> threads;
 
@@ -64,17 +72,17 @@ void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kerne
         &data,
         gameState.get(),
         gameStateActions.get(),
-        &guiStyle,
-        peepVBOBuffer,
-        particleVBOBuffer,
-        mapTile1VBO,
-        mapTile1AttrVBO,
-        mapTile1OtherAttrVBO,
-        mapTile2VBO,
-        mapTile2AttrVBO,
-        mapTile2OtherAttrVBO,
-        guiVBO,
-        linesVBO,
+        &gameState.get()->guiStyle,
+        &peepVBOBuffer[0],
+        &particleVBOBuffer[0],
+        &mapTile1VBO[0],
+        &mapTile1AttrVBO[0],
+        &mapTile1OtherAttrVBO[0],
+        &mapTile2VBO[0],
+        &mapTile2AttrVBO[0],
+        &mapTile2OtherAttrVBO[0],
+        &guiVBO[0],
+        &linesVBO[0],
         t, 
         numThreads
         ));
@@ -83,6 +91,23 @@ void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kerne
     {
         threads[t].join();
     }
+
+}
+void GameCompute::GameInit()
+{
+    std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Game::game_init_single;
+    RunGameKernel(kernel,1);
+
+
+    kernel = game_init_multi;
+    RunGameKernel(kernel);
+
+    kernel = game_init_multi2;
+    RunGameKernel(kernel);
+
+    
+    kernel = game_init_single2;
+    RunGameKernel(kernel,1);
 
 }
 
@@ -96,10 +121,10 @@ void GameCompute::Stage1_Begin()
 
     //run game tick
     std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Game::game_apply_actions;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,1);
 
     kernel = game_hover_gui;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,1);
 
     kernel = game_preupdate_1;
     RunGameKernel(kernel);

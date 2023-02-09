@@ -1,6 +1,7 @@
 module;
 
 #include <stdio.h>
+#include <cassert>
 
 #include "SDL_opengl.h"
 
@@ -874,6 +875,7 @@ void GUI_PopClip(SyncedGui* gui)
     else if(gui->clipStackIdx < 0)
     {
         printf("ERROR: GUI_PopClip Missmatch\n");
+        assert(0);
         gui->clipStackIdx=0;
     }
 }

@@ -10,9 +10,9 @@
             "request": "launch",
             "program": "${workspaceFolder}\\build\\game\\Debug\\MinerTycoon.exe",
             "symbolSearchPath": "${workspaceFolder}\\build\\game\\Debug",
-            "console": true,
+            "console": "newExternalWindow",
             "logging": {
-              "moduleLoad": false,
+              "moduleLoad": true,
               "trace": true
             },
             "cwd" : "${workspaceFolder}\\build\\game\\Debug\\"
@@ -23,9 +23,9 @@
             "request": "launch",
             "program": "${workspaceFolder}\\build\\game\\RelWithDebInfo\\MinerTycoon.exe",
             "symbolSearchPath": "${workspaceFolder}\\build\\game\\RelWithDebInfo",
-            "console": true,
+            "console": "newExternalWindow",
             "logging": {
-              "moduleLoad": false,
+              "moduleLoad": true,
               "trace": true
             },
             "cwd" : "${workspaceFolder}\\build\\game\\RelWithDebInfo\\"

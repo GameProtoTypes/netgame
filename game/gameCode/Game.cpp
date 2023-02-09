@@ -1,6 +1,7 @@
 module;
 
     #include <stdio.h>
+    #include <iostream>
 
     #include "Game.CoreParam.Defines.h"
     #include "../GE.Basic.Macro.defines.h"
@@ -12,7 +13,7 @@ module;
     #define MAP_TILE_UV_WIDTH (1/16.0)
     #define MAP_TILE_UV_WIDTH_FLOAT2 (ge_float2(1/16.0, 1/16.0))
 
-
+    #define PEEP_ALL_ALWAYS_VISIBLE
 
 module Game;
 
@@ -5487,9 +5488,10 @@ void game_init_single2(ALL_CORE_PARAMS)
     {
         gameState->peeps[p].ptr = p;
 
-        gameState->peeps[p].physics.base.pos_Q16.x = GE_UNIFORM_RANDOM_RANGE(p, -spread << 16, spread << 16);
-        gameState->peeps[p].physics.base.pos_Q16.y = GE_UNIFORM_RANDOM_RANGE(p + 1, -spread << 16, spread << 16);
-
+        gameState->peeps[p].physics.base.pos_Q16.x = GE_UNIFORM_RANDOM_RANGE(p, GE_TO_Q<16>(-spread), GE_TO_Q<16>(spread));
+        gameState->peeps[p].physics.base.pos_Q16.y = GE_UNIFORM_RANDOM_RANGE(p + 1, GE_TO_Q<16>(-spread), GE_TO_Q<16>(spread));
+        //GE_PRINT_Q<16>(GE_TO_Q<16>(-spread));
+        GE2_PRINT_Q<16>(gameState->peeps[p].physics.base.pos_Q16);
 
         ge_int3 mapcoord;
         ge_int2 world2D;
@@ -5580,6 +5582,7 @@ void UpdateMapExplorer(ALL_CORE_PARAMS,  MapExplorerAgent* agent)
 
 void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
 {
+
     ge_float3 drawColor;
     float drawPosX = (float)((float)peep->physics.base.pos_Q16.x / (1 << 16));
     float drawPosY = (float)((float)peep->physics.base.pos_Q16.y / (1 << 16));
@@ -5695,6 +5698,9 @@ void game_updatepre1(ALL_CORE_PARAMS)
 void game_update(ALL_CORE_PARAMS)
 {
 
+    {
+    //printf("weee. %d\n", threadIdx);
+
     // Get the index of the current element to be processed
     ge_int globalid = threadIdx;
 
@@ -5749,7 +5755,7 @@ void game_update(ALL_CORE_PARAMS)
     MapExplorerAgent* explorer = &gameState->explorerAgents[globalid];
     UpdateMapExplorer(ALL_CORE_PARAMS_PASS, explorer);
 
-
+    }
 }
 void game_update2(ALL_CORE_PARAMS)
 {
