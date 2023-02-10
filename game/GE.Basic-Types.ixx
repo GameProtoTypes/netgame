@@ -235,14 +235,23 @@ constexpr ge_int GE_FAST_NOISE_2D(GE2_T v, ge_int seed)
 }
 
 
-template <class GE2_T>
-GE2_T operator+(const GE2_T& ge2A,const GE2_T& ge2B)
+
+constexpr ge_int2 operator+(const ge_int2& ge2A,const ge_int2& ge2B)
 {
     return GE2_ADD(ge2A,ge2B);
 }
-
-
-
+constexpr ge_short2 operator+(const ge_short2& ge2A, const ge_short2& ge2B)
+{
+    return GE2_ADD(ge2A, ge2B);
+}
+constexpr ge_long2 operator+(const ge_long2& ge2A, const ge_long2& ge2B)
+{
+    return GE2_ADD(ge2A, ge2B);
+}
+constexpr ge_float2 operator+(const ge_float2& ge2A, const ge_float2& ge2B)
+{
+    return GE2_ADD(ge2A, ge2B);
+}
 
 
 
@@ -296,6 +305,12 @@ GE3_T operator*(const GE3_T& ge3A,const GE_T& ge)
     return GE3_MUL(ge3A,ge);
 }
 
+
+
+ge_int3 operator+(const ge_int3& ge3A, const ge_int3& ge3B)
+{
+    return GE3_ADD(ge3A, ge3B);
+}
 
 
 

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <chrono>
 
 #include "assert.h"
 
@@ -23,6 +24,7 @@ using namespace GE;
 
 
 class GameGraphics;
+class GameNetworking;
 class GameCompute
 {
 public:
@@ -45,28 +47,32 @@ public:
 	void LoadGameStateFromDiff(std::string diffFileName, std::string resultGameStateFileName);
 	void LoadGameStateFromDiff(std::vector<char>* data,  int id);
 
-
+	void ImGuiProfiler();
 
 	std::shared_ptr<Game::GameState> gameState;
 	std::shared_ptr<Game::GameStateActions> gameStateActions;
 	GameGraphics* graphics = nullptr;
+	GameNetworking* networking = nullptr;
 
 	//void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc);
-	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc, int numThreads = Game::GAME_UPDATE_WORKITEMS);
+	void RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc, int funcId, int numThreads = Game::GAME_UPDATE_WORKITEMS);
 
 
+	static const int numProfileFuncs = 12;
+	float profileTimes[numProfileFuncs][Game::GAME_UPDATE_WORKITEMS][500];
+	float frameTimes[500] = { 0.0f };
+	std::chrono::steady_clock::time_point lastFrameTimePoint;
 
-
-	ge_float peepVBOBuffer[Game::maxPeeps];
-	ge_float particleVBOBuffer[Game::maxParticles];
-	ge_ubyte mapTile1VBO[Game::mapDim*Game::mapDim];
-	ge_ubyte mapTile1AttrVBO[Game::mapDim*Game::mapDim];
-	ge_ubyte mapTile1OtherAttrVBO[Game::mapDim*Game::mapDim];
-	ge_ubyte mapTile2VBO[Game::mapDim*Game::mapDim];
-	ge_ubyte mapTile2AttrVBO[Game::mapDim*Game::mapDim];
-	ge_ubyte mapTile2OtherAttrVBO[Game::mapDim*Game::mapDim];
-	ge_float guiVBO[Game::maxGuiRects];
-	ge_float linesVBO[Game::maxLines];
+	ge_float peepVBOBuffer[Game::maxPeeps*6] = { 0.0f };
+	ge_float particleVBOBuffer[Game::maxParticles] = { 0.0f };
+	ge_ubyte mapTile1VBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_uint mapTile1AttrVBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_uint mapTile1OtherAttrVBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_ubyte mapTile2VBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_uint mapTile2AttrVBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_uint mapTile2OtherAttrVBO[Game::mapDim*Game::mapDim] = { 0 };
+	ge_float guiVBO[Game::maxGuiRects*7] = { 0.0f };
+	ge_float linesVBO[Game::maxLines*5] = { 0.0f };
 
 
 };

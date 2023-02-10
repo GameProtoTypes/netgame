@@ -108,6 +108,11 @@ public:
 	uint32_t mapTile1VAO, mapTile1VBO, mapTile1AttrVBO, mapTile1OtherAttrVBO;	
 	uint32_t mapTile2VAO, mapTile2VBO, mapTile2AttrVBO, mapTile2OtherAttrVBO;
 	int mapTileInstanceSIZE = 0;
+
+	static const int PEEP_VBO_INSTANCE_SIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);
+	static const int MAX_GUI_VBO_INSTANCE_SIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(glm::vec2);
+	static const int DEBUG_LINES_SIZE = sizeof(glm::vec2) + sizeof(glm::vec3);
+
 	GLuint mapTileTexId = 0;
 	GLuint lettersTileTexId = 0;
 

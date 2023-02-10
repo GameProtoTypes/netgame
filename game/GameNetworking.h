@@ -17,8 +17,8 @@
 
 
 
+import Game;
 
-#include "GameCompute.h"
 
 
 #define GAMESERVERPORT (50010)
@@ -49,16 +49,11 @@
 #define LOCAL_AUTO_CONNECT
 
 using namespace Game;
-
+class GameCompute;
 class GameNetworking
 {
 public:
-	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameCompute* gameCompute) {
-	
-		this->gameState = gameState;
-		this->gameStateActions = gameStateActions;
-		this->gameCompute = gameCompute;
-	}
+	GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameCompute* gameCompute);
 	~GameNetworking() {}
 
 

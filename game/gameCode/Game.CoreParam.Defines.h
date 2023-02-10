@@ -6,11 +6,11 @@ GuiStyle* guiStyle, \
 ge_float* peepVBOBuffer, \
 ge_float* particleVBOBuffer, \
 ge_ubyte* mapTile1VBO, \
-ge_ubyte* mapTile1AttrVBO, \
-ge_ubyte* mapTile1OtherAttrVBO, \
+ge_uint* mapTile1AttrVBO, \
+ge_uint* mapTile1OtherAttrVBO, \
 ge_ubyte* mapTile2VBO, \
-ge_ubyte* mapTile2AttrVBO, \
-ge_ubyte* mapTile2OtherAttrVBO, \
+ge_uint* mapTile2AttrVBO, \
+ge_uint* mapTile2OtherAttrVBO, \
 ge_float* guiVBO, \
 ge_float* linesVBO, \
 int threadIdx, int numThreads
@@ -23,11 +23,11 @@ GuiStyle*, \
 ge_float*, \
 ge_float*, \
 ge_ubyte*, \
+ge_uint*, \
+ge_uint*, \
 ge_ubyte*, \
-ge_ubyte*, \
-ge_ubyte*, \
-ge_ubyte*, \
-ge_ubyte*, \
+ge_uint*, \
+ge_uint*, \
 ge_float*, \
 ge_float*, \
 int , int 

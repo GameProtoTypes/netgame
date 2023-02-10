@@ -310,7 +310,7 @@ void GameGraphics::Init()
 
 
     // also set instance data
-    PEEP_VBO_INSTANCE_SIZE = sizeof(glm::vec2) + sizeof(glm::vec3) + sizeof(float);//size for each peep
+    
     glGenBuffers(1, &peepInstanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, peepInstanceVBO);
     glBufferData(GL_ARRAY_BUFFER, PEEP_VBO_INSTANCE_SIZE * maxPeeps, nullptr, GL_DYNAMIC_DRAW);
@@ -406,7 +406,6 @@ void GameGraphics::Init()
 
     glGenBuffers(1, &guiRectInstanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, guiRectInstanceVBO);
-    MAX_GUI_VBO_INSTANCE_SIZE = sizeof(glm::vec2)+sizeof(glm::vec3)+sizeof(glm::vec2);
     glBufferData(GL_ARRAY_BUFFER, MAX_GUI_VBO_INSTANCE_SIZE*maxGuiRects, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE,MAX_GUI_VBO_INSTANCE_SIZE, (void*)0);//position
@@ -432,12 +431,11 @@ void GameGraphics::Init()
 
     glGenBuffers(1, &linesVBO);
     glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
-    const int strideLines = sizeof(glm::vec2)+sizeof(glm::vec3);
-    glBufferData(GL_ARRAY_BUFFER, strideLines*maxLines, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, DEBUG_LINES_SIZE *maxLines, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, strideLines, (void*)0);//position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, DEBUG_LINES_SIZE, (void*)0);//position
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, strideLines, (void*)sizeof(glm::vec2));//color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, DEBUG_LINES_SIZE, (void*)sizeof(glm::vec2));//color
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

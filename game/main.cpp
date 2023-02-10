@@ -220,7 +220,7 @@ int32_t main(int32_t argc, char* args[])
 
 
     GameNetworking gameNetworking(gameState, gameStateActions, gameCompute.get());
-        
+    gameCompute.get()->networking = &gameNetworking;
 
     gameNetworking.Init();
     gameNetworking.Update();
@@ -278,17 +278,13 @@ int32_t main(int32_t argc, char* args[])
         gameNetworking.Update();
 
 
-        if(gameStateActions->pauseState==0)
-        {   
-            gameStateActions->tickIdx++;
-        }
 
 
         clientActions.clear();
 
 
         gameCompute->Stage1_Begin();
-        // gameCompute.Stage1_End();
+
         
         GSCS(A)
 
@@ -649,13 +645,32 @@ int32_t main(int32_t argc, char* args[])
         glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.mapTile1VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim*mapDim*sizeof(ge_ubyte), gameCompute.get()->mapTile1VBO );
 
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTile1AttrVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim*mapDim*sizeof(ge_uint), gameCompute.get()->mapTile1AttrVBO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTile1OtherAttrVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim*mapDim*sizeof(ge_uint), gameCompute.get()->mapTile1OtherAttrVBO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTile2VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim * mapDim * sizeof(ge_ubyte), gameCompute.get()->mapTile2VBO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTile2AttrVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim * mapDim * sizeof(ge_uint), gameCompute.get()->mapTile2AttrVBO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, gameGraphics.mapTile2OtherAttrVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, mapDim * mapDim * sizeof(ge_uint), gameCompute.get()->mapTile2OtherAttrVBO);
+
+
+
         glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.peepInstanceVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, maxPeeps*sizeof(PEEP_VBO_INSTANCE_SIZE), gameCompute.get()->peepVBOBuffer );
+        glBufferSubData(GL_ARRAY_BUFFER, 0, maxPeeps*(gameGraphics.PEEP_VBO_INSTANCE_SIZE), gameCompute.get()->peepVBOBuffer );
 
         glBindBuffer(GL_ARRAY_BUFFER,gameGraphics.guiRectInstanceVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, maxGuiRects*sizeof(MAX_GUI_VBO_INSTANCE_SIZE), gameCompute.get()->guiVBO );
+        glBufferSubData(GL_ARRAY_BUFFER, 0, maxGuiRects*(gameGraphics.MAX_GUI_VBO_INSTANCE_SIZE), gameCompute.get()->guiVBO );
 
         
+
+
         glActiveTexture(GL_TEXTURE0); // Texture unit 0
         glBindTexture(GL_TEXTURE_2D, gameGraphics.mapTileTexId);
 
@@ -694,15 +709,15 @@ int32_t main(int32_t argc, char* args[])
 
 
         //draw all particles
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        gameGraphics.pParticleShadProgram->Use();
-        gameGraphics.pParticleShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
+        //gameGraphics.pParticleShadProgram->Use();
+        //gameGraphics.pParticleShadProgram->SetUniform_Mat4("WorldToScreenTransform", view);
 
-        glBindVertexArray(gameGraphics.particleVAO);
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, maxParticles);
-        glBindVertexArray(0);
+        //glBindVertexArray(gameGraphics.particleVAO);
+        //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, maxParticles);
+        //glBindVertexArray(0);
 
         
         //draw mouse
@@ -789,29 +804,7 @@ int32_t main(int32_t argc, char* args[])
         ImGui::Text("TickIdx: %d", gameStateActions->tickIdx);
 
                 
-        if (ImPlot::BeginPlot("Times")) {
-
-            ImPlot::SetupAxes("Tick","Time");
-            ImPlot::SetupAxesLimits(0,500,0,gameNetworking.targetTickTimeMs*2);
-
-            
-            ImPlot::PlotLine("actionEvent", profiles[0].data(),      500);
-            ImPlot::PlotLine("guiEvent", profiles[1].data(),         500);
-            ImPlot::PlotLine("preUpdateEvent1", profiles[2].data(),  500);
-            ImPlot::PlotLine("preUpdateEvent2", profiles[3].data(),  500);
-            ImPlot::PlotLine("updatepre1Event", profiles[4].data(),  500);
-            ImPlot::PlotLine("updateEvent", profiles[5].data(),      500);
-            ImPlot::PlotLine("update2Event", profiles[6].data(),     500);
-            ImPlot::PlotLine("postupdateEvent", profiles[7].data(),  500);
-            ImPlot::PlotLine("FrameTime", profiles[8].data(),  500);
-
-            
-            ImPlot::PlotInfLines("Limit",&gameNetworking.targetTickTimeMs,1,ImPlotInfLinesFlags_Horizontal);
-            int d = gameStateActions->tickIdx%501;
-            ImPlot::PlotInfLines("Tick",&d,1);
-
-            ImPlot::EndPlot();
-        }
+        gameCompute.get()->ImGuiProfiler();
 
 
         ImGui::End();

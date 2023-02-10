@@ -56,39 +56,36 @@ source_group("Source Files" FILES ${Source_Files})
 
 set(Shader_Files
 
-    "vertPeep.glsl"
-    "vertShader.glsl"
-    "vertMapTile.glsl"
+    "shaders/vertPeep.glsl"
+    "shaders/vertShader.glsl"
+    "shaders/vertMapTile.glsl"
 
-    "geomMapTile.glsl"
+    "shaders/geomMapTile.glsl"
 
-    "fragPeep.glsl"
-    "fragShader.glsl"
-    "fragMapTile.glsl"
+    "shaders/fragPeep.glsl"
+    "shaders/fragShader.glsl"
+    "shaders/fragMapTile.glsl"
 
 )
-source_group("Shader Files" FILES ${Shader_Files})
-
-
+source_group("Shaders" FILES ${Shader_Files})
 
 set(OPENCL_Source_Files
 )
-source_group("CL Source Files" FILES ${OPENCL_Source_Files})
+#source_group("CL Source Files" FILES ${OPENCL_Source_Files})
 
 set(OPENCL_Header_Files
 )
-source_group("CL Header Files" FILES ${OPENCL_Header_Files})
+#source_group("CL Header Files" FILES ${OPENCL_Header_Files})
 
 
 set(Game_Source_Files
     #"gameCode/Game.cpp"
 )
-source_group("Game Source Files" FILES ${Game_Source_Files})
+#source_group("Game Source Files" FILES ${Game_Source_Files})
 
 set(Game_Header_Files
-
 )
-source_group("Game Header Files" FILES ${Game_Header_Files})
+#source_group("Game Header Files" FILES ${Game_Header_Files})
 
 set(Game_Module_Files
     "gameCode/Game.ixx"
@@ -107,10 +104,8 @@ set(Engine_Module_Files
 
 "GE.ImGui.cpp"
 "GE.ImGui.ixx"
-
-
-
 )
+source_group("Engine Module Files" FILES ${Engine_Module_Files})
 
 
 
@@ -126,6 +121,8 @@ set(ALL_FILES
 
     ${Engine_Module_Files}
 
+    ${Shader_Files}
+
     ${Game_Source_Files}
     ${Game_Header_Files}
     ${Game_Module_Files}
@@ -134,13 +131,14 @@ set(COMPILE_FILES
     ${Header_Files}
     ${Source_Files}
 
+    ${Shader_Files}
+
     ${Engine_Module_Files}
 
     ${Game_Source_Files}
     ${Game_Header_Files}
     ${Game_Module_Files}
 )
-
 
 ################################################################################
 # Target

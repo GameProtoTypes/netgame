@@ -16,9 +16,10 @@
 
  
 #include "GameCompute.h"
-
+#include "GameNetworking.h"
 #include "GameGraphics.h"
 
+#include "implot.h"
 
 import Game;
 namespace Game {
@@ -58,16 +59,21 @@ GameCompute::~GameCompute()
 {
 }
 
-void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc,
-                                int numThreads)
+void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kernelFunc, 
+    int funcId,
+    int numThreads)
 {
 
     //run game tick
     std::vector<std::thread> threads;
+    std::vector<std::chrono::steady_clock::time_point> startTimes;
+    std::vector<std::chrono::steady_clock::time_point> endTimes;
 
     Game::StaticData data;
     for(int t = 0; t < numThreads; t++)
     {
+        startTimes.push_back(std::chrono::steady_clock::now());
+
         threads.push_back(std::thread(kernelFunc,
         &data,
         gameState.get(),
@@ -86,28 +92,68 @@ void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kerne
         t, 
         numThreads
         ));
+
     }
+
+
+
+
+
     for(int t=0; t < numThreads; t++)
     {
         threads[t].join();
+        endTimes.push_back(std::chrono::steady_clock::now());
+        profileTimes[funcId][t][gameStateActions->tickIdx%500] = (endTimes[t] - startTimes[t]).count()/1000000.0f;
     }
 
 }
+
+void GameCompute::ImGuiProfiler()
+{
+    if (ImPlot::BeginPlot("Times")) {
+
+        ImPlot::SetupAxes("Tick", "Time");
+        ImPlot::SetupAxesLimits(0, 500, 0, networking->targetTickTimeMs * 2);
+
+
+        ImPlot::PlotLine("actionEvent",     profileTimes[4][0], 500);
+        ImPlot::PlotLine("guiEvent",        profileTimes[5][0], 500);
+        ImPlot::PlotLine("preUpdateEvent1", profileTimes[6][0], 500);
+        ImPlot::PlotLine("preUpdateEvent2", profileTimes[7][0], 500);
+        ImPlot::PlotLine("updatepre1Event", profileTimes[8][0], 500);
+        ImPlot::PlotLine("updateEvent",     profileTimes[9][0], 500);
+        ImPlot::PlotLine("update2Event",    profileTimes[10][0], 500);
+        ImPlot::PlotLine("postupdateEvent", profileTimes[11][0], 500);
+        ImPlot::PlotLine("FrameTime", frameTimes, 500);
+
+
+        ImPlot::PlotInfLines("Limit", &(networking->targetTickTimeMs), 1, ImPlotInfLinesFlags_Horizontal);
+        int d = gameStateActions->tickIdx % 501;
+        ImPlot::PlotInfLines("Tick", &d, 1);
+
+
+        ImPlot::EndPlot();
+    }
+    auto now = std::chrono::steady_clock::now();
+    frameTimes[gameStateActions->tickIdx % 500] = (now - lastFrameTimePoint).count() / 1000000.0f;
+    lastFrameTimePoint = now;
+}
+
 void GameCompute::GameInit()
 {
     std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Game::game_init_single;
-    RunGameKernel(kernel,1);
+    RunGameKernel(kernel,0, 1);
 
 
     kernel = game_init_multi;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel, 1);
 
     kernel = game_init_multi2;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,2);
 
     
     kernel = game_init_single2;
-    RunGameKernel(kernel,1);
+    RunGameKernel(kernel,3,1);
 
 }
 
@@ -121,28 +167,28 @@ void GameCompute::Stage1_Begin()
 
     //run game tick
     std::function<void(ALL_CORE_PARAMS_TYPES)> kernel = Game::game_apply_actions;
-    RunGameKernel(kernel,1);
+    RunGameKernel(kernel,4, 1);
 
     kernel = game_hover_gui;
-    RunGameKernel(kernel,1);
+    RunGameKernel(kernel,5, 1);
 
     kernel = game_preupdate_1;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel, 6);
 
     kernel = game_preupdate_2;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel, 7);
 
     kernel = game_updatepre1;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,8 );
 
     kernel = game_update;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,9);
 
     kernel = game_update2;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,10);
 
     kernel = game_post_update;
-    RunGameKernel(kernel);
+    RunGameKernel(kernel,11);
 
 
     stage1_Running = true;

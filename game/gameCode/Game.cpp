@@ -8,7 +8,7 @@ module;
     #include "../GE.ImGui.defines.h"
 
 
-
+    #include "../GameGraphics.h"
 
     #define MAP_TILE_UV_WIDTH (1/16.0)
     #define MAP_TILE_UV_WIDTH_FLOAT2 (ge_float2(1/16.0, 1/16.0))
@@ -4462,7 +4462,7 @@ ge_int cliId)
 
     if(GUI_SLIDER_INT_VERTICAL(GUIID_PASS,  ge_int2{0 ,100}, ge_int2{80, 800}, GuiFlags(0), &client->mapZView, 0, mapDepth))
     {
-
+        //printf("sliding, %d\n", client->mapZView);
     }
 
     LOCAL_STRL(labeltxt2, "BIRDS\nEYE", labeltxt2Len); 
@@ -5647,14 +5647,14 @@ void PeepDraw(ALL_CORE_PARAMS, Peep* peep)
         drawColor.z = 0.0f;
     }
 
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 0] = drawPosX;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 1] = drawPosY;
 
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 2] = drawColor.x * brightFactor;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 3] = drawColor.y * brightFactor;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 4] = drawColor.z * brightFactor;
 
-    peepVBOBuffer[peep->ptr * (PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
+    peepVBOBuffer[peep->ptr * (GameGraphics::PEEP_VBO_INSTANCE_SIZE / sizeof(float)) + 5] = peep->physics.base.CS_angle_rad;
 }
 
 

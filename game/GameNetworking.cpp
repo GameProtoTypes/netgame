@@ -13,6 +13,14 @@
 #include <cmath>
 
 #include "GameNetworking.h"
+#include "GameCompute.h"
+
+GameNetworking::GameNetworking(std::shared_ptr<GameState> gameState, std::shared_ptr<GameStateActions> gameStateActions, GameCompute* gameCompute) {
+
+	this->gameState = gameState;
+	this->gameStateActions = gameStateActions;
+	this->gameCompute = gameCompute;
+}
 
  void GameNetworking::Init()
 {

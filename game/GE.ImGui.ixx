@@ -1121,7 +1121,7 @@ ge_ubyte GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, int* value, int min, int max)
 
     posHandle.x = origPos.x;
 
-    posHandle.y = origPos.y + (((size.y-sizeHandle.y)*((*value - min)))/(max-1-min));
+    posHandle.y = origPos.y + (((size.y-sizeHandle.y)*(((*value) - min)))/(max-1-min));
 
     posHandle.y = GE_CLAMP(posHandle.y, origPos.y, origPos.y + size.y - sizeHandle.y);
 
@@ -1134,6 +1134,7 @@ ge_ubyte GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, int* value, int min, int max)
 
     GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, GuiFlags(0), GUI_BUTTON_COLOR_DEF, NULL, &down, NULL);
 
+    printf("v: %d\n", (*value));
     return ret;
 }
 
