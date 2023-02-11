@@ -5,6 +5,10 @@ module;
 #include <gcem.hpp>
 #include <glm.hpp>
 
+#ifdef _DEBUG
+    #define GE_FIXEDPOINT_CHECK_OVERFLOW
+    #define GE_FIXEDPOINT_CHECK_CAST
+#endif
 
 export module GE.Basic:FixedPoint;
 
@@ -69,82 +73,197 @@ constexpr GE3_Q_T GE3_TO_Q(const ge_int3& ge3)
             ge3.z << Q);
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename GE_Q_TA = ge_int, typename GE_Q_TB = ge_int, typename PADDED_T = ge_long>
+template <typename INTEGER_T>
+void GE_CHECK_INT_MULTIPLY_OVERFLOW(const INTEGER_T& valA, const INTEGER_T& valB)
+{
+    INTEGER_T a = valA * valB;
+    if (a != 0) {
+        INTEGER_T d = a / valB;
+        if (d != valA)
+        {
+            assert(0);
+        }
+    }
+}
+
+template <typename PADDED_INTEGER_T, typename RESULT_T>
+void GE_CHECK_INT_CAST_NUMERIC(PADDED_INTEGER_T& value)
+{
+    if (PADDED_INTEGER_T(RESULT_T(value)) != value)
+    {
+        assert(0);
+    }
+}
+
+
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename GE_Q_TA = ge_int, typename GE_Q_TB = ge_int>
 constexpr GE_Q_TA GE_MUL_Q(const GE_Q_TA& valA, const GE_Q_TB& valB)
 {
-    return GE_Q_TA((((PADDED_T)valA)*((PADDED_T)valB)) >> ((Q_A+Q_B)-Q_OUT));
+    typedef GETypeConversions<GE_Q_TA>::paddedBaseType PADDED_T;
+
+#ifdef GE_FIXEDPOINT_CHECK_OVERFLOW
+    PADDED_T valAP = valA;
+    PADDED_T valBP = valB;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAP, valBP);
+#endif
+    const ge_int shift = ((Q_A + Q_B) - Q_OUT);
+    PADDED_T resPadded = (((PADDED_T)valA) * ((PADDED_T)valB)) >> shift;
+
+#ifdef GE_FIXEDPOINT_CHECK_CAST
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GE_Q_TA>(resPadded);
+#endif
+    return GE_Q_TA(resPadded);
+
 }
 
 
-
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int2, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2>
 constexpr T GE2_MUL_Q(const T& ge2A, const T& ge2B)
 {
-    return T( (((PADDED_T)ge2A.x)*((PADDED_T)ge2B.x)) >> ((Q_A+Q_B)-Q_OUT), 
-              (((PADDED_T)ge2A.y)*((PADDED_T)ge2B.y)) >> ((Q_A+Q_B)-Q_OUT) );
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
+#ifdef GE_FIXEDPOINT_CHECK_OVERFLOW
+    PADDED_T valAPX = ge2A.x;
+    PADDED_T valBPX = ge2B.x;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPX, valBPX);
+
+    PADDED_T valAPY = ge2A.y;
+    PADDED_T valBPY = ge2B.y;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPY, valBPY);
+
+#endif
+    const ge_int shift = ((Q_A + Q_B) - Q_OUT);
+    PADDED_T x = (( (PADDED_T)ge2A.x) * ((PADDED_T)ge2B.x )) >> shift;
+    PADDED_T y = (( (PADDED_T)ge2A.y) * ((PADDED_T)ge2B.y )) >> shift;
+
+
+#ifdef GE_FIXEDPOINT_CHECK_CAST
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType >(x);
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType >(y);
+#endif
+
+    return T(x, y);
 }
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int2,  typename SCALAR_T= ge_int, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T = ge_int2,  typename SCALAR_T = ge_int>
 constexpr T GE2_MUL_Q(const T& ge2A, const SCALAR_T& scalar)
 {
-    return T( (((PADDED_T)ge2A.x)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
-              (((PADDED_T)ge2A.y)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
+
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
+#ifdef GE_FIXEDPOINT_CHECK_OVERFLOW
+    PADDED_T valAPX = ge2A.x;
+    PADDED_T valBPX = scalar;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPX, valBPX);
+
+    PADDED_T valAPY = ge2A.y;
+    PADDED_T valBPY = scalar;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPY, valBPY);
+
+#endif
+
+
+    const ge_int shift = ((Q_A + Q_SCALAR) - Q_OUT);
+
+    PADDED_T x = (((PADDED_T)ge2A.x) * ((PADDED_T)scalar)) >> shift;
+    PADDED_T y = (((PADDED_T)ge2A.y) * ((PADDED_T)scalar)) >> shift;
+
+#ifdef GE_FIXEDPOINT_CHECK_CAST
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType>(x);
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType>(y);
+#endif
+
+    return T(x,y);
+
 }
 
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int3, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T= ge_int3>
 constexpr T GE3_MUL_Q(const T& ge3A, const T& ge3B)
 {
-    return T( (((PADDED_T)ge3A.x)*((PADDED_T)ge3B.x)) >> ((Q_A+Q_B)-Q_OUT), 
-              (((PADDED_T)ge3A.y)*((PADDED_T)ge3B.y)) >> ((Q_A+Q_B)-Q_OUT),
-              (((PADDED_T)ge3A.z)*((PADDED_T)ge3B.z)) >> ((Q_A+Q_B)-Q_OUT) );
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+    const ge_int shift = ((Q_A + Q_B) - Q_OUT);
+
+#ifdef GE_FIXEDPOINT_CHECK_OVERFLOW
+    PADDED_T valAPX = ge3A.x;
+    PADDED_T valBPX = ge3B.x;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPX, valBPX);
+
+    PADDED_T valAPY = ge3A.y;
+    PADDED_T valBPY = ge3B.y;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPY, valBPY);
+
+    PADDED_T valAPZ = ge3A.z;
+    PADDED_T valBPZ = ge3B.z;
+    GE_CHECK_INT_MULTIPLY_OVERFLOW<PADDED_T>(valAPZ, valBPZ);
+
+#endif
+    PADDED_T x = (((PADDED_T)ge3A.x) * ((PADDED_T)ge3B.x)) >> shift;
+    PADDED_T y = (((PADDED_T)ge3A.y) * ((PADDED_T)ge3B.y)) >> shift;
+    PADDED_T z = (((PADDED_T)ge3A.z) * ((PADDED_T)ge3B.z)) >> shift;
+
+
+#ifdef GE_FIXEDPOINT_CHECK_CAST
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType>(x);
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType>(y);
+    GE_CHECK_INT_CAST_NUMERIC<PADDED_T, GETypeConversions<T>::baseType>(z);
+#endif
+
+    return T( x,y,z);
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int3,  typename SCALAR_T= ge_int, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_SCALAR = DEFAULT_Q, typename T= ge_int3,  typename SCALAR_T= ge_int>
 constexpr T GE3_MUL_Q(const T& ge3A, const SCALAR_T& scalar)
 {
-    return T( (((PADDED_T)ge3A.x)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT), 
-              (((PADDED_T)ge3A.y)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT),
-              (((PADDED_T)ge3A.z)*((PADDED_T)scalar)) >> ((Q_A+Q_SCALAR)-Q_OUT) );
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+    const ge_int shift = ((Q_A + Q_SCALAR) - Q_OUT);
+
+    return T( (((PADDED_T)ge3A.x)*((PADDED_T)scalar)) >> shift,
+              (((PADDED_T)ge3A.y)*((PADDED_T)scalar)) >> shift,
+              (((PADDED_T)ge3A.z)*((PADDED_T)scalar)) >> shift);
 }
 
 
 
-// template <int Q = DEFAULT_Q, typename T= ge_int, typename PADDED_T = ge_long>
-// constexpr T GE_DIV_Q(const T& valA, const T& valB)
-// {
-//     return T((((PADDED_T)valA)<<Q)/((PADDED_T)valB));
-// }
-
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int>
 constexpr T GE_DIV_Q(const T& valA, const T& valB)
 {
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
     return T(GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)valA)<<(Q_B))/(PADDED_T(valB)))) );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2>
 constexpr T GE2_DIV_Q(const T& ge2A, const T& ge2B)
 {
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
     return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.x)<<(Q_B))/(PADDED_T(ge2B.x)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.y)<<(Q_B))/(PADDED_T(ge2B.y))))  );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename SCALAR_T = ge_int, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int2, typename SCALAR_T = ge_int>
 constexpr T GE2_DIV_Q(const T& ge2A, const SCALAR_T& scalar)
 {
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
     return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.x)<<(Q_B))/(PADDED_T(scalar)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge2A.y)<<(Q_B))/(PADDED_T(scalar))))  );
 }
 
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename SCALAR_T = ge_int, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename SCALAR_T = ge_int>
 constexpr T GE3_DIV_Q(const T& ge3A, const SCALAR_T& scalar)
 {
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
     return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(scalar)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(scalar)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(scalar))))   );
 }
-template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3, typename PADDED_T = ge_long>
+template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3>
 constexpr T GE3_DIV_Q(const T& ge3A, const T& ge3B)
 {
+    typedef GETypeConversions<T>::paddedBaseType PADDED_T;
+
     return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(ge3B.x)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(ge3B.y)))),
               GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(ge3B.z))))   );
@@ -263,7 +382,7 @@ template <int Q = DEFAULT_Q, typename GE3_Q_T= ge_int3, typename T = ge_int>
 T GE3_LENGTH_Q(const GE3_Q_T& ge3)
 {
     ge_long3 v_1 = ge_long3(ge3.x, ge3.y, ge3.z);
-    ge_long3 squared = GE3_MUL_Q<Q, Q,Q, ge_long3, ge_long>(v_1, v_1);
+    ge_long3 squared = GE3_MUL_Q<Q,Q,Q, ge_long3>(v_1, v_1);
 
     ge_long innerSum = squared.x + squared.y + squared.z;
     ge_long len = GE_SQRT_ULONG(innerSum) << (Q/2);
@@ -296,7 +415,7 @@ GE3_Q_T GE3_NORMALIZED_Q(const GE3_Q_T& ge3, GE_LEN_Q_T& length)
     length = GE3_LENGTH_Q<Q, GE3_Q_T, GE_LEN_Q_T>(ge3);
     if(length == 0)
         return GE3_Q_T(0,0,0);
-    GE3_Q_T normalized = GE3_DIV_Q<Q,Q,Q, GE3_Q_T, GE_LEN_Q_T, ge_long>(ge3, length);
+    GE3_Q_T normalized = GE3_DIV_Q<Q,Q,Q, GE3_Q_T, GE_LEN_Q_T>(ge3, length);
     return normalized;
 }
 

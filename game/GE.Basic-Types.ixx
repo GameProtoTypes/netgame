@@ -105,6 +105,85 @@ struct ge_float4
     ge_float x,y,z,w;
 };
 
+
+//specializations
+
+//Base Types
+template<typename T>
+struct GETypeConversions;
+
+
+
+template<>
+struct GETypeConversions<ge_int> {
+    typedef ge_int baseType;
+    typedef ge_long paddedType;
+    typedef ge_long paddedBaseType;
+};
+template<>
+struct GETypeConversions<ge_uint> {
+    typedef ge_uint baseType;
+    typedef ge_ulong paddedType;
+    typedef ge_ulong paddedBaseType;
+};
+
+
+
+
+
+template<>
+struct GETypeConversions<ge_int2> {
+    typedef ge_int baseType;
+    typedef ge_long2 paddedType;
+    typedef ge_long  paddedBaseType;
+};
+
+template<>
+struct GETypeConversions<ge_int3> {
+    typedef ge_int baseType;
+    typedef ge_long3 paddedType;
+    typedef ge_long  paddedBaseType;
+};
+
+template<>
+struct GETypeConversions<long> {
+    typedef long baseType;
+    typedef long long paddedType;
+    typedef long long paddedBaseType;
+};
+
+template<>
+struct GETypeConversions<ge_long> {
+    typedef ge_long baseType;
+    typedef ge_long paddedType;
+    typedef ge_long paddedBaseType;
+};
+
+template<>
+struct GETypeConversions<ge_long2> {
+    typedef ge_long baseType;
+    typedef ge_long2 paddedType;
+    typedef ge_long paddedBaseType;
+};
+template<>
+struct GETypeConversions<ge_long3> {
+    typedef ge_long baseType;
+    typedef ge_long3 paddedType;
+    typedef ge_long paddedBaseType;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 typedef ge_uint ge_offsetPtr;
 typedef ge_uint2 ge_offsetPtr2;
 typedef ge_uint3 ge_offsetPtr3;

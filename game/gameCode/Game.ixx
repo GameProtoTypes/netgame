@@ -16,7 +16,7 @@ const int GAME_UPDATE_WORKITEMS = 4;
 const int warpSize = 32;
 const int maxPeeps = 1024*1;
 const int maxParticles = 32;
-const int mapDim = 1024;
+const int mapDim = 512;
 const int mapDepth = 32;
 const int mapTileSize = 5;
 const int maxGuiRects = 1024*16;
@@ -32,7 +32,7 @@ const int SECTOR_SIZE = (10);
 
 
 
-
+const ge_int3 test = GE3_MUL_Q(GE3_TO_Q(ge_int3{ 1,2,3 }), GE3_TO_Q(ge_int3{ 4,5,6 }));
 
 
 struct Cell;

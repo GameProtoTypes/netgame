@@ -15,6 +15,10 @@ module;
 
     #define PEEP_ALL_ALWAYS_VISIBLE
 
+//#define FLATMAP
+
+#define ALL_EXPLORED
+
 module Game;
 
 using namespace GE;
@@ -85,7 +89,7 @@ char* CL_ITOA(ge_int value, char* result, ge_int resultSize, ge_int base) {
 
 
 
-void StartupTests_ConvertionHelp()
+void FixedPointTests()
 {
 
     ge_int s = 0;
@@ -130,6 +134,10 @@ void StartupTests_ConvertionHelp()
     constexpr ge_int n = GE_TO_Q<testQ>(fltToRepresent);
     constexpr float nF = GE_Q_TO_FLOAT<testQ>(n);
     printf("(GE_BIGGEST_Q) %f, is %f\n", fltToRepresent, nF);
+
+
+    //ge_int overflowed = GE_MUL_Q(0xFFFFFFFF, 0xFFFFFFFF);
+    //ge_int badcast = GE_MUL_Q<0,0,0>(0xFFFFFFFF, 0xFFFFF);
 
 
     printf("(Q2F)  1: %f\n", GE_Q_TO_FLOAT<16>(GE_TO_Q(1)));
@@ -5220,9 +5228,9 @@ void StartupTests()
     }
 
   }
-  if(0)
+  if(1)
   {
-  //  fixedPointTests();
+      FixedPointTests();
   }
 
   if(0)

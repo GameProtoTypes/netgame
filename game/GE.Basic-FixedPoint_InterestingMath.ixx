@@ -24,8 +24,8 @@ constexpr GE_Q_T GE_LINEAR_INTERP_1D_Q(GE_Q_T x1, GE_Q_T x2, GE_Q_T perc)
 template<int Q = DEFAULT_Q, typename GE_Q_T>
 constexpr GE_Q_T GE_CUBIC_INTERP_1D_Q(GE_Q_T x1, GE_Q_T x2, GE_Q_T perc)
 {
-    ge_long p = (ge_long)perc;
-    ge_long perc_cubic = GE_MUL_Q<Q>(GE_MUL_Q<Q>(p, p), (GE_TO_Q<Q>(3) - GE_MUL_Q<Q>(GE_TO_Q<Q>(2), p)));
+    GE_Q_T p = perc;
+    GE_Q_T perc_cubic = GE_MUL_Q<Q>(GE_MUL_Q<Q>(p, p), (GE_TO_Q<Q>(3) - GE_MUL_Q<Q>(GE_TO_Q<Q>(2), p)));
     return GE_LINEAR_INTERP_1D_Q(x1, x2, (ge_int)perc_cubic);
 }
 
