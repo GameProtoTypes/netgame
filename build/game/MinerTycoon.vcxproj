@@ -619,6 +619,20 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GameGraphics.cpp" />
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GameCompute.cpp" />
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GameNetworking.cpp" />
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertPeep.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertShader.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertMapTile.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\geomMapTile.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragPeep.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragShader.glsl">
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragMapTile.glsl">
+    </None>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint.cpp">
       <ObjectFileName>$(IntDir)/GE.Basic-FixedPoint.cpp.obj</ObjectFileName>
     </ClCompile>

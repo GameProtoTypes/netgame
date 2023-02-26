@@ -306,12 +306,7 @@ constexpr bool GE2_ISZERO(const T& ge2)
     return (ge2.x == 0 && ge2.y == 0);
 }
 
-template <class GE2_T = ge_int2>
-constexpr ge_int GE_FAST_NOISE_2D(GE2_T v, ge_int seed)
-{
-    int tmp = perlin_hash_numbers[(v.y + seed) % 256];
-    return perlin_hash_numbers[(tmp + v.x) % 256];
-}
+
 
 
 

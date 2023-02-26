@@ -1341,15 +1341,13 @@ GuiFlags flags, char* str )
 
     GUI_LABEL(GUIID_PASS, pos,
     (ge_int2)(size.x, guiStyle->WINDOW_HEADER_SIZE), GuiFlags(0), str,  headerColor);
-    
-    //GUI_DrawRectangle(GUI_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    //size.x, guiStyle->WINDOW_HEADER_SIZE, headerColor, guiStyle->UV_WHITE, guiStyle->UV_WHITE );
+
 
     GUI_DrawRectangle(GUI_CORE_PARAMS_PASS, gui, pos.x, pos.y+guiStyle->WINDOW_HEADER_SIZE, 
     size.x, size.y-guiStyle->WINDOW_HEADER_SIZE, (ge_float3)(0.6,0.6,0.6), guiStyle->UV_WHITE, guiStyle->UV_WHITE , false);
 
     GUI_PushContainer(gui, GE2_ADD(origPos,(ge_int2)(guiStyle->WINDOW_PADDING,guiStyle->WINDOW_HEADER_SIZE)), 
-    GE2_SUB(origSize,(ge_int2)(guiStyle->WINDOW_PADDING*2,guiStyle->WINDOW_PADDING + guiStyle->WINDOW_HEADER_SIZE)));
+        GE2_SUB(origSize,(ge_int2)(guiStyle->WINDOW_PADDING*2,guiStyle->WINDOW_PADDING + guiStyle->WINDOW_HEADER_SIZE)));
 
     return true;
 }

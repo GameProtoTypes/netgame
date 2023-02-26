@@ -20,25 +20,25 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic.ixx">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-Types.ixx">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint.ixx">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.Basic-FixedPoint_InterestingMath.ixx">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.ImGui.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\GE.ImGui.ixx">
-      <Filter>Source Files</Filter>
+      <Filter>Engine Module Files</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\casht\repos\netgame\game\gameCode\Game.ixx">
       <Filter>Game Module Files</Filter>
@@ -77,11 +77,40 @@
     <CustomBuild Include="C:\Users\casht\repos\netgame\game\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertPeep.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertShader.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\vertMapTile.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\geomMapTile.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragPeep.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragShader.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="C:\Users\casht\repos\netgame\game\shaders\fragMapTile.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Engine Module Files">
+      <UniqueIdentifier>{F0B3C466-6E38-32F6-A4E1-EF65B6EC48D9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Game Module Files">
       <UniqueIdentifier>{7906D657-598D-3038-A480-2DC6B1996E6A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{B65147BB-9782-3532-9107-04CF7FD529E5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{32F76AAE-52CD-3567-9E6F-AC3134A0390D}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4442BB9E-3CDD-3969-A4BA-A5C23CB92DD8}</UniqueIdentifier>

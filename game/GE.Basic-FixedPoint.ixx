@@ -74,7 +74,7 @@ constexpr GE3_Q_T GE3_TO_Q(const ge_int3& ge3)
 }
 
 template <typename INTEGER_T>
-void GE_CHECK_INT_MULTIPLY_OVERFLOW(const INTEGER_T& valA, const INTEGER_T& valB)
+constexpr void GE_CHECK_INT_MULTIPLY_OVERFLOW(const INTEGER_T& valA, const INTEGER_T& valB)
 {
     INTEGER_T a = valA * valB;
     if (a != 0) {
@@ -87,7 +87,7 @@ void GE_CHECK_INT_MULTIPLY_OVERFLOW(const INTEGER_T& valA, const INTEGER_T& valB
 }
 
 template <typename PADDED_INTEGER_T, typename RESULT_T>
-void GE_CHECK_INT_CAST_NUMERIC(PADDED_INTEGER_T& value)
+constexpr void GE_CHECK_INT_CAST_NUMERIC(PADDED_INTEGER_T& value)
 {
     if (PADDED_INTEGER_T(RESULT_T(value)) != value)
     {
@@ -274,7 +274,7 @@ constexpr T GE3_DIV_Q(const T& ge3A, const T& ge3B)
 template <int Q = DEFAULT_Q, typename T= ge_int>
 constexpr T GE_WHOLE_Q(const T& valA)
 {
-    return (valA>>Q);
+    return T(valA>>Q);
 }
 
 //whole part of a Q* as an int.

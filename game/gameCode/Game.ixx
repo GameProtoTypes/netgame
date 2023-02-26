@@ -32,7 +32,6 @@ const int SECTOR_SIZE = (10);
 
 
 
-const ge_int3 test = GE3_MUL_Q(GE3_TO_Q(ge_int3{ 1,2,3 }), GE3_TO_Q(ge_int3{ 4,5,6 }));
 
 
 struct Cell;

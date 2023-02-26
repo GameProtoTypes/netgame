@@ -136,6 +136,10 @@ void FixedPointTests()
     printf("(GE_BIGGEST_Q) %f, is %f\n", fltToRepresent, nF);
 
 
+    constexpr ge_int3 ge3constTest = GE3_MUL_Q(GE3_TO_Q(ge_int3{ 1,2,3 }), GE3_TO_Q(ge_int3{ 4,5,6 }));
+    GE3_PRINT_Q(ge3constTest);
+
+
     //ge_int overflowed = GE_MUL_Q(0xFFFFFFFF, 0xFFFFFFFF);
     //ge_int badcast = GE_MUL_Q<0,0,0>(0xFFFFFFFF, 0xFFFFF);
 
@@ -202,6 +206,15 @@ void FixedPointTests()
 
 
 
+    printf("Perlin Tests\n");
+
+    for(ge_int x = 0; x < GE_TO_Q(1); x += GE_TO_Q(0.01f))
+    {
+        //ge_int v = GE_CUBIC_INTERP_1D_Q(GE_TO_Q(0.0f), GE_TO_Q(1.0f), x);
+        ge_int v = GE2_NOISE_SMOOTH_Q(ge_int2(x,x), 1);
+        GE_PRINT_Q(v);
+    }
+    fflush(stdout);
 }
 
 
