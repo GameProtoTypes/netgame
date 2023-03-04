@@ -19,7 +19,7 @@
 
 
 #define GUI_FAKESWITCH_PARAM_INT(PARAM) GuiFakeSwitch_Param_Int(gui, PARAM)
-#define GUI_AUTO_SIZE (ge_int2){-1,-1}
+#define GUI_AUTO_SIZE ge_int2{-1,-1}
 #define GUI_BUTTON_COLOR_DEF (guiStyle->BUTTON_COLOR_TOGGLED)
 
 

@@ -170,7 +170,7 @@ void FixedPointTests()
 
 
 
-    ge_int3 test = (ge_int3)(42);
+    ge_int3 test = ge_int3(42);
     printf("%d,%d,%d\n", test);
 
     v = ge_int2(GE_TO_Q(1), GE_TO_Q(1));
@@ -3629,13 +3629,13 @@ ge_float4 Matrix_Float4_Times_Vec4(float mat[][4], ge_float4 vec)
 
 void LINES_DrawLineWorld(ALL_CORE_PARAMS, ge_float2 worldPosStart, ge_float2 worldPosEnd, ge_float3 color)
 {
-    ge_float4 worldPosStart4 = (ge_float4)(worldPosStart.x, worldPosStart.y, 0.0f, 1.0f);
+    ge_float4 worldPosStart4 = ge_float4(worldPosStart.x, worldPosStart.y, 0.0f, 1.0f);
     ge_float4 screenPosStart4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix[0], worldPosStart4);
-    ge_float2 screenPosStart2 = (ge_float2)(screenPosStart4.x, screenPosStart4.y);
+    ge_float2 screenPosStart2 = ge_float2(screenPosStart4.x, screenPosStart4.y);
 
-    ge_float4 worldPosEnd4 = (ge_float4)(worldPosEnd.x, worldPosEnd.y, 0.0f, 1.0f);
+    ge_float4 worldPosEnd4 = ge_float4(worldPosEnd.x, worldPosEnd.y, 0.0f, 1.0f);
     ge_float4 screenPosEnd4 = Matrix_Float4_Times_Vec4(&gameStateActions->viewMatrix[0], worldPosEnd4);
-    ge_float2 screenPosEnd2 = (ge_float2)(screenPosEnd4.x, screenPosEnd4.y);
+    ge_float2 screenPosEnd2 = ge_float2(screenPosEnd4.x, screenPosEnd4.y);
 
     // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[0][0], gameStateActions->viewMatrix[0][1], gameStateActions->viewMatrix[0][2], gameStateActions->viewMatrix[0][3]);
     // printf("[%f,%f,%f,%f]\n", gameStateActions->viewMatrix[1][0], gameStateActions->viewMatrix[1][1], gameStateActions->viewMatrix[1][2], gameStateActions->viewMatrix[1][3]);
@@ -3915,7 +3915,8 @@ SynchronizedClientState* client)
         if(client->curEditingOrderPtr == order->ptr && client->curEditingOrder_targeting)
         {
             str = locStr2;  
-            color = COLOR_RED * ANIMATION_BLINK(ALL_CORE_PARAMS_PASS);
+            ge_float anim = ANIMATION_BLINK(ALL_CORE_PARAMS_PASS);
+            color = COLOR_RED * ge_float3{anim,anim,anim};
 
             if(client->tileTargetFound )
             {
@@ -5893,8 +5894,8 @@ void game_post_update( ALL_CORE_PARAMS )
                     MapToWorld(( nodeNext->mapCoord_Q16 ), &worldCoordNext_Q16);
 
                     
-                    ge_float2 worldCoordsFloat = (ge_float2)(GE_Q_TO_FLOAT(worldCoord_Q16.x),GE_Q_TO_FLOAT(worldCoord_Q16.y));
-                    ge_float2 worldCoordsNextFloat = (ge_float2)(GE_Q_TO_FLOAT(worldCoordNext_Q16.x),GE_Q_TO_FLOAT(worldCoordNext_Q16.y));
+                    ge_float2 worldCoordsFloat = ge_float2(GE_Q_TO_FLOAT(worldCoord_Q16.x),GE_Q_TO_FLOAT(worldCoord_Q16.y));
+                    ge_float2 worldCoordsNextFloat = ge_float2(GE_Q_TO_FLOAT(worldCoordNext_Q16.x),GE_Q_TO_FLOAT(worldCoordNext_Q16.y));
 
                 
                     LINES_DrawLineWorld(ALL_CORE_PARAMS_PASS, worldCoordsFloat, worldCoordsNextFloat, ge_float3(GE_UNIFORM_RANDOM_RANGE(i, 0, 1000)/1000.0f, GE_UNIFORM_RANDOM_RANGE(i+1, 0, 1000)/1000.0f, 1.0f));

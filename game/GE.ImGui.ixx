@@ -222,7 +222,7 @@ bool gui_CommonWidgetStart(GUI_CORE_PARAMS, SyncedGui* gui, ge_int2 * pos, ge_in
 
     if(flags & GuiFlags_FillParent)
     {
-        *pos = (ge_int2)(0,0);
+        *pos = ge_int2(0,0);
         *size = GUI_GetContainerSize(gui);
     }
 
@@ -303,7 +303,7 @@ void GUI_RESET(GUI_CORE_PARAMS, SyncedGui* gui, ge_int2 mouseLoc, int mouseState
     if(GE_BITGET(mouseState, MouseButtonBits_PrimaryPressed) || GE_BITGET(mouseState, MouseButtonBits_SecondaryPressed))
     {
         gui->mouseLocBegin = mouseLoc;
-        gui->mouseFrameDelta = (ge_int2)(0,0);
+        gui->mouseFrameDelta = ge_int2(0,0);
        // printf("pressedbegin "); Print_GE_INT2(mouseLoc);
         gui->mouseDragging = 1;
     }
@@ -388,8 +388,8 @@ void GuiState_Init(GuiState* state)
 
     for(int w = 0 ; w < GUI_MAX_WINDOWS; w++)
     {
-        state->windowPositions[w] = (ge_int2)(100,100);
-        state->windowSizes[w] = (ge_int2)(200,400);
+        state->windowPositions[w] = ge_int2(100,100);
+        state->windowSizes[w] = ge_int2(200,400);
     }
     
 
@@ -682,7 +682,7 @@ bool bevelled)
 
 
      //TopQuad
-    ge_float3 colorTop = GE3_MUL(color , (ge_float3)(0.9,0.9,0.9));
+    ge_float3 colorTop =  GE3_MUL(color , ge_float3{0.9f,0.9f,0.9f});
     guiVBO[idx*stride + 0] = xf+widthf; //G
     guiVBO[idx*stride + 1] = yf;//G
 
@@ -745,7 +745,7 @@ bool bevelled)
     idx++;
 
      //LeftQuad
-    ge_float3 colorLeft = GE3_MUL(color , (ge_float3)(0.9,0.9,0.9));
+    ge_float3 colorLeft = GE3_MUL(color , ge_float3{0.9f,0.9f,0.9f});
     guiVBO[idx*stride + 0] = xf + bevelx;//B
     guiVBO[idx*stride + 1] = yf - bevely;//B
 
@@ -1028,7 +1028,6 @@ bool GUI_BUTTON(GUIID_DEF_ALL, ge_float3 color, char* str, int* down,  bool* tog
 
     if((toggleState != NULL) && (*toggleState))
     {
-
         color =  GE3_MUL(color,guiStyle->BUTTON_COLOR_TOGGLED);
     }
 
@@ -1189,7 +1188,7 @@ bool GUI_SCROLLBOX_BEGIN(GUIID_DEF_ALL, ge_int2 scrollSpace, int* scrollx, int* 
     GUI_PushClip(gui, origPos, canvasSize);
 
     GUI_DrawRectangle(GUI_CORE_PARAMS_PASS, gui, pos.x, pos.y, 
-    canvasSize.x, canvasSize.y, (ge_float3)(0.2,0.2,0.2), guiStyle->UV_WHITE, guiStyle->UV_WHITE , false );
+    canvasSize.x, canvasSize.y, ge_float3(0.2,0.2,0.2), guiStyle->UV_WHITE, guiStyle->UV_WHITE , false );
 
     GUI_PushContainer(gui, GE2_ADD(origPos , scrollOffset), origSize);
 
@@ -1299,7 +1298,7 @@ GuiFlags flags, char* str )
 
         if(gui->lastActiveWidget == id && GE_BITGET(gui->mouseState, MouseButtonBits_PrimaryReleased))
         {
-           // headerColor = (ge_float3)(0.5,0.5,0.5);
+           // headerColor = ge_float3(0.5,0.5,0.5);
 
             //printf("window, guipasstype: %d, is local client: %d", gui->passType, gui->isLocalClient);
            
@@ -1339,14 +1338,14 @@ GuiFlags flags, char* str )
 
 
     GUI_LABEL(GUIID_PASS, pos,
-    (ge_int2)(size.x, guiStyle->WINDOW_HEADER_SIZE), GuiFlags(0), str,  headerColor);
+    ge_int2(size.x, guiStyle->WINDOW_HEADER_SIZE), GuiFlags(0), str,  headerColor);
 
 
     GUI_DrawRectangle(GUI_CORE_PARAMS_PASS, gui, pos.x, pos.y+guiStyle->WINDOW_HEADER_SIZE, 
-    size.x, size.y-guiStyle->WINDOW_HEADER_SIZE, (ge_float3)(0.6,0.6,0.6), guiStyle->UV_WHITE, guiStyle->UV_WHITE , false);
+    size.x, size.y-guiStyle->WINDOW_HEADER_SIZE, ge_float3(0.6,0.6,0.6), guiStyle->UV_WHITE, guiStyle->UV_WHITE , false);
 
-    GUI_PushContainer(gui, GE2_ADD(origPos,(ge_int2)(guiStyle->WINDOW_PADDING,guiStyle->WINDOW_HEADER_SIZE)), 
-        GE2_SUB(origSize,(ge_int2)(guiStyle->WINDOW_PADDING*2,guiStyle->WINDOW_PADDING + guiStyle->WINDOW_HEADER_SIZE)));
+    GUI_PushContainer(gui, GE2_ADD(origPos,ge_int2(guiStyle->WINDOW_PADDING,guiStyle->WINDOW_HEADER_SIZE)), 
+        GE2_SUB(origSize,ge_int2(guiStyle->WINDOW_PADDING*2,guiStyle->WINDOW_PADDING + guiStyle->WINDOW_HEADER_SIZE)));
 
     return true;
 }
