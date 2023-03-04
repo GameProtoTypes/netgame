@@ -13,6 +13,10 @@
 #include <filesystem>
 #include <format>
 
+#include "cista/serialization.h"
+#include "cista/containers/vector.h"
+#include "cista/reflection/to_tuple.h"
+
 
  
 #include "GameCompute.h"
@@ -212,6 +216,8 @@ void GameCompute::SaveGameStateBase()
         std::cout << "Error Saving File!" << std::endl;
     else
     {
+        
+
         myfile.write(reinterpret_cast<char*>(gameState.get()), sizeof(GameState));
     }
     

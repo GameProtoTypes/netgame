@@ -1134,7 +1134,6 @@ ge_ubyte GUI_SLIDER_INT_VERTICAL(GUIID_DEF_ALL, int* value, int min, int max)
 
     GUI_BUTTON(GUIID_PASS, posHandle, sizeHandle, GuiFlags(0), GUI_BUTTON_COLOR_DEF, NULL, &down, NULL);
 
-    printf("v: %d\n", (*value));
     return ret;
 }
 

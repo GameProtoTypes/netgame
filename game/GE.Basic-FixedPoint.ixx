@@ -255,18 +255,18 @@ constexpr T GE3_DIV_Q(const T& ge3A, const SCALAR_T& scalar)
 {
     typedef GETypeConversions<T>::paddedBaseType PADDED_T;
 
-    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(scalar)))),
-              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(scalar)))),
-              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(scalar))))   );
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.x))<<(Q_B))/(PADDED_T(scalar)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.y))<<(Q_B))/(PADDED_T(scalar)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.z))<<(Q_B))/(PADDED_T(scalar))))   );
 }
 template <int Q_OUT = DEFAULT_Q, int Q_A = DEFAULT_Q, int Q_B = DEFAULT_Q, typename T = ge_int3>
 constexpr T GE3_DIV_Q(const T& ge3A, const T& ge3B)
 {
     typedef GETypeConversions<T>::paddedBaseType PADDED_T;
 
-    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.x)<<(Q_B))/(PADDED_T(ge3B.x)))),
-              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.y)<<(Q_B))/(PADDED_T(ge3B.y)))),
-              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>(((((PADDED_T)ge3A.z)<<(Q_B))/(PADDED_T(ge3B.z))))   );
+    return T( GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.x))<<(Q_B))/(PADDED_T(ge3B.x)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.y))<<(Q_B))/(PADDED_T(ge3B.y)))),
+              GE_SIGNED_SHIFT<PADDED_T,-(Q_OUT - Q_A)>((((static_cast<PADDED_T>(ge3A.z))<<(Q_B))/(PADDED_T(ge3B.z))))   );
 }
 
 

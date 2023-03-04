@@ -73,8 +73,8 @@ GE_Q_T GE2_PERLIN_Q(GE2_Q_T ge2, GE_Q_T freq, GE_Q_T depth, GE_Q_T seed)
         div += GE_MUL_Q<Q>(GE_TO_Q<Q>(256) , amp);
         fin += GE_MUL_Q<Q>(GE2_NOISE_SMOOTH_Q(ge_int2(xa, ya), seed) , amp);
         amp = GE_DIV_Q<Q>(amp, GE_TO_Q<Q>(2));
-        xa = GE_MUL_Q<Q>(xa, GE_TO_Q<Q>(2));
-        ya = GE_MUL_Q<Q>(ya, GE_TO_Q<Q>(2));
+        xa  = GE_MUL_Q<Q>(xa, GE_TO_Q<Q>(2));
+        ya  = GE_MUL_Q<Q>(ya, GE_TO_Q<Q>(2));
     }
 
     return  GE_DIV_Q<Q>(fin, div);

@@ -1,6 +1,7 @@
+
+
+
 export module Game;
-
-
 
 export import :Graphics;
 
@@ -14,7 +15,7 @@ const int MAX_ACTIONS_PER_TICK = 8;
 const int MAX_CLIENTS = 1024;
 const int GAME_UPDATE_WORKITEMS = 4;
 const int warpSize = 32;
-const int maxPeeps = 1024*1;
+const int maxPeeps = 1024*8;
 const int maxParticles = 32;
 const int mapDim = 512;
 const int mapDepth = 32;

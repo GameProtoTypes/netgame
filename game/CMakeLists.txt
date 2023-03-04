@@ -208,7 +208,8 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "imgui;"
     "SLikeNet;"
     "angelscript;"
-    "gcem"
+    "gcem;"
+    "cista"
 )
 
 

@@ -3,6 +3,8 @@ module;
     #include <stdio.h>
     #include <iostream>
 
+
+
     #include "Game.CoreParam.Defines.h"
     #include "../GE.Basic.Macro.defines.h"
     #include "../GE.ImGui.defines.h"
@@ -4495,9 +4497,9 @@ ge_int cliId)
     &gui->guiState.windowSizes[0],GuiFlags(0),  robotSelWindowStr ))
     {
         if(GUI_SCROLLBOX_BEGIN(GUIID_PASS, ge_int2{0,0},
-        ge_int2{10,10},
-        GuiFlags_FillParent,
-        ge_int2{1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly))
+            ge_int2{10,10},
+            GuiFlags_FillParent,
+            ge_int2{1000,1000}, &gui->guiState.menuScrollx, &gui->guiState.menuScrolly))
         {
             //iterate selected peeps
             Peep* p;
@@ -4511,7 +4513,7 @@ ge_int cliId)
                 LOCAL_STRL(peeptxt, "Select", peeptxtLen); 
                 GUI_LABEL(GUIID_PASS, ge_int2{0 ,50*i}, ge_int2{50, 50}, GuiFlags(0), header, ge_float3(0.3,0.3,0.3));
         
-                if(GUI_BUTTON(GUIID_PASS, ge_int2{50 ,50*i}, ge_int2{50, 50},GuiFlags_Beveled,GUI_BUTTON_COLOR_DEF,  peeptxt, &downDummy, NULL))
+                if(GUI_BUTTON(GUIID_PASS, ge_int2{50 , 50*i}, ge_int2{50, 50}, GuiFlags_Beveled, GUI_BUTTON_COLOR_DEF,  peeptxt, &downDummy, NULL))
                 {
                     client->selectedPeepPrimary = p->ptr;
                 }
@@ -4541,9 +4543,9 @@ ge_int cliId)
 
 
 
-        MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,1));
+        MapTile tileup = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + ge_int3{0,0,1});
         MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
-        MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + (ge_int3)(0,0,-1));
+        MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + ge_int3{0,0,-1});
         
 
 
