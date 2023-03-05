@@ -53,6 +53,8 @@ public:
 
 	std::shared_ptr<Game::GameState> gameState;
 	std::shared_ptr<Game::GameStateActions> gameStateActions;
+    Game::StaticData gameStaticData;
+
 	GameGraphics* graphics = nullptr;
 	GameNetworking* networking = nullptr;
 

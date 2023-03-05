@@ -1189,7 +1189,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
     //printf("AStarSearch_BFS_Continue..openHeapSize: %d\n", search->openHeapSize);
     while (search->openHeapSize > 0 && iterations > 0)
     {
-        //printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
+        printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
         //find node in open with lowest f cost
         ge_offsetPtr currentOPtr = AStarRemoveFromOpen(search);
 
@@ -1267,7 +1267,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
             }
             else
             {
-                //printf("grabbing new prospective node\n");
+                printf("grabbing new prospective node\n");
                 prospectiveNodeOPtr = AStarGrabDetailNode(search, &prospectiveNode);
                 prospectiveNode->tileIdx = prospectiveTileCoord;
             }
@@ -1284,6 +1284,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
                 {
                     printf("skippping obvious bullshit. %d, %d\n", AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current), AStarNodeInClosed(search, prospectiveNode));
                 }
+                printf("not traversible\n");
                 continue;
             }
 
@@ -1291,7 +1292,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
 
 
             ge_int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
-           // GE_PRINT_Q(totalMoveCost); GE_PRINT_Q(current->g_Q16); GE_PRINT_Q(prospectiveNode->g_Q16);
+            GE_PRINT_Q(totalMoveCost); GE_PRINT_Q(current->g_Q16); GE_PRINT_Q(prospectiveNode->g_Q16);
             if (((totalMoveCost < prospectiveNode->g_Q16) || !AStarNodeInOpen(search, prospectiveNode)) )
             {
                 
@@ -5391,7 +5392,7 @@ void game_init_single(ALL_CORE_PARAMS)
     printf("ASTARBFS Size: %d\n", sizeof(AStarSearch_BFS));
 
     printf("Initializing StaticData Buffers..\n");
-    MakeCardinalDirectionOffsets(&staticData->directionalOffsets[0]);
+    MakeCardinalDirectionOffsets(&(staticData->directionalOffsets[0]));
    // MakeItemStrings(staticData->ItemTypeStrings);
 
 

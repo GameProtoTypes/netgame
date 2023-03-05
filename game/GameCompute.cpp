@@ -73,13 +73,13 @@ void GameCompute::RunGameKernel(std::function<void(ALL_CORE_PARAMS_TYPES)> kerne
     std::vector<std::chrono::steady_clock::time_point> startTimes;
     std::vector<std::chrono::steady_clock::time_point> endTimes;
 
-    Game::StaticData data;
+
     for(int t = 0; t < numThreads; t++)
     {
         startTimes.push_back(std::chrono::steady_clock::now());
 
         threads.push_back(std::thread(kernelFunc,
-        &data,
+        &gameStaticData,
         gameState.get(),
         gameStateActions.get(),
         &gameState.get()->guiStyle,
