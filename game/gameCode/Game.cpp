@@ -269,7 +269,7 @@ inline void BITBANK_SET_SUBNUMBER_UINT(ge_uint* bank, ge_int lsbBitIdx, ge_int n
 
 
 inline MapTile MapDataGetTile(ge_uint tileData) {
-    return (MapTile)BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8);
+    return MapTile(BITBANK_GET_SUBNUMBER_UINT(tileData, 0, 8));
 }
 inline void MapDataSetTile(ge_uint* tileData, MapTile tile) {
     ge_uint tmp = *tileData;
@@ -283,12 +283,12 @@ inline ge_int MapTileGetRotation(ge_uint tileData) {
 
 ge_uint* MapGetDataPointerFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    return &(gameState->map.levels[(mapcoord).z].data[(mapcoord).x][(mapcoord).y]);
+    return &(gameState->map.levels[mapcoord.z].data[mapcoord.x][mapcoord.y]);
 }
 
 MapTile MapGetTileFromCoord(ALL_CORE_PARAMS, ge_int3 mapcoord)
 {
-    return MapDataGetTile(gameState->map.levels[(mapcoord).z].data[(mapcoord).x][(mapcoord).y]);
+    return MapDataGetTile(gameState->map.levels[mapcoord.z].data[mapcoord.x][mapcoord.y]);
 }
 
 ge_ubyte MapRidgeType(ALL_CORE_PARAMS, ge_int3 mapCoords, ge_int3 enterDir)
@@ -1189,7 +1189,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
     //printf("AStarSearch_BFS_Continue..openHeapSize: %d\n", search->openHeapSize);
     while (search->openHeapSize > 0 && iterations > 0)
     {
-        printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
+        //printf("AStarSearch_BFS_Continue iterating..%d\n", iterations);
         //find node in open with lowest f cost
         ge_offsetPtr currentOPtr = AStarRemoveFromOpen(search);
 
@@ -1267,7 +1267,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
             }
             else
             {
-                printf("grabbing new prospective node\n");
+                //printf("grabbing new prospective node\n");
                 prospectiveNodeOPtr = AStarGrabDetailNode(search, &prospectiveNode);
                 prospectiveNode->tileIdx = prospectiveTileCoord;
             }
@@ -1284,7 +1284,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
                 {
                     printf("skippping obvious bullshit. %d, %d\n", AStarNode2NodeTraversible(ALL_CORE_PARAMS_PASS,  prospectiveNode, current), AStarNodeInClosed(search, prospectiveNode));
                 }
-                printf("not traversible\n");
+                //printf("not traversible\n");
                 continue;
             }
 
@@ -1292,7 +1292,7 @@ AStarPathFindingProgress AStarSearch_BFS_Continue(ALL_CORE_PARAMS,AStarSearch_BF
 
 
             ge_int totalMoveCost = current->g_Q16 + AStarNodeDistanceHuristic(search, current, prospectiveNode);
-            GE_PRINT_Q(totalMoveCost); GE_PRINT_Q(current->g_Q16); GE_PRINT_Q(prospectiveNode->g_Q16);
+            //GE_PRINT_Q(totalMoveCost); GE_PRINT_Q(current->g_Q16); GE_PRINT_Q(prospectiveNode->g_Q16);
             if (((totalMoveCost < prospectiveNode->g_Q16) || !AStarNodeInOpen(search, prospectiveNode)) )
             {
                 
@@ -1533,7 +1533,7 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if(search->state == AStarPathFindingProgress_Searching)
     {
-        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 100);
+        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 1000);
     }
     else if(	search->state == AStarPathFindingProgress_Finished ||
 	search->state == AStarPathFindingProgress_Failed)
@@ -3421,7 +3421,7 @@ void PeepUpdate(ALL_CORE_PARAMS, Peep* peep)
 
 
     //update map coord tracking
-    if(GE3_EQUAL(peep->mapCoord, maptilecoords))
+    if(!GE3_EQUAL(peep->mapCoord, maptilecoords))
     {
 
 
@@ -3756,6 +3756,8 @@ void PeepCommandGui(ALL_CORE_PARAMS, SyncedGui* gui, SynchronizedClientState* cl
             
             ge_int3 mapCoord = GE3_CAST<ge_int3>(peep->mapCoord);
             mapCoord.z--;
+
+            ge_int3 wholeTest = GE3_WHOLE_Q(peep->posMap_Q16);
 
             MapTile downTile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapCoord);
             Machine* machine = MachineGetFromMapCoord(ALL_CORE_PARAMS_PASS, mapCoord);
@@ -4549,7 +4551,7 @@ ge_int cliId)
         MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
         MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + ge_int3{0,0,-1});
         
-
+        GE3_PRINT(mapcoord_whole);
 
 
         LOCAL_STRL(xtxt, "", xtxtLen); 
