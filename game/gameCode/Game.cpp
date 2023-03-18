@@ -638,31 +638,26 @@ void AStarInitPathNode(AStarPathNode* node)
 
 void AStarSearch_BFS_Instantiate(AStarSearch_BFS* search)
 {
-    for (ge_int x = 0; x < mapDim; x++)
-    {
-        for (ge_int y = 0; y < mapDim; y++)
-        {
-            for (ge_int z = 0; z < mapDepth; z++)
-            {
-                search->closedMap[x][y][z] = 0;
-                search->openMap[x][y][z] = 0;
-            }
-        }  
-    }
-
-    for(ge_int i = 0; i < ASTARHEAPSIZE; i++)
+    for(ge_long i = 0; i < ASTARHEAPSIZE; i++)
     {
         search->openHeap_OPtrs[i] = GE_OFFSET_NULL;
     }
-    
+    for(ge_long x = 0; x < mapDim; x++)
+    {
+        for(ge_long y = 0; y < mapDim; y++)
+        {
+            for(ge_long z = 0; z < mapDepth; z++)
+            {
+        
+                search->closedMap[x][y][z] = 0;
+                search->openMap[x][y][z] = 0;
+            }
+        }
+    }
+
+
+
     search->nextDetailNodePtr = 0;
-
-    search->startNodeOPtr = GE_OFFSET_NULL;
-    search->endNodeOPtr = GE_OFFSET_NULL;
-    
-    search->openHeapSize = 0;
-    search->pathOPtr = GE_OFFSET_NULL;
-
 }
 void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, ge_ulong idx, ge_int x, ge_int y, ge_int z)
 {
@@ -677,11 +672,6 @@ void AStarSearch_BFS_InstantiateParrallel(AStarSearch_BFS* search, ge_ulong idx,
     {
         search->openHeap_OPtrs[idx] = GE_OFFSET_NULL;
     }
-    
-    
-
-
-
 }
 
 
@@ -1163,6 +1153,7 @@ ge_offsetPtr AStarGrabDetailNode(AStarSearch_BFS* search, AStarNode** node_out)
     if(search->nextDetailNodePtr >= ASTARDETAILSSIZE)
     {
         printf("AStarGrabDetailNode Out of Nodes. (ASTARDETAILSSIZE)\n");
+        assert(0);
     }
 
     AStarNode* node;
@@ -1533,7 +1524,7 @@ void AStarJob_UpdateJobs(ALL_CORE_PARAMS)
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
     if(search->state == AStarPathFindingProgress_Searching)
     {
-        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, 1000);
+        AStarSearch_BFS_Continue(ALL_CORE_PARAMS_PASS, search, ASTARSEARCH_ADVANCEMENT);
     }
     else if(	search->state == AStarPathFindingProgress_Finished ||
 	search->state == AStarPathFindingProgress_Failed)
@@ -4551,7 +4542,7 @@ ge_int cliId)
         MapTile tile = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole);
         MapTile tiledown = MapGetTileFromCoord(ALL_CORE_PARAMS_PASS, mapcoord_whole + ge_int3{0,0,-1});
         
-        GE3_PRINT(mapcoord_whole);
+        
 
 
         LOCAL_STRL(xtxt, "", xtxtLen); 
@@ -5796,38 +5787,14 @@ void game_update2(ALL_CORE_PARAMS)
 
     //reset searches
     AStarSearch_BFS* search = &gameState->mapSearchers[0];
-    if(search->state == AStarPathFindingProgress_ResetReady)
+    if(globalid == 0)
     {
-        ge_ulong chunkSize = (mapDim * mapDim * mapDepth) / GAME_UPDATE_WORKITEMS;
-    
-        for (ge_ulong i = 0; i < chunkSize+1; i++)
+        if(search->state == AStarPathFindingProgress_ResetReady)
         {
-            ge_long xyzIdx = globalid+GAME_UPDATE_WORKITEMS*i;
-            
-            if (xyzIdx < (mapDim * mapDim* mapDepth))
-            {
-
-                ge_long z = xyzIdx % mapDepth;
-                ge_long y = (xyzIdx / mapDepth) % mapDim;
-                ge_long x = xyzIdx / (mapDim * mapDepth); 
-
-
-
-
-                if(x > mapDim)
-                    printf("X>mapDim\n");
-                if(y > mapDim)
-                    printf("Y>mapDim\n");
-                if(z > mapDepth)
-                    printf("Z>mapDepth\n");
-
-                if(xyzIdx == (mapDim * mapDim* mapDepth)-1)
-                    printf("RESETING SEARCH\n");
-
-                AStarSearch_BFS_InstantiateParrallel(search, xyzIdx, x, y, z);
-            }
+            AStarSearch_BFS_Instantiate(search);  
         }
     }
+
 
     if(globalid == 0)
     if(ThisClient(ALL_CORE_PARAMS_PASS)->updateMap)

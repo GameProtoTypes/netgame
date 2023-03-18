@@ -24,6 +24,7 @@ const int maxGuiRects = 1024*16;
 const int maxLines = 1024*64;
 const int maxExplorers = 1024;
 
+const int ASTARSEARCH_ADVANCEMENT = 1000;
 
 
 constexpr ge_int MAP_TILE_SIZE = 5;
@@ -381,7 +382,7 @@ enum AStarPathFindingProgress
 
 
 const int ASTARHEAPSIZE = ((mapDim*mapDim*mapDepth)/100);
-const int ASTARDETAILSSIZE = ((mapDim*mapDim*mapDepth)/100);
+const int ASTARDETAILSSIZE = ((mapDim*mapDim*mapDepth)/10);
 struct AStarSearch_BFS {
 	AStarNode details[ASTARDETAILSSIZE];
 	ge_offsetPtr nextDetailNodePtr;
