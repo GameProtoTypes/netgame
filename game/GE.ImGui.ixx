@@ -894,7 +894,7 @@ ge_float4 ascii_to_uv(char ch)
 }
 
 
-void GUI_TEXT(GUIID_DEF_ALL, char* str)
+void GUI_TEXT(GUIID_DEF_ALL, const char* str)
 {
     GUI_COMMON_WIDGET_START()
 
@@ -965,7 +965,7 @@ void GUI_IMAGE(GUIID_DEF_ALL, ge_float2 uvStart, ge_float2 uvEnd, ge_float3 colo
 
 }
 
-bool GUI_BUTTON(GUIID_DEF_ALL, ge_float3 color, char* str, int* down,  bool* toggleState)
+bool GUI_BUTTON(GUIID_DEF_ALL, ge_float3 color, const char* str, int* down,  bool* toggleState)
 {
 
     GUI_COMMON_WIDGET_START()

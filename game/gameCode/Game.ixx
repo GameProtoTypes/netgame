@@ -395,6 +395,8 @@ struct AStarSearch_BFS {
 
 	ge_offsetPtr closedMap[mapDim][mapDim][mapDepth];
 	ge_offsetPtr openMap[mapDim][mapDim][mapDepth];
+
+	
 	
 	AStarPathFindingProgress state;
 

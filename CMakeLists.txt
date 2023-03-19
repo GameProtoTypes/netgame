@@ -2,19 +2,20 @@ project(game)
 cmake_minimum_required(VERSION 3.25)
 
 
+include(FetchContent)
+FetchContent_Declare(
+  Cista
+  GIT_REPOSITORY https://github.com/felixguendling/cista
+  GIT_TAG        master
+)
 
-
-
+FetchContent_MakeAvailable(Cista)
 
 
 add_subdirectory(game)
 add_subdirectory(SLikeNet)
 add_subdirectory(angelscriptsdk/angelscript/projects/cmake)
 add_subdirectory(gcem)
-
-
-
-
 
 
 set(SPRINTFS_FUNCTION_EXISTS true)

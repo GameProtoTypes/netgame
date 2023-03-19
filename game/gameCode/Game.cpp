@@ -2777,8 +2777,8 @@ ge_offsetPtr PeepOperate(ALL_CORE_PARAMS, Peep* peep, ge_offsetPtr nextOrderPtr)
     {
             printf("peep operating mining site\n");
             ge_int3 coord = GE3_CAST<ge_int3>(machine->mapTilePtr);
-            coord.x += GE_UNIFORM_RANDOM_RANGE(gameStateActions->tickIdx, -2, 3);
-                        coord.y += GE_UNIFORM_RANDOM_RANGE(gameStateActions->tickIdx+1, -2,3);
+            coord.x += GE_UNIFORM_RANDOM_RANGE(gameStateActions->tickIdx,   -2, 3);
+            coord.y += GE_UNIFORM_RANDOM_RANGE(gameStateActions->tickIdx+1, -2, 3);
             if(coord.x == machine->mapTilePtr.x && coord.y == machine->mapTilePtr.y)
             {
              coord.x++;
@@ -2795,27 +2795,30 @@ ge_offsetPtr PeepOperate(ALL_CORE_PARAMS, Peep* peep, ge_offsetPtr nextOrderPtr)
             coord.z++;
 
             {
-                Order* nextOrder;
-                GE_OFFSET_TO_PTR(gameState->orders, nextOrderPtr, nextOrder);
+                ge_offsetPtr returnOrderPtr = GE_OFFSET_NULL;
+                if(nextOrderPtr != GE_OFFSET_NULL)
+                {
+                    Order* nextOrder;
+                    GE_OFFSET_TO_PTR(gameState->orders, nextOrderPtr, nextOrder);
 
-                //make order to return to next order destination after finish
-                Order* returnOrder;
-                ge_offsetPtr returnOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                GE_OFFSET_TO_PTR(gameState->orders, returnOrderPtr, returnOrder);
-                returnOrder->mapDest_Coord = nextOrder->mapDest_Coord;
-                returnOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
-                returnOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-                returnOrder->nextExecutionOrder = nextOrder->nextExecutionOrder;
-                returnOrder->action = nextOrder->action;
+                    //make order to return to next order destination after finish
+                    Order* returnOrder;
+                    returnOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
+                    GE_OFFSET_TO_PTR(gameState->orders, returnOrderPtr, returnOrder);
+                    returnOrder->mapDest_Coord = nextOrder->mapDest_Coord;
+                    returnOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
+                    returnOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
+                    returnOrder->nextExecutionOrder = nextOrder->nextExecutionOrder;
+                    returnOrder->action = nextOrder->action;
 
-                AStarJob* returnJob;
-                GE_OFFSET_TO_PTR(gameState->mapSearchJobQueue, returnOrder->aStarJobPtr, returnJob);
+                    AStarJob* returnJob;
+                    GE_OFFSET_TO_PTR(gameState->mapSearchJobQueue, returnOrder->aStarJobPtr, returnJob);
 
-                returnJob->startLoc = GE3_CAST<ge_int3>( coord);
-                returnJob->endLoc = nextOrder->mapDest_Coord;
-                returnJob->pathPtr = returnOrder->pathToDestPtr;
+                    returnJob->startLoc = GE3_CAST<ge_int3>( coord);
+                    returnJob->endLoc = nextOrder->mapDest_Coord;
+                    returnJob->pathPtr = returnOrder->pathToDestPtr;
 
-
+                }
 
 
 
@@ -2837,10 +2840,7 @@ ge_offsetPtr PeepOperate(ALL_CORE_PARAMS, Peep* peep, ge_offsetPtr nextOrderPtr)
                 job->endLoc = coord;
                 job->pathPtr = order->pathToDestPtr;
 
-
-
-
-
+                
 
                 return orderPtr;
             }
@@ -2951,13 +2951,13 @@ void PeepDrivePhysics(ALL_CORE_PARAMS, Peep* peep)
                             
                             if((order->nextExecutionOrder == GE_OFFSET_NULL && order->prevExecutionOrder == GE_OFFSET_NULL))
                             {
-                               // printf("peep detach from order\n");
+                               printf("peep detach from order\n");
                                
                             }
                             else//advance order
                             {
 
-                                //printf("peep advancing to order %d\n", order->nextExecutionOrder);
+                                printf("peep advancing to order %d\n", order->nextExecutionOrder);
                                 Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, nextOrder);
                             }
                             
@@ -3812,11 +3812,11 @@ void PeepCommandGui(ALL_CORE_PARAMS, SyncedGui* gui, SynchronizedClientState* cl
                     }
                     else if(machDesc->type == MachineTypes_MINING_SITE)
                     {
-                        LOCAL_STR(str, "Mine"); 
                         if(GUI_BUTTON(GUIID_PASS, ge_int2(0,50+50), ge_int2(gui->guiState.windowSizes[2].x,50),GuiFlags_Beveled,
-                        ge_float3(0.4,0.4,0.4), str, NULL, NULL ))
+                        ge_float3(0.4,0.4,0.4), "Operate Mine", NULL, NULL ))
                         {
-                            PeepOperate(ALL_CORE_PARAMS_PASS, peep, GE_OFFSET_NULL);
+                            ge_offsetPtr orderPtr = PeepOperate(ALL_CORE_PARAMS_PASS, peep, GE_OFFSET_NULL);
+                            Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, orderPtr);
                         }
                     }
                     else
