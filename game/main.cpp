@@ -15,9 +15,9 @@
 #include "SDL_opengl.h"
 
 
-#include <angelscript.h>
-#include <scriptstdstring/scriptstdstring.h>
-#include <scriptbuilder/scriptbuilder.h>
+// #include <angelscript.h>
+// #include <scriptstdstring/scriptstdstring.h>
+// #include <scriptbuilder/scriptbuilder.h>
 
 #include "glm.hpp"
 #include <glm.hpp>
@@ -81,19 +81,19 @@ void WaitTickTime(uint64_t timerStartMs, float targetTimeMs, float* frameTimeMS)
     std::this_thread::sleep_for(std::chrono::microseconds((long long)(sleepTime*1000.0f)));
 }
 
-const char* AngelScriptPrintPrefix = "ANGEL SCRIPT: ";
+// const char* AngelScriptPrintPrefix = "ANGEL SCRIPT: ";
 
 
-// Implement a simple message callback function
-void MessageCallback(const asSMessageInfo *msg, void *param)
-{
-  const char *type = "ERR ";
-  if( msg->type == asMSGTYPE_WARNING ) 
-    type = "WARN";
-  else if( msg->type == asMSGTYPE_INFORMATION ) 
-    type = "INFO";
-  printf("%s %s (%d, %d) : %s : %s\n", AngelScriptPrintPrefix, msg->section, msg->row, msg->col, type, msg->message);
-}
+// // Implement a simple message callback function
+// void MessageCallback(const asSMessageInfo *msg, void *param)
+// {
+//   const char *type = "ERR ";
+//   if( msg->type == asMSGTYPE_WARNING ) 
+//     type = "WARN";
+//   else if( msg->type == asMSGTYPE_INFORMATION ) 
+//     type = "INFO";
+//   printf("%s %s (%d, %d) : %s : %s\n", AngelScriptPrintPrefix, msg->section, msg->row, msg->col, type, msg->message);
+// }
  
 
 
@@ -112,70 +112,70 @@ int32_t main(int32_t argc, char* args[])
 {
 
 
-    asIScriptEngine *engine = asCreateScriptEngine();
-    int r = engine->SetMessageCallback(asFUNCTION(MessageCallback), 0, asCALL_CDECL); assert( r >= 0 );
-    std::cout << "AS ENUM COUNT: " << engine->GetEnumCount();
-    RegisterStdString(engine);
-    r = engine->RegisterGlobalFunction("void print(const string &in)", asFUNCTION(print), asCALL_CDECL); assert( r >= 0 );
+    // asIScriptEngine *engine = asCreateScriptEngine();
+    // int r = engine->SetMessageCallback(asFUNCTION(MessageCallback), 0, asCALL_CDECL); assert( r >= 0 );
+    // std::cout << "AS ENUM COUNT: " << engine->GetEnumCount();
+    // RegisterStdString(engine);
+    // r = engine->RegisterGlobalFunction("void print(const string &in)", asFUNCTION(print), asCALL_CDECL); assert( r >= 0 );
 
 
-    // The CScriptBuilder helper is an add-on that loads the file,
-    // performs a pre-processing pass if necessary, and then tells
-    // the engine to build a script module.
-    CScriptBuilder builder;
-    r = builder.StartNewModule(engine, "MainGameModule"); 
-    if( r < 0 ) 
-    {
-        // If the code fails here it is usually because there
-        // is no more memory to allocate the module
-        printf("%s Unrecoverable error while starting a new module.\n", AngelScriptPrintPrefix);
-        return 1;
-    }
-    r = builder.AddSectionFromFile("angelScript/game.as");
-    if( r < 0 )
-    {
-        // The builder wasn't able to load the file. Maybe the file
-        // has been removed, or the wrong name was given, or some
-        // preprocessing commands are incorrectly written.
-        printf("%s Please correct the errors in the script and restart the game\n", AngelScriptPrintPrefix);
-        return 1;
-    }
-    r = builder.BuildModule();
-    if( r < 0 )
-    {
-        // An error occurred. Instruct the script writer to fix the 
-        // compilation errors that were listed in the output stream.
-        printf("%s Please correct the errors in the script and restart the game\n", AngelScriptPrintPrefix);
-        return 1;
-    }
+    // // The CScriptBuilder helper is an add-on that loads the file,
+    // // performs a pre-processing pass if necessary, and then tells
+    // // the engine to build a script module.
+    // CScriptBuilder builder;
+    // r = builder.StartNewModule(engine, "MainGameModule"); 
+    // if( r < 0 ) 
+    // {
+    //     // If the code fails here it is usually because there
+    //     // is no more memory to allocate the module
+    //     printf("%s Unrecoverable error while starting a new module.\n", AngelScriptPrintPrefix);
+    //     return 1;
+    // }
+    // r = builder.AddSectionFromFile("angelScript/game.as");
+    // if( r < 0 )
+    // {
+    //     // The builder wasn't able to load the file. Maybe the file
+    //     // has been removed, or the wrong name was given, or some
+    //     // preprocessing commands are incorrectly written.
+    //     printf("%s Please correct the errors in the script and restart the game\n", AngelScriptPrintPrefix);
+    //     return 1;
+    // }
+    // r = builder.BuildModule();
+    // if( r < 0 )
+    // {
+    //     // An error occurred. Instruct the script writer to fix the 
+    //     // compilation errors that were listed in the output stream.
+    //     printf("%s Please correct the errors in the script and restart the game\n", AngelScriptPrintPrefix);
+    //     return 1;
+    // }
 
 
 
 
-    // Find the function that is to be called. 
-    asIScriptModule *mod = engine->GetModule("MainGameModule");
-    asIScriptFunction *func = mod->GetFunctionByDecl("void main()");
-    if( func == 0 )
-    {
-        // The function couldn't be found. Instruct the script writer
-        // to include the expected function in the script.
-        printf("%s The script must have the function 'void main()'. Please add it and restart the game\n", AngelScriptPrintPrefix);
-        return 1;
-    }
+    // // Find the function that is to be called. 
+    // asIScriptModule *mod = engine->GetModule("MainGameModule");
+    // asIScriptFunction *func = mod->GetFunctionByDecl("void main()");
+    // if( func == 0 )
+    // {
+    //     // The function couldn't be found. Instruct the script writer
+    //     // to include the expected function in the script.
+    //     printf("%s The script must have the function 'void main()'. Please add it and restart the game\n", AngelScriptPrintPrefix);
+    //     return 1;
+    // }
     
-    // Create our context, prepare it, and then execute
-    asIScriptContext *ctx = engine->CreateContext();
-    ctx->Prepare(func);
-    r = ctx->Execute();
-    if( r != asEXECUTION_FINISHED )
-    {
-        // The execution didn't complete as expected. Determine what happened.
-        if( r == asEXECUTION_EXCEPTION )
-        {
-            // An exception occurred, let the script writer know what happened so it can be corrected.
-            printf("%s An exception '%s' occurred. Please correct the code and try again.\n", AngelScriptPrintPrefix, ctx->GetExceptionString());
-        }
-    }
+    // // Create our context, prepare it, and then execute
+    // asIScriptContext *ctx = engine->CreateContext();
+    // ctx->Prepare(func);
+    // r = ctx->Execute();
+    // if( r != asEXECUTION_FINISHED )
+    // {
+    //     // The execution didn't complete as expected. Determine what happened.
+    //     if( r == asEXECUTION_EXCEPTION )
+    //     {
+    //         // An exception occurred, let the script writer know what happened so it can be corrected.
+    //         printf("%s An exception '%s' occurred. Please correct the code and try again.\n", AngelScriptPrintPrefix, ctx->GetExceptionString());
+    //     }
+    // }
 
 
 
@@ -183,9 +183,9 @@ int32_t main(int32_t argc, char* args[])
 
 
 
-    // Clean up
-    ctx->Release();
-    engine->ShutDownAndRelease();
+    // // Clean up
+    // ctx->Release();
+    // engine->ShutDownAndRelease();
 
 
 

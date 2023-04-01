@@ -1,5 +1,8 @@
-project(MinerTycoon CXX)
 cmake_minimum_required(VERSION 3.25)
+
+
+project(MinerTycoon CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 
 #include("cxx-modules-rules.cmake")
@@ -207,7 +210,7 @@ set(ADDITIONAL_LIBRARY_DEPENDENCIES
     "glfw3;"
     "imgui;"
     "SLikeNet;"
-    "angelscript;"
+#    "angelscript;"
     "gcem;"
     "cista"
 )
@@ -231,39 +234,39 @@ target_link_directories(${PROJECT_NAME} PUBLIC
 )
 
 
-#COPY ThINGS INTO BINARY DIRECTORY
+#Copy Dependancies
 add_custom_command(
         TARGET MinerTycoon POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${CMAKE_SOURCE_DIR}/SDL2-2.0.22/lib/x64/SDL2.dll
-                ${CMAKE_CURRENT_BINARY_DIR}/Debug/SDL2.dll)
+                ${CMAKE_CURRENT_BINARY_DIR}/SDL2.dll)
 
 
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/glew-2.1.0/bin/Release/x64/glew32.dll
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/glew32.dll)
+            ${CMAKE_CURRENT_BINARY_DIR}/glew32.dll)
 
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-        ${CMAKE_CURRENT_BINARY_DIR}/Debug/shaders)
+        ${CMAKE_CURRENT_BINARY_DIR}/shaders)
        
 
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/angelScript
-        ${CMAKE_CURRENT_BINARY_DIR}/Debug/angelScript)
+        ${CMAKE_CURRENT_BINARY_DIR}/angelScript)
 
 #compression binaries
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/windows_binaries
-        ${CMAKE_CURRENT_BINARY_DIR}/Debug/windows_binaries)
+        ${CMAKE_CURRENT_BINARY_DIR}/windows_binaries)
         
 
 
@@ -272,13 +275,13 @@ add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_SOURCE_DIR}/TileSet.png
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/TileSet.png)
+            ${CMAKE_CURRENT_BINARY_DIR}/TileSet.png)
 
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_SOURCE_DIR}/16x16_sm_ascii.png
-            ${CMAKE_CURRENT_BINARY_DIR}/Debug/16x16_sm_ascii.png)
+            ${CMAKE_CURRENT_BINARY_DIR}/16x16_sm_ascii.png)
 
 
 

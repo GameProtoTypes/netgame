@@ -1,5 +1,21 @@
-project(game)
 cmake_minimum_required(VERSION 3.25)
+
+project(game)
+
+
+#if multiconfiguration restrict project to the CMAKE_BUILD_TYPE
+if(WIN32 OR APPLE)
+    if(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+        SET(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
+    endif()
+
+    if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+        SET(CMAKE_CONFIGURATION_TYPES "Debug" CACHE STRING "" FORCE)
+    endif()
+
+endif()
+
+
 
 
 include(FetchContent)
@@ -12,10 +28,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Cista)
 
 
-add_subdirectory(game)
 add_subdirectory(SLikeNet)
-add_subdirectory(angelscriptsdk/angelscript/projects/cmake)
+#add_subdirectory(angelscriptsdk/angelscript/projects/cmake)
 add_subdirectory(gcem)
+
+
 
 
 set(SPRINTFS_FUNCTION_EXISTS true)
@@ -47,3 +64,5 @@ target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<glfw3na
 
 
 
+
+add_subdirectory(game)

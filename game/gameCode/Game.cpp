@@ -16,6 +16,7 @@ module;
     #define MAP_TILE_UV_WIDTH_FLOAT2 (ge_float2(1/16.0, 1/16.0))
 
     #define PEEP_ALL_ALWAYS_VISIBLE
+    #define DEBUG_PATHS
 
 //#define FLATMAP
 
@@ -2795,33 +2796,6 @@ ge_offsetPtr PeepOperate(ALL_CORE_PARAMS, Peep* peep, ge_offsetPtr nextOrderPtr)
             coord.z++;
 
             {
-                ge_offsetPtr returnOrderPtr = GE_OFFSET_NULL;
-                if(nextOrderPtr != GE_OFFSET_NULL)
-                {
-                    Order* nextOrder;
-                    GE_OFFSET_TO_PTR(gameState->orders, nextOrderPtr, nextOrder);
-
-                    //make order to return to next order destination after finish
-                    Order* returnOrder;
-                    returnOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
-                    GE_OFFSET_TO_PTR(gameState->orders, returnOrderPtr, returnOrder);
-                    returnOrder->mapDest_Coord = nextOrder->mapDest_Coord;
-                    returnOrder->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
-                    returnOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-                    returnOrder->nextExecutionOrder = nextOrder->nextExecutionOrder;
-                    returnOrder->action = nextOrder->action;
-
-                    AStarJob* returnJob;
-                    GE_OFFSET_TO_PTR(gameState->mapSearchJobQueue, returnOrder->aStarJobPtr, returnJob);
-
-                    returnJob->startLoc = GE3_CAST<ge_int3>( coord);
-                    returnJob->endLoc = nextOrder->mapDest_Coord;
-                    returnJob->pathPtr = returnOrder->pathToDestPtr;
-
-                }
-
-
-
                 //make order to navigate to tile.
                 Order* order;
                 ge_offsetPtr orderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
@@ -2829,7 +2803,6 @@ ge_offsetPtr PeepOperate(ALL_CORE_PARAMS, Peep* peep, ge_offsetPtr nextOrderPtr)
                 order->mapDest_Coord = coord;
                 order->pathToDestPtr = AStarPathStepsNextFreePathNode(&gameState->paths);
                 order->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
-                order->nextExecutionOrder = returnOrderPtr;
                 order->action = OrderAction_MINE;
 
                 AStarJob* job;
@@ -3779,12 +3752,13 @@ void PeepCommandGui(ALL_CORE_PARAMS, SyncedGui* gui, SynchronizedClientState* cl
                         {    
                             if(gui->passType == GuiStatePassType_Synced)
                             {
+                                Peep_DetachFromAllOrders(ALL_CORE_PARAMS_PASS, peep);
+
 
                                 Order* machineRootOrder;
                                 GE_OFFSET_TO_PTR(gameState->orders,machine->rootOrderPtr,  machineRootOrder);
 
                                 //make path to the first machine order
-
                                 Order* newOrder;
                                 ge_offsetPtr newOrderPtr = Order_GetNewOrder(ALL_CORE_PARAMS_PASS);
                                 GE_OFFSET_TO_PTR(gameState->orders, newOrderPtr, newOrder);
@@ -3798,15 +3772,14 @@ void PeepCommandGui(ALL_CORE_PARAMS, SyncedGui* gui, SynchronizedClientState* cl
                                 newOrder->aStarJobPtr = AStarJob_EnqueueJob(ALL_CORE_PARAMS_PASS);
 
 
-
                                 AStarJob* job;
                                 GE_OFFSET_TO_PTR(gameState->mapSearchJobQueue, newOrder->aStarJobPtr, job);
                                 job->startLoc = GE3_WHOLE_Q(peep->posMap_Q16);
                                 job->endLoc = machineRootOrder->mapDest_Coord;
                                 job->pathPtr = newOrder->pathToDestPtr;
 
-                                Peep_DetachFromAllOrders(ALL_CORE_PARAMS_PASS, peep);
                                 Peep_PushAssignOrder(ALL_CORE_PARAMS_PASS, peep, newOrderPtr);
+                            
                             }
                         }
                     }
