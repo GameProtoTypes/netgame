@@ -7,5 +7,6 @@
         "**/.hg": true,
         "**/Debug": true,
         "**/.DS_Store": true
-      }
+      },
+    "debug.console.collapseIdenticalLines": false
 }

@@ -29,6 +29,19 @@
               "trace": true
             },
             "cwd" : "${workspaceFolder}\\build\\game\\RelWithDebInfo\\"
+          },
+          {
+            "name": "C++ Launch (Windows, Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\build\\game\\Release\\MinerTycoon.exe",
+            "symbolSearchPath": "${workspaceFolder}\\build\\game\\Release",
+            "console": "newExternalWindow",
+            "logging": {
+              "moduleLoad": true,
+              "trace": true
+            },
+            "cwd" : "${workspaceFolder}\\build\\game\\Release\\"
           }
     ]
 }
