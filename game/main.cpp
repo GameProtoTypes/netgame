@@ -18,10 +18,6 @@
 #include "GameGraphics.h"
 #include "GameCompute.h"
 
-
-#include "GEShader.h"
-#include "GEShaderProgram.h"
-
 #include "implot.h"
 
 //#include  "imgui_impl_sdl.h"

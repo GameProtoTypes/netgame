@@ -11,9 +11,6 @@ set(CMAKE_CXX_STANDARD 20)
 # Source groups
 ################################################################################
 set(Header_Files
-    
-    "GEShaderProgram.h"
-    "GEShader.h"
     "GameGraphics.h"
     "GameCompute.h"
     "GameNetworking.h" 
@@ -24,8 +21,6 @@ source_group("Header Files" FILES ${Header_Files})
 
 set(Source_Files
     "main.cpp"
-    "GEShaderProgram.cpp"
-    "GEShader.cpp"
     "GameGraphics.cpp"
     "GameCompute.cpp"
     "GameNetworking.cpp"
