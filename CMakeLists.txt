@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
+include(fetchcontent)
+
 project(game)
 
 
@@ -18,16 +20,6 @@ endif()
 
 
 
-include(FetchContent)
-FetchContent_Declare(
-  Cista
-  GIT_REPOSITORY https://github.com/felixguendling/cista
-  GIT_TAG        master
-)
-
-FetchContent_MakeAvailable(Cista)
-
-
 add_subdirectory(SLikeNet)
 #add_subdirectory(angelscriptsdk/angelscript/projects/cmake)
 add_subdirectory(gcem)
@@ -38,30 +30,142 @@ add_subdirectory(gcem)
 set(SPRINTFS_FUNCTION_EXISTS true)
 set(VSNPRINTFS_FUNCTION_EXISTS true)
 
-add_library(imgui
-    # Main Imgui files
-    ./imgui/imgui.cpp ./imgui/imgui_draw.cpp
-    ./imgui/imgui_tables.cpp ./imgui/imgui_widgets.cpp
+#Bring in sdl2
+fetchcontent_declare(
+    sdl2
+    GIT_REPOSITORY
+    https://github.com/libsdl-org/SDL
+    GIT_TAG SDL2
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+fetchcontent_populate(sdl2)
+fetchcontent_makeavailable(sdl2)
 
-    #implot
-    ./imgui/implot.cpp ./imgui/implot_items.cpp ./imgui/implot_demo.cpp
 
-    # SDL2+OpenGL-specific files
-    ./imgui/backends/imgui_impl_sdl.cpp
-    ./imgui/backends/imgui_impl_opengl3.cpp)
+add_subdirectory(${sdl2_SOURCE_DIR})
 
 
-set(SDL2_INCLUDE_DIRS ./SDL2-2.0.22/include)
+#Bring in magnum
+fetchcontent_declare(
+    magnum
+    GIT_REPOSITORY
+    https://github.com/mosra/magnum
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+fetchcontent_populate(magnum)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${magnum_SOURCE_DIR}/modules")
+fetchcontent_makeavailable(magnum)
 
-# Make SDL2 available to Imgui
-target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(imgui PUBLIC ./GLFW)
-target_include_directories(imgui PUBLIC ./glew-2.1.0/include)
-# imgui/backends/ contains the SDL implementation
-target_include_directories(imgui PUBLIC ./imgui/ ./imgui/backends/)
-# Configure Imgui to use OpengGL through SDL2
-target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_CUSTOM=<glfw3native.h>  GL_GLEXT_PROTOTYPES=1)
 
+#Bring in corrade
+fetchcontent_declare(
+    corrade
+    GIT_REPOSITORY
+    https://github.com/mosra/corrade.git
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+
+fetchcontent_populate(corrade)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${corrade_SOURCE_DIR}/modules")
+fetchcontent_makeavailable(corrade)
+
+
+#Bring in magnum_integrations
+fetchcontent_declare(
+    magnum_integrations
+    GIT_REPOSITORY
+    https://github.com/mosra/magnum-integration
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+
+fetchcontent_populate(magnum_integrations)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${magnum_integrations_SOURCE_DIR}/modules")
+fetchcontent_makeavailable(magnum_integrations)
+
+fetchcontent_declare(
+    imgui
+    GIT_REPOSITORY
+        https://github.com/ocornut/imgui
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+
+fetchcontent_populate(imgui)
+
+
+fetchcontent_declare(
+    implot
+    GIT_REPOSITORY
+        https://github.com/epezent/implot
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+
+fetchcontent_populate(implot)
+
+
+
+
+set(IMGUI_DIR ${imgui_SOURCE_DIR})
+
+
+
+fetchcontent_declare(
+    glm
+    GIT_REPOSITORY
+        https://github.com/TrevorCash/glm
+    GIT_TAG master
+    GIT_PROGRESS
+    TRUE
+    GIT_SHALLOW
+    TRUE
+)
+
+fetchcontent_populate(glm)
+
+#set GLM_INCLUDE_DIR so magnum can find it.
+set(GLM_INCLUDE_DIR ${glm_SOURCE_DIR} CACHE STRING "" FORCE)
+
+
+
+set(MAGNUM_WITH_IMGUI ON CACHE BOOL "" FORCE)
+set(MAGNUM_WITH_GLM ON CACHE BOOL "" FORCE)
+
+
+#set(MAGNUM_INCLUDE_INSTALL_DIR "magnum")
+#set(CORRADE_INCLUDE_INSTALL_DIR "corrade")
+
+set(WITH_SDL2APPLICATION ON CACHE BOOL "" FORCE)
+
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "")
+
+add_subdirectory(${corrade_SOURCE_DIR})
+add_subdirectory(${magnum_SOURCE_DIR})
+add_subdirectory(${magnum_integrations_SOURCE_DIR})
 
 
 

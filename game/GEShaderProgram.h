@@ -2,7 +2,7 @@
 #include "GEShader.h"
 #include <vector>
 #include <memory>
-#include "glm.hpp"
+#include "glm/glm.hpp"
 
 class GEShaderProgram
 {

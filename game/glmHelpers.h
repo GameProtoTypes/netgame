@@ -1,8 +1,6 @@
 #pragma once
 
 
-#include "glm.hpp"
-#include <glm.hpp>
 
 
 void SetTranslation(glm::mat4& matrix, glm::vec3& translation)

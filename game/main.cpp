@@ -8,22 +8,9 @@
 #include <thread>
 
 
-#include "glew.h"
-#include "glfw3native.h"
-
-#include <SDL.h>
-#include "SDL_opengl.h"
+#include <Magnum/GlmIntegration/Integration.h>
 
 
-// #include <angelscript.h>
-// #include <scriptstdstring/scriptstdstring.h>
-// #include <scriptbuilder/scriptbuilder.h>
-
-#include "glm.hpp"
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtx/transform2.hpp>
-#include <gtx/string_cast.hpp>
 #include "glmHelpers.h"
 
 

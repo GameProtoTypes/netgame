@@ -3,7 +3,7 @@ module;
 #include <type_traits>
 #include <numbers>
 #include <gcem.hpp>
-#include <glm.hpp>
+#include <glm/glm.hpp>
 
 #ifdef _DEBUG
     #define GE_FIXEDPOINT_CHECK_OVERFLOW

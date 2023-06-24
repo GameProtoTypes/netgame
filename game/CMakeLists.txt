@@ -5,30 +5,6 @@ project(MinerTycoon CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-#include("cxx-modules-rules.cmake")
-
-
-
-##################################################################
-#LLVM
-##################################################################
-#find_package(LLVM REQUIRED CONFIG)
-
-#message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-#message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-
-
-#separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-#add_definitions(${LLVM_DEFINITIONS_LIST})
-
-# Find the libraries that correspond to the LLVM components
-#llvm_map_components_to_libnames(llvm_libs support core irreader clang)
-
-
-
-
-
-
 
 
 ################################################################################
@@ -152,16 +128,6 @@ add_executable(${PROJECT_NAME} ${COMPILE_FILES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE "gameCode" )
 target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL" "IMGUI_DISABLE_OBSOLETE_FUNCTIONS")
-#target_precompile_headers(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../stb/stb_image.h")
-# target_sources(${PROJECT_NAME}
-#   PRIVATE
-#     FILE_SET CXX_MODULES
-#       TYPE CXX_MODULES
-#       FILES
-#       ${Game_Module_Files})
-
-
-
 
 
 
@@ -170,18 +136,18 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "GLM_ENABLE_EXPERIMENTAL" "IM
 # Include directories
 ################################################################################
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/../glew-2.1.0/include/GL;"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../GLFW;"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../SDL2-2.0.22/include;"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../stb;"
-    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/source"  
+# target_include_directories(${PROJECT_NAME} PUBLIC
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../glew-2.1.0/include/GL;"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../GLFW;"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../SDL2-2.0.22/include;"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../stb;"
+#     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../glm-master/glm"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../SLikeNet/Source/include"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/include"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/../angelscriptsdk/angelscript/source"  
 
-)
+# )
 
     
 set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBuild=true")
@@ -193,26 +159,24 @@ set_property(SOURCE ${OPENCL_Source_Files} PROPERTY VS_SETTINGS "ExcludedFromBui
 # Dependencies
 ################################################################################
 
-
-
-#separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-#add_definitions(${LLVM_DEFINITIONS_LIST})
-
+find_package(Corrade REQUIRED Main)
+find_package(Magnum REQUIRED GL Shaders Sdl2Application)
+find_package(MagnumIntegration REQUIRED ImGui Glm)
 
 
 
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
 #    "OpenCL;"
-    "SDL2;"
-    "SDL2main;"
-    "Opengl32;"
-    "glew32;"
-    "glfw3;"
-    "imgui;"
+    "Corrade::Main;"
+    "Magnum::Application;"
+    "Magnum::GL;"
+    "Magnum::Magnum;"
+    "Magnum::Shaders;"
+    "MagnumIntegration::ImGui;"
+    "MagnumIntegration::Glm;"
     "SLikeNet;"
-#    "angelscript;"
     "gcem;"
-    "cista"
+
 )
 
 
@@ -226,28 +190,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}
 
 
 
-target_link_directories(${PROJECT_NAME} PUBLIC
-    "${CMAKE_SOURCE_DIR}/SDL2-2.0.22/lib/x64"
-    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64"
-    "${CMAKE_SOURCE_DIR}/glew-2.1.0/lib/Release/x64"
-    "${CMAKE_SOURCE_DIR}/GLFW/lib"
-)
-
-
 #Copy Dependancies
-add_custom_command(
-        TARGET MinerTycoon POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_SOURCE_DIR}/SDL2-2.0.22/lib/x64/SDL2.dll
-                ${CMAKE_CURRENT_BINARY_DIR}/SDL2.dll)
-
-
-add_custom_command(
-    TARGET MinerTycoon POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/glew-2.1.0/bin/Release/x64/glew32.dll
-            ${CMAKE_CURRENT_BINARY_DIR}/glew32.dll)
-
 add_custom_command(
     TARGET MinerTycoon POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -282,19 +225,6 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_CURRENT_SOURCE_DIR}/16x16_sm_ascii.png
             ${CMAKE_CURRENT_BINARY_DIR}/16x16_sm_ascii.png)
-
-
-
-#COPY THINGS FROM RUNTIME BACK INTO SOURCE (FOR EDITOR NESSECITIES AND SUCH STRANGE THINGS)
-#add_custom_command(
-#    TARGET MinerTycoon POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy
-#            ${CMAKE_CURRENT_BINARY_DIR}/Debug/openCL/dynamicDefines.h
-#            ${CMAKE_CURRENT_SOURCE_DIR}/openCL/dynamicDefines.h)
-
-
-
-
 
 
 

@@ -3,7 +3,7 @@ module;
 #include <type_traits>
 #include <numbers>
 #include <gcem.hpp>
-#include <glm.hpp>
+#include <glm/glm.hpp>
 
 
 export module GE.Basic:FixedPoint_InterestingMath;
