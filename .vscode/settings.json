@@ -8,5 +8,8 @@
         "**/Debug": true,
         "**/.DS_Store": true
       },
-    "debug.console.collapseIdenticalLines": false
+    "debug.console.collapseIdenticalLines": false,
+    "files.associations": {
+      "random": "cpp"
+    }
 }
